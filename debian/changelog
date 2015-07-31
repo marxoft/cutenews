@@ -1,0 +1,12 @@
+cutenews (0.1.0) unstable; urgency=low
+
+  * Add OSSO user interface.
+  * Add search feature.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Thu, 30 Jul 2015 15:05:41 +0100
+
+cutenews (0.0.1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sun, 26 Jul 2015 17:05:36 +0100
