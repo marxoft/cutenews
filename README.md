@@ -15,7 +15,7 @@ Features include:
 
 ##Using custom commands for subscription source
 
-The only requirement for a custom commad is that it must output a valid RSS feed response to STDOUT, for example:
+The only requirement for a custom command is that it must output a valid RSS feed response to STDOUT, for example:
 
     wget -q http://talk.maemo.org/external?type=RSS2 -O -
 
