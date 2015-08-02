@@ -26,7 +26,6 @@
 #include "subscriptionsourcetypemodel.h"
 #include "transfermodel.h"
 #include "transfers.h"
-#include "urlopener.h"
 #include "urlopenermodel.h"
 #include "userinterfacemodel.h"
 #include "utils.h"
@@ -54,7 +53,6 @@ void registerTypes() {
     qmlRegisterType<Transfer>("cuteNews", 1, 0, "Transfer");
     qmlRegisterType<TransferModel>("cuteNews", 1, 0, "TransferModel");
     qmlRegisterType<UserInterfaceModel>("cuteNews", 1, 0, "UserInterfaceModel");
-    qmlRegisterType<UrlOpenerModel>("cuteNews", 1, 0, "UrlOpenerModel");
     qmlRegisterType<ViewModeModel>("cuteNews", 1, 0, "ViewModeModel");
     qmlRegisterUncreatableType<Subscriptions>("cuteNews", 1, 0, "Subscriptions", "");
 }
@@ -73,7 +71,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     QScopedPointer<Settings> settings(Settings::instance());
     QScopedPointer<Subscriptions> subscriptions(Subscriptions::instance());
     QScopedPointer<Transfers> transfers(Transfers::instance());
-    QScopedPointer<UrlOpener> urlopener(UrlOpener::instance());
+    UrlOpenerModel urlopener;
     Utils utils;
     
     QThread thread;
@@ -90,7 +88,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     context->setContextProperty("downloads", Transfers::instance());
     context->setContextProperty("settings", Settings::instance());
     context->setContextProperty("subscriptions", Subscriptions::instance());
-    context->setContextProperty("urlopener", UrlOpener::instance());
+    context->setContextProperty("urlopener", &urlopener);
     context->setContextProperty("utils", &utils);
     context->setContextProperty("ALL_ARTICLES_SUBSCRIPTION_ID", ALL_ARTICLES_SUBSCRIPTION_ID);
     context->setContextProperty("FAVOURITES_SUBSCRIPTION_ID", FAVOURITES_SUBSCRIPTION_ID);
