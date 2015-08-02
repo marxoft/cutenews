@@ -21,7 +21,6 @@ HEADERS += \
     src/base/subscriptionsourcetypemodel.h \
     src/base/transfer.h \
     src/base/transfers.h \
-    src/base/urlopener.h \
     src/base/urlopenermodel.h \
     src/base/utils.h \
     src/base/viewmodemodel.h
@@ -38,7 +37,7 @@ SOURCES += \
     src/base/subscriptions.cpp \
     src/base/transfer.cpp \
     src/base/transfers.cpp \
-    src/base/urlopener.cpp \
+    src/base/urlopenermodel.cpp \
     src/base/utils.cpp
 
 maemo5 {

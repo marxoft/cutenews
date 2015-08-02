@@ -18,32 +18,19 @@
 #define URLOPENERMODEL_H
 
 #include "selectionmodel.h"
-#include "urlopener.h"
 
 class UrlOpenerModel : public SelectionModel
 {
     Q_OBJECT
     
 public:
-    explicit UrlOpenerModel(QObject *parent = 0) :
-        SelectionModel(parent)
-    {
-        reload();
-    }
-    
+    explicit UrlOpenerModel(QObject *parent = 0);
+        
 public Q_SLOTS:
-    inline void reload() {
-        clear();
-        
-        QList<Opener> openers = UrlOpener::instance()->openers();
-        
-        for (int i = 0; i < openers.size(); i++) {
-            QVariantMap m;
-            m["regExp"] = openers.at(i).regExp.pattern();
-            m["command"] = openers.at(i).command;
-            append(openers.at(i).name, m);
-        }
-    }
+    bool open(const QString &url);
+    
+    void load();
+    void save();
 };
 
 #endif // URLOPENERMODEL_H
