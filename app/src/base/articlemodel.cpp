@@ -22,6 +22,10 @@
 
 ArticleModel::ArticleModel(QObject *parent) :
     QAbstractListModel(parent),
+    m_limit(-1),
+    m_offset(0),
+    m_insert(false),
+    m_moreResults(false),
     m_status(Idle),
     m_subscriptionId(ALL_ARTICLES_SUBSCRIPTION_ID)
 {
@@ -55,6 +59,17 @@ void ArticleModel::setErrorString(const QString &e) {
     m_errorString = e;
 }
 
+int ArticleModel::limit() const {
+    return m_limit;
+}
+
+void ArticleModel::setLimit(int l) {
+    if (l != limit()) {
+        m_limit = l;
+        emit limitChanged(l);
+    }
+}
+
 ArticleModel::Status ArticleModel::status() const {
     return m_status;
 }
@@ -74,6 +89,31 @@ QHash<int, QByteArray> ArticleModel::roleNames() const {
 
 int ArticleModel::rowCount(const QModelIndex &) const {
     return m_list.size();
+}
+
+bool ArticleModel::canFetchMore(const QModelIndex &) const {
+    return (m_moreResults) && (status() == Ready) && (limit() > 0);
+}
+
+void ArticleModel::fetchMore(const QModelIndex &) {
+    if (canFetchMore()) {
+        if (!m_query.isEmpty()) {
+            fetchArticles(m_query);
+        }
+        else {
+            switch (m_subscriptionId) {
+            case ALL_ARTICLES_SUBSCRIPTION_ID:
+                fetchArticles();
+                break;
+            case FAVOURITES_SUBSCRIPTION_ID:
+                fetchArticles(QString("WHERE isFavourite = 1"));
+                break;
+            default:
+                fetchArticles(QString("WHERE subscriptionId = %1").arg(m_subscriptionId));
+                break;
+            }
+        }
+    }
 }
 
 QVariant ArticleModel::data(const QModelIndex &index, int role) const {
@@ -139,11 +179,14 @@ int ArticleModel::match(const QByteArray &role, const QVariant &value) const {
 
 void ArticleModel::clear() {
     if (!m_list.isEmpty()) {
+        setStatus(Active);
         beginResetModel();
         qDeleteAll(m_list);
         m_list.clear();
         endResetModel();
         emit countChanged(0);
+        m_offset = 0;
+        m_moreResults = false;
         setStatus(Idle);
     }
 }
@@ -156,18 +199,16 @@ void ArticleModel::load(int subscriptionId) {
     m_subscriptionId = subscriptionId;
     m_query = QString();
     clear();
-    setStatus(Active);
     
-    switch (subscriptionId) {
+    switch (m_subscriptionId) {
     case ALL_ARTICLES_SUBSCRIPTION_ID:
-        Database::fetchArticles(QString("ORDER BY date"), m_subscriptionId);
+        fetchArticles();
         break;
     case FAVOURITES_SUBSCRIPTION_ID:
-        Database::fetchArticles(QString("WHERE isFavourite = 1 ORDER BY date"), m_subscriptionId);
+        fetchArticles(QString("WHERE isFavourite = 1"));
         break;
     default:
-        Database::fetchArticles(QString("WHERE subscriptionId = %1 ORDER BY date").arg(m_subscriptionId),
-                                m_subscriptionId);
+        fetchArticles(QString("WHERE subscriptionId = %1").arg(m_subscriptionId));
         break;
     }
 }
@@ -180,8 +221,7 @@ void ArticleModel::search(const QString &query) {
     m_query = query;
     m_subscriptionId = -1000;
     clear();
-    setStatus(Active);
-    Database::fetchArticles(query, m_subscriptionId);
+    fetchArticles(query);
 }
 
 void ArticleModel::reload() {
@@ -191,6 +231,14 @@ void ArticleModel::reload() {
     else {
         load(m_subscriptionId);
     }
+}
+
+void ArticleModel::fetchArticles(const QString &query) {
+    m_insert = false;
+    setStatus(Active);
+    Database::fetchArticles(QString("%1 %2%3").arg(query).arg(QString("ORDER BY date DESC"))
+                            .arg(limit() > 0 ? QString(" LIMIT %1, %2").arg(m_offset).arg(limit())
+                                             : QString()), m_subscriptionId);
 }
 
 void ArticleModel::onArticleChanged(Article *article) {
@@ -205,6 +253,7 @@ void ArticleModel::onArticleChanged(Article *article) {
 void ArticleModel::onArticlesAdded(int count, int subscriptionId) {
     if ((status() == Ready) && ((subscriptionId == m_subscriptionId)
                                 || (m_subscriptionId == ALL_ARTICLES_SUBSCRIPTION_ID))) {
+        m_insert = true;
         setStatus(Active);
         Database::fetchArticles(QString("WHERE subscriptionId = %1 ORDER BY id DESC LIMIT %2")
                                 .arg(subscriptionId).arg(count), m_subscriptionId);
@@ -220,6 +269,7 @@ void ArticleModel::onArticleDeleted(int articleId, int subscriptionId) {
                 m_list.takeAt(i)->deleteLater();
                 endRemoveRows();
                 emit countChanged(rowCount());
+                m_offset--;
                 return;
             }
         }
@@ -229,6 +279,7 @@ void ArticleModel::onArticleDeleted(int articleId, int subscriptionId) {
 void ArticleModel::onArticleFavourited(int articleId, bool isFavourite) {
     if ((m_subscriptionId == FAVOURITES_SUBSCRIPTION_ID) && (status() == Ready)) {
         if (isFavourite) {
+            m_insert = true;
             setStatus(Active);
             Database::fetchArticles(QString("WHERE id = %1").arg(articleId), m_subscriptionId);
         }
@@ -239,6 +290,7 @@ void ArticleModel::onArticleFavourited(int articleId, bool isFavourite) {
                     m_list.takeAt(i)->deleteLater();
                     endRemoveRows();
                     emit countChanged(rowCount());
+                    m_offset--;
                     return;
                 }
             }
@@ -254,15 +306,32 @@ void ArticleModel::onArticlesFetched(QSqlQuery query, int requestId) {
             return;
         }
         
-        while (query.next()) {
-            beginInsertRows(QModelIndex(), 0, 0);
-            Article *article = new Article(query, this);
-            connect(article, SIGNAL(dataChanged(Article*)), this, SLOT(onArticleChanged(Article*)));
-            m_list.prepend(article);
-            endInsertRows();
+        const int oldCount = rowCount();
+        
+        if (m_insert) {
+            while (query.next()) {
+                beginInsertRows(QModelIndex(), 0, 0);
+                Article *article = new Article(query, this);
+                connect(article, SIGNAL(dataChanged(Article*)), this, SLOT(onArticleChanged(Article*)));
+                m_list.prepend(article);
+                endInsertRows();
+            }
+        }
+        else {
+            while (query.next()) {
+                beginInsertRows(QModelIndex(), rowCount(), rowCount());
+                Article *article = new Article(query, this);
+                connect(article, SIGNAL(dataChanged(Article*)), this, SLOT(onArticleChanged(Article*)));
+                m_list << article;
+                endInsertRows();
+            }
         }
         
-        emit countChanged(rowCount());
+        const int newCount = rowCount();
+        m_offset = newCount;
+        m_moreResults = ((newCount - oldCount) >= limit());
+        
+        emit countChanged(newCount);
         setStatus(Ready);
     }
 }

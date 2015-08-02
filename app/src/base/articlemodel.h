@@ -28,6 +28,7 @@ class ArticleModel : public QAbstractListModel
     
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY statusChanged)
+    Q_PROPERTY(int limit READ limit WRITE setLimit NOTIFY limitChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     
     Q_ENUMS(Status)
@@ -58,6 +59,9 @@ public:
     
     QString errorString() const;
     
+    int limit() const;
+    void setLimit(int l);
+    
     Status status() const;
     
 #if QT_VERSION >= 0x050000
@@ -65,6 +69,9 @@ public:
 #endif
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    
+    bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
+    void fetchMore(const QModelIndex &parent = QModelIndex());
     
     QVariant data(const QModelIndex &index, int role) const;
     Q_INVOKABLE QVariant data(int row, const QByteArray &role) const;
@@ -86,6 +93,8 @@ private:
     void setErrorString(const QString &e);
     
     void setStatus(Status s);
+    
+    void fetchArticles(const QString &query = QString());
 
 private Q_SLOTS:
     void onArticleChanged(Article *article);
@@ -97,14 +106,20 @@ private Q_SLOTS:
 
 Q_SIGNALS:
     void countChanged(int count);
+    void limitChanged(int limit);
     void statusChanged(Status status);
     
 private:
     QList<Article*> m_list;
     
     QHash<int, QByteArray> m_roles;
-    
+        
     QString m_errorString;
+    
+    int m_limit;
+    int m_offset;
+    bool m_insert;
+    bool m_moreResults;
     
     Status m_status;
     
