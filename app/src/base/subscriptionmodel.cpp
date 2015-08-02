@@ -138,6 +138,7 @@ int SubscriptionModel::match(const QByteArray &role, const QVariant &value) cons
 
 void SubscriptionModel::clear() {
     if (!m_list.isEmpty()) {
+        setStatus(Active);
         beginResetModel();
         qDeleteAll(m_list);
         m_list.clear();
