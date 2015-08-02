@@ -29,7 +29,7 @@ static const int ICON_SIZE = 48;
 
 static const QRegExp ILLEGAL_FILENAME_CHARS_RE("[\"\\/@&~=:?#!|<>*^]");
 
-static const QString VERSION_NUMBER("0.1.0");
+static const QString VERSION_NUMBER("0.1.1");
 
 static const QString DATABASE_PATH("/home/user/.config/cuteNews/");
 static const QString DOWNLOAD_PATH("/home/user/MyDocs/cuteNews/");
