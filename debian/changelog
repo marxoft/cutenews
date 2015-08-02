@@ -1,3 +1,11 @@
+cutenews (0.1.1) unstable; urgency=low
+
+  * Implement lazy loading of articles.
+  * URL opener fixes.
+  * UI tweaks.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sun, 02 Aug 2015 03:03:24 +0100
+
 cutenews (0.1.0) unstable; urgency=low
 
   * Add OSSO user interface.
