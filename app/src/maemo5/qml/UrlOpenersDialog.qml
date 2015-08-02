@@ -34,11 +34,9 @@ Dialog {
             top: parent.top
             bottom: parent.bottom
         }
-        model: UrlOpenerModel {
-            id: urlOpenerModel
-        }
+        model: urlopener
         delegate: UrlOpenerDelegate {
-            onClicked: dialogs.showUrlOpenerDialog(urlOpenerModel.itemData(index))
+            onClicked: dialogs.showUrlOpenerDialog(urlopener.itemData(index))
             onPressAndHold: contextMenu.popup()
         }
     }
@@ -48,7 +46,7 @@ Dialog {
         font.pointSize: platformStyle.fontSizeLarge
         color: platformStyle.secondaryTextColor
         text: qsTr("No URL openers")
-        visible: urlOpenerModel.count == 0
+        visible: urlopener.count == 0
     }
         
     Menu {
@@ -56,15 +54,12 @@ Dialog {
         
         MenuItem {
             text: qsTr("Edit")
-            onTriggered: dialogs.showUrlOpenerDialog(urlOpenerModel.itemData(view.currentIndex))
+            onTriggered: dialogs.showUrlOpenerDialog(urlopener.itemData(view.currentIndex))
         }
         
         MenuItem {
             text: qsTr("Delete")
-            onTriggered: {
-                urlopener.removeOpener(urlOpenerModel.data(view.currentIndex, "name"));
-                urlOpenerModel.reload();
-            }
+            onTriggered: urlopener.remove(view.currentIndex)
         }
     }
     
@@ -92,7 +87,7 @@ Dialog {
             
             if (opener) {
                 urlOpenerDialog.name = opener.name;
-                urlOpenerDialog.regExp = opener.value.regExp;
+                urlOpenerDialog.regExp = opener.value.regExp.source;
                 urlOpenerDialog.command = opener.value.command;
             }
             
@@ -103,8 +98,8 @@ Dialog {
     Component {
         id: urlOpenerDialogComponent
         
-        UrlOpenerDialog {
-            onAccepted: urlOpenerModel.reload()
-        }
+        UrlOpenerDialog {}
     }
+    
+    onStatusChanged: if (status == DialogStatus.Open) view.positionViewAtIndex(0, ListView.Beginning);
 }

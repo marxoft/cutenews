@@ -170,4 +170,6 @@ Dialog {
         
         UrlOpenersDialog {}
     }
+    
+    onStatusChanged: if (status == DialogStatus.Open) flickable.contentY = 0;
 }

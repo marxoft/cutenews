@@ -38,7 +38,7 @@ Item {
             
             onStatusChanged: if (status == SubscriptionModel.Error) informationBox.information(errorString);
         }
-        delegate: ListItem {            
+        delegate: ListItem {
             height: 32
             style: ListItemStyle {
                 background: ""
@@ -82,6 +82,7 @@ Item {
             onClicked: {
                 appWindow.windowTitle = "cuteNews - " + title;
                 searchField.clear();
+                subscriptionView.forceActiveFocus();
                 articleModel.load(id);
             }
             onPressAndHold: if (index > 1) subscriptionMenu.popup();
@@ -107,10 +108,11 @@ Item {
             top: parent.top
             bottom: toolBar.top
         }
-        cacheBuffer: height
+        cacheBuffer: height * 2
         model: ArticleModel {
             id: articleModel
             
+            limit: 5
             onStatusChanged: if (status == ArticleModel.Error) informationBox.information(errorString);
         }
         delegate: Item {
@@ -296,8 +298,9 @@ Item {
                 if (text) {
                     subscriptionView.currentIndex = 0;
                     appWindow.windowTitle = "cuteNews - " + qsTr("Search");
+                    subscriptionView.forceActiveFocus();
                     articleModel.search(text.substring(0, 6) == "WHERE " ? text
-                                        : "WHERE title LIKE '%" + text + "%' ORDER BY date");
+                                        : "WHERE title LIKE '%" + text + "%'");
                 }
                 else {
                     informationBox.information(qsTr("Enter keywords"));

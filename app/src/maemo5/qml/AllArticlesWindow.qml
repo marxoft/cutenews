@@ -52,6 +52,7 @@ Window {
         model: ArticleModel {
             id: articleModel
             
+            limit: 20
             onStatusChanged: if (status == ArticleModel.Error) informationBox.information(errorString);
         }
         delegate: ArticleDelegate {

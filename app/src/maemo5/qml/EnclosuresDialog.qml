@@ -31,7 +31,13 @@ Dialog {
         anchors.fill: parent
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
         delegate: EnclosureDelegate {
-            onClicked: if (!urlopener.open(modelData.url)) Qt.openUrlExternally(modelData.url);
+            onClicked: {
+                if (!urlopener.open(modelData.url)) {
+                    Qt.openUrlExternally(modelData.url);
+                }
+                
+                root.accept();
+            }
             onPressAndHold: contextMenu.popup()
         }
     }
@@ -61,4 +67,6 @@ Dialog {
             }
         }
     }
+    
+    onStatusChanged: if (status == DialogStatus.Open) view.positionViewAtIndex(0, ListView.Beginning);
 }

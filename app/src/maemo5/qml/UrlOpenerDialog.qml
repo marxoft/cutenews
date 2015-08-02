@@ -83,13 +83,19 @@ Dialog {
         text: qsTr("Done")
         enabled: (nameField.text != "") && (regexpField.text != "") && (commandField.text != "")
         onClicked: {
-            if (urlopener.addOpener(nameField.text, regexpField.text, commandField.text)) {
-                informationBox.information(qsTr("URL opener added"));
-                root.accept();
+            var i = urlopener.match("name", nameField.text);
+            
+            if (i >= 0) {
+                urlopener.setItemData(i, {value: {name: nameField.text, regExp: regexpField.text,
+                                          command: commandField.text}});
             }
             else {
-                informationBox.information(qsTr("Cannot add URL opener"));
+                urlopener.append(nameField.text, {name: nameField.text, regExp: regexpField.text,
+                                 command: commandField.text});
             }
+            
+            urlopener.save();
+            root.accept();
         }
     }
 

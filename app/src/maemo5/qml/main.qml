@@ -141,7 +141,7 @@ ApplicationWindow {
         SearchDialog {
             onAccepted: windowStack.push(Qt.resolvedUrl("SearchWindow.qml"), {title: qsTr("Search") + " - " + query,
                                          query: query.substring(0, 6) == "WHERE " ? query
-                                         : "WHERE title LIKE '%" + query + "%' ORDER BY date"})
+                                         : "WHERE title LIKE '%" + query + "%'"})
         }
     }
     

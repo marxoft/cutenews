@@ -134,4 +134,6 @@ Dialog {
             }
         }
     }
+    
+    onStatusChanged: if (status == DialogStatus.Open) flickable.contentY = 0;
 }

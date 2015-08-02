@@ -115,12 +115,13 @@ Dialog {
     }
     
     onStatusChanged: {
-        if (status == DialogStatus.Opening) {
+        if (status == DialogStatus.Open) {
             proxyCheckBox.checked = settings.networkProxyEnabled;
             hostField.text = settings.networkProxyHost;
             portField.value = settings.networkProxyPort;
             usernameField.text = settings.networkProxyUsername;
             passwordField.text = settings.networkProxyPassword;
+            flickable.contentY = 0;
         }
     }
     onAccepted: {
