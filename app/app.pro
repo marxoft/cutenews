@@ -43,21 +43,22 @@ SOURCES += \
 maemo5 {
     DEFINES += NO_SQLITE_FOREIGN_KEYS
     
-    QT += declarative
+    QT += declarative dbus
     
     INCLUDEPATH += src/maemo5
     
     HEADERS += \
         src/base/transfermodel.h \
+        src/maemo5/cutenews.h \
         src/maemo5/definitions.h \
         src/maemo5/userinterfacemodel.h
     
     SOURCES += \
         src/base/transfermodel.cpp \
+        src/maemo5/cutenews.cpp \
         src/maemo5/main.cpp
     
     qml.files += \
-        src/maemo5/qml/main.qml \
         src/maemo5/qml/AboutDialog.qml \
         src/maemo5/qml/AllArticlesWindow.qml \
         src/maemo5/qml/ArticleDelegate.qml \
@@ -69,6 +70,7 @@ maemo5 {
         src/maemo5/qml/EnclosureDelegate.qml \
         src/maemo5/qml/EnclosuresDialog.qml \
         src/maemo5/qml/FavouritesWindow.qml \
+        src/maemo5/qml/MainWindow.qml \
         src/maemo5/qml/NetworkProxyDialog.qml \
         src/maemo5/qml/OssoView.qml \
         src/maemo5/qml/SearchDialog.qml \
@@ -89,9 +91,15 @@ maemo5 {
     icon.files = desktop/maemo5/64/cutenews.png
     icon.path = /usr/share/icons/hicolor/64x64/apps
     
+    scripts.files = src/maemo5/scripts/showwindow
+    scripts.path = /opt/cutenews/bin
+    
+    dbus_service.files = dbus/org.marxoft.cutenews.service
+    dbus_service.path = /usr/share/dbus-1/services
+    
     target.path = /opt/cutenews/bin
     
-    INSTALLS += qml desktop icon   
+    INSTALLS += qml desktop icon scripts dbus_service
 }
 
 INSTALLS += target
