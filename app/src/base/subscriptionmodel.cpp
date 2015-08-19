@@ -20,6 +20,8 @@
 #include "subscription.h"
 #include <QSqlError>
 
+static const int REQUEST_ID = 1000;
+
 SubscriptionModel::SubscriptionModel(QObject *parent) :
     QAbstractListModel(parent),
     m_status(Idle)
@@ -40,10 +42,8 @@ SubscriptionModel::SubscriptionModel(QObject *parent) :
 #if QT_VERSION <= 0x050000
     setRoleNames(m_roles);
 #endif
-    connect(Database::instance(), SIGNAL(subscriptionAdded(int)), this, SLOT(onSubscriptionAdded(int)));
+    connect(Database::instance(), SIGNAL(subscriptionsAdded(int)), this, SLOT(onSubscriptionsAdded(int)));
     connect(Database::instance(), SIGNAL(subscriptionDeleted(int)), this, SLOT(onSubscriptionDeleted(int)));
-    connect(Database::instance(), SIGNAL(subscriptionsFetched(QSqlQuery, int)),
-            this, SLOT(onSubscriptionsFetched(QSqlQuery, int)));
 }
 
 QString SubscriptionModel::errorString() const {
@@ -158,7 +158,9 @@ void SubscriptionModel::load() {
     endInsertRows();
     emit countChanged(rowCount());
     setStatus(Active);
-    Database::fetchSubscriptions(-1);
+    connect(Database::instance(), SIGNAL(subscriptionsFetched(QSqlQuery, int)),
+            this, SLOT(onSubscriptionsFetched(QSqlQuery, int)));
+    Database::fetchSubscriptions(REQUEST_ID);
 }
 
 void SubscriptionModel::onSubscriptionChanged(Subscription *subscription) {
@@ -170,10 +172,12 @@ void SubscriptionModel::onSubscriptionChanged(Subscription *subscription) {
     }
 }
 
-void SubscriptionModel::onSubscriptionAdded(int id) {
+void SubscriptionModel::onSubscriptionsAdded(int count) {
     if (status() == Ready) {
         setStatus(Active);
-        Database::fetchSubscriptions("WHERE subscriptions.id = " + QString::number(id), -1);
+        connect(Database::instance(), SIGNAL(subscriptionsFetched(QSqlQuery, int)),
+                this, SLOT(onSubscriptionsFetched(QSqlQuery, int)));
+        Database::fetchSubscriptions(QString("ORDER BY id DESC LIMIT %1").arg(count), REQUEST_ID);
     }
 }
 
@@ -190,7 +194,10 @@ void SubscriptionModel::onSubscriptionDeleted(int id) {
 }
 
 void SubscriptionModel::onSubscriptionsFetched(QSqlQuery query, int requestId) {
-    if (requestId == -1) {
+    if (requestId == REQUEST_ID) {
+        disconnect(Database::instance(), SIGNAL(subscriptionsFetched(QSqlQuery, int)),
+                   this, SLOT(onSubscriptionsFetched(QSqlQuery, int)));
+        
         if (query.lastError().isValid()) {
             setErrorString(query.lastError().text());
             setStatus(Error);

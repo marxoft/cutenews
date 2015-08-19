@@ -89,7 +89,7 @@ private:
 
 private Q_SLOTS:
     void onSubscriptionChanged(Subscription *subscription);
-    void onSubscriptionAdded(int id);
+    void onSubscriptionsAdded(int count);
     void onSubscriptionDeleted(int id);
     void onSubscriptionsFetched(QSqlQuery query, int requestId);
 
