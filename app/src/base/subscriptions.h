@@ -58,7 +58,12 @@ public:
 
 public Q_SLOTS:
     void cancel();
+    
+    bool create(const QString &source, int sourceType, bool downloadEnclosures = false);
+    bool importFromOpml(const QString &fileName, bool downloadEnclosures = false);
+    
     void update(int id);
+    void updateAll();
     
 private:
     void setProgress(int p);
@@ -79,7 +84,9 @@ private Q_SLOTS:
     void onProcessError();
     void onProcessFinished(int exitCode);
     
+    void onSubscriptionsAdded(int count);
     void onSubscriptionFetched(const QSqlQuery &query, int requestId);
+    void onSubscriptionIdsFetched(QSqlQuery query, int requestId);
 
 Q_SIGNALS:
     void activeSubscriptionChanged(int subscriptionId);

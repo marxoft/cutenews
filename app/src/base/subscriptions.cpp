@@ -47,9 +47,7 @@ Subscriptions::Subscriptions() :
     m_status(Idle),
     m_total(0)
 {
-    connect(Database::instance(), SIGNAL(subscriptionAdded(int)), this, SLOT(update(int)));
-    connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
-            this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
+    connect(Database::instance(), SIGNAL(subscriptionsAdded(int)), this, SLOT(onSubscriptionsAdded(int)));
 }
 
 Subscriptions::~Subscriptions() {
@@ -107,6 +105,10 @@ void Subscriptions::setStatusText(const QString &t) {
 }
 
 void Subscriptions::cancel() {
+    if (status() != Active) {
+        return;
+    }
+    
     m_queue.clear();
     
     if (m_xmlDownload) {
@@ -121,6 +123,76 @@ void Subscriptions::cancel() {
     setStatus(Canceled);
 }
 
+bool Subscriptions::create(const QString &source, int sourceType, bool downloadEnclosures) {
+#ifdef CUTENEWS_DEBUG
+    qDebug() << "Subscriptions::create" << source << sourceType << downloadEnclosures;
+#endif
+    return Database::addSubscription(QVariantList() << QVariant(QVariant::Int) << 0 << QString()
+                                                    << (downloadEnclosures ? 1 : 0) << QString() << QString() << source
+                                                    << sourceType << tr("New subscription") << 0 << QString());
+}
+
+bool Subscriptions::importFromOpml(const QString &fileName, bool downloadEnclosures) {
+#ifdef CUTENEWS_DEBUG
+    qDebug() << "Subscriptions::importFromOpml" << fileName << downloadEnclosures;
+#endif
+    QFile file(fileName);
+    
+    if (!file.open(QFile::ReadOnly)) {
+        setStatusText(tr("Unable to open file %1").arg(fileName));
+        setStatus(Error);
+        return false;
+    }
+    
+    QDomDocument doc;
+    
+    if (!doc.setContent(&file)) {
+        setStatusText(tr("Error parsing XML from %1").arg(fileName));
+        setStatus(Error);
+        return false;
+    }
+    
+    QDomNodeList items = doc.firstChildElement("opml").firstChildElement("body").elementsByTagName("outline");
+    
+    if (items.isEmpty()) {
+        return false;
+    }
+    
+    QVariantList ids;
+    QVariantList cacheSizes;
+    QVariantList descriptions;
+    QVariantList downloads;
+    QVariantList icons;
+    QVariantList dates;
+    QVariantList sources;
+    QVariantList sourceTypes;
+    QVariantList titles;
+    QVariantList intervals;
+    QVariantList urls;
+    
+    for (int i = 0; i < items.size(); i++) {
+        const QString source = items.at(i).toElement().attribute("xmlUrl");
+        
+        if (!source.isEmpty()) {
+            ids << QVariant(QVariant::Int);
+            cacheSizes << 0;
+            descriptions << QString();
+            downloads << (downloadEnclosures ? 1 : 0);
+            icons << QString();
+            dates << QString();
+            sources << source;
+            sourceTypes << Subscription::Url;
+            titles << tr("New subscription");
+            intervals << 0;
+            urls << QString();            
+        }
+    }
+
+    return (!ids.isEmpty()) && (Database::addSubscriptions(QList<QVariantList>() << ids << cacheSizes << descriptions
+                                                           << downloads << icons << dates << sources << sourceTypes
+                                                           << titles << intervals << urls));
+}
+
 void Subscriptions::update(int id) {
 #ifdef CUTENEWS_DEBUG
     qDebug() << "Subscriptions::update" << id;
@@ -130,6 +202,17 @@ void Subscriptions::update(int id) {
     
     if (status() != Active) {
         next();
+    }
+}
+
+void Subscriptions::updateAll() {
+#ifdef CUTENEWS_DEBUG
+    qDebug() << "Subscriptions::updateAll";
+#endif
+    if (status() != Active) {
+        connect(Database::instance(), SIGNAL(queryReady(QSqlQuery, int)),
+                this, SLOT(onSubscriptionIdsFetched(QSqlQuery, int)));
+        Database::execQuery(QString("SELECT id FROM subscriptions"), REQUEST_ID);
     }
 }
 
@@ -147,6 +230,8 @@ void Subscriptions::next() {
     }
     
     setStatus(Active);
+    connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
+            this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
     Database::fetchSubscription(m_queue.dequeue(), REQUEST_ID);
 }
 
@@ -484,13 +569,37 @@ void Subscriptions::onProcessFinished(int exitCode) {
     next();
 }
 
+void Subscriptions::onSubscriptionsAdded(int count) {
+    if (status() != Active) {
+        connect(Database::instance(), SIGNAL(queryReady(QSqlQuery, int)),
+                this, SLOT(onSubscriptionIdsFetched(QSqlQuery, int)));
+        Database::execQuery(QString("SELECT id FROM subscriptions ORDER BY id DESC LIMIT %1").arg(count), REQUEST_ID);
+    }
+}
+
 void Subscriptions::onSubscriptionFetched(const QSqlQuery &query, int requestId) {
     if (requestId == REQUEST_ID) {
 #ifdef CUTENEWS_DEBUG
         qDebug() << "Subscriptions::onSubscriptionFetched" << Database::subscriptionId(query);
 #endif
+        disconnect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
+                   this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
         m_query = query;
         emit activeSubscriptionChanged(activeSubscription());
         update();
     }    
+}
+
+void Subscriptions::onSubscriptionIdsFetched(QSqlQuery query, int requestId) {
+    if (requestId == REQUEST_ID) {
+#ifdef CUTENEWS_DEBUG
+        qDebug() << "Subscriptions::onSubscriptionIdsFetched";
+#endif
+        disconnect(Database::instance(), SIGNAL(queryReady(QSqlQuery, int)),
+                   this, SLOT(onSubscriptionIdsFetched(QSqlQuery, int)));
+        
+        while (query.next()) {
+            update(Database::subscriptionId(query));
+        }
+    }
 }
