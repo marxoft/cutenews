@@ -1,3 +1,11 @@
+cutenews (0.2.2) unstable; urgency=low
+
+  * Add homescreen widget.
+  * Add OPML import.
+  * URL opener fixes.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Wed, 19 Aug 2015 01:28:31 +0100
+
 cutenews (0.1.1) unstable; urgency=low
 
   * Implement lazy loading of articles.
