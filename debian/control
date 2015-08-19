@@ -8,7 +8,7 @@ Homepage: https://github.com/marxoft/cutenews
 
 Package: cutenews
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, qt-components-hildon (>= 0.14.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, qt-components-hildon (>= 0.17.1), qt4-homescreen-loader
 Description: News/podcast aggregator
  cuteNews is a user-friendly news and podcast aggregator.
 XB-Maemo-Display-Name: cuteNews
