@@ -25,7 +25,6 @@ Article::Article(QObject *parent) :
     m_read(false),
     m_subscriptionId(-1)
 {
-    connect(Database::instance(), SIGNAL(articleFetched(QSqlQuery, int)), this, SLOT(onArticleFetched(QSqlQuery, int)));
     connect(Database::instance(), SIGNAL(articleFavourited(int, bool)), this, SLOT(onArticleFavourited(int, bool)));
     connect(Database::instance(), SIGNAL(articleRead(int, int, bool)), this, SLOT(onArticleRead(int, int, bool)));
     connect(Database::instance(), SIGNAL(subscriptionRead(int, bool)), this, SLOT(onSubscriptionRead(int, bool)));
@@ -45,7 +44,6 @@ Article::Article(const QSqlQuery &query, QObject *parent) :
     m_title(Database::articleTitle(query)),
     m_url(Database::articleUrl(query))
 {
-    connect(Database::instance(), SIGNAL(articleFetched(QSqlQuery, int)), this, SLOT(onArticleFetched(QSqlQuery, int)));
     connect(Database::instance(), SIGNAL(articleFavourited(int, bool)), this, SLOT(onArticleFavourited(int, bool)));
     connect(Database::instance(), SIGNAL(articleRead(int, int, bool)), this, SLOT(onArticleRead(int, int, bool)));
     connect(Database::instance(), SIGNAL(subscriptionRead(int, bool)), this, SLOT(onSubscriptionRead(int, bool)));
@@ -67,7 +65,6 @@ Article::Article(int id, const QString &author, const QString &body, const QStri
     m_title(title),
     m_url(url)
 {
-    connect(Database::instance(), SIGNAL(articleFetched(QSqlQuery, int)), this, SLOT(onArticleFetched(QSqlQuery, int)));
     connect(Database::instance(), SIGNAL(articleFavourited(int, bool)), this, SLOT(onArticleFavourited(int, bool)));
     connect(Database::instance(), SIGNAL(articleRead(int, int, bool)), this, SLOT(onArticleRead(int, int, bool)));
     connect(Database::instance(), SIGNAL(subscriptionRead(int, bool)), this, SLOT(onSubscriptionRead(int, bool)));
@@ -202,11 +199,15 @@ void Article::setUrl(const QUrl &u) {
 
 void Article::load(int id) {
     setId(id);
+    connect(Database::instance(), SIGNAL(articleFetched(QSqlQuery, int)), this, SLOT(onArticleFetched(QSqlQuery, int)));
     Database::fetchArticle(id, id);
 }
 
 void Article::onArticleFetched(const QSqlQuery &query, int requestId) {
     if (requestId == id()) {
+        disconnect(Database::instance(), SIGNAL(articleFetched(QSqlQuery, int)),
+                   this, SLOT(onArticleFetched(QSqlQuery, int)));
+        
         setAuthor(Database::articleAuthor(query));
         setBody(Database::articleBody(query));
         setCategories(Database::articleCategories(query));
