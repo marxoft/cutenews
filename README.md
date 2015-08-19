@@ -7,6 +7,7 @@ Features include:
     * Choice of 'OSSO' and 'Touch' user interfaces.
     * Choice of 'Dark on light' or 'Light on dark' reading modes.
     * Choice of URL, local file or custom command for subscription sources.
+    * Import subscriptions via OPML.
     * Search articles using keywords or SQLite WHERE query.
     * Option to save articles as favourites.
     * Option to automatically download enclosures.
@@ -26,7 +27,7 @@ Custom URL openers can be managed either in the application, or by manually crea
 and a command that will be executed when a URL is activated:
 
     [My MP3 handler]
-    regExp=http(s|)://.+\\.mp3$
+    regExp=http(s|)://.+\.mp3$
     command=/usr/bin/mp3player
 
 Now, any link to an MP3 file will be opened using the specified command.
