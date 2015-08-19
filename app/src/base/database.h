@@ -19,9 +19,9 @@
 
 #include <QObject>
 #include <QVariantMap>
+#include <QSqlQuery>
 
 class QDateTime;
-class QSqlQuery;
 class QUrl;
 
 class Database : public QObject
@@ -64,6 +64,7 @@ public Q_SLOTS:
     static bool init();
     
     static bool addSubscription(const QVariantList &properties);
+    static bool addSubscriptions(const QList<QVariantList> &subscriptions);
     static bool deleteSubscription(int id);
     static bool updateSubscription(int id, const QVariantMap &properties);
     static bool markSubscriptionRead(int id, bool isRead);
@@ -81,9 +82,12 @@ public Q_SLOTS:
     static bool fetchArticle(int articleId, int requestId);
     static bool fetchArticles(int requestId);
     static bool fetchArticles(const QString &criteria, int requestId);
+    
+    static bool execQuery(const QString &statement, int requestId);
 
 private Q_SLOTS:
     void _p_addSubscription(const QVariantList &properties);
+    void _p_addSubscriptions(const QList<QVariantList> &subscriptions);
     void _p_deleteSubscription(int id);
     void _p_updateSubscription(int id, const QVariantMap &properties);
     void _p_markSubscriptionRead(int id, bool isRead);
@@ -102,8 +106,10 @@ private Q_SLOTS:
     void _p_fetchArticles(int requestId);
     void _p_fetchArticles(const QString &criteria, int requestId);
     
+    void _p_execQuery(const QString &statement, int requestId);
+    
 Q_SIGNALS:
-    void subscriptionAdded(int id);
+    void subscriptionsAdded(int count);
     void subscriptionDeleted(int id);
     void subscriptionUpdated(int id);
     void subscriptionRead(int id, bool isRead);
@@ -118,6 +124,8 @@ Q_SIGNALS:
     
     void articleFetched(const QSqlQuery &query, int requestId);
     void articlesFetched(const QSqlQuery &query, int requestId);
+    
+    void queryReady(const QSqlQuery &query, int requestId);
     
     void error(const QString &errorString);
 

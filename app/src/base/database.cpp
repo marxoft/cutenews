@@ -199,6 +199,11 @@ bool Database::addSubscription(const QVariantList &properties) {
                                      Q_ARG(QVariantList, properties));
 }
 
+bool Database::addSubscriptions(const QList<QVariantList> &subscriptions) {
+    return QMetaObject::invokeMethod(instance(), "_p_addSubscriptions", Qt::QueuedConnection,
+                                     Q_ARG(QList<QVariantList>, subscriptions));
+}
+
 bool Database::deleteSubscription(int id) {
     return QMetaObject::invokeMethod(instance(), "_p_deleteSubscription", Qt::QueuedConnection, Q_ARG(int, id));
 }
@@ -265,6 +270,11 @@ bool Database::fetchArticles(const QString &criteria, int requestId) {
                                      Q_ARG(QString, criteria), Q_ARG(int, requestId));
 }
 
+bool Database::execQuery(const QString &statement, int requestId) {
+    return QMetaObject::invokeMethod(instance(), "_p_execQuery", Qt::QueuedConnection, Q_ARG(QString, statement),
+                                     Q_ARG(int, requestId));
+}
+
 void Database::_p_addSubscription(const QVariantList &properties) {
     QSqlQuery query(getDatabase());
     query.prepare("INSERT INTO subscriptions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -275,8 +285,26 @@ void Database::_p_addSubscription(const QVariantList &properties) {
 #ifdef CUTENEWS_DEBUG
     qDebug() << "Database::_p_addSubscription" << query.boundValues();
 #endif
-    if ((query.exec()) && (query.exec("SELECT last_insert_rowid() FROM subscriptions")) && (query.next())) {
-        emit subscriptionAdded(query.value(0).toInt());
+    if (query.exec()) {
+        emit subscriptionsAdded(1);
+    }
+    else {
+        emit error(query.lastError().text());
+    }
+}
+
+void Database::_p_addSubscriptions(const QList<QVariantList> &subscriptions) {
+    QSqlQuery query(getDatabase());
+    query.prepare("INSERT INTO subscriptions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    
+    foreach (QVariantList subscription, subscriptions) {
+        query.addBindValue(subscription);
+    }
+#ifdef CUTENEWS_DEBUG
+    qDebug() << "Database::_p_addSubscriptions" << query.boundValues();
+#endif
+    if (query.execBatch()) {
+        emit subscriptionsAdded(subscriptions.first().size());
     }
     else {
         emit error(query.lastError().text());
@@ -382,8 +410,7 @@ void Database::_p_fetchSubscriptions(int requestId) {
 void Database::_p_fetchSubscriptions(const QString &criteria, int requestId) {
     QSqlQuery query(getDatabase());
     QString statement(QString("SELECT subscriptions.*, COUNT(articles.id) FROM subscriptions LEFT JOIN articles ON \
-    subscriptions.id = articles.subscriptionId AND articles.isRead = 0 %1 \
-    GROUP BY subscriptions.id").arg(criteria));
+    subscriptions.id = articles.subscriptionId AND articles.isRead = 0 GROUP BY subscriptions.id %1").arg(criteria));
 #ifdef CUTENEWS_DEBUG
     qDebug() << "Database::_p_fetchSubscriptions:" << statement;
 #endif
@@ -511,4 +538,10 @@ void Database::_p_fetchArticles(const QString &criteria, int requestId) {
 #endif    
     query.exec(statement);
     emit articlesFetched(query, requestId);
+}
+
+void Database::_p_execQuery(const QString &statement, int requestId) {
+    QSqlQuery query(getDatabase());
+    query.exec(statement);
+    emit queryReady(query, requestId);
 }
