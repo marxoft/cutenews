@@ -21,6 +21,14 @@ import cuteNews 1.0
 Item {
     id: root
     
+    function showArticle(articleId) {
+        windowStack.clear();
+        windowStack.push(Qt.resolvedUrl("ArticleWindow.qml"));
+        var article = Qt.createQmlObject("import cuteNews 1.0; Article {}", windowStack.currentWindow);
+        article.load(articleId);
+        windowStack.currentWindow.article = article;
+    }
+    
     anchors.fill: parent
     
     Button {
@@ -50,14 +58,9 @@ Item {
             top: parent.top
             topMargin: platformStyle.paddingMedium
         }
-        text: qsTr("Update all")
-        iconName: "general_refresh"
-        enabled: (subscriptionModel.count > 0) && (subscriptions.status != Subscriptions.Active)
-        onClicked: {
-            for (var i = 2; i < subscriptionModel.count; i++) {
-                subscriptions.update(subscriptionModel.data(i, "id"));
-            }
-        }
+        text: subscriptions.status == Subscriptions.Active ? qsTr("Cancel update") : qsTr("Update all")
+        iconName: subscriptions.status == Subscriptions.Active ? "general_stop" : "general_refresh"
+        onClicked: subscriptions.status == Subscriptions.Active ? subscriptions.cancel() : subscriptions.updateAll()
     }
     
     ListView {
@@ -119,9 +122,13 @@ Item {
         }
     }
     
+    Connections {
+        target: cutenews
+        onArticleRequested: showArticle(articleId)
+    }
+    
     Component.onCompleted: {
         appWindow.title = "cuteNews";
-        database.init();
         subscriptionModel.load();
     }
 }

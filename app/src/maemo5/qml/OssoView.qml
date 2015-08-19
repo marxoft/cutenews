@@ -21,6 +21,13 @@ import cuteNews 1.0
 Item {
     id: root
     
+    function showArticle(articleId) {
+        subscriptionView.currentIndex = 0;
+        appWindow.windowTitle = "cuteNews";
+        subscriptionView.forceActiveFocus();
+        articleModel.search("WHERE id = " + articleId);
+    }
+    
     anchors.fill: parent
     
     ListView {
@@ -207,6 +214,8 @@ Item {
                     color: platformStyle.secondaryTextColor
                 }
             }
+            
+            Component.onCompleted: if (!read) database.markArticleRead(id, true);
         }
         
         Rectangle {
@@ -247,13 +256,8 @@ Item {
         ToolButton {
             id: updateButton
             
-            iconName: "general_refresh"
-            enabled: (subscriptionModel.count > 0) && (subscriptions.status != Subscriptions.Active)
-            onClicked: {
-                for (var i = 2; i < subscriptionModel.count; i++) {
-                    subscriptions.update(subscriptionModel.data(i, "id"));
-                }
-            }
+            iconName: subscriptions.status == Subscriptions.Active ? "general_stop" : "general_refresh"
+            onClicked: subscriptions.status == Subscriptions.Active ? subscriptions.cancel() : subscriptions.updateAll()
         }
         
         ToolButton {
@@ -294,6 +298,7 @@ Item {
             id: searchField
             
             width: parent.width - 420
+            placeholderText: qsTr("Search")
             onAccepted: {
                 if (text) {
                     subscriptionView.currentIndex = 0;
@@ -316,8 +321,12 @@ Item {
         }
     }
     
+    Connections {
+        target: cutenews
+        onArticleRequested: showArticle(articleId)
+    }
+    
     Component.onCompleted: {
-        database.init();
         subscriptionModel.load();
         subscriptionView.forceActiveFocus();
     }

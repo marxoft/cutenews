@@ -22,7 +22,8 @@ Window {
     id: root
     
     property string query
-        
+    
+    title: qsTr("Search")
     showProgressIndicator: (articleModel.status == ArticleModel.Active)
                            || (subscriptions.status == Subscriptions.Active)
     

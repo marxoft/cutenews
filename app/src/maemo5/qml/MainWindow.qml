@@ -20,11 +20,16 @@ import cuteNews 1.0
 
 ApplicationWindow {
     id: appWindow
-    
+        
     visible: true
     title: "cuteNews"
     showProgressIndicator: subscriptions.status == Subscriptions.Active
     menuBar: MenuBar {
+        MenuItem {
+            text: qsTr("Import from OPML")
+            onTriggered: dialogs.showImportDialog()
+        }
+        
         MenuItem {
             text: qsTr("Downloads") + " (" + downloads.count + ")"
             onTriggered: windowStack.push(Qt.resolvedUrl("DownloadsWindow.qml"))
@@ -90,10 +95,19 @@ ApplicationWindow {
     QtObject {
         id: dialogs
         
+        property FileDialog importDialog
         property SubscriptionDialog subscriptionDialog
         property SearchDialog searchDialog
         property SettingsDialog settingsDialog
         property AboutDialog aboutDialog
+        
+        function showImportDialog() {
+            if (!importDialog) {
+                importDialog = importDialogComponent.createObject(appWindow);
+            }
+            
+            importDialog.open();
+        }
         
         function showSubscriptionDialog(subscriptionId) {
             if (!subscriptionDialog) {
@@ -130,6 +144,15 @@ ApplicationWindow {
     }
     
     Component {
+        id: importDialogComponent
+        
+        FileDialog {
+            nameFilters: ["*.opml"]
+            onAccepted: subscriptions.importFromOpml(filePath)
+        }
+    }
+    
+    Component {
         id: subscriptionDialogComponent
         
         SubscriptionDialog {}
@@ -158,14 +181,15 @@ ApplicationWindow {
     }
     
     Connections {
+        target: database
+        onError: informationBox.information(qsTr("Database error") + ": " + errorString)
+    }
+    
+    Connections {
         target: settings
         onUserInterfaceChanged: loader.loadUi()
     }
     
-    Component.onCompleted: {
-        loader.loadUi();
-        urlopener.load();
-        downloads.load();
-    }
+    Component.onCompleted: loader.loadUi();
 }
                 

@@ -23,6 +23,7 @@ Window {
     
     property int subscriptionId
     
+    title: qsTr("Articles")
     showProgressIndicator: (articleModel.status == ArticleModel.Active)
                            || (subscriptions.status == Subscriptions.Active)
     menuBar: MenuBar {

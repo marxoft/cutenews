@@ -59,7 +59,10 @@ Dialog {
         
         MenuItem {
             text: qsTr("Delete")
-            onTriggered: urlopener.remove(view.currentIndex)
+            onTriggered: {
+                urlopener.remove(view.currentIndex);
+                urlopener.save();
+            }
         }
     }
     
@@ -87,7 +90,7 @@ Dialog {
             
             if (opener) {
                 urlOpenerDialog.name = opener.name;
-                urlOpenerDialog.regExp = opener.value.regExp.source;
+                urlOpenerDialog.regExp = opener.value.regExp;
                 urlOpenerDialog.command = opener.value.command;
             }
             

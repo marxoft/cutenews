@@ -87,9 +87,9 @@ Window {
             wrapMode: Text.Wrap
             textFormat: Text.RichText
             color: platformStyle.reversedTextColor
-            text: article == null ? "" : qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown"))
-                  + "<br>" + qsTr("Date") + ": " + Qt.formatDateTime(article.date, "dd/MM/yyyy HH:mm") + "<br>"
-                  + qsTr("Categories") + ": " + article.categories.join(", ") + "<br><br>" + article.body
+            text: article == null ? "" : qsTr("Author") + ": " + article.author + "<br>" + qsTr("Date") + ": "
+                  + Qt.formatDateTime(article.date, "dd/MM/yyyy HH:mm") + "<br>" + qsTr("Categories") + ": "
+                  + article.categories.join(", ") + "<br><br>" + article.body
             
             onLinkActivated: if (!urlopener.open(link)) Qt.openUrlExternally(link);
         }

@@ -145,9 +145,8 @@ Dialog {
              downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0});
         }
         else {
-            database.addSubscription([subscriptionId > 0 ? subscriptionId : null, 0, "",
-            enclosuresCheckBox.checked ? 1 : 0, "", "", sourceField.text,
-            sourceTypeModel.data(sourceTypeSelector.currentIndex, "value"), qsTr("New subscription"), 0, ""]);
+            subscriptions.create(sourceField.text, sourceTypeModel.data(sourceTypeSelector.currentIndex, "value"),
+                                 enclosuresCheckBox.checked);
         }
         
         sourceField.clear();

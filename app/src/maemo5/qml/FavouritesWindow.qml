@@ -20,7 +20,8 @@ import cuteNews 1.0
 
 Window {
     id: root
-        
+    
+    title: qsTr("Favourites")
     showProgressIndicator: (articleModel.status == ArticleModel.Active)
                            || (subscriptions.status == Subscriptions.Active)
     

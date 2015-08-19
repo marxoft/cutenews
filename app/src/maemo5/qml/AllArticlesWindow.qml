@@ -20,17 +20,14 @@ import cuteNews 1.0
 
 Window {
     id: root
-        
+    
+    title: qsTr("Articles")
     showProgressIndicator: (articleModel.status == ArticleModel.Active)
                            || (subscriptions.status == Subscriptions.Active)
     menuBar: MenuBar {
         MenuItem {
             text: qsTr("Update")
-            onTriggered: {
-                for (var i = 2; i < subscriptionModel.count; i++) {
-                    subscriptions.update(subscriptionModel.data(i, "id"));
-                }
-            }
+            onTriggered: subscriptions.updateAll()
         }
         
         MenuItem {
