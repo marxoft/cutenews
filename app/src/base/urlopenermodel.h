@@ -26,7 +26,7 @@ class UrlOpenerModel : public SelectionModel
 public:
     explicit UrlOpenerModel(QObject *parent = 0);
         
-public Q_SLOTS:
+public Q_SLOTS:    
     bool open(const QString &url);
     
     void load();

@@ -28,7 +28,7 @@ class Opener : public QVariantMap
 {
 
 public:
-    Opener(const QString &name, const QRegExp &regExp, const QString &command) :
+    Opener(const QString &name, const QString &regExp, const QString &command) :
         QVariantMap()
     {
         insert("name", name);
@@ -46,7 +46,7 @@ bool UrlOpenerModel::open(const QString &url) {
     for (int i = 0; i < rowCount(); i++) {
         QVariantMap opener = data(i, "value").toMap();
         
-        if (opener.value("regExp").toRegExp().indexIn(url) == 0) {
+        if (QRegExp(opener.value("regExp").toString()).indexIn(url) == 0) {
             QString command = opener.value("command").toString().replace("%URL%", url);
 #ifdef CUTENEWS_DEBUG
             qDebug() << "UrlOpener::open: Opening" << url << "with command" << command;
@@ -69,18 +69,18 @@ void UrlOpenerModel::load() {
 
     foreach (QString group, settings.childGroups()) {
         settings.beginGroup(group);
-        QRegExp regExp(settings.value("regExp").toString());
+        QString regExp(settings.value("regExp").toString());
         QString command(settings.value("command").toString());
 
-        if ((regExp.isValid()) && (!command.isEmpty())) {
+        if ((!regExp.isEmpty()) && (!command.isEmpty())) {
             append(group, Opener(group, regExp, command));
 #ifdef CUTENEWS_DEBUG
-            qDebug() << "UrlOpenerModel::load: Opener added" << group << regExp.pattern() << command;
+            qDebug() << "UrlOpenerModel::load: Opener added" << group << regExp << command;
 #endif
         }
 #ifdef CUTENEWS_DEBUG
         else {
-            qDebug() << "UrlOpenerModel::load: Cannot add opener" << group << regExp.pattern() << command;
+            qDebug() << "UrlOpenerModel::load: Cannot add opener" << group << regExp << command;
         }
 #endif
         settings.endGroup();
@@ -88,15 +88,10 @@ void UrlOpenerModel::load() {
 }
 
 void UrlOpenerModel::save() {
-    const int count = rowCount();
-    
-    if (!count) {
-        return;
-    }
-    
     QSettings settings(STORAGE_PATH + "urlopeners", QSettings::NativeFormat);
+    settings.clear();
     
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < rowCount(); i++) {
         const QString name = data(i, "name").toString();
         const QVariantMap opener = data(i, "value").toMap();
         
