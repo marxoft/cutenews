@@ -109,7 +109,7 @@ Q_SIGNALS:
     void limitChanged(int limit);
     void statusChanged(Status status);
     
-private:
+private:    
     QList<Article*> m_list;
     
     QHash<int, QByteArray> m_roles;
