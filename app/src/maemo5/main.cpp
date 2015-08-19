@@ -16,6 +16,7 @@
 
 #include "article.h"
 #include "articlemodel.h"
+#include "cutenews.h"
 #include "database.h"
 #include "definitions.h"
 #include "networkproxytypemodel.h"
@@ -39,7 +40,6 @@
 #include <QDeclarativeComponent>
 #include <QDeclarativeContext>
 #include <qdeclarative.h>
-#include <QDebug>
 
 void registerTypes() {
     qRegisterMetaType<QSqlQuery>("QSqlQuery");
@@ -71,19 +71,26 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     QScopedPointer<Settings> settings(Settings::instance());
     QScopedPointer<Subscriptions> subscriptions(Subscriptions::instance());
     QScopedPointer<Transfers> transfers(Transfers::instance());
+    
     UrlOpenerModel urlopener;
     Utils utils;
+    
+    Database::init();
+    Transfers::instance()->load();
+    Settings::instance()->setNetworkProxy();
+    urlopener.load();
     
     QThread thread;
     Database::instance()->moveToThread(&thread);
     thread.start();
     
-    Settings::instance()->setNetworkProxy();
-    
     registerTypes();
     
     QDeclarativeEngine engine;
+    CuteNews cutenews(&engine);
+    
     QDeclarativeContext *context = engine.rootContext();
+    context->setContextProperty("cutenews", &cutenews);
     context->setContextProperty("database", Database::instance());
     context->setContextProperty("downloads", Transfers::instance());
     context->setContextProperty("settings", Settings::instance());
@@ -94,19 +101,18 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     context->setContextProperty("FAVOURITES_SUBSCRIPTION_ID", FAVOURITES_SUBSCRIPTION_ID);
     context->setContextProperty("VERSION_NUMBER", VERSION_NUMBER);
     
-    QDeclarativeComponent component(&engine, "/opt/cutenews/qml/main.qml");
-    component.create();
-    
-    if (component.isError()) {
-        foreach (QDeclarativeError error, component.errors()) {
-            qWarning() << error.toString();
-        }
-        
-        return 0;
-    }
-    
     QObject::connect(&app, SIGNAL(aboutToQuit()), &thread, SLOT(quit()));
     QObject::connect(&app, SIGNAL(aboutToQuit()), Transfers::instance(), SLOT(save()));
+    
+    const QStringList args = app.arguments();
+    
+    if (args.contains("--window")) {
+        cutenews.showWindow();
+    }
+    
+    if (args.contains("--widget")) {
+        cutenews.showWidget();
+    }
     
     return app.exec();
 }
