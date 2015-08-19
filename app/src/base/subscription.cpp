@@ -54,8 +54,6 @@ Subscription::Subscription(const QSqlQuery &query, QObject *parent) :
     connect(Database::instance(), SIGNAL(articlesAdded(int, int)), this, SLOT(onArticlesAdded(int, int)));
     connect(Database::instance(), SIGNAL(articleDeleted(int, int)), this, SLOT(onArticleDeleted(int, int)));
     connect(Database::instance(), SIGNAL(articleRead(int, int, bool)), this, SLOT(onArticleRead(int, int, bool)));
-    connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
-            this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
     connect(Database::instance(), SIGNAL(subscriptionRead(int, bool)), this, SLOT(onSubscriptionRead(int, bool)));
     connect(Database::instance(), SIGNAL(subscriptionUpdated(int)), this, SLOT(onSubscriptionUpdated(int)));
 }
@@ -81,8 +79,6 @@ Subscription::Subscription(int id, int cacheSize, const QString &description, bo
     connect(Database::instance(), SIGNAL(articlesAdded(int, int)), this, SLOT(onArticlesAdded(int, int)));
     connect(Database::instance(), SIGNAL(articleDeleted(int, int)), this, SLOT(onArticleDeleted(int, int)));
     connect(Database::instance(), SIGNAL(articleRead(int, int, bool)), this, SLOT(onArticleRead(int, int, bool)));
-    connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
-            this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
     connect(Database::instance(), SIGNAL(subscriptionRead(int, bool)), this, SLOT(onSubscriptionRead(int, bool)));
     connect(Database::instance(), SIGNAL(subscriptionUpdated(int)), this, SLOT(onSubscriptionUpdated(int)));
 }
@@ -237,6 +233,8 @@ void Subscription::setUnreadArticles(int u) {
 
 void Subscription::load(int id) {
     setId(id);
+    connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
+            this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
     Database::fetchSubscription(id, id);
 }
 
@@ -260,6 +258,9 @@ void Subscription::onArticleRead(int, int subscriptionId, bool isRead) {
 
 void Subscription::onSubscriptionFetched(const QSqlQuery &query, int requestId) {
     if (requestId == id()) {
+        disconnect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
+                   this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
+        
         setCacheSize(Database::subscriptionCacheSize(query)),
         setDescription(Database::subscriptionDescription(query));
         setDownloadEnclosures(Database::subscriptionDownloadEnclosures(query));
@@ -280,6 +281,8 @@ void Subscription::onSubscriptionRead(int subscriptionId, bool isRead) {
             setUnreadArticles(0);
         }
         else {
+            connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
+                    this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
             Database::fetchSubscription(subscriptionId, subscriptionId);
         }
     }
@@ -287,6 +290,8 @@ void Subscription::onSubscriptionRead(int subscriptionId, bool isRead) {
 
 void Subscription::onSubscriptionUpdated(int subscriptionId) {
     if (subscriptionId == id()) {
+        connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
+                this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
         Database::fetchSubscription(subscriptionId, subscriptionId);
     }
 }
