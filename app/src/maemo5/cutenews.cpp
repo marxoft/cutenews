@@ -86,7 +86,13 @@ QObject* CuteNews::createQmlObject(const QString &fileName) {
             context->setParent(obj);
             return obj;
         }
-        
+#ifdef CUTENEWS_DEBUG
+        if (component->isError()) {
+            foreach (QDeclarativeError error, component->errors()) {
+                qDebug() << error.toString();
+            }        
+        }
+#endif
         delete component;
         delete context;
     }
