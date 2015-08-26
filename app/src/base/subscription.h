@@ -20,6 +20,7 @@
 #include <QObject>
 #include <QDateTime>
 #include <QUrl>
+#include <QVariant>
 
 class QSqlQuery;
 
@@ -31,30 +32,40 @@ class Subscription : public QObject
     Q_PROPERTY(int cacheSize READ cacheSize NOTIFY cacheSizeChanged)
     Q_PROPERTY(QString description READ description NOTIFY descriptionChanged)
     Q_PROPERTY(bool downloadEnclosures READ downloadEnclosures NOTIFY downloadEnclosuresChanged)
+    Q_PROPERTY(QString errorString READ errorString NOTIFY statusChanged)
     Q_PROPERTY(QString iconPath READ iconPath NOTIFY iconPathChanged)
     Q_PROPERTY(QDateTime lastUpdated READ lastUpdated NOTIFY lastUpdatedChanged)
     Q_PROPERTY(bool read READ isRead NOTIFY unreadArticlesChanged)
-    Q_PROPERTY(QString source READ source NOTIFY sourceChanged)
+    Q_PROPERTY(QVariant source READ source NOTIFY sourceChanged)
     Q_PROPERTY(SourceType sourceType READ sourceType NOTIFY sourceTypeChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString title READ title NOTIFY titleChanged)
     Q_PROPERTY(int updateInterval READ updateInterval NOTIFY updateIntervalChanged)
     Q_PROPERTY(QUrl url READ url NOTIFY urlChanged)
     Q_PROPERTY(int unreadArticles READ unreadArticles NOTIFY unreadArticlesChanged)
     
-    Q_ENUMS(SourceType)
+    Q_ENUMS(SourceType Status)
 
 public:
     enum SourceType {
         Url = 0,
         LocalFile,
         Command,
+        Plugin,
         None
+    };
+    
+    enum Status {
+        Idle = 0,
+        Active,
+        Ready,
+        Error
     };
     
     explicit Subscription(QObject *parent = 0);
     explicit Subscription(const QSqlQuery &query, QObject *parent = 0);
     explicit Subscription(int id, int cacheSize, const QString &description, bool downloadEnclosures,
-                          const QString &iconPath, const QDateTime &lastUpdated, const QString &source,
+                          const QString &iconPath, const QDateTime &lastUpdated, const QVariant &source,
                           SourceType sourceType, const QString &title, int updateInterval, const QUrl &url,
                           int unreadArticles, QObject *parent = 0);
     
@@ -65,6 +76,8 @@ public:
     QString description() const;
     
     bool downloadEnclosures() const;
+    
+    QString errorString() const;
         
     QString iconPath() const;
     
@@ -72,8 +85,10 @@ public:
     
     bool isRead() const;
     
-    QString source() const;
+    QVariant source() const;
     SourceType sourceType() const;
+    
+    Status status() const;
     
     QString title() const;
         
@@ -103,12 +118,16 @@ private:
     
     void setDownloadEnclosures(bool d);
     
+    void setErrorString(const QString &e);
+    
     void setIconPath(const QString &p);
     
     void setLastUpdated(const QDateTime &d);
     
-    void setSource(const QString &s);
+    void setSource(const QVariant &s);
     void setSourceType(SourceType t);
+    
+    void setStatus(Status s);
     
     void setTitle(const QString &t);
         
@@ -129,6 +148,7 @@ Q_SIGNALS:
     void readChanged();
     void sourceChanged();
     void sourceTypeChanged();
+    void statusChanged();
     void titleChanged();
     void updateIntervalChanged();
     void urlChanged();
@@ -142,14 +162,18 @@ private:
     QString m_description;
     
     bool m_downloadEnclosures;
+    
+    QString m_errorString;
         
     QString m_iconPath;
     
     QDateTime m_lastUpdated;
         
-    QString m_source;
+    QVariant m_source;
     
     SourceType m_sourceType;
+    
+    Status m_status;
 
     QString m_title;
         
