@@ -26,6 +26,8 @@ class Utils : public QObject
     
 public:
     explicit Utils(QObject *parent = 0);
+    
+    Q_INVOKABLE static int createId();
         
     Q_INVOKABLE static QString formatBytes(qint64 bytes);
     

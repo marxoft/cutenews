@@ -17,10 +17,21 @@
 #include "utils.h"
 #include <QRegExp>
 #include <QDir>
+#include <QDateTime>
+
+static bool RAND_SEEDED = false;
 
 Utils::Utils(QObject *parent) :
     QObject(parent)
 {
+}
+
+int Utils::createId() {
+    if (!RAND_SEEDED) {
+        qsrand(QDateTime::currentMSecsSinceEpoch());
+    }
+    
+    return qrand();
 }
 
 QString Utils::formatBytes(qint64 bytes) {
