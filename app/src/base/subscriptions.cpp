@@ -17,16 +17,17 @@
 #include "subscriptions.h"
 #include "database.h"
 #include "definitions.h"
+#include "feedparser.h"
 #include "json.h"
+#include "opmlparser.h"
 #include "settings.h"
 #include "subscription.h"
+#include "subscriptionplugins.h"
 #include "utils.h"
 #include "transfers.h"
 #include <QProcess>
 #include <QImage>
 #include <QDir>
-#include <QDomDocument>
-#include <QDomElement>
 #ifdef CUTENEWS_DEBUG
 #include <QDebug>
 #endif
@@ -137,24 +138,9 @@ bool Subscriptions::importFromOpml(const QString &fileName, bool downloadEnclosu
     qDebug() << "Subscriptions::importFromOpml" << fileName << downloadEnclosures;
 #endif
     QFile file(fileName);
+    OpmlParser parser(&file);
     
-    if (!file.open(QFile::ReadOnly)) {
-        setStatusText(tr("Unable to open file %1").arg(fileName));
-        setStatus(Error);
-        return false;
-    }
-    
-    QDomDocument doc;
-    
-    if (!doc.setContent(&file)) {
-        setStatusText(tr("Error parsing XML from %1").arg(fileName));
-        setStatus(Error);
-        return false;
-    }
-    
-    QDomNodeList items = doc.firstChildElement("opml").firstChildElement("body").elementsByTagName("outline");
-    
-    if (items.isEmpty()) {
+    if (!parser.readHead()) {
         return false;
     }
     
@@ -170,24 +156,22 @@ bool Subscriptions::importFromOpml(const QString &fileName, bool downloadEnclosu
     QVariantList intervals;
     QVariantList urls;
     
-    for (int i = 0; i < items.size(); i++) {
-        const QString source = items.at(i).toElement().attribute("xmlUrl");
-        
-        if (!source.isEmpty()) {
+    while (parser.readNextSubscription()) {
+        if (!parser.xmlUrl().isEmpty()) {
             ids << QVariant(QVariant::Int);
             cacheSizes << 0;
-            descriptions << QString();
+            descriptions << parser.description();
             downloads << (downloadEnclosures ? 1 : 0);
             icons << QString();
             dates << QString();
-            sources << source;
+            sources << parser.xmlUrl();
             sourceTypes << Subscription::Url;
-            titles << tr("New subscription");
+            titles << (parser.title().isEmpty() ? tr("New subscription") : parser.title());
             intervals << 0;
-            urls << QString();            
+            urls << parser.htmlUrl();
         }
     }
-
+    
     return (!ids.isEmpty()) && (Database::addSubscriptions(QList<QVariantList>() << ids << cacheSizes << descriptions
                                                            << downloads << icons << dates << sources << sourceTypes
                                                            << titles << intervals << urls));
@@ -236,225 +220,158 @@ void Subscriptions::next() {
 }
 
 void Subscriptions::update() {
-    const QString &source = Database::subscriptionSource(m_query);
+    const QVariant source = Database::subscriptionSource(m_query);
     const int sourceType = Database::subscriptionSourceType(m_query);
-    setStatusText(tr("Retrieving feed for %1").arg(source));
+    setStatusText(tr("Retrieving feed for %1").arg(Database::subscriptionTitle(m_query)));
     
-    if (sourceType == Subscription::Command) {
+    if (sourceType == Subscription::Plugin) {
         if (!m_process) {
             m_process = new QProcess(this);
             connect(m_process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(onProcessFinished(int)));
             connect(m_process, SIGNAL(error(QProcess::ProcessError)), this, SLOT(onProcessError()));
         }
-#ifdef CUTENEWS_DEBUG
-        qDebug() << "Subscriptions::update: Updating subscription" << Database::subscriptionId(m_query)
-                 << "using command" << source;
-#endif
-        m_process->start(source);
-    }
-    else {
-        if (!m_xmlDownload) {
-            m_xmlDownload = new Transfer(this);
-            connect(m_xmlDownload, SIGNAL(statusChanged()), this, SLOT(onXmlDownloadStatusChanged()));
+        
+        const QVariantMap plugin = source.toMap();
+        QString command = SubscriptionPlugins::command(plugin.value("pluginName").toString());
+        
+        if (plugin.contains("params")) {
+            QMapIterator<QString, QVariant> iterator(plugin.value("params").toMap());
+            
+            while(iterator.hasNext()) {
+                iterator.next();
+                command.append(" -");
+                command.append(iterator.key());
+                command.append(" ");
+                command.append(QtJson::Json::serialize(iterator.value()));
+            }
         }
 #ifdef CUTENEWS_DEBUG
         qDebug() << "Subscriptions::update: Updating subscription" << Database::subscriptionId(m_query)
-                 << "using URI" << source;
+                 << "using plugin:" << plugin.value("pluginName").toString() << "with command:" << command;
 #endif
-        m_xmlDownload->setUrl(Utils::isLocalFile(source) ? QUrl::fromLocalFile(source) : QUrl(source));
-        m_xmlDownload->start();
+        m_process->start(command);
+    }
+    else {
+        const QString sourceString = source.toString();
+        
+        if (sourceType == Subscription::Command) {
+            if (!m_process) {
+                m_process = new QProcess(this);
+                connect(m_process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(onProcessFinished(int)));
+                connect(m_process, SIGNAL(error(QProcess::ProcessError)), this, SLOT(onProcessError()));
+            }
+#ifdef CUTENEWS_DEBUG
+            qDebug() << "Subscriptions::update: Updating subscription" << Database::subscriptionId(m_query)
+                     << "using command:" << sourceString;
+#endif
+            m_process->start(sourceString);
+        }
+        else {
+            if (!m_xmlDownload) {
+                m_xmlDownload = new Transfer(this);
+                connect(m_xmlDownload, SIGNAL(statusChanged()), this, SLOT(onXmlDownloadStatusChanged()));
+            }
+#ifdef CUTENEWS_DEBUG
+            qDebug() << "Subscriptions::update: Updating subscription" << Database::subscriptionId(m_query)
+                     << "using URI:" << sourceString;
+#endif
+            m_xmlDownload->setUrl(Utils::isLocalFile(sourceString) ? QUrl::fromLocalFile(sourceString)
+                                                                   : QUrl(sourceString));
+            m_xmlDownload->start();
+        }
     }
 }
 
 void Subscriptions::parseXml(const QByteArray &xml) {
-    QDomDocument doc;
+    FeedParser parser(xml);
     
-    if (!doc.setContent(xml)) {
-        setStatusText(tr("Error parsing XML from %1").arg(Database::subscriptionSource(m_query)));
+    if (!parser.readChannel()) {
+        setStatusText(tr("Error parsing XML for %1").arg(Database::subscriptionTitle(m_query)));
         setStatus(Error);
         return;
     }
     
-    const QDomElement channel = doc.firstChildElement("rss").firstChildElement("channel");
-    const QString title = channel.firstChildElement("title").text();
-    const QString description = channel.firstChildElement("description").text();
-    const QUrl url = channel.firstChildElement("link").text();
-#ifndef USE_FAVICONS
-    QString iconUrl;
-    
-    if (Database::subscriptionIconPath(m_query).isEmpty()) {
-        QDomElement iconElement = channel.firstChildElement("image");
-    
-        if (iconElement.isNull()) {
-            iconElement = channel.firstChildElement("itunes:image");
-        
-            if (!iconElement.isNull()) {
-                iconUrl = iconElement.attribute("href");
-            }
-        }
-        else {
-            if (iconElement.hasAttribute("href")) {
-                iconUrl = iconElement.attribute("href");
-            }
-            else if (iconElement.hasAttribute("src")) {
-                iconUrl = iconElement.attribute("src");
-            }
-            else {
-                iconUrl = iconElement.firstChildElement("url").text();
-            }
-        }
-    }
-#endif
-    QVariantMap subscription;
-    
-    if (Database::subscriptionTitle(m_query) != title) {
-        subscription["title"] = title;
-    }
-    
-    if (Database::subscriptionDescription(m_query) != description) {
-        subscription["description"] = description;
-    }
-    
-    if (Database::subscriptionUrl(m_query) != url) {
-        subscription["url"] = url;
-    }
-    
-    const QDateTime lastUpdated = Database::subscriptionLastUpdated(m_query);
-    const QDomNodeList items = channel.elementsByTagName("item");
-    const QDateTime latest = items.isEmpty() ? QDateTime()
-                                             : QDateTime::fromString(items.at(0).firstChildElement("pubDate").text()
-                                               .section(' ', 0, -2), "ddd, dd MMM yyyy HH:mm:ss");
+    const QString channelTitle = parser.title();
+    const QString channelDescription = parser.description();
+    const QUrl channelUrl = parser.url();
+    const QString channelIconUrl = parser.iconUrl();
 
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "Subscriptions::parseXml:" << items.size() << "articles found. Latest article published at" << latest;
-#endif
-    if (latest <= lastUpdated) {
-        if (!subscription.isEmpty()) {
-            Database::updateSubscription(Database::subscriptionId(m_query), subscription);
-        }
+    if (!parser.readNextArticle()) {
+        setStatusText(tr("Error parsing XML for %1").arg(Database::subscriptionTitle(m_query)));
+        setStatus(Error);
+        return;
+    }
+    
+    const int subscriptionId = Database::subscriptionId(m_query);
+    const QDateTime lastUpdated = Database::subscriptionLastUpdated(m_query);
+    
+    QVariantMap subscription;
+    subscription["title"] = channelTitle;
+    subscription["description"] = channelDescription;
+    subscription["url"] = channelUrl;
+    
+    if (parser.date() <= lastUpdated) {
+        Database::updateSubscription(subscriptionId, subscription);
 #ifdef USE_FAVICONS
-        if ((!url.isEmpty()) && (Database::subscriptionIconPath(m_query).isEmpty())) {
-            downloadIcon(FAVICONS_URL + url.host());
+        if ((!channelUrl.isEmpty()) && (Database::subscriptionIconPath(m_query).isEmpty())) {
+            downloadIcon(FAVICONS_URL + channelUrl.host());
         }
         else {
             next();
         }
 #else
-        if (!iconUrl.isEmpty()) {
-            downloadIcon(iconUrl);
+        if ((!channelIconUrl.isEmpty()) && (Database::subscriptionIconPath(m_query).isEmpty())) {
+            downloadIcon(channelIconUrl);
         }
         else {
             next();
         }
-#endif       
+#endif
         return;
     }
         
-    QVariantList ids;
-    QVariantList authors;
-    QVariantList bodies;
-    QVariantList categories;
-    QVariantList dates;
-    QVariantList enclosures;
-    QVariantList favourites;
-    QVariantList reads;
-    QVariantList subscriptionIds;
-    QVariantList titles;
-    QVariantList urls;
+    QVariantList ids = QVariantList() << QVariant(QVariant::Int);
+    QVariantList authors = QVariantList() << parser.author();
+    QVariantList bodies = QVariantList() << parser.description();
+    QVariantList categories = QVariantList() << parser.categories().join(", ");
+    QVariantList dates = QVariantList() << parser.date();
+    QVariantList enclosures = QVariantList() << QtJson::Json::serialize(parser.enclosures());
+    QVariantList favourites = QVariantList() << 0;
+    QVariantList reads = QVariantList() << 0;
+    QVariantList subscriptionIds = QVariantList() << subscriptionId;
+    QVariantList titles = QVariantList() << parser.title();
+    QVariantList urls = QVariantList() << parser.url();
     
-    for (int i = 0; i < items.size(); i++) {
-        const QDomElement item = items.at(i).toElement();
-        const QDateTime date = QDateTime::fromString(item.firstChildElement("pubDate").text().section(' ', 0, -2),
-                                                     "ddd, dd MMM yyyy HH:mm:ss");
-        
-        if (date <= lastUpdated) {
-            break;
-        }
-        
-        dates << date;
+    while ((parser.readNextArticle()) && (parser.date() > lastUpdated)) {
         ids << QVariant(QVariant::Int);
-        titles << item.firstChildElement("title").text();
-        urls << item.firstChildElement("link").text();
-        
-        QDomElement authorElement = item.firstChildElement("dc:creator");
-        
-        if (authorElement.isNull()) {
-            authorElement = item.firstChildElement("itunes:author");
-        }
-        
-        authors << authorElement.text();
-        
-        QDomElement descriptionElement = item.firstChildElement("content:encoded");
-        
-        if (descriptionElement.isNull()) {
-            descriptionElement = item.firstChildElement("description");
-        }
-        
-        bodies << descriptionElement.text();
-        
-        QStringList itemCategories;
-        QDomNodeList categoryNodes = item.elementsByTagName("category");
-        
-        if (categoryNodes.isEmpty()) {
-            categoryNodes = item.elementsByTagName("itunes:keywords");
-        }
-        
-        for (int i = 0; i < categoryNodes.size(); i++) {
-            itemCategories << categoryNodes.at(i).toElement().text();
-        }
-        
-        QVariantList itemEnclosures;
-        QDomNodeList enclosureNodes = item.elementsByTagName("enclosure");
-        
-        if (enclosureNodes.isEmpty()) {
-            enclosureNodes = item.elementsByTagName("media:content");
-        }
-        
-        for (int i = 0; i < enclosureNodes.size(); i++) {
-            const QDomElement enclosureElement = enclosureNodes.at(i).toElement();
-            const int enclosureSize = enclosureElement.hasAttribute("length")
-                                      ? enclosureElement.attribute("length").toInt()
-                                      : enclosureElement.attribute("fileSize").toInt();
-            
-            if (enclosureSize > 0) {
-                const QString enclosureUrl = enclosureElement.attribute("url");
-                const QString enclosureType = enclosureElement.attribute("type");
-                
-                QVariantMap enclosure;
-                enclosure["url"] = enclosureUrl;
-                enclosure["type"] = enclosureType;
-                enclosure["length"] = enclosureSize;            
-                itemEnclosures << enclosure;
-                
-                if (Database::subscriptionDownloadEnclosures(m_query)) {
-                    Transfers::instance()->addDownloadTransfer(enclosureUrl);
-                }
-            }
-        }
-        
-        categories << itemCategories.join(", ");
-        enclosures << QtJson::Json::serialize(itemEnclosures);
+        authors << parser.author();
+        bodies << parser.description();
+        categories << parser.categories().join(", ");
+        dates << parser.date();
+        enclosures << QtJson::Json::serialize(parser.enclosures());
         favourites << 0;
         reads << 0;
-        subscriptionIds << Database::subscriptionId(m_query);
+        subscriptionIds << subscriptionId;
+        titles << parser.title();
+        urls << parser.url();
     }
-    
-    subscription["lastUpdated"] = latest;
+
+    subscription["lastUpdated"] = dates.first();
 
     Database::addArticles(QList<QVariantList>() << ids << authors << bodies << categories << dates << enclosures
                           << favourites << reads << subscriptionIds << titles << urls,
-                          Database::subscriptionId(m_query));
-    Database::updateSubscription(Database::subscriptionId(m_query), subscription);
+                          subscriptionId);
+    Database::updateSubscription(subscriptionId, subscription);
 #ifdef USE_FAVICONS
-    if ((!url.isEmpty()) && (Database::subscriptionIconPath(m_query).isEmpty())) {
-        downloadIcon(FAVICONS_URL + url.host());
+    if ((!channelUrl.isEmpty()) && (Database::subscriptionIconPath(m_query).isEmpty())) {
+        downloadIcon(FAVICONS_URL + channelUrl.host());
     }
     else {
         next();
     }
 #else
-    if (!iconUrl.isEmpty()) {
-        downloadIcon(iconUrl);
+    if ((!channelIconUrl.isEmpty()) && (Database::subscriptionIconPath(m_query).isEmpty())) {
+        downloadIcon(channelIconUrl);
     }
     else {
         next();
@@ -493,8 +410,8 @@ void Subscriptions::onXmlDownloadStatusChanged() {
     case Transfer::Canceled:
         break;
     case Transfer::Failed:
-        setStatusText(tr("Error retrieving feed from %1: %2").arg(Database::subscriptionSource(m_query))
-                                                             .arg(m_xmlDownload->errorString()));
+        setStatusText(tr("Error retrieving feed for %1: %2").arg(Database::subscriptionTitle(m_query))
+                                                            .arg(m_xmlDownload->errorString()));
         break;
     default:
         return;
@@ -546,8 +463,8 @@ void Subscriptions::onProcessError() {
 #ifdef CUTENEWS_DEBUG
     qDebug() << "Subscriptions::onProcessError" << m_process->errorString();
 #endif
-    setStatusText(tr("Error retrieving feed from %1: %2").arg(Database::subscriptionSource(m_query))
-                                                         .arg(m_process->errorString()));
+    setStatusText(tr("Error retrieving feed for %1: %2").arg(Database::subscriptionTitle(m_query))
+                                                        .arg(m_process->errorString()));
     next();
 }
 
@@ -564,8 +481,8 @@ void Subscriptions::onProcessFinished(int exitCode) {
         }
     }
     
-    setStatusText(tr("Error retrieving feed from %1: %2").arg(Database::subscriptionSource(m_query))
-                                                         .arg(m_process->errorString()));
+    setStatusText(tr("Error retrieving feed for %1: %2").arg(Database::subscriptionTitle(m_query))
+                                                        .arg(m_process->errorString()));
     next();
 }
 
@@ -599,7 +516,7 @@ void Subscriptions::onSubscriptionIdsFetched(QSqlQuery query, int requestId) {
                    this, SLOT(onSubscriptionIdsFetched(QSqlQuery, int)));
         
         while (query.next()) {
-            update(Database::subscriptionId(query));
+            update(query.value(0).toInt());
         }
     }
 }
