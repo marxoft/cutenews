@@ -22,17 +22,17 @@ Dialog {
     id: root
     
     property int subscriptionId: -1
+    property int sourceType: Subscription.Url
     
-    title: subscriptionId == -1 ? qsTr("New subscription") : qsTr("Subscription properties")
-    height: column.height + platformStyle.paddingMedium
+    title: qsTr("Subscription properties")
+    height: flow.height + platformStyle.paddingMedium
   
-    Column {
-        id: column
+    Flow {
+        id: flow
     
         anchors {
             left: parent.left
-            right: button.left
-            rightMargin: platformStyle.paddingMedium
+            right: parent.right
             bottom: parent.bottom
         }
         spacing: platformStyle.paddingMedium
@@ -41,70 +41,49 @@ Dialog {
             width: parent.width
             text: qsTr("Source")
         }
-        
-        Row {
-            width: parent.width
-            spacing: platformStyle.paddingMedium
             
-            TextField {
-                id: sourceField
-                
-                width: parent.width - sourceButton.width - parent.spacing
-            }
-        
-            Button {
-                id: sourceButton
-                
-                text: qsTr("Browse")
-                enabled: (sourceTypeSelector) && (sourceTypeSelector.currentIndex > 0)
-                onClicked: dialogs.showFileDialog() 
-            }
+        TextField {
+            id: sourceField
+            
+            width: parent.width - sourceButton.width - parent.spacing
+            onAccepted: if (text) root.accept();
         }
-        
-        ValueButton {
-            id: sourceTypeButton
+    
+        Button {
+            id: sourceButton
             
-            width: parent.width
-            text: qsTr("Source type")
-            pickSelector: sourceTypeSelector
+            text: qsTr("Browse")
+            enabled: sourceType != Subscription.Url
+            onClicked: dialogs.showFileDialog() 
         }
         
         CheckBox {
             id: enclosuresCheckBox
             
-            width: parent.width
+            width: parent.width - acceptButton.width - parent.spacing
             text: qsTr("Download enclosures automatically")
         }
-    }
-    
-    Button {
-        id: button
         
-        anchors {
-            right: parent.right
-            bottom: parent.bottom
+        Button {
+            id: acceptButton
+            
+            style: DialogButtonStyle {}
+            text: qsTr("Done")
+            enabled: sourceField.text != ""
+            onClicked: root.accept()
         }
-        style: DialogButtonStyle {}
-        text: qsTr("Done")
-        enabled: sourceField.text != ""
-        onClicked: root.accept()
     }
-    
-    ListPickSelector {
-        id: sourceTypeSelector
-        
-        model: SubscriptionSourceTypeModel {
-            id: sourceTypeModel
-        }
-        textRole: "name"
-    }
-    
+
     Subscription {
         id: subscription
         
-        onSourceChanged: sourceField.text = source
-        onSourceTypeChanged: sourceTypeSelector.currentIndex = sourceTypeModel.match("value", sourceType)
-        onDownloadEnclosuresChanged: enclosuresCheckBox.checked = downloadEnclosures
+        onStatusChanged: {
+            if (status == Subscription.Ready) {
+                sourceField.text = source;
+                root.sourceType = sourceType;
+                enclosuresCheckBox.checked = downloadEnclosures;
+            }
+        }
     }
     
     QtObject {
@@ -140,22 +119,20 @@ Dialog {
     }
     onAccepted: {
         if (subscriptionId > 0) {
-            database.updateSubscription(subscriptionId,
-            {source: sourceField.text, sourceType: sourceTypeModel.data(sourceTypeSelector.currentIndex, "value"),
-             downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0});
+            database.updateSubscription(subscriptionId, {source: sourceField.text,
+                                        downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0});
         }
         else {
-            subscriptions.create(sourceField.text, sourceTypeModel.data(sourceTypeSelector.currentIndex, "value"),
-                                 enclosuresCheckBox.checked);
+            subscriptions.create(sourceField.text, sourceType, enclosuresCheckBox.checked);
         }
         
         sourceField.clear();
-        sourceTypeSelector.currentIndex = 0;
+        sourceType = Subscription.Url;
         enclosuresCheckBox.checked = false;
     }
     onRejected: {
         sourceField.clear();
-        sourceTypeSelector.currentIndex = 0;
+        sourceType = Subscription.Url;
         enclosuresCheckBox.checked = false;
     }
 }

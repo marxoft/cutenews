@@ -96,7 +96,9 @@ ApplicationWindow {
         id: dialogs
         
         property FileDialog importDialog
+        property ListPickSelector subscriptionTypeDialog
         property SubscriptionDialog subscriptionDialog
+        property PluginDialog pluginDialog
         property SearchDialog searchDialog
         property SettingsDialog settingsDialog
         property AboutDialog aboutDialog
@@ -109,13 +111,32 @@ ApplicationWindow {
             importDialog.open();
         }
         
-        function showSubscriptionDialog(subscriptionId) {
+        function showSubscriptionTypeDialog() {
+            if (!subscriptionTypeDialog) {
+                subscriptionTypeDialog = subscriptionTypeDialogComponent.createObject(appWindow);
+            }
+            
+            subscriptionTypeDialog.open();
+        }
+        
+        function showSubscriptionDialog(subscriptionId, sourceType) {
             if (!subscriptionDialog) {
                 subscriptionDialog = subscriptionDialogComponent.createObject(appWindow);
             }
             
-            subscriptionDialog.subscriptionId = subscriptionId;
+            subscriptionDialog.subscriptionId = (subscriptionId ? subscriptionId : -1);
+            subscriptionDialog.sourceType = (sourceType ? sourceType : Subscription.Url);
             subscriptionDialog.open();
+        }
+        
+        function showPluginDialog(subscriptionId, pluginName) {
+            if (!pluginDialog) {
+                pluginDialog = pluginDialogComponent.createObject(appWindow);
+            }
+            
+            pluginDialog.subscriptionId = (subscriptionId ? subscriptionId : -1);
+            pluginDialog.pluginName = (pluginName ? pluginName : "");
+            pluginDialog.open();
         }
         
         function showSearchDialog() {
@@ -153,11 +174,39 @@ ApplicationWindow {
     }
     
     Component {
+        id: subscriptionTypeDialogComponent
+        
+        ListPickSelector {
+            title: qsTr("Subscription type")
+            model: SubscriptionSourceTypeModel {}
+            textRole: "name"
+            onSelected: {
+                var sourceType = model.data(currentIndex, "value");
+                
+                switch (sourceType) {
+                case Subscription.Plugin:
+                    dialogs.showPluginDialog(-1, model.data(currentIndex, "name"));
+                    break;
+                default:
+                    dialogs.showSubscriptionDialog(-1, sourceType);
+                    break;
+                }
+            }
+        }
+    }
+    
+    Component {
         id: subscriptionDialogComponent
         
         SubscriptionDialog {}
     }
     
+    Component {
+        id: pluginDialogComponent
+        
+        PluginDialog {}
+    }
+        
     Component {
         id: searchDialogComponent
         

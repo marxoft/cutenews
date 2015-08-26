@@ -17,9 +17,9 @@
 #include "transfers.h"
 #include "definitions.h"
 #include "settings.h"
+#include "utils.h"
 #include <QNetworkAccessManager>
 #include <QSettings>
-#include <QDateTime>
 
 Transfers* Transfers::self = 0;
 
@@ -51,12 +51,13 @@ int Transfers::count() const {
     return m_transfers.size();
 }
 
-void Transfers::addDownloadTransfer(const QUrl &url) {
+void Transfers::addDownloadTransfer(const QUrl &url, int subscriptionId) {
     Transfer *transfer = new Transfer(this);
     transfer->setNetworkAccessManager(m_nam);
-    transfer->setId(QString::number(QDateTime::currentMSecsSinceEpoch()));
+    transfer->setId(QString::number(Utils::createId()));
     transfer->setDownloadPath(Settings::instance()->downloadPath() + ".incomplete/" + transfer->id());
     transfer->setFileName(url.path().section('/', -1));
+    transfer->setSubscriptionId(subscriptionId);
     transfer->setUrl(url);
     
     connect(transfer, SIGNAL(statusChanged()), this, SLOT(onTransferStatusChanged()));

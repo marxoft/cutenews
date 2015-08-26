@@ -16,11 +16,12 @@
 
 import QtQuick 1.0
 import org.hildon.components 1.0
+import cuteNews 1.0
 
 Dialog {
     id: root
     
-    property alias enclosures: view.model
+    property Article article
     
     title: qsTr("Enclosures")
     height: Math.min(350, view.count * 70 + platformStyle.paddingMedium)
@@ -30,6 +31,7 @@ Dialog {
         
         anchors.fill: parent
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
+        model: article ? article.enclosures : null
         delegate: EnclosureDelegate {
             onClicked: {
                 if (!urlopener.open(modelData.url)) {
@@ -48,7 +50,7 @@ Dialog {
         MenuItem {
             text: qsTr("Open externally")
             onTriggered: {
-                var url = enclosures[view.currentIndex].url;
+                var url = article.enclosures[view.currentIndex].url;
                 
                 if (!urlopener.open(url)) {
                     Qt.openUrlExternally(url);
@@ -61,7 +63,7 @@ Dialog {
         MenuItem {
             text: qsTr("Download")
             onTriggered: {
-                downloads.addDownloadTransfer(enclosures[view.currentIndex].url);
+                downloads.addDownloadTransfer(article.enclosures[view.currentIndex].url, article.subscriptionId);
                 informationBox.information(qsTr("Download added"));
                 root.accept();
             }

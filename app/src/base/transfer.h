@@ -20,6 +20,7 @@
 #include <QString>
 #include <QUrl>
 #include <QFile>
+#include <QSqlQuery>
 #include <qplatformdefs.h>
 
 #ifdef MEEGO_EDITION_HARMATTAN
@@ -31,6 +32,7 @@ namespace TransferUI {
 
 class QNetworkAccessManager;
 class QNetworkReply;
+class QProcess;
 
 class Transfer : public QObject
 {
@@ -47,8 +49,9 @@ class Transfer : public QObject
     Q_PROPERTY(qint64 size READ size WRITE setSize NOTIFY sizeChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString statusString READ statusString NOTIFY statusChanged)
+    Q_PROPERTY(int subscriptionId READ subscriptionId WRITE setSubscriptionId NOTIFY subscriptionIdChanged)
     Q_PROPERTY(TransferType transferType READ transferType WRITE setTransferType NOTIFY transferTypeChanged)
-    Q_PROPERTY(QUrl url READ url NOTIFY urlChanged)
+    Q_PROPERTY(QUrl url READ url WRITE setUrl NOTIFY urlChanged)
     
     Q_ENUMS(Priority Status TransferType)
     
@@ -105,6 +108,9 @@ public:
     Status status() const;
     QString statusString() const;
     
+    int subscriptionId() const;
+    void setSubscriptionId(int i);
+    
     TransferType transferType() const;
     void setTransferType(TransferType type);
     
@@ -119,12 +125,14 @@ public Q_SLOTS:
     void pause();
     void cancel();
     
-protected:
+private:
     void setErrorString(const QString &es);
     
     void setProgress(int p);
             
     void setStatus(Status s);
+    
+    void getSubscriptionSource();
             
     void startDownload(const QUrl &u);
     void followRedirect(const QUrl &u);
@@ -132,9 +140,14 @@ protected:
     void moveDownloadedFiles();    
     
 private Q_SLOTS:
+    void onProcessError();
+    void onProcessFinished(int exitCode);
+        
     void onReplyMetaDataChanged();
     void onReplyReadyRead();
     void onReplyFinished();
+    
+    void onSubscriptionSourceReady(QSqlQuery query, int requestId);
     
 Q_SIGNALS:
     void downloadPathChanged();
@@ -144,6 +157,7 @@ Q_SIGNALS:
     void progressChanged();
     void sizeChanged();
     void statusChanged();
+    void subscriptionIdChanged();
     void transferTypeChanged();
     void urlChanged();
 
@@ -155,6 +169,7 @@ private:
         
     QNetworkAccessManager *m_nam;
     QNetworkReply *m_reply;
+    QProcess *m_process;
         
     QFile m_file;
     
@@ -180,9 +195,13 @@ private:
     
     Status m_status;
     
+    int m_subscriptionId;
+    
     TransferType m_transferType;
     
     QUrl m_url;
+    
+    int m_requestId;
 #ifdef SYMBIAN_OS
     QByteArray m_buffer;
 #endif

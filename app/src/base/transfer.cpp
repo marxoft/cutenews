@@ -15,11 +15,17 @@
  */
 
 #include "transfer.h"
+#include "database.h"
 #include "definitions.h"
+#include "json.h"
 #include "settings.h"
+#include "subscription.h"
+#include "subscriptionplugins.h"
+#include "utils.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QDir>
+#include <QProcess>
 #ifdef MEEGO_EDITION_HARMATTAN
 #include <TransferUI/Client>
 #include <TransferUI/Transfer>
@@ -39,6 +45,7 @@ Transfer::Transfer(QObject *parent) :
     QObject(parent),
     m_nam(0),
     m_reply(0),
+    m_process(0),
     m_ownNetworkAccessManager(false),
     m_canceled(false),
     m_priority(NormalPriority),
@@ -47,7 +54,9 @@ Transfer::Transfer(QObject *parent) :
     m_bytesTransferred(0),
     m_redirects(0),
     m_status(Paused),
-    m_transferType(Download)
+    m_subscriptionId(-1),
+    m_transferType(Download),
+    m_requestId(-1)
 {
 #ifdef MEEGO_EDITION_HARMATTAN
     if (!tuiClient) {
@@ -301,6 +310,20 @@ QString Transfer::statusString() const {
     }
 }
 
+int Transfer::subscriptionId() const {
+    return m_subscriptionId;
+}
+
+void Transfer::setSubscriptionId(int i) {
+    if (i != subscriptionId()) {
+        m_subscriptionId = i;
+        emit subscriptionIdChanged();
+    }
+#ifdef CUTENEWS_DEBUG
+    qDebug() << "Transfer::setSubscriptionId" << i;
+#endif
+}
+
 Transfer::TransferType Transfer::transferType() const {
     return m_transferType;
 }
@@ -377,7 +400,12 @@ void Transfer::start() {
         break;
     }
     
-    startDownload(url());
+    if (subscriptionId() == -1) {
+        startDownload(url());
+    }
+    else {
+        getSubscriptionSource();
+    }
 }
 
 void Transfer::pause() {
@@ -417,6 +445,19 @@ void Transfer::cancel() {
         QDir().rmdir(downloadPath());
         setStatus(Canceled);
     }
+}
+
+void Transfer::getSubscriptionSource() {
+    if (m_requestId == -1) {
+        m_requestId = Utils::createId();
+    }
+#ifdef CUTENEWS_DEBUG
+    qDebug() << "Transfer::getSubscriptionSource. Subscription id" << subscriptionId() << ", request id" << m_requestId;
+#endif
+    connect(Database::instance(), SIGNAL(queryReady(QSqlQuery, int)),
+            this, SLOT(onSubscriptionSourceReady(QSqlQuery, int)));
+    Database::execQuery(QString("SELECT source, sourceType FROM subscriptions WHERE id = %1").arg(subscriptionId()),
+                        m_requestId);
 }
 
 void Transfer::startDownload(const QUrl &u) {    
@@ -546,6 +587,52 @@ void Transfer::moveDownloadedFiles() {
     setStatus(Completed);
 }
 
+void Transfer::onProcessError() {
+#ifdef CUTENEWS_DEBUG
+    qDebug() << "Transfer::onProcessError" << m_process->errorString();
+#endif
+    setErrorString(tr("Cannot obtain redirect from plugin."));
+    setStatus(Failed);
+}
+
+void Transfer::onProcessFinished(int exitCode) {
+    if (exitCode == 0) {
+        const QVariant response = QtJson::Json::parse(m_process->readAllStandardOutput());
+        
+        if (response.type() == QVariant::Map) {
+            const QVariantMap map = response.toMap();
+            
+            if (map.contains("url")) {
+                if (map.contains("fileName")) {
+                    setFileName(map.value("fileName").toString());
+                }
+                
+                startDownload(map.value("url").toString());
+                return;
+            }
+            
+            if (map.contains("error")) {
+                setErrorString(map.value("error").toString());
+                setStatus(Failed);
+                return;
+            }
+        }
+        else {
+            const QUrl u = response.toString();
+        
+            if (u.isValid()) {
+                startDownload(u);
+                return;
+            }
+        }
+    }
+#ifdef CUTENEWS_DEBUG
+    qDebug() << "Transfer::onProcessFinished" << m_process->errorString();
+#endif
+    setErrorString(tr("Cannot obtain redirect from plugin."));
+    setStatus(Failed);
+}
+
 void Transfer::onReplyMetaDataChanged() {
     if (size() > 0) {
         return;
@@ -664,5 +751,63 @@ void Transfer::onReplyFinished() {
     else {
         setErrorString(QString());
         setStatus(Completed);
+    }
+}
+
+void Transfer::onSubscriptionSourceReady(QSqlQuery query, int requestId) {
+    if (requestId == m_requestId) {
+        disconnect(Database::instance(), SIGNAL(queryReady(QSqlQuery, int)),
+                   this, SLOT(onSubscriptionSourceReady(QSqlQuery, int)));
+        
+        if (!query.next()) {
+            setErrorString(tr("Cannot obtain redirect from plugin."));
+            setStatus(Failed);
+            return;
+        }
+        
+        disconnect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
+                   this, SLOT(onSubscriptionSourceReady(QSqlQuery, int)));
+        
+        const int sourceType = query.value(1).toInt();
+        
+        if (sourceType == Subscription::Plugin) {
+            if (!m_process) {
+                m_process = new QProcess(this);
+                connect(m_process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(onProcessFinished(int)));
+                connect(m_process, SIGNAL(error(QProcess::ProcessError)), this, SLOT(onProcessError()));
+            }
+        
+            const QVariantMap plugin = QtJson::Json::parse(query.value(0).toString()).toMap();
+            QString command = SubscriptionPlugins::command(plugin.value("pluginName").toString());
+            
+            if (command.isEmpty()) {
+                setErrorString(tr("Cannot obtain redirect from plugin."));
+                setStatus(Failed);
+                return;
+            }
+        
+            if (plugin.contains("params")) {
+                QMapIterator<QString, QVariant> iterator(plugin.value("params").toMap());
+            
+                while (iterator.hasNext()) {
+                    iterator.next();
+                    command.append(" -");
+                    command.append(iterator.key());
+                    command.append(" ");
+                    command.append(QtJson::Json::serialize(iterator.value()));
+                }
+            }
+            
+            command.append(" -e ");
+            command.append(url().toString());
+#ifdef CUTENEWS_DEBUG
+            qDebug() << "Transfer::onSubscriptionSourceReady. Retrieving redirect from plugin:"
+                     << plugin.value("pluginName").toString() << "with command:" << command;
+#endif
+            m_process->start(command);
+            return;
+        }
+        
+        startDownload(url());
     }
 }

@@ -1,0 +1,22 @@
+<plugin title="YouTube videos" exec="/opt/cutenews/plugins/youtube/youtube" enclosureRedirect="true">
+    <params>
+        <text title="Query" name="q" />
+        <integer title="Maximum results" name="m" min="5" max="50" step="1" default="20" />
+        <list title="Query type" name="t" default="search">
+            <element name="Search" value="search" />
+            <element name="User channel" value="channel" />
+        </list>
+        <list title="Safe search" name="s" default="none">
+            <element name="None" value="none" />
+            <element name="Moderate" value="moderate" />
+            <element name="Strict" value="strict" />
+        </list>
+        <list title="Download format" name="f" default="18">
+            <element name="1080P" value="37" />
+            <element name="720P" value="22" />
+            <element name="360P" value="18" />
+            <element name="240P" value="5" />
+            <element name="144P" value="17" />
+        </list>
+    </params>
+</plugin>

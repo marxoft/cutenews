@@ -18,6 +18,7 @@
 #define DEFINITIONS_H
 
 #include <QRegExp>
+#include <QStringList>
 
 static const int ALL_ARTICLES_SUBSCRIPTION_ID = -1;
 static const int FAVOURITES_SUBSCRIPTION_ID = 0;
@@ -29,11 +30,13 @@ static const int ICON_SIZE = 48;
 
 static const QRegExp ILLEGAL_FILENAME_CHARS_RE("[\"\\/@&~=:?#!|<>*^]");
 
-static const QString VERSION_NUMBER("0.2.2");
+static const QString VERSION_NUMBER("0.3.0");
 
 static const QString DATABASE_PATH("/home/user/.config/cuteNews/");
 static const QString DOWNLOAD_PATH("/home/user/MyDocs/cuteNews/");
 static const QString ICON_PATH("/home/user/.config/cuteNews/icons/");
 static const QString STORAGE_PATH("/home/user/.config/cuteNews/");
+static const QStringList PLUGIN_PATHS = QStringList() << "/opt/cutenews/plugins/"
+                                                      << "/home/user/.config/cuteNews/plugins/";
 
 #endif // DEFINITIONS_H

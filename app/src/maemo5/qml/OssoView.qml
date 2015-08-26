@@ -193,6 +193,7 @@ Item {
                                 onClicked: if (!urlopener.open(modelData.url)) Qt.openUrlExternally(modelData.url);
                                 onPressAndHold: {
                                     enclosureMenu.enclosureUrl = modelData.url;
+                                    enclosureMenu.subscriptionId = subscriptionId;
                                     enclosureMenu.popup();
                                 }
                             }
@@ -232,6 +233,7 @@ Item {
         id: enclosureMenu
         
         property url enclosureUrl
+        property int subscriptionId
         
         MenuItem {
             text: qsTr("Open externally")
@@ -242,7 +244,7 @@ Item {
         MenuItem {
             text: qsTr("Download")
             onTriggered: {
-                downloads.addDownloadTransfer(enclosureMenu.enclosureUrl);
+                downloads.addDownloadTransfer(enclosureMenu.enclosureUrl, enclosureMenu.subscriptionId);
                 informationBox.information(qsTr("Download added"));
             }
         }
@@ -264,7 +266,7 @@ Item {
             id: subscriptionButton
             
             iconName: "general_add"
-            onClicked: dialogs.showSubscriptionDialog(-1)
+            onClicked: dialogs.showSubscriptionTypeDialog()
         }
         
         ToolButton {
@@ -272,7 +274,19 @@ Item {
             
             iconName: "general_information"
             enabled: subscriptionView.currentIndex > 1
-            onClicked: dialogs.showSubscriptionDialog(subscriptionModel.data(subscriptionView.currentIndex, "id"))
+            onClicked: {
+                var sourceType = subscriptionModel.data(subscriptionView.currentIndex, "sourceType");
+                
+                switch (sourceType) {
+                case Subscription.Plugin:
+                    dialogs.showPluginDialog(subscriptionModel.data(subscriptionView.currentIndex, "id"));
+                    break;
+                default:
+                    dialogs.showSubscriptionDialog(subscriptionModel.data(subscriptionView.currentIndex, "id"),
+                                                   sourceType);
+                    break;
+                }
+            }
         }
         
         ToolButton {

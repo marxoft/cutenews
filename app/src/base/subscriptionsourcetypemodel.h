@@ -19,6 +19,7 @@
 
 #include "selectionmodel.h"
 #include "subscription.h"
+#include "subscriptionplugins.h"
 
 class SubscriptionSourceTypeModel : public SelectionModel
 {
@@ -31,6 +32,10 @@ public:
         append(tr("URL"), Subscription::Url);
         append(tr("Local file"), Subscription::LocalFile);
         append(tr("Command"), Subscription::Command);
+        
+        foreach (QString name, SubscriptionPlugins::pluginNames()) {
+            append(name, Subscription::Plugin);
+        }
     }
 };
 

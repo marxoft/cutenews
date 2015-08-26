@@ -73,7 +73,7 @@ Window {
         focus: true
         clip: true
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
-        contentHeight: label.height
+        contentHeight: label.height + platformStyle.paddingMedium
 
         Label {
             id: label
@@ -87,9 +87,9 @@ Window {
             wrapMode: Text.Wrap
             textFormat: Text.RichText
             color: platformStyle.reversedTextColor
-            text: article == null ? "" : qsTr("Author") + ": " + article.author + "<br>" + qsTr("Date") + ": "
-                  + Qt.formatDateTime(article.date, "dd/MM/yyyy HH:mm") + "<br>" + qsTr("Categories") + ": "
-                  + article.categories.join(", ") + "<br><br>" + article.body
+            text: article == null ? "" : qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown"))
+                  + "<br>" + qsTr("Date") + ": " + Qt.formatDateTime(article.date, "dd/MM/yyyy HH:mm") + "<br>"
+                  + qsTr("Categories") + ": " + article.categories.join(", ") + "<br><br>" + article.body
             
             onLinkActivated: if (!urlopener.open(link)) Qt.openUrlExternally(link);
         }
@@ -119,7 +119,7 @@ Window {
                 enclosuresDialog = enclosuresDialogComponent.createObject(root);
             }
             
-            enclosuresDialog.enclosures = article.enclosures;
+            enclosuresDialog.article = article;
             enclosuresDialog.open();
         }
     }
@@ -143,6 +143,7 @@ Window {
             PropertyChanges {
                 target: flickable
                 clip: false
+                contentHeight: label.height + platformStyle.paddingMedium * 2
                 anchors.margins: 0
             }
         

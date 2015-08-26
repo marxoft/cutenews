@@ -23,6 +23,7 @@
 #include "settings.h"
 #include "subscription.h"
 #include "subscriptionmodel.h"
+#include "subscriptionplugins.h"
 #include "subscriptions.h"
 #include "subscriptionsourcetypemodel.h"
 #include "transfermodel.h"
@@ -47,6 +48,7 @@ void registerTypes() {
     qmlRegisterType<Article>("cuteNews", 1, 0, "Article");
     qmlRegisterType<ArticleModel>("cuteNews", 1, 0, "ArticleModel");
     qmlRegisterType<NetworkProxyTypeModel>("cuteNews", 1, 0, "NetworkProxyTypeModel");
+    qmlRegisterType<SelectionModel>("cuteNews", 1, 0, "SelectionModel");
     qmlRegisterType<Subscription>("cuteNews", 1, 0, "Subscription");
     qmlRegisterType<SubscriptionModel>("cuteNews", 1, 0, "SubscriptionModel");
     qmlRegisterType<SubscriptionSourceTypeModel>("cuteNews", 1, 0, "SubscriptionSourceTypeModel");
@@ -72,12 +74,15 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     QScopedPointer<Subscriptions> subscriptions(Subscriptions::instance());
     QScopedPointer<Transfers> transfers(Transfers::instance());
     
+    SubscriptionPlugins plugins;
     UrlOpenerModel urlopener;
     Utils utils;
     
     Database::init();
+    
     Transfers::instance()->load();
     Settings::instance()->setNetworkProxy();
+    SubscriptionPlugins::load();
     urlopener.load();
     
     QThread thread;
@@ -93,6 +98,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     context->setContextProperty("cutenews", &cutenews);
     context->setContextProperty("database", Database::instance());
     context->setContextProperty("downloads", Transfers::instance());
+    context->setContextProperty("plugins", &plugins);
     context->setContextProperty("settings", Settings::instance());
     context->setContextProperty("subscriptions", Subscriptions::instance());
     context->setContextProperty("urlopener", &urlopener);

@@ -44,7 +44,7 @@ Item {
         }
         text: qsTr("New subscription")
         iconName: "general_add"
-        onClicked: dialogs.showSubscriptionDialog(-1)
+        onClicked: dialogs.showSubscriptionTypeDialog()
     }
     
     Button {
@@ -113,7 +113,19 @@ Item {
         
         MenuItem {
             text: qsTr("Properties")
-            onTriggered: dialogs.showSubscriptionDialog(subscriptionModel.data(subscriptionView.currentIndex, "id"))
+            onTriggered: {
+                var sourceType = subscriptionModel.data(subscriptionView.currentIndex, "sourceType");
+                
+                switch (sourceType) {
+                case Subscription.Plugin:
+                    dialogs.showPluginDialog(subscriptionModel.data(subscriptionView.currentIndex, "id"));
+                    break;
+                default:
+                    dialogs.showSubscriptionDialog(subscriptionModel.data(subscriptionView.currentIndex, "id"),
+                                                   sourceType);
+                    break;
+                }
+            }
         }
         
         MenuItem {
