@@ -1,3 +1,11 @@
+cutenews (0.3.0) unstable; urgency=low
+
+  * Add support for subscription plugins.
+  * Fix locale issues with article publication dates.
+  * Improve feed parsing.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Wed, 26 Aug 2015 11:52:53 +0100
+
 cutenews (0.2.2) unstable; urgency=low
 
   * Add homescreen widget.
