@@ -3,7 +3,7 @@ TARGET = cutenews
 
 #DEFINES += CUTENEWS_DEBUG
 
-QT += network sql xml
+QT += network sql
 
 INCLUDEPATH += src/base
 
@@ -11,12 +11,15 @@ HEADERS += \
     src/base/article.h \
     src/base/articlemodel.h \
     src/base/database.h \
+    src/base/feedparser.h \
     src/base/json.h \
     src/base/networkproxytypemodel.h \
+    src/base/opmlparser.h \
     src/base/selectionmodel.h \
     src/base/settings.h \
     src/base/subscription.h \
     src/base/subscriptionmodel.h \
+    src/base/subscriptionplugins.h \
     src/base/subscriptions.h \
     src/base/subscriptionsourcetypemodel.h \
     src/base/transfer.h \
@@ -29,11 +32,14 @@ SOURCES += \
     src/base/article.cpp \
     src/base/articlemodel.cpp \
     src/base/database.cpp \
+    src/base/feedparser.cpp \
     src/base/json.cpp \
+    src/base/opmlparser.cpp \
     src/base/selectionmodel.cpp \
     src/base/settings.cpp \
     src/base/subscription.cpp \
     src/base/subscriptionmodel.cpp \
+    src/base/subscriptionplugins.cpp \
     src/base/subscriptions.cpp \
     src/base/transfer.cpp \
     src/base/transfers.cpp \
@@ -73,6 +79,7 @@ maemo5 {
         src/maemo5/qml/MainWindow.qml \
         src/maemo5/qml/NetworkProxyDialog.qml \
         src/maemo5/qml/OssoView.qml \
+        src/maemo5/qml/PluginDialog.qml \
         src/maemo5/qml/SearchDialog.qml \
         src/maemo5/qml/SearchWindow.qml \
         src/maemo5/qml/SettingsDialog.qml \
