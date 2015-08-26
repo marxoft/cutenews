@@ -19,8 +19,8 @@
 
 #include <QObject>
 #include <QVariantMap>
-#include <QSqlQuery>
 
+class QSqlQuery;
 class QDateTime;
 class QUrl;
 
@@ -39,7 +39,7 @@ public:
     static bool subscriptionDownloadEnclosures(const QSqlQuery &query);
     static QString subscriptionIconPath(const QSqlQuery &query);
     static QDateTime subscriptionLastUpdated(const QSqlQuery &query);
-    static QString subscriptionSource(const QSqlQuery &query);
+    static QVariant subscriptionSource(const QSqlQuery &query);
     static int subscriptionSourceType(const QSqlQuery &query);
     static QString subscriptionTitle(const QSqlQuery &query);
     static int subscriptionUpdateInterval(const QSqlQuery &query);

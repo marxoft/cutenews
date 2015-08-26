@@ -17,6 +17,7 @@
 #include "database.h"
 #include "definitions.h"
 #include "json.h"
+#include "subscription.h"
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlError>
@@ -76,8 +77,9 @@ QDateTime Database::subscriptionLastUpdated(const QSqlQuery &query) {
     return query.value(5).toDateTime();
 }
 
-QString Database::subscriptionSource(const QSqlQuery &query) {
-    return query.value(6).toString();
+QVariant Database::subscriptionSource(const QSqlQuery &query) {
+    return subscriptionSourceType(query) == Subscription::Plugin ? QtJson::Json::parse(query.value(6).toString())
+                                                                 : query.value(6).toString();
 }
 
 int Database::subscriptionSourceType(const QSqlQuery &query) {
