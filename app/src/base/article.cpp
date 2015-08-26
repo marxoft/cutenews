@@ -17,12 +17,14 @@
 #include "article.h"
 #include "database.h"
 #include <QSqlQuery>
+#include <QSqlError>
 
 Article::Article(QObject *parent) :
     QObject(parent),
     m_id(-1),
     m_favourite(false),
     m_read(false),
+    m_status(Idle),
     m_subscriptionId(-1)
 {
     connect(Database::instance(), SIGNAL(articleFavourited(int, bool)), this, SLOT(onArticleFavourited(int, bool)));
@@ -40,6 +42,7 @@ Article::Article(const QSqlQuery &query, QObject *parent) :
     m_enclosures(Database::articleEnclosures(query)),
     m_favourite(Database::articleIsFavourite(query)),
     m_read(Database::articleIsRead(query)),
+    m_status(Ready),
     m_subscriptionId(Database::articleSubscriptionId(query)),
     m_title(Database::articleTitle(query)),
     m_url(Database::articleUrl(query))
@@ -61,6 +64,7 @@ Article::Article(int id, const QString &author, const QString &body, const QStri
     m_enclosures(enclosures),
     m_favourite(isFavourite),
     m_read(isRead),
+    m_status(Ready),
     m_subscriptionId(subscriptionId),
     m_title(title),
     m_url(url)
@@ -137,6 +141,14 @@ void Article::setEnclosures(const QVariantList &e) {
     emit dataChanged(this);
 }
 
+QString Article::errorString() const {
+    return m_errorString;
+}
+
+void Article::setErrorString(const QString &e) {
+    m_errorString = e;
+}
+
 bool Article::isFavourite() const {
     return m_favourite;
 }
@@ -158,6 +170,17 @@ void Article::setRead(bool r) {
         m_read = r;
         emit readChanged();
         emit dataChanged(this);
+    }
+}
+
+Article::Status Article::status() const {
+    return m_status;
+}
+
+void Article::setStatus(Article::Status s) {
+    if (s != status()) {
+        m_status = s;
+        emit statusChanged();
     }
 }
 
@@ -199,6 +222,7 @@ void Article::setUrl(const QUrl &u) {
 
 void Article::load(int id) {
     setId(id);
+    setStatus(Active);
     connect(Database::instance(), SIGNAL(articleFetched(QSqlQuery, int)), this, SLOT(onArticleFetched(QSqlQuery, int)));
     Database::fetchArticle(id, id);
 }
@@ -218,6 +242,8 @@ void Article::onArticleFetched(const QSqlQuery &query, int requestId) {
         setSubscriptionId(Database::articleSubscriptionId(query));
         setTitle(Database::articleTitle(query));
         setUrl(Database::articleUrl(query));
+        setErrorString(query.lastError().text());
+        setStatus(query.lastError().isValid() ? Error : Ready);
     }
 }
 

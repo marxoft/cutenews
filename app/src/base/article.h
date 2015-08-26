@@ -35,13 +35,24 @@ class Article : public QObject
     Q_PROPERTY(QStringList categories READ categories NOTIFY categoriesChanged)
     Q_PROPERTY(QDateTime date READ date NOTIFY dateChanged)
     Q_PROPERTY(QVariantList enclosures READ enclosures NOTIFY enclosuresChanged)
+    Q_PROPERTY(QString errorString READ errorString NOTIFY statusChanged)
     Q_PROPERTY(bool favourite READ isFavourite NOTIFY favouriteChanged)
     Q_PROPERTY(bool read READ isRead NOTIFY readChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(int subscriptionId READ subscriptionId NOTIFY subscriptionIdChanged)
     Q_PROPERTY(QString title READ title NOTIFY titleChanged)
     Q_PROPERTY(QUrl url READ url NOTIFY urlChanged)
+    
+    Q_ENUMS(Status)
 
 public:
+    enum Status {
+        Idle = 0,
+        Active,
+        Ready,
+        Error
+    };
+    
     explicit Article(QObject *parent = 0);
     explicit Article(const QSqlQuery &query, QObject *parent = 0);
     explicit Article(int id, const QString &author, const QString &body, const QStringList &categories,
@@ -60,9 +71,13 @@ public:
     
     QVariantList enclosures() const;
     
+    QString errorString() const;
+    
     bool isFavourite() const;
     
     bool isRead() const;
+    
+    Status status() const;
         
     int subscriptionId() const;
     
@@ -86,9 +101,13 @@ private:
     
     void setEnclosures(const QVariantList &e);
     
+    void setErrorString(const QString &e);
+    
     void setFavourite(bool f);
     
     void setRead(bool r);
+    
+    void setStatus(Status s);
     
     void setSubscriptionId(int i);
     
@@ -112,6 +131,7 @@ Q_SIGNALS:
     void enclosuresChanged();
     void favouriteChanged();
     void readChanged();
+    void statusChanged();
     void subscriptionIdChanged();
     void titleChanged();
     void urlChanged();
@@ -129,9 +149,13 @@ private:
     
     QVariantList m_enclosures;
     
+    QString m_errorString;
+    
     bool m_favourite;
         
     bool m_read;
+    
+    Status m_status;
     
     int m_subscriptionId;
     
