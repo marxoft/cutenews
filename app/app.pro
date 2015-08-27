@@ -101,12 +101,27 @@ maemo5 {
     scripts.files = src/maemo5/scripts/showwindow
     scripts.path = /opt/cutenews/bin
     
-    dbus_service.files = dbus/org.marxoft.cutenews.service
+    dbus_service.files = \
+        dbus/org.marxoft.cutenews.service \
+        dbus/org.marxoft.cutenews.subscriptions.service
+    
     dbus_service.path = /usr/share/dbus-1/services
+    
+    dbus_interface.files = \
+        dbus/org.marxoft.cutenews.xml \
+        dbus/org.marxoft.cutenews.subscriptions.xml
+    
+    dbus_interface.path = /usr/share/dbus-1/interfaces
     
     target.path = /opt/cutenews/bin
     
-    INSTALLS += qml desktop icon scripts dbus_service
+    INSTALLS += \
+        qml \
+        desktop \
+        icon \
+        scripts \
+        dbus_service \
+        dbus_interface
 }
 
 INSTALLS += target

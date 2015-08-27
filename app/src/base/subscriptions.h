@@ -36,6 +36,8 @@ class Subscriptions : public QObject
     
     Q_ENUMS(Status)
     
+    Q_CLASSINFO("D-Bus Interface", "org.marxoft.cutenews.subscriptions")
+    
 public:
     enum Status {
         Idle = 0,
@@ -62,8 +64,8 @@ public Q_SLOTS:
     bool create(const QString &source, int sourceType, bool downloadEnclosures = false);
     bool importFromOpml(const QString &fileName, bool downloadEnclosures = false);
     
-    void update(int id);
-    void updateAll();
+    Q_SCRIPTABLE void update(int id);
+    Q_SCRIPTABLE bool updateAll();
     
 private:
     void setProgress(int p);

@@ -28,6 +28,7 @@
 #include <QProcess>
 #include <QImage>
 #include <QDir>
+#include <QDBusConnection>
 #ifdef CUTENEWS_DEBUG
 #include <QDebug>
 #endif
@@ -49,6 +50,10 @@ Subscriptions::Subscriptions() :
     m_total(0)
 {
     connect(Database::instance(), SIGNAL(subscriptionsAdded(int)), this, SLOT(onSubscriptionsAdded(int)));
+    
+    QDBusConnection connection = QDBusConnection::sessionBus();
+    connection.registerService("org.marxoft.cutenews.subscriptions");
+    connection.registerObject("/org/marxoft/cutenews/subscriptions", this, QDBusConnection::ExportScriptableSlots);
 }
 
 Subscriptions::~Subscriptions() {
@@ -189,7 +194,7 @@ void Subscriptions::update(int id) {
     }
 }
 
-void Subscriptions::updateAll() {
+bool Subscriptions::updateAll() {
 #ifdef CUTENEWS_DEBUG
     qDebug() << "Subscriptions::updateAll";
 #endif
@@ -197,7 +202,10 @@ void Subscriptions::updateAll() {
         connect(Database::instance(), SIGNAL(queryReady(QSqlQuery, int)),
                 this, SLOT(onSubscriptionIdsFetched(QSqlQuery, int)));
         Database::execQuery(QString("SELECT id FROM subscriptions"), REQUEST_ID);
+        return true;
     }
+    
+    return false;
 }
 
 void Subscriptions::next() {
