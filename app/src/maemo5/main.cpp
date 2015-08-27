@@ -79,9 +79,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     Utils utils;
     
     Database::init();
-    
-    Transfers::instance()->load();
     Settings::instance()->setNetworkProxy();
+    Transfers::instance()->load();
     SubscriptionPlugins::load();
     urlopener.load();
     
