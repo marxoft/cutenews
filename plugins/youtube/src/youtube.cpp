@@ -226,8 +226,8 @@ void YouTube::onVideosRequestFinished() {
             writer.writeTextElement("dc:date", snippet.value("publishedAt").toString());
             writer.writeTextElement("dc:creator", snippet.value("channelTitle").toString());
             writer.writeStartElement("content:encoded");
-            writer.writeCDATA(QString("<img src=\"%1\" width=\"480\" height=\"360\" /><p>%2")
-                                     .arg(snippet.value("thumbnails").toMap()
+            writer.writeCDATA(QString("<a href=\"%1\"><img src=\"%2\" width=\"480\" height=\"360\" /></a><p>%3")
+                                     .arg(videoUrl).arg(snippet.value("thumbnails").toMap()
                                      .value("high").toMap().value("url").toString())
                                      .arg(snippet.value("description").toString()));
             writer.writeEndElement(); // content:encoded
