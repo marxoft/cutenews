@@ -46,6 +46,9 @@ public:
         SubscriptionIdRole,
         TitleRole,
         UrlRole
+#ifdef WIDGETS_UI
+        ,SortRole
+#endif
     };
     
     enum Status {
@@ -69,9 +72,13 @@ public:
 #endif
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
+#ifdef WIDGETS_UI
+    int columnCount(const QModelIndex &parent = QModelIndex()) const;
     
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+#endif
     bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
-    void fetchMore(const QModelIndex &parent = QModelIndex());
+    void fetchMore(const QModelIndex &parent = QModelIndex());    
     
     QVariant data(const QModelIndex &index, int role) const;
     Q_INVOKABLE QVariant data(int row, const QByteArray &role) const;
@@ -81,6 +88,8 @@ public:
     
     Q_INVOKABLE Article* get(int row) const;
     
+    QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits = 1,
+                          Qt::MatchFlags flags = Qt::MatchFlags(Qt::MatchStartsWith | Qt::MatchWrap)) const;
     Q_INVOKABLE int match(const QByteArray &role, const QVariant &value) const;
 
 public Q_SLOTS:

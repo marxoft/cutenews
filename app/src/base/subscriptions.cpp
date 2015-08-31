@@ -33,7 +33,7 @@
 #include <QDebug>
 #endif
 
-static const int REQUEST_ID = 1001;
+static const int REQUEST_ID = Utils::createId();
 #ifdef USE_FAVICONS
 static const QString FAVICONS_URL("http://www.google.com/s2/favicons?domain=");
 #endif
@@ -320,21 +320,21 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     
     if (parser.date() <= lastUpdated) {
         Database::updateSubscription(subscriptionId, subscription);
+        
+        if (Database::subscriptionIconPath(m_query).isEmpty()) {
+            if (!channelIconUrl.isEmpty()) {
+                downloadIcon(channelIconUrl);
+                return;
+            }
 #ifdef USE_FAVICONS
-        if ((!channelUrl.isEmpty()) && (Database::subscriptionIconPath(m_query).isEmpty())) {
-            downloadIcon(FAVICONS_URL + channelUrl.host());
-        }
-        else {
-            next();
-        }
-#else
-        if ((!channelIconUrl.isEmpty()) && (Database::subscriptionIconPath(m_query).isEmpty())) {
-            downloadIcon(channelIconUrl);
-        }
-        else {
-            next();
-        }
+            if (!channelUrl.isEmpty()) {
+                downloadIcon(FAVICONS_URL + channelUrl.host());
+                return;
+            }
 #endif
+        }
+    
+        next();
         return;
     }
         
@@ -370,21 +370,21 @@ void Subscriptions::parseXml(const QByteArray &xml) {
                           << favourites << reads << subscriptionIds << titles << urls,
                           subscriptionId);
     Database::updateSubscription(subscriptionId, subscription);
+    
+    if (Database::subscriptionIconPath(m_query).isEmpty()) {
+        if (!channelIconUrl.isEmpty()) {
+            downloadIcon(channelIconUrl);
+            return;
+        }
 #ifdef USE_FAVICONS
-    if ((!channelUrl.isEmpty()) && (Database::subscriptionIconPath(m_query).isEmpty())) {
-        downloadIcon(FAVICONS_URL + channelUrl.host());
-    }
-    else {
-        next();
-    }
-#else
-    if ((!channelIconUrl.isEmpty()) && (Database::subscriptionIconPath(m_query).isEmpty())) {
-        downloadIcon(channelIconUrl);
-    }
-    else {
-        next();
-    }
+        if (!channelUrl.isEmpty()) {
+            downloadIcon(FAVICONS_URL + channelUrl.host());
+            return;
+        }
 #endif
+    }
+    
+    next();
 }
 
 void Subscriptions::downloadIcon(const QUrl &url) {
@@ -442,9 +442,7 @@ void Subscriptions::onIconDownloadStatusChanged() {
             }
             
             if (QDir().mkpath(ICON_PATH)) {
-                const QString ext = m_iconDownload->url().path().section('.', -1);
-                const QString fileName = QString("%1%2.%3").arg(ICON_PATH).arg(Database::subscriptionId(m_query))
-                                                           .arg(ext.isEmpty() ? QString("png") : ext);
+                const QString fileName = QString("%1%2.png").arg(ICON_PATH).arg(Database::subscriptionId(m_query));
             
                 if ((!image.isNull()) && (image.save(fileName))) {
                     QVariantMap subscription;

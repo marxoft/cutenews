@@ -16,6 +16,10 @@
 
 #include "transfermodel.h"
 #include "transfers.h"
+#ifdef WIDGETS_UI
+#include "utils.h"
+#include <QColor>
+#endif
 
 TransferModel::TransferModel(QObject *parent) :
     QAbstractListModel(parent)
@@ -56,8 +60,70 @@ int TransferModel::rowCount(const QModelIndex &) const {
     return Transfers::instance()->count();
 }
 
+#ifdef WIDGETS_UI
+int TransferModel::columnCount(const QModelIndex &) const {
+    return 4;
+}
+
+QVariant TransferModel::headerData(int section, Qt::Orientation orientation, int role) const {
+    if ((orientation == Qt::Horizontal) && (role == Qt::DisplayRole)) {
+        switch (section) {
+        case 0:
+            return tr("Filename");
+        case 1:
+            return tr("Priority");
+        case 2:
+            return tr("Progress");
+        case 3:
+            return tr("Status");
+        default:
+            break;
+        }
+    }
+    
+    return QVariant();
+}
+#endif
+
 QVariant TransferModel::data(const QModelIndex &index, int role) const {
     if (Transfer *transfer = Transfers::instance()->get(index.row())) {
+#ifdef WIDGETS_UI
+        switch (index.column()) {
+        case 0:
+            if (role == Qt::DisplayRole) {
+                return transfer->fileName();
+            }
+            
+            break;
+        case 1:
+            if (role == Qt::DisplayRole) {
+                return transfer->priorityString();
+            }
+        case 2:
+            if (role == Qt::DisplayRole) {
+                return transfer->size() > 0 ? QString("%1 of %2 (%3%)")
+                                              .arg(Utils::formatBytes(transfer->bytesTransferred()))
+                                              .arg(Utils::formatBytes(transfer->size()))
+                                              .arg(transfer->progress())
+                                            : QString("%1 of %2")
+                                              .arg(Utils::formatBytes(transfer->bytesTransferred()))
+                                              .arg(tr("unknown"));
+            }
+        case 3:
+            switch (role) {
+            case Qt::DisplayRole:
+                return transfer->statusString();
+            case Qt::ForegroundRole:
+                if (transfer->status() == Transfer::Failed) {
+                    return QColor(Qt::red);
+                }
+                
+                break;
+            default:
+                break;
+            }
+        }
+#endif
         return transfer->property(m_roles[role]);
     }
     
@@ -174,13 +240,61 @@ void TransferModel::onCountChanged(int count) {
 }
 
 void TransferModel::onTransferAdded(Transfer *transfer) {
+#ifdef WIDGETS_UI
+    connect(transfer, SIGNAL(fileNameChanged()), this, SLOT(onTransferFileNameChanged()));
+    connect(transfer, SIGNAL(priorityChanged()), this, SLOT(onTransferPriorityChanged()));
+    connect(transfer, SIGNAL(progressChanged()), this, SLOT(onTransferProgressChanged()));
+    connect(transfer, SIGNAL(sizeChanged()), this, SLOT(onTransferSizeChanged()));
+    connect(transfer, SIGNAL(statusChanged()), this, SLOT(onTransferStatusChanged()));
+#else
     connect(transfer, SIGNAL(fileNameChanged()), this, SLOT(onTransferDataChanged()));
     connect(transfer, SIGNAL(priorityChanged()), this, SLOT(onTransferDataChanged()));
     connect(transfer, SIGNAL(progressChanged()), this, SLOT(onTransferDataChanged()));
     connect(transfer, SIGNAL(sizeChanged()), this, SLOT(onTransferDataChanged()));
     connect(transfer, SIGNAL(statusChanged()), this, SLOT(onTransferDataChanged()));
+#endif
 }
 
+#ifdef WIDGETS_UI
+void TransferModel::onTransferDataChanged(Transfer* transfer, int column) {
+    const int row = indexOf(transfer);
+    
+    if (row != -1) {
+        const QModelIndex &idx = index(row, column);
+        emit dataChanged(idx, idx);
+    }
+}
+
+void TransferModel::onTransferFileNameChanged() {
+    if (Transfer *transfer = qobject_cast<Transfer*>(sender())) {
+        onTransferDataChanged(transfer, 0);
+    }
+}
+
+void TransferModel::onTransferPriorityChanged() {
+    if (Transfer *transfer = qobject_cast<Transfer*>(sender())) {
+        onTransferDataChanged(transfer, 1);
+    }
+}
+
+void TransferModel::onTransferProgressChanged() {
+    if (Transfer *transfer = qobject_cast<Transfer*>(sender())) {
+        onTransferDataChanged(transfer, 2);
+    }
+}
+
+void TransferModel::onTransferSizeChanged() {
+    if (Transfer *transfer = qobject_cast<Transfer*>(sender())) {
+        onTransferDataChanged(transfer, 2);
+    }
+}
+
+void TransferModel::onTransferStatusChanged() {
+    if (Transfer *transfer = qobject_cast<Transfer*>(sender())) {
+        onTransferDataChanged(transfer, 3);
+    }
+}
+#else
 void TransferModel::onTransferDataChanged() {
     if (Transfer *transfer = qobject_cast<Transfer*>(sender())) {
         const int row = indexOf(transfer);
@@ -191,3 +305,4 @@ void TransferModel::onTransferDataChanged() {
         }
     }
 }
+#endif

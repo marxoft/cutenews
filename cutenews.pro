@@ -1,4 +1,6 @@
 TEMPLATE = subdirs
-SUBDIRS = \
-    app \
-    widget
+SUBDIRS = app
+
+maemo5 {
+    SUBDIRS += widget
+}

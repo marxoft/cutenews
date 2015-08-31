@@ -188,39 +188,6 @@ void Settings::setScreenOrientation(int orientation) {
     }
 }
 
-QStringList Settings::searchHistory() const {
-    return value("Search/searchHistory").toStringList();
-}
-
-void Settings::setSearchHistory(const QStringList &searches) {
-    setValue("Search/searchHistory", searches);
-    emit searchHistoryChanged();
-}
-
-void Settings::addSearch(const QString &query) {
-    QStringList searches = searchHistory();
-    searches.removeOne(query);
-    searches.prepend(query);
-    setSearchHistory(searches);
-}
-
-void Settings::removeSearch(const QString &query) {
-    QStringList searches = searchHistory();
-    searches.removeOne(query);
-    setSearchHistory(searches);
-}
-
-QString Settings::searchOrder() const {
-    return value("Search/searchOrder").toString();
-}
-
-void Settings::setSearchOrder(const QString &order) {
-    if (order != searchOrder()) {
-        setValue("Search/searchOrder", order);
-        emit searchOrderChanged();
-    }
-}
-
 bool Settings::startTransfersAutomatically() const {
     return value("Transfers/startTransfersAutomatically", true).toBool();
 }

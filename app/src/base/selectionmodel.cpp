@@ -143,6 +143,11 @@ bool SelectionModel::setItemData(int row, const QVariantMap &roles) {
     return ok;
 }
 
+QModelIndexList SelectionModel::match(const QModelIndex &start, int role, const QVariant &value, int hits,
+                                      Qt::MatchFlags flags) const {
+    return QAbstractListModel::match(start, role, value, hits, flags);
+}
+
 int SelectionModel::match(const QByteArray &role, const QVariant &value) const {
     for (int i = 0; i < m_items.size(); i++) {
         if (data(i, role) == value) {

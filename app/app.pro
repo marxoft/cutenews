@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = cutenews
 
-#DEFINES += CUTENEWS_DEBUG
+DEFINES += CUTENEWS_DEBUG
 
 QT += network sql
 
@@ -122,6 +122,68 @@ maemo5 {
         scripts \
         dbus_service \
         dbus_interface
+
+} else:unix {
+    DEFINES += USE_FAVICONS WIDGETS_UI
+    
+    QT += dbus widgets webkitwidgets
+    
+    INCLUDEPATH += src/desktop
+    
+    HEADERS += \
+        src/base/transfermodel.h \
+        src/desktop/browser.h \
+        src/desktop/cutenews.h \
+        src/desktop/definitions.h \
+        src/desktop/downloadsview.h \
+        src/desktop/mainwindow.h \
+        src/desktop/plugindialog.h \
+        src/desktop/searchdialog.h \
+        src/desktop/settingsdialog.h \
+        src/desktop/subscriptiondialog.h
+    
+    SOURCES += \
+        src/base/transfermodel.cpp \
+        src/desktop/browser.cpp \
+        src/desktop/cutenews.cpp \
+        src/desktop/downloadsview.cpp \
+        src/desktop/main.cpp \
+        src/desktop/mainwindow.cpp \
+        src/desktop/plugindialog.cpp \
+        src/desktop/searchdialog.cpp \
+        src/desktop/settingsdialog.cpp \
+        src/desktop/subscriptiondialog.cpp
+    
+    desktop.files = desktop/desktop/cutenews.desktop
+    desktop.path = /usr/share/applications
+    
+    icon64.files = desktop/desktop/64/cutenews.png
+    icon64.path = /usr/share/icons/hicolor/64x64/apps
+    
+    icon48.files = desktop/desktop/48/cutenews.png
+    icon48.path = /usr/share/icons/hicolor/48x48/apps
+    
+    icon22.files = desktop/desktop/22/cutenews.png
+    icon22.path = /usr/share/icons/hicolor/22x22/apps
+    
+    icon16.files = desktop/desktop/16/cutenews.png
+    icon16.path = /usr/share/icons/hicolor/16x16/apps
+    
+    dbus_service.files = \
+        dbus/org.marxoft.cutenews.service \
+        dbus/org.marxoft.cutenews.subscriptions.service
+    
+    dbus_service.path = /usr/share/dbus-1/services
+    
+    target.path = /opt/cutenews/bin
+    
+    INSTALLS += \
+        desktop \
+        icon64 \
+        icon48 \
+        icon22 \
+        icon16 \
+        dbus_service
 }
 
 INSTALLS += target

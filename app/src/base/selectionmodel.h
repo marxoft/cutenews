@@ -53,6 +53,8 @@ public:
     Q_INVOKABLE bool setData(int row, const QVariant &value, const QByteArray &role);
     Q_INVOKABLE bool setItemData(int row, const QVariantMap &roles);
     
+    QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits = 1,
+                          Qt::MatchFlags flags = Qt::MatchFlags(Qt::MatchStartsWith | Qt::MatchWrap)) const;
     Q_INVOKABLE int match(const QByteArray &role, const QVariant &value) const;
     
     Q_INVOKABLE void append(const QString &name, const QVariant &value);

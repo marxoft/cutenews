@@ -1,0 +1,11 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Terminal=false
+Name=cuteNews
+Exec=/opt/cutenews/bin/cutenews --window
+Icon=cutenews
+GenericName=RSS reader
+Comment=RSS news and podcast aggregator
+Categories=Network

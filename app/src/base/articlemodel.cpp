@@ -19,6 +19,10 @@
 #include "database.h"
 #include "definitions.h"
 #include <QSqlError>
+#ifdef WIDGETS_UI
+#include <QFont>
+#include <QIcon>
+#endif
 
 ArticleModel::ArticleModel(QObject *parent) :
     QAbstractListModel(parent),
@@ -89,6 +93,27 @@ int ArticleModel::rowCount(const QModelIndex &) const {
     return m_list.size();
 }
 
+#ifdef WIDGETS_UI
+int ArticleModel::columnCount(const QModelIndex &) const {
+    return 3;
+}
+
+QVariant ArticleModel::headerData(int section, Qt::Orientation orientation, int role) const {
+    if ((orientation == Qt::Horizontal) && (role == Qt::DisplayRole)) {
+        switch (section) {
+        case 1:
+            return tr("Date");
+        case 2:
+            return tr("Title");
+        default:
+            break;
+        }
+    }
+    
+    return QVariant();
+}
+#endif
+
 bool ArticleModel::canFetchMore(const QModelIndex &) const {
     return (m_moreResults) && (status() == Ready) && (limit() > 0);
 }
@@ -116,6 +141,58 @@ void ArticleModel::fetchMore(const QModelIndex &) {
 
 QVariant ArticleModel::data(const QModelIndex &index, int role) const {
     if (Article *article = get(index.row())) {
+#ifdef WIDGETS_UI
+        switch (index.column()) {
+        case 0:
+            switch (role) {
+            case Qt::DecorationRole:
+                if (article->isFavourite()) {
+                    return QIcon::fromTheme("user-bookmarks");
+                }
+                
+                break;
+            default:
+                break;
+            }
+            
+            break; 
+        case 1:
+            switch (role) {
+            case Qt::DisplayRole:
+                return article->date().toString("dd/MM/yyyy HH:mm");
+            case Qt::FontRole:
+                if (!article->isRead()) {
+                    QFont font;
+                    font.setBold(true);
+                    return font;
+                }
+                
+                return QFont();
+            case SortRole:
+                return article->date();
+            default:
+                break;
+            }
+        case 2:
+            switch (role) {
+            case Qt::DisplayRole:
+            case SortRole:
+                return article->title();
+            case Qt::FontRole:
+                if (!article->isRead()) {
+                    QFont font;
+                    font.setBold(true);
+                    return font;
+                }
+                
+                return QFont();
+            default:
+                break;
+            }
+        default:
+            break;
+        }
+#endif
         return article->property(m_roles.value(role));
     }
     
@@ -163,6 +240,11 @@ Article* ArticleModel::get(int row) const {
     }
     
     return 0;
+}
+
+QModelIndexList ArticleModel::match(const QModelIndex &start, int role, const QVariant &value, int hits,
+                                    Qt::MatchFlags flags) const {
+    return QAbstractListModel::match(start, role, value, hits, flags);
 }
 
 int ArticleModel::match(const QByteArray &role, const QVariant &value) const {
@@ -245,8 +327,12 @@ void ArticleModel::onArticleChanged(Article *article) {
     const int i = m_list.indexOf(article);
     
     if (i >= 0) {
+#ifdef WIDGETS_UI
+        emit dataChanged(index(i, 0), index(i, 2));
+#else
         const QModelIndex idx = index(i);
         emit dataChanged(idx, idx);
+#endif
     }
 }
 

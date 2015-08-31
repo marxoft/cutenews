@@ -52,7 +52,11 @@ public:
 #endif
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
+#ifdef WIDGETS_UI
+    int columnCount(const QModelIndex &parent = QModelIndex()) const;
     
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+#endif
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     QMap<int, QVariant> itemData(const QModelIndex &index) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
@@ -71,7 +75,16 @@ private:
 private Q_SLOTS:
     void onCountChanged(int count);
     void onTransferAdded(Transfer *transfer);
+#ifdef WIDGETS_UI
+    void onTransferDataChanged(Transfer *transfer, int column);
+    void onTransferFileNameChanged();
+    void onTransferPriorityChanged();
+    void onTransferProgressChanged();
+    void onTransferSizeChanged();
+    void onTransferStatusChanged();
+#else
     void onTransferDataChanged();
+#endif
     
 Q_SIGNALS:
     void countChanged(int c);

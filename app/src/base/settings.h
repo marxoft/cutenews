@@ -18,7 +18,6 @@
 #define SETTINGS_H
 
 #include <QObject>
-#include <QStringList>
 #include <QVariant>
 #include <qplatformdefs.h>
 
@@ -44,8 +43,6 @@ class Settings : public QObject
     Q_PROPERTY(QString networkProxyUsername READ networkProxyUsername WRITE setNetworkProxyUsername
                NOTIFY networkProxyChanged)
     Q_PROPERTY(int screenOrientation READ screenOrientation WRITE setScreenOrientation NOTIFY screenOrientationChanged)
-    Q_PROPERTY(QStringList searchHistory READ searchHistory WRITE setSearchHistory NOTIFY searchHistoryChanged)
-    Q_PROPERTY(QString searchOrder READ searchOrder WRITE setSearchOrder NOTIFY searchOrderChanged)
     Q_PROPERTY(bool startTransfersAutomatically READ startTransfersAutomatically WRITE setStartTransfersAutomatically
                NOTIFY startTransfersAutomaticallyChanged)
     Q_PROPERTY(int updateInterval READ updateInterval WRITE setUpdateInterval NOTIFY updateIntervalChanged)
@@ -77,11 +74,6 @@ public:
     QString networkProxyUsername() const;
         
     int screenOrientation() const;
-    
-    QStringList searchHistory() const;
-    void setSearchHistory(const QStringList &searches);
-    
-    QString searchOrder() const;
     
     bool startTransfersAutomatically() const;
     
@@ -116,11 +108,6 @@ public Q_SLOTS:
         
     void setScreenOrientation(int orientation);
     
-    void addSearch(const QString &query);
-    void removeSearch(const QString &query);
-    
-    void setSearchOrder(const QString &order);
-    
     void setStartTransfersAutomatically(bool enabled);
     
     void setUpdateInterval(int interval);
@@ -143,8 +130,6 @@ Q_SIGNALS:
     void maximumConcurrentTransfersChanged();
     void networkProxyChanged();
     void screenOrientationChanged();
-    void searchHistoryChanged();
-    void searchOrderChanged();
     void startTransfersAutomaticallyChanged();
     void updateIntervalChanged();
     void updateOnStartupChanged();

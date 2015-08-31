@@ -19,6 +19,10 @@
 #include "definitions.h"
 #include "subscription.h"
 #include <QSqlError>
+#ifdef WIDGETS_UI
+#include <QFont>
+#include <QIcon>
+#endif
 
 static const int REQUEST_ID = 1000;
 
@@ -75,8 +79,61 @@ int SubscriptionModel::rowCount(const QModelIndex &) const {
     return m_list.size();
 }
 
+#ifdef WIDGETS_UI
+int SubscriptionModel::columnCount(const QModelIndex &) const {
+    return 2;
+}
+#endif
+
 QVariant SubscriptionModel::data(const QModelIndex &index, int role) const {
     if (Subscription *subscription = get(index.row())) {
+#ifdef WIDGETS_UI
+        switch (index.column()) {
+        case 0:
+            switch (role) {
+            case Qt::DisplayRole:
+                return subscription->title();
+            case Qt::DecorationRole:
+                return subscription->iconPath().isEmpty() ? QIcon::fromTheme("cutenews")
+                                                          : QIcon(subscription->iconPath());
+            case Qt::FontRole:
+                if (subscription->unreadArticles() > 0) {
+                    QFont font;
+                    font.setBold(true);
+                    return font;
+                }
+                
+                return QFont();
+            default:
+                break;
+            }
+            
+            break;
+        case 1:
+            switch (role) {
+            case Qt::DisplayRole:
+                if (subscription->unreadArticles() > 0) {
+                    return subscription->unreadArticles();
+                }
+                
+                break;
+            case Qt::FontRole:
+                if (subscription->unreadArticles() > 0) {
+                    QFont font;
+                    font.setBold(true);
+                    return font;
+                }
+                
+                return QFont();
+            default:
+                break;
+            }
+            
+            break;
+        default:
+            break;
+        }                
+#endif
         return subscription->property(m_roles.value(role));
     }
     
@@ -126,6 +183,11 @@ Subscription* SubscriptionModel::get(int row) const {
     return 0;
 }
 
+QModelIndexList SubscriptionModel::match(const QModelIndex &start, int role, const QVariant &value, int hits,
+                                         Qt::MatchFlags flags) const {
+    return QAbstractListModel::match(start, role, value, hits, flags);
+}
+
 int SubscriptionModel::match(const QByteArray &role, const QVariant &value) const {
     for (int i = 0; i < m_list.size(); i++) {
         if (m_list.at(i)->property(role) == value) {
@@ -167,8 +229,12 @@ void SubscriptionModel::onSubscriptionChanged(Subscription *subscription) {
     const int i = m_list.indexOf(subscription);
     
     if (i >= 0) {
+#ifdef WIDGETS_UI
+        emit dataChanged(index(i, 0), index(i, 1));
+#else
         const QModelIndex idx = index(i);
         emit dataChanged(idx, idx);
+#endif
     }
 }
 
