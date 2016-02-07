@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -153,22 +153,13 @@ Item {
                 CheckBox {                
                     width: parent.width
                     height: 26
-                    style: CheckBoxStyle {
-                        background: ""
-                        backgroundChecked: ""
-                        backgroundDisabled: ""
-                        backgroundPressed: ""
-                        iconWidth: 26
-                        iconHeight: 26
-                        paddingLeft: 0
+                    style: OssoCheckBoxStyle {
                         textColor: platformStyle.activeTextColor
                         pressedTextColor: platformStyle.activeTextColor
                         disabledTextColor: platformStyle.buttonTextDisabledColor
                         checkedTextColor: platformStyle.activeTextColor
                     }
-                    text: " " + qsTr("Favourite")
-                    iconSource: "image://theme/qgn_plat_check_box" + (checked ? "_selected" : "_empty")
-                                + (enabled ? "_normal" : "_disabled")
+                    text: qsTr("Favourite")
                     checked: favourite
                     onClicked: database.markArticleFavourite(id, checked)
                 }
@@ -259,6 +250,7 @@ Item {
             id: updateButton
             
             iconName: subscriptions.status == Subscriptions.Active ? "general_stop" : "general_refresh"
+            activeFocusOnPress: false
             onClicked: subscriptions.status == Subscriptions.Active ? subscriptions.cancel() : subscriptions.updateAll()
         }
         
@@ -266,6 +258,7 @@ Item {
             id: subscriptionButton
             
             iconName: "general_add"
+            activeFocusOnPress: false
             onClicked: dialogs.showSubscriptionTypeDialog()
         }
         
@@ -273,6 +266,7 @@ Item {
             id: propertiesButton
             
             iconName: "general_information"
+            activeFocusOnPress: false
             enabled: subscriptionView.currentIndex > 1
             onClicked: {
                 var sourceType = subscriptionModel.data(subscriptionView.currentIndex, "sourceType");
@@ -293,6 +287,7 @@ Item {
             id: deleteButton
             
             iconName: "general_delete"
+            activeFocusOnPress: false
             enabled: subscriptionView.currentIndex > 1
             onClicked: {
                 database.deleteSubscription(subscriptionModel.data(subscriptionView.currentIndex, "id"));
@@ -304,6 +299,7 @@ Item {
             id: viewButton
             
             iconName: "general_foldertree"
+            activeFocusOnPress: false
             checkable: true
             checked: true
         }
@@ -311,7 +307,7 @@ Item {
         TextField {
             id: searchField
             
-            width: parent.width - 420
+            width: toolBar.width - 420
             placeholderText: qsTr("Search")
             onAccepted: {
                 if (text) {
@@ -331,6 +327,7 @@ Item {
             id: searchButton
             
             iconName: "rss_reader_goto"
+            activeFocusOnPress: false
             onClicked: searchField.accepted()
         }
     }

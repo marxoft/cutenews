@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -48,50 +48,56 @@ Window {
         }
     }
     
-    BorderImage {
-        id: background
-
-        anchors.fill: parent
-        border {
-            left: 22
-            right: 22
-            top: 22
-            bottom: 22
-        }
-        source: "image://theme/TextInputFrame" + (flickable.focus ? "Focused" : "")
-        smooth: true
+    TextAreaStyle {
+        id: textAreaStyle
     }
     
     Flickable {
         id: flickable
         
-        anchors {
-            fill: parent
-            margins: platformStyle.paddingLarge
-        }
-        
+        anchors.fill: parent
         focus: true
-        clip: true
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
-        contentHeight: label.height + platformStyle.paddingMedium
-
-        Label {
-            id: label
+        contentHeight: background.height
         
+        BorderImage {
+            id: background
+            
             anchors {
                 left: parent.left
                 right: parent.right
                 top: parent.top
             }
-            height: paintedHeight
-            wrapMode: Text.Wrap
-            textFormat: Text.RichText
-            color: platformStyle.reversedTextColor
-            text: article == null ? "" : qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown"))
-                  + "<br>" + qsTr("Date") + ": " + Qt.formatDateTime(article.date, "dd/MM/yyyy HH:mm") + "<br>"
-                  + qsTr("Categories") + ": " + article.categories.join(", ") + "<br><br>" + article.body
-            
-            onLinkActivated: if (!urlopener.open(link)) Qt.openUrlExternally(link);
+            height: Math.max(flickable.height, label.height + textAreaStyle.paddingTop + textAreaStyle.paddingBottom)
+            border {
+                left: textAreaStyle.backgroundCornerMargin
+                right: textAreaStyle.backgroundCornerMargin
+                top: textAreaStyle.backgroundCornerMargin
+                bottom: textAreaStyle.backgroundCornerMargin
+            }
+            source: flickable.activeFocus ? textAreaStyle.backgroundSelected : textAreaStyle.background
+            smooth: true
+
+            Label {
+                id: label
+                
+                anchors {
+                    left: parent.left
+                    leftMargin: textAreaStyle.paddingLeft
+                    right: parent.right
+                    rightMargin: textAreaStyle.paddingRight
+                    top: parent.top
+                    topMargin: textAreaStyle.paddingTop
+                }
+                wrapMode: Text.Wrap
+                textFormat: Text.RichText
+                color: textAreaStyle.textColor
+                text: article == null ? "" : qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown"))
+                + "<br>" + qsTr("Date") + ": " + Qt.formatDateTime(article.date, "dd/MM/yyyy HH:mm") + "<br>"
+                + qsTr("Categories") + ": " + article.categories.join(", ") + "<br><br>" + article.body
+                
+                onLinkActivated: if (!urlopener.open(link)) Qt.openUrlExternally(link);
+            }
         }
         
         Keys.onLeftPressed: {
@@ -136,25 +142,21 @@ Window {
             when: settings.viewMode == "dark"
         
             PropertyChanges {
-                target: background
-                source: ""
-            }
-        
-            PropertyChanges {
-                target: flickable
-                clip: false
-                contentHeight: label.height + platformStyle.paddingMedium * 2
-                anchors.margins: 0
-            }
-        
-            PropertyChanges {
-                target: label
-                anchors.margins: platformStyle.paddingMedium
-                color: platformStyle.defaultTextColor
+                target: textAreaStyle
+                background: ""
+                backgroundSelected: ""
+                backgroundDisabled: ""
+                textColor: platformStyle.defaultTextColor
             }
         }
     }
     
-    onArticleChanged: if ((article) && (!article.read)) database.markArticleRead(article.id, true);
+    onArticleChanged: {
+        flickable.contentY = 0;
+        
+        if ((article) && (!article.read)) {
+            database.markArticleRead(article.id, true);
+        }
+    }
 }
     

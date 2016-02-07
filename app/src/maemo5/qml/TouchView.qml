@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -44,6 +44,7 @@ Item {
         }
         text: qsTr("New subscription")
         iconName: "general_add"
+        activeFocusOnPress: false
         onClicked: dialogs.showSubscriptionTypeDialog()
     }
     
@@ -60,6 +61,7 @@ Item {
         }
         text: subscriptions.status == Subscriptions.Active ? qsTr("Cancel update") : qsTr("Update all")
         iconName: subscriptions.status == Subscriptions.Active ? "general_stop" : "general_refresh"
+        activeFocusOnPress: false
         onClicked: subscriptions.status == Subscriptions.Active ? subscriptions.cancel() : subscriptions.updateAll()
     }
     
@@ -142,5 +144,6 @@ Item {
     Component.onCompleted: {
         appWindow.title = "cuteNews";
         subscriptionModel.load();
+        subscriptionView.forceActiveFocus();
     }
 }

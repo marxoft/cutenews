@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ $(pidof cutenews) ]
+    then
+        run-standalone.sh dbus-send --print-reply --dest=org.marxoft.cutenews /org/marxoft/cutenews org.marxoft.cutenews.showWidget
+    else
+        run-standalone.sh /opt/cutenews/bin/cutenews "--widget"
+fi

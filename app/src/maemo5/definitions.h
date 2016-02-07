@@ -1,16 +1,16 @@
 /*
- * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License version 3 as
+ * it under the terms of the GNU General Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
@@ -30,7 +30,7 @@ static const int ICON_SIZE = 48;
 
 static const QRegExp ILLEGAL_FILENAME_CHARS_RE("[\"\\/@&~=:?#!|<>*^]");
 
-static const QString VERSION_NUMBER("0.3.0");
+static const QString VERSION_NUMBER("0.5.0");
 
 static const QString DATABASE_PATH("/home/user/.config/cuteNews/");
 static const QString DOWNLOAD_PATH("/home/user/MyDocs/cuteNews/");
