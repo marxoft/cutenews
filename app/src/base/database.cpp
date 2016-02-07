@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -161,7 +161,7 @@ bool Database::init() {
     if (!db.isOpen()) {
         db.open();
     }
-        
+    
     QSqlQuery query = db.exec("CREATE TABLE IF NOT EXISTS subscriptions (id INTEGER PRIMARY KEY NOT NULL, \
     cacheSize INTEGER, description TEXT, downloadEnclosures INTEGER, iconPath TEXT, lastUpdated TEXT, source TEXT, \
     sourceType INTEGER, title TEXT, updateInterval INTEGER, url TEXT)");

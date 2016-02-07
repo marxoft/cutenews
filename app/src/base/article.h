@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -36,6 +36,7 @@ class Article : public QObject
     Q_PROPERTY(QDateTime date READ date NOTIFY dateChanged)
     Q_PROPERTY(QVariantList enclosures READ enclosures NOTIFY enclosuresChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY statusChanged)
+    Q_PROPERTY(bool hasEnclosures READ hasEnclosures NOTIFY enclosuresChanged)
     Q_PROPERTY(bool favourite READ isFavourite NOTIFY favouriteChanged)
     Q_PROPERTY(bool read READ isRead NOTIFY readChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
@@ -72,6 +73,8 @@ public:
     QVariantList enclosures() const;
     
     QString errorString() const;
+    
+    bool hasEnclosures() const;
     
     bool isFavourite() const;
     
