@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -25,6 +25,10 @@
 #include <QIcon>
 #include <QSqlQuery>
 #include <QThread>
+#if QT_VERSION < 0x050000
+#include <QSsl>
+#include <QSslConfiguration>
+#endif
 
 void registerTypes() {
     qRegisterMetaType<QSqlQuery>("QSqlQuery");
@@ -38,6 +42,13 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     app.setApplicationVersion(VERSION_NUMBER);
     app.setWindowIcon(QIcon::fromTheme("cutenews"));
     app.setAttribute(Qt::AA_DontShowIconsInMenus, false);
+
+#if QT_VERSION < 0x050000
+    QSslConfiguration config = QSslConfiguration::defaultConfiguration();
+    config.setProtocol(QSsl::TlsV1);
+    QSslConfiguration::setDefaultConfiguration(config);
+    QIcon::setThemeName("Lubuntu");
+#endif  
     
     QScopedPointer<Database> database(Database::instance());
     QScopedPointer<Settings> settings(Settings::instance());

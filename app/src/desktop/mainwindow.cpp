@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -346,6 +346,9 @@ MainWindow::MainWindow(QWidget *parent) :
     
     connect(m_enclosuresView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showEnclosureContextMenu(QPoint)));
     connect(m_enclosuresView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openCurrentEnclosureInBrowser()));
+
+    connect(m_browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
+    connect(m_browser, SIGNAL(openUrlInTab(QString)), this, SLOT(openUrlInTab(QString)));
     
     connect(m_tabs, SIGNAL(currentChanged(int)), m_stack, SLOT(setCurrentIndex(int)));
     connect(m_tabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
@@ -480,10 +483,7 @@ void MainWindow::copyCurrentArticleUrl() {
 }
 
 void MainWindow::openCurrentArticleInTab() {
-    Browser *browser = new Browser(m_articlesView->currentIndex().data(ArticleModel::UrlRole).toString(), m_stack);    
-    m_stack->addWidget(browser);
-    m_tabs->addTab(m_articlesView->currentIndex().data(ArticleModel::TitleRole).toString());
-    m_tabs->show();
+    openUrlInTab(m_articlesView->currentIndex().data(ArticleModel::UrlRole).toString());
 }
 
 void MainWindow::openCurrentArticleInBrowser() {
@@ -502,10 +502,7 @@ void MainWindow::copyCurrentEnclosureUrl() {
 
 void MainWindow::openCurrentEnclosureInTab() {
     if (QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
-        Browser *browser = new Browser(item->text(), m_stack);    
-        m_stack->addWidget(browser);
-        m_tabs->addTab(item->text());
-        m_tabs->show();
+        openUrlInTab(item->text());
     }
 }
 
@@ -624,6 +621,22 @@ void MainWindow::openUrlExternally(const QString &url) {
         
     if (!m_urlOpenerModel->open(url)) {
         QDesktopServices::openUrl(url);
+    }
+}
+
+void MainWindow::openUrlInTab(const QString &url) {
+    Browser *browser = new Browser(url, m_stack);
+    connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
+    connect(browser, SIGNAL(openUrlInTab(QString)), this, SLOT(openUrlInTab(QString)));
+    connect(browser, SIGNAL(titleChanged(QString)), this, SLOT(updateTabText(QString)));
+    m_stack->addWidget(browser);
+    m_tabs->addTab(url);
+    m_tabs->show();
+}
+
+void MainWindow::updateTabText(const QString &text) {
+    if (Browser *browser = qobject_cast<Browser*>(sender())) {
+        m_tabs->setTabText(m_stack->indexOf(browser), text);
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,6 +22,8 @@
 
 class QVBoxLayout;
 class QLineEdit;
+class QMenu;
+class QAction;
 class QToolBar;
 class QWebView;
 
@@ -30,6 +32,7 @@ class Browser : public QWidget
     Q_OBJECT
     
     Q_PROPERTY(QString html READ toHtml WRITE setHtml)
+    Q_PROPERTY(QString title READ title)
     Q_PROPERTY(QUrl url READ url WRITE setUrl)
 
 public:
@@ -38,13 +41,29 @@ public:
     
     QString toHtml() const;
     void setHtml(const QString &h);
+
+    QString title() const;
     
     QUrl url() const;
     void setUrl(const QUrl &u);
 
 private Q_SLOTS:
+    void onLinkClicked(const QUrl &u);
     void onUrlChanged(const QUrl &u);
 
+    void showContextMenu(const QPoint &pos);
+
+    void copyUrl();
+    void openUrlInTab();
+    void openUrlInBrowser();
+    void openUrlExternally();
+
+Q_SIGNALS:
+    void openUrlExternally(const QString &url);
+    void openUrlInTab(const QString &url);
+    void titleChanged(const QString &title);
+    void urlChanged(const QUrl &url);
+    
 private:    
     QLineEdit *m_urlEdit;
     
@@ -53,6 +72,15 @@ private:
     QVBoxLayout *m_layout;
     
     QWebView *m_webView;
+
+    QMenu *m_menu;
+
+    QAction *m_copyAction;
+    QAction *m_tabAction;
+    QAction *m_browserAction;
+    QAction *m_externalAction;
+
+    QUrl m_url;
 };
 
 #endif // BROWSER_H

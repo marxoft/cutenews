@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -118,7 +118,7 @@ QVariant PluginDialog::initParam(const QString &key, const QVariant &defaultValu
 }
 
 bool PluginDialog::loadUi() {
-    const QString &fileName = SubscriptionPlugins::filePath(m_pluginName);
+    const QString fileName = SubscriptionPlugins::filePath(m_pluginName);
     
     if (fileName.isEmpty()) {
         return false;
@@ -288,6 +288,8 @@ void PluginDialog::onTextChanged(const QString &currentText) {
 
 void PluginDialog::onSubscriptionFetched(const QSqlQuery &query, int requestId) {
     if (requestId == m_requestId) {
+        disconnect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
+                   this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
         QVariantMap source = Database::subscriptionSource(query).toMap();
         
         if (!source.isEmpty()) {
