@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<node name="/org/marxoft/cutenews">
+    <interface name="org.marxoft.cutenews">
+    <method name="showArticle">
+        <arg name="id" type="i" direction="in" />
+        <arg name="ok" type="b" direction="out" />
+    </method>
+    <method name="showWindow">
+        <arg name="ok" type="b" direction="out" />
+    </method>
+</node>
