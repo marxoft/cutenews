@@ -39,6 +39,8 @@ Browser::Browser(QWidget *parent) :
     m_browserAction(new QAction(tr("Open in browser"), this)),
     m_externalAction(new QAction(tr("Open externally"), this))
 {
+    setStyleSheet("background: #fff");
+    
     m_toolBar->addAction(m_webView->pageAction(QWebPage::Back));
     m_toolBar->addAction(m_webView->pageAction(QWebPage::Forward));
     m_toolBar->addWidget(m_urlEdit);
@@ -46,7 +48,6 @@ Browser::Browser(QWidget *parent) :
     m_toolBar->setMovable(false);
     m_toolBar->hide();
     
-    m_webView->setPalette(QApplication::palette("QWebView"));
     m_webView->setContextMenuPolicy(Qt::CustomContextMenu);
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
 
