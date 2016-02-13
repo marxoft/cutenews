@@ -17,6 +17,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "subscriptions.h"
 #include <QMainWindow>
 #include <QPointer>
 
@@ -86,6 +87,7 @@ private Q_SLOTS:
 
     void updateTabText(const QString &text);
     void closeTab(int index);
+    void closeCurrentTab();
     
     void showDownloadsTab();
     
@@ -93,7 +95,10 @@ private Q_SLOTS:
     void showSettingsDialog();
     
     void onSubscriptionsCountChanged(int count);
+    void onSubscriptionsStatusChanged(Subscriptions::Status status);
     void onArticlesCountChanged(int count);
+    
+    void onCurrentTabChanged(int index);
 
 private:
     SubscriptionModel *m_subscriptionsModel;
@@ -114,6 +119,7 @@ private:
     QToolBar *m_toolBar;
     
     QAction *m_updateAllSubscriptionsAction;
+    QAction *m_cancelSubscriptionUpdatesAction;
     QAction *m_markAllSubscriptionsReadAction;
     QAction *m_newSubscriptionAction;
     QAction *m_importSubscriptionsAction;
@@ -142,6 +148,7 @@ private:
     QAction *m_downloadEnclosureAction;
     
     QAction *m_downloadsAction;
+    QAction *m_closeTabAction;
     
     QAction *m_searchAction;
     QAction *m_settingsAction;

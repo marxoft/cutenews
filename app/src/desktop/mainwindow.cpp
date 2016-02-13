@@ -26,7 +26,6 @@
 #include "subscriptiondialog.h"
 #include "subscriptionmodel.h"
 #include "subscriptionplugins.h"
-#include "subscriptions.h"
 #include "transfers.h"
 #include "urlopenermodel.h"
 #include "utils.h"
@@ -67,33 +66,35 @@ MainWindow::MainWindow(QWidget *parent) :
     m_viewMenu(new QMenu(tr("&View"), this)),
     m_toolsMenu(new QMenu(tr("&Tools"), this)),
     m_toolBar(new QToolBar(this)),
-    m_updateAllSubscriptionsAction(new QAction(QIcon::fromTheme("view-refresh"), tr("Update all"), this)),
-    m_markAllSubscriptionsReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Mark all read"), this)),
-    m_newSubscriptionAction(new QAction(QIcon::fromTheme("list-add"), tr("New subscription"), this)),
-    m_importSubscriptionsAction(new QAction(QIcon::fromTheme("document-open"), tr("Import from OPML"), this)),
-    m_quitAction(new QAction(QIcon::fromTheme("application-exit"), tr("Quit"), this)),
-    m_updateSubscriptionAction(new QAction(QIcon::fromTheme("view-refresh"), tr("Update"), this)),
-    m_markSubscriptionReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Mark all read"), this)),
-    m_deleteSubscriptionAction(new QAction(QIcon::fromTheme("edit-delete"), tr("Unsubscribe"), this)),
-    m_subscriptionPropertiesAction(new QAction(QIcon::fromTheme("document-properties"), tr("Properties"), this)),
-    m_nextUnreadArticleAction(new QAction(QIcon::fromTheme("go-jump"), tr("Next unread article"), this)),
-    m_nextArticleAction(new QAction(QIcon::fromTheme("go-next"), tr("Next article"), this)),
-    m_previousArticleAction(new QAction(QIcon::fromTheme("go-previous"), tr("Previous article"), this)),
-    m_toggleArticleReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Toggle read status"), this)),
-    m_toggleArticleFavouriteAction(new QAction(QIcon::fromTheme("user-bookmarks"), tr("Toggle favourite status"), this)),
-    m_deleteArticleAction(new QAction(QIcon::fromTheme("edit-delete"), tr("Delete"), this)),
-    m_copyArticleUrlAction(new QAction(tr("Copy URL"), this)),
-    m_openArticleInTabAction(new QAction(tr("Open in tab"), this)),
-    m_openArticleInBrowserAction(new QAction(tr("Open in browser"), this)),
-    m_openArticleExternallyAction(new QAction(tr("Open externally"), this)),
-    m_copyEnclosureUrlAction(new QAction(tr("Copy URL"), this)),
-    m_openEnclosureInTabAction(new QAction(tr("Open in tab"), this)),
-    m_openEnclosureInBrowserAction(new QAction(tr("Open in browser"), this)),
-    m_openEnclosureExternallyAction(new QAction(tr("Open externally"), this)),
-    m_downloadEnclosureAction(new QAction(tr("Download"), this)),
-    m_downloadsAction(new QAction(QIcon::fromTheme("folder-download"), tr("Show downloads"), this)),
-    m_searchAction(new QAction(QIcon::fromTheme("edit-find"), tr("Search all articles"), this)),
-    m_settingsAction(new QAction(QIcon::fromTheme("document-properties"), tr("Preferences"), this)),
+    m_updateAllSubscriptionsAction(new QAction(QIcon::fromTheme("view-refresh"), tr("&Update all"), this)),
+    m_cancelSubscriptionUpdatesAction(new QAction(QIcon::fromTheme("dialog-cancel"), tr("&Cancel updates"), this)),
+    m_markAllSubscriptionsReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Mark all &read"), this)),
+    m_newSubscriptionAction(new QAction(QIcon::fromTheme("list-add"), tr("&New subscription"), this)),
+    m_importSubscriptionsAction(new QAction(QIcon::fromTheme("document-open"), tr("&Import from OPML"), this)),
+    m_quitAction(new QAction(QIcon::fromTheme("application-exit"), tr("&Quit"), this)),
+    m_updateSubscriptionAction(new QAction(QIcon::fromTheme("view-refresh"), tr("&Update"), this)),
+    m_markSubscriptionReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Mark all &read"), this)),
+    m_deleteSubscriptionAction(new QAction(QIcon::fromTheme("edit-delete"), tr("Un&subscribe"), this)),
+    m_subscriptionPropertiesAction(new QAction(QIcon::fromTheme("document-properties"), tr("&Properties"), this)),
+    m_nextUnreadArticleAction(new QAction(QIcon::fromTheme("go-jump"), tr("Next &unread article"), this)),
+    m_nextArticleAction(new QAction(QIcon::fromTheme("go-next"), tr("&Next article"), this)),
+    m_previousArticleAction(new QAction(QIcon::fromTheme("go-previous"), tr("&Previous article"), this)),
+    m_toggleArticleReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Toggle &read status"), this)),
+    m_toggleArticleFavouriteAction(new QAction(QIcon::fromTheme("user-bookmarks"), tr("Toggle &favourite status"), this)),
+    m_deleteArticleAction(new QAction(QIcon::fromTheme("edit-delete"), tr("&Delete"), this)),
+    m_copyArticleUrlAction(new QAction(tr("&Copy URL"), this)),
+    m_openArticleInTabAction(new QAction(tr("Open in &tab"), this)),
+    m_openArticleInBrowserAction(new QAction(tr("Open in &browser"), this)),
+    m_openArticleExternallyAction(new QAction(tr("Open &externally"), this)),
+    m_copyEnclosureUrlAction(new QAction(tr("&Copy URL"), this)),
+    m_openEnclosureInTabAction(new QAction(tr("Open in &tab"), this)),
+    m_openEnclosureInBrowserAction(new QAction(tr("Open in &browser"), this)),
+    m_openEnclosureExternallyAction(new QAction(tr("Open &externally"), this)),
+    m_downloadEnclosureAction(new QAction(tr("&Download"), this)),
+    m_downloadsAction(new QAction(QIcon::fromTheme("folder-download"), tr("Show &downloads"), this)),
+    m_closeTabAction(new QAction(QIcon::fromTheme("view-close"), tr("Close &tab"), this)),
+    m_searchAction(new QAction(QIcon::fromTheme("edit-find"), tr("&Search all articles"), this)),
+    m_settingsAction(new QAction(QIcon::fromTheme("document-properties"), tr("&Preferences"), this)),
     m_horizontalSplitter(new QSplitter(Qt::Horizontal, this)),
     m_verticalSplitter(new QSplitter(Qt::Vertical, this)),
     m_stack(new QStackedWidget(this)),
@@ -126,6 +127,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_articlesProxyModel->setSortRole(ArticleModel::SortRole);
         
     m_subscriptionsMenu->addAction(m_updateAllSubscriptionsAction);
+    m_subscriptionsMenu->addAction(m_cancelSubscriptionUpdatesAction);
     m_subscriptionsMenu->addAction(m_markAllSubscriptionsReadAction);
     m_subscriptionsMenu->addAction(m_newSubscriptionAction);
     m_subscriptionsMenu->addMenu(m_newSubscriptionMenu);
@@ -170,6 +172,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_enclosureContextMenu->addAction(m_downloadEnclosureAction);
     
     m_viewMenu->addAction(m_downloadsAction);
+    m_viewMenu->addAction(m_closeTabAction);
     
     m_toolsMenu->addAction(m_searchAction);
     m_toolsMenu->addAction(m_settingsAction);
@@ -182,9 +185,11 @@ MainWindow::MainWindow(QWidget *parent) :
     m_toolBar->addAction(m_nextArticleAction);
     m_toolBar->addAction(m_nextUnreadArticleAction);
     m_toolBar->addAction(m_updateAllSubscriptionsAction);
+    m_toolBar->addAction(m_cancelSubscriptionUpdatesAction);
     m_toolBar->addAction(m_searchAction);
     
     m_updateAllSubscriptionsAction->setShortcut(QKeySequence(tr("Ctrl+U")));
+    m_cancelSubscriptionUpdatesAction->setShortcut(QKeySequence(tr("Ctrl+Shift+U")));
     m_importSubscriptionsAction->setShortcut(QKeySequence(tr("Ctrl+O")));
     m_quitAction->setShortcut(QKeySequence(tr("Ctrl+Q")));
     
@@ -198,6 +203,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_toggleArticleFavouriteAction->setShortcut(QKeySequence(tr("Ctrl+T")));
     
     m_downloadsAction->setShortcut(QKeySequence(tr("Ctrl+D")));
+    m_closeTabAction->setShortcut(QKeySequence(tr("Ctrl+W")));
+    m_closeTabAction->setEnabled(false);
     
     m_searchAction->setShortcut(QKeySequence(tr("Ctrl+F")));
     m_settingsAction->setShortcut(QKeySequence(tr("Ctrl+P")));
@@ -294,6 +301,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_articleLayout->setContentsMargins(0, 0, 0, 0);
     m_articleLayout->setStretch(1, 1);
     
+    connect(Subscriptions::instance(), SIGNAL(statusChanged(Subscriptions::Status)),
+            this, SLOT(onSubscriptionsStatusChanged(Subscriptions::Status)));
     connect(Subscriptions::instance(), SIGNAL(statusTextChanged(QString)), statusBar(), SLOT(showMessage(QString)));
     
     connect(m_subscriptionsModel, SIGNAL(countChanged(int)), this, SLOT(onSubscriptionsCountChanged(int)));
@@ -302,6 +311,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_newSubscriptionMenu, SIGNAL(triggered(QAction*)), this, SLOT(newSubscriptionRequested(QAction*)));
     
     connect(m_updateAllSubscriptionsAction, SIGNAL(triggered()), Subscriptions::instance(), SLOT(updateAll()));
+    connect(m_cancelSubscriptionUpdatesAction, SIGNAL(triggered()), Subscriptions::instance(), SLOT(cancel()));
     connect(m_markAllSubscriptionsReadAction, SIGNAL(triggered()), this, SLOT(markAllSubscriptionsRead()));
     connect(m_newSubscriptionAction, SIGNAL(triggered()), this, SLOT(newSubscriptionRequested()));
     connect(m_importSubscriptionsAction, SIGNAL(triggered()), this, SLOT(importSubscriptions()));
@@ -330,6 +340,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_downloadEnclosureAction, SIGNAL(triggered()), this, SLOT(downloadCurrentEnclosure()));
     
     connect(m_downloadsAction, SIGNAL(triggered()), this, SLOT(showDownloadsTab()));
+    connect(m_closeTabAction, SIGNAL(triggered()), this, SLOT(closeCurrentTab()));
     
     connect(m_searchAction, SIGNAL(triggered()), this, SLOT(showSearchDialog()));
     connect(m_settingsAction, SIGNAL(triggered()), this, SLOT(showSettingsDialog()));
@@ -350,10 +361,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(m_browser, SIGNAL(openUrlInTab(QString)), this, SLOT(openUrlInTab(QString)));
     
-    connect(m_tabs, SIGNAL(currentChanged(int)), m_stack, SLOT(setCurrentIndex(int)));
+    connect(m_tabs, SIGNAL(currentChanged(int)), this, SLOT(onCurrentTabChanged(int)));
     connect(m_tabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
     
     connect(m_infoLabel, SIGNAL(linkActivated(QString)), this, SLOT(openUrlExternally(QString)));
+    
+    onSubscriptionsStatusChanged(Subscriptions::instance()->status());
     
     m_subscriptionsModel->load();
 }
@@ -670,6 +683,10 @@ void MainWindow::closeTab(int index) {
     }
 }
 
+void MainWindow::closeCurrentTab() {
+    closeTab(m_tabs->currentIndex());
+}
+
 void MainWindow::showDownloadsTab() {
     if (m_downloadsTab) {
         const int index = m_stack->indexOf(m_downloadsTab);
@@ -708,6 +725,12 @@ void MainWindow::onSubscriptionsCountChanged(int count) {
     m_subscriptionPropertiesAction->setEnabled(enable);
 }
 
+void MainWindow::onSubscriptionsStatusChanged(Subscriptions::Status status) {
+    const bool active = (status == Subscriptions::Active);    
+    m_updateAllSubscriptionsAction->setVisible(!active);
+    m_cancelSubscriptionUpdatesAction->setVisible(active);
+}
+
 void MainWindow::onArticlesCountChanged(int count) {
     const bool enable = (count > 0);
     m_markSubscriptionReadAction->setEnabled(enable);
@@ -720,4 +743,9 @@ void MainWindow::onArticlesCountChanged(int count) {
     m_openArticleInTabAction->setEnabled(enable);
     m_openArticleInBrowserAction->setEnabled(enable);
     m_openArticleExternallyAction->setEnabled(enable);    
+}
+
+void MainWindow::onCurrentTabChanged(int index) {
+    m_stack->setCurrentIndex(index);
+    m_closeTabAction->setEnabled(index > 0);
 }
