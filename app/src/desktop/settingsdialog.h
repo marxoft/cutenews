@@ -19,7 +19,9 @@
 
 #include <QDialog>
 
+class NetworkProxyTypeModel;
 class QCheckBox;
+class QComboBox;
 class QDialogButtonBox;
 class QGroupBox;
 class QLineEdit;
@@ -46,10 +48,16 @@ private:
 private Q_SLOTS:
     void setCurrentTab(int index);
     
-    void showFileDialog();
+    void setNetworkProxyType(int index);
     
+    void showFileDialog();
+        
 private:
+    NetworkProxyTypeModel *m_proxyTypeModel;
+    
     QCheckBox *m_downloadsCheckBox;
+    
+    QComboBox *m_proxyTypeSelector;
     
     QDialogButtonBox *m_buttonBox;
     

@@ -16,12 +16,13 @@
 
 #include "settingsdialog.h"
 #include "definitions.h"
+#include "networkproxytypemodel.h"
 #include "settings.h"
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QFormLayout>
-#include <QGridLayout>
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
@@ -29,10 +30,13 @@
 #include <QSpinBox>
 #include <QStackedWidget>
 #include <QTabBar>
+#include <QVBoxLayout>
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
+    m_proxyTypeModel(0),
     m_downloadsCheckBox(0),
+    m_proxyTypeSelector(0),
     m_buttonBox(new QDialogButtonBox(QDialogButtonBox::Ok, Qt::Horizontal, this)),
     m_proxyGroupBox(0),
     m_downloadPathEdit(0),
@@ -49,7 +53,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     m_layout(new QVBoxLayout(this))
 {
     setWindowTitle(tr("Preferences"));
-    setMinimumSize(QSize(400, 400));
+    setMinimumSize(QSize(520, 400));
     
     m_tabs->addTab(tr("General"));
     m_tabs->addTab(tr("Network"));
@@ -77,21 +81,19 @@ void SettingsDialog::accept() {
 void SettingsDialog::showGeneralTab() {
     if (!m_generalTab) {
         m_generalTab = new QWidget(m_stack);
-        m_downloadsCheckBox = new QCheckBox(tr("Start downloads automatically"), m_stack);
-        m_downloadsCheckBox->setChecked(Settings::instance()->startTransfersAutomatically());
-        m_downloadPathEdit = new QLineEdit(Settings::instance()->downloadPath(), m_stack);
+        m_downloadsCheckBox = new QCheckBox(tr("Start downloads &automatically"), m_stack);
+        m_downloadsCheckBox->setChecked(Settings::startTransfersAutomatically());
+        m_downloadPathEdit = new QLineEdit(Settings::downloadPath(), m_stack);
         m_downloadPathButton = new QPushButton(QIcon::fromTheme("document-open"), tr("Browse"), m_stack);
         m_downloadsSpinBox = new QSpinBox(m_stack);
         m_downloadsSpinBox->setRange(1, MAX_CONCURRENT_TRANSFERS);
-        m_downloadsSpinBox->setValue(Settings::instance()->maximumConcurrentTransfers());
-                
-        QGridLayout *grid = new QGridLayout(m_generalTab);
-        grid->addWidget(new QLabel(tr("Download path:"), m_generalTab), 0, 0);
-        grid->addWidget(m_downloadPathEdit, 0, 1);
-        grid->addWidget(m_downloadPathButton, 0, 2);
-        grid->addWidget(m_downloadsCheckBox, 1, 0, 1, 3);
-        grid->addWidget(new QLabel(tr("Maximum concurrent downloads:"), m_generalTab), 2, 0);
-        grid->addWidget(m_downloadsSpinBox, 2, 1, 1, 2);
+        m_downloadsSpinBox->setValue(Settings::maximumConcurrentTransfers());
+        
+        QFormLayout *form = new QFormLayout(m_generalTab);
+        form->addRow(tr("Download &path:"), m_downloadPathEdit);
+        form->addWidget(m_downloadPathButton);
+        form->addRow(tr("&Maximum concurrent downloads:"), m_downloadsSpinBox);
+        form->addWidget(m_downloadsCheckBox);
         
         connect(m_downloadsCheckBox, SIGNAL(toggled(bool)),
                 Settings::instance(), SLOT(setStartTransfersAutomatically(bool)));
@@ -111,16 +113,21 @@ void SettingsDialog::showNetworkTab() {
         m_networkTab = new QWidget(m_stack);
         m_proxyGroupBox = new QGroupBox(tr("Use network proxy"), m_stack);
         m_proxyGroupBox->setCheckable(true);
-        m_proxyGroupBox->setChecked(Settings::instance()->networkProxyEnabled());
-        m_proxyHostEdit = new QLineEdit(Settings::instance()->networkProxyHost(), m_proxyGroupBox);
+        m_proxyGroupBox->setChecked(Settings::networkProxyEnabled());
+        m_proxyTypeModel = new NetworkProxyTypeModel(this);
+        m_proxyTypeSelector = new QComboBox(m_proxyGroupBox);
+        m_proxyTypeSelector->setModel(m_proxyTypeModel);
+        m_proxyTypeSelector->setCurrentIndex(m_proxyTypeModel->match(0, "value", Settings::networkProxyType()));
+        m_proxyHostEdit = new QLineEdit(Settings::networkProxyHost(), m_proxyGroupBox);
         m_proxyPortSpinBox = new QSpinBox(m_proxyGroupBox);
         m_proxyPortSpinBox->setRange(1, 9999);
-        m_proxyPortSpinBox->setValue(Settings::instance()->networkProxyPort());
-        m_proxyUsernameEdit = new QLineEdit(Settings::instance()->networkProxyUsername(), m_proxyGroupBox);
-        m_proxyPasswordEdit = new QLineEdit(Settings::instance()->networkProxyPassword(), m_proxyGroupBox);
+        m_proxyPortSpinBox->setValue(Settings::networkProxyPort());
+        m_proxyUsernameEdit = new QLineEdit(Settings::networkProxyUsername(), m_proxyGroupBox);
+        m_proxyPasswordEdit = new QLineEdit(Settings::networkProxyPassword(), m_proxyGroupBox);
         m_proxyPasswordEdit->setEchoMode(QLineEdit::Password);
         
         QFormLayout *form = new QFormLayout(m_proxyGroupBox);
+        form->addRow(tr("&Type:"), m_proxyTypeSelector);
         form->addRow(tr("&Host:"), m_proxyHostEdit);
         form->addRow(tr("&Port:"), m_proxyPortSpinBox);
         form->addRow(tr("&Username:"), m_proxyUsernameEdit);
@@ -130,6 +137,7 @@ void SettingsDialog::showNetworkTab() {
         vbox->addWidget(m_proxyGroupBox);
         
         connect(m_proxyGroupBox, SIGNAL(toggled(bool)), Settings::instance(), SLOT(setNetworkProxyEnabled(bool)));
+        connect(m_proxyTypeSelector, SIGNAL(activated(int)), this, SLOT(setNetworkProxyType(int)));
         connect(m_proxyHostEdit, SIGNAL(textChanged(QString)),
                 Settings::instance(), SLOT(setNetworkProxyHost(QString)));
         connect(m_proxyPortSpinBox, SIGNAL(valueChanged(int)), Settings::instance(), SLOT(setNetworkProxyPort(int)));
@@ -155,6 +163,10 @@ void SettingsDialog::setCurrentTab(int index) {
     default:
         break;
     }
+}
+
+void SettingsDialog::setNetworkProxyType(int index) {
+    Settings::setNetworkProxyType(m_proxyTypeSelector->itemData(index).toInt());
 }
 
 void SettingsDialog::showFileDialog() {
