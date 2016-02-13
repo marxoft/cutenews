@@ -80,7 +80,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_nextArticleAction(new QAction(QIcon::fromTheme("go-next"), tr("&Next article"), this)),
     m_previousArticleAction(new QAction(QIcon::fromTheme("go-previous"), tr("&Previous article"), this)),
     m_toggleArticleReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Toggle &read status"), this)),
-    m_toggleArticleFavouriteAction(new QAction(QIcon::fromTheme("user-bookmarks"), tr("Toggle &favourite status"), this)),
+    m_toggleArticleFavouriteAction(new QAction(QIcon::fromTheme("mail-mark-important"), tr("Toggle &favourite status"), this)),
     m_deleteArticleAction(new QAction(QIcon::fromTheme("edit-delete"), tr("&Delete"), this)),
     m_copyArticleUrlAction(new QAction(tr("&Copy URL"), this)),
     m_openArticleInTabAction(new QAction(tr("Open in &tab"), this)),
@@ -347,8 +347,7 @@ MainWindow::MainWindow(QWidget *parent) :
     
     connect(m_subscriptionsView, SIGNAL(customContextMenuRequested(QPoint)),
             this, SLOT(showSubscriptionContextMenu(QPoint)));
-    connect(m_subscriptionsView->selectionModel(), SIGNAL(currentRowChanged(QModelIndex, QModelIndex)),
-            this, SLOT(setCurrentSubscription(QModelIndex)));
+    connect(m_subscriptionsView, SIGNAL(activated(QModelIndex)), this, SLOT(setCurrentSubscription(QModelIndex)));
     
     connect(m_articlesView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showArticleContextMenu(QPoint)));
     connect(m_articlesView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openCurrentArticleInBrowser()));
