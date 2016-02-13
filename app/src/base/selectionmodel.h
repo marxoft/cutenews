@@ -24,7 +24,8 @@ class SelectionModel : public QAbstractListModel
     Q_OBJECT
     
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
-    Q_PROPERTY(Qt::Alignment textAlignment READ textAlignment WRITE setTextAlignment NOTIFY textAlignmentChanged)
+    Q_PROPERTY(Qt::Alignment textAlignment READ textAlignment WRITE setTextAlignment
+               NOTIFY textAlignmentChanged)
     
 public:
     enum Roles {
@@ -48,18 +49,19 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles);
     
-    Q_INVOKABLE QVariant data(int row, const QByteArray &role) const;
-    Q_INVOKABLE QVariantMap itemData(int row) const;
-    Q_INVOKABLE bool setData(int row, const QVariant &value, const QByteArray &role);
-    Q_INVOKABLE bool setItemData(int row, const QVariantMap &roles);
+    Q_INVOKABLE virtual QVariant data(int row, const QByteArray &role) const;
+    Q_INVOKABLE virtual QVariantMap itemData(int row) const;
+    Q_INVOKABLE virtual bool setData(int row, const QVariant &value, const QByteArray &role);
+    Q_INVOKABLE virtual bool setItemData(int row, const QVariantMap &roles);
     
     QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits = 1,
-                          Qt::MatchFlags flags = Qt::MatchFlags(Qt::MatchStartsWith | Qt::MatchWrap)) const;
-    Q_INVOKABLE int match(const QByteArray &role, const QVariant &value) const;
+                          Qt::MatchFlags flags = Qt::MatchFlags(Qt::MatchExactly | Qt::MatchWrap)) const;
+    Q_INVOKABLE virtual int match(int start, const QByteArray &role, const QVariant &value,
+                                  int flags = Qt::MatchFlags(Qt::MatchExactly | Qt::MatchWrap)) const;
     
-    Q_INVOKABLE void append(const QString &name, const QVariant &value);
-    Q_INVOKABLE void insert(int row, const QString &name, const QVariant &value);
-    Q_INVOKABLE bool remove(int row);
+    Q_INVOKABLE virtual void append(const QString &name, const QVariant &value);
+    Q_INVOKABLE virtual void insert(int row, const QString &name, const QVariant &value);
+    Q_INVOKABLE virtual bool remove(int row);
 
 public Q_SLOTS:
     void clear();

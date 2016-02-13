@@ -25,7 +25,7 @@ Dialog {
     property string pluginName
         
     title: qsTr("Subscription properties")
-    height: Math.min(350, container.height + platformStyle.paddingMedium)
+    height: Math.min(360, container.height + platformStyle.paddingMedium)
     
     Flickable {
         id: flickable
@@ -149,24 +149,16 @@ Dialog {
     }
     
     Component {
-        id: listButtonComponent
-        
-        ValueButton {
-            id: valueButton
-            
-            property alias title: valueButton.text            
-        }
-    }
-    
-    Component {
         id: listSelectorComponent
         
-        ListPickSelector {
+        ListSelectorButton {
+            id: listSelector
+            
+            property alias title: listSelector.text
             property string key
             
             model: SelectionModel {}
-            textRole: "name"
-            onSelected: internal.setParam(key, model.data(currentIndex, "value"))
+            onSelected: internal.setParam(key, value)
         }
     }
     
@@ -284,22 +276,20 @@ Dialog {
                             loader.item.value = getParam(loader.item.key, findAttribute(node, "default", 0));
                         }
                         else if (node.nodeName === "list") {
-                            loader.sourceComponent = listButtonComponent;
-                            loader.item.title = findAttribute(node, "title");                            
-                            loader.item.pickSelector = listSelectorComponent.createObject(root,
-                                                       {key: findAttribute(node, "name")});
+                            loader.sourceComponent = listSelectorComponent;
+                            loader.item.title = findAttribute(node, "title");
+                            loader.item.key = findAttribute(node, "name");
                         
                             for (var j = 0; j < node.childNodes.length; j++) {
                                 var listNode = node.childNodes[j];
 
                                 if (listNode.nodeName === "element") {
-                                    loader.item.pickSelector.model.append(findAttribute(listNode, "name"),
-                                                                          findAttribute(listNode, "value"));
+                                    loader.item.model.append(findAttribute(listNode, "name"),
+                                                             findAttribute(listNode, "value"));
                                 }
                             }
                         
-                            loader.item.pickSelector.currentIndex = loader.item.pickSelector.model.match("value",
-                            getParam(loader.item.pickSelector.key, findAttribute(node, "default")));
+                            loader.item.value = getParam(loader.item.key, findAttribute(node, "default"));
                         }
                         else if (node.nodeName === "text") {
                             loader.sourceComponent = textComponent;
@@ -339,9 +329,6 @@ Dialog {
                 internal.loadParams(plugins.filePath(pluginName));
             }
         }
-        else if (status == DialogStatus.Closed) {
-            repeater.model = null;
-        }
     }
     onAccepted: {
         if (subscriptionId > 0) {
@@ -350,10 +337,7 @@ Dialog {
         }
         else {
             subscriptions.create(internal.stringifySource(), Subscription.Plugin, enclosuresCheckBox.checked);
-        }
-        
-        enclosuresCheckBox.checked = false;
+        }        
     }
-    onRejected: enclosuresCheckBox.checked = false
 }
     

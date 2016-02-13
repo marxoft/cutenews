@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=cuteNews
+Icon=cutenews
+Categories=Feeds
+Type=qml
+Exec=/opt/cutenews/qml/EventFeedSettingsDialog.qml

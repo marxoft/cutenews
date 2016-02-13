@@ -175,6 +175,7 @@ HomescreenWidget {
             height: 48
             iconName: "rss_reader_move_up"
             style: buttonStyle
+            enabled: view.currentIndex > 4
             onClicked: view.decrementCurrentIndexInstantly()
         }
         
@@ -195,6 +196,7 @@ HomescreenWidget {
             height: 48
             iconName: "rss_reader_move_down"
             style: buttonStyle
+            enabled: view.currentIndex < view.count - 4
             onClicked: view.incrementCurrentIndexInstantly()
         }
     }
@@ -209,8 +211,12 @@ HomescreenWidget {
         onTriggered: view.incrementCurrentIndex()
     }
     
+    PopupLoader {
+        id: popupLoader
+    }
+    
     Component {
-        id: settingsDialogComponent
+        id: settingsDialog
         
         Dialog {
             id: dialog
@@ -258,11 +264,5 @@ HomescreenWidget {
         }
     }
     
-    onSettingsRequested: {
-        if (!settingsDialog) {
-            settingsDialog = settingsDialogComponent.createObject(null);
-        }
-        
-        settingsDialog.open();
-    }
+    onSettingsRequested: popupLoader.open(settingsDialog, null)
 }

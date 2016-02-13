@@ -93,23 +93,26 @@ bool SelectionModel::setData(const QModelIndex &index, const QVariant &value, in
         return false;
     }
     
+    emit dataChanged(index, index);
     return true;
 }
 
 bool SelectionModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) {
+    if (roles.isEmpty()) {
+        return false;
+    }
+    
     QMapIterator<int, QVariant> iterator(roles);
-    bool ok = false;
     
     while (iterator.hasNext()) {
         iterator.next();
-        ok = setData(index, iterator.value(), iterator.key());
         
-        if (!ok) {
+        if (!setData(index, iterator.value(), iterator.key())) {
             return false;
         }
     }
     
-    return ok;
+    return true;
 }
 
 QVariant SelectionModel::data(int row, const QByteArray &role) const {
@@ -129,18 +132,21 @@ bool SelectionModel::setData(int row, const QVariant &value, const QByteArray &r
 }
 
 bool SelectionModel::setItemData(int row, const QVariantMap &roles) {
+    if (roles.isEmpty()) {
+        return false;
+    }
+    
     QMapIterator<QString, QVariant> iterator(roles);
-    bool ok = false;
     
     while (iterator.hasNext()) {
         iterator.next();
-        ok = setData(row, iterator.value(), iterator.key().toUtf8());
-        if (!ok) {
+        
+        if (!setData(row, iterator.value(), iterator.key().toUtf8())) {
             return false;
         }
     }
     
-    return ok;
+    return true;
 }
 
 QModelIndexList SelectionModel::match(const QModelIndex &start, int role, const QVariant &value, int hits,
@@ -148,14 +154,9 @@ QModelIndexList SelectionModel::match(const QModelIndex &start, int role, const 
     return QAbstractListModel::match(start, role, value, hits, flags);
 }
 
-int SelectionModel::match(const QByteArray &role, const QVariant &value) const {
-    for (int i = 0; i < m_items.size(); i++) {
-        if (data(i, role) == value) {
-            return i;
-        }
-    }
-    
-    return -1;
+int SelectionModel::match(int start, const QByteArray &role, const QVariant &value, int flags) const {
+    const QModelIndexList idxs = match(index(start), m_roles.key(role), value, 1, Qt::MatchFlags(flags));
+    return idxs.isEmpty() ? -1 : idxs.first().row();
 }
 
 void SelectionModel::append(const QString &name, const QVariant &value) {

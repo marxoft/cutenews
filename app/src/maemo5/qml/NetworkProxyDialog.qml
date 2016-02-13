@@ -16,12 +16,13 @@
 
 import QtQuick 1.0
 import org.hildon.components 1.0
+import cuteNews 1.0
 
 Dialog {
     id: root
     
     title: qsTr("Network proxy")
-    height: 350
+    height: Math.min(360, column.height + platformStyle.paddingMedium)
     
     Flickable {
         id: flicakble
@@ -51,6 +52,16 @@ Dialog {
             
                 width: parent.width
                 text: qsTr("Use network proxy")
+                checked: settings.networkProxyEnabled
+            }
+            
+            ListSelectorButton {
+                id: proxyTypeSelector
+                
+                width: parent.width
+                text: qsTr("Proxy type")
+                model: NetworkProxyTypeModel {}
+                value: settings.networkProxyType
             }
         
             Label {
@@ -62,6 +73,7 @@ Dialog {
                 id: hostField
             
                 width: parent.width
+                text: settings.networkProxyHost
             }
         
             Label {
@@ -75,6 +87,7 @@ Dialog {
                 width: parent.width
                 minimum: 1
                 maximum: 1000000
+                value: settings.networkProxyPort
             }
         
             Label {
@@ -86,6 +99,7 @@ Dialog {
                 id: usernameField
             
                 width: parent.width
+                text: settings.networkProxyUsername
             }
         
             Label {
@@ -98,6 +112,7 @@ Dialog {
             
                 width: parent.width
                 echoMode: TextInput.Password
+                text: settings.networkProxyPassword
             }
         }
     }
@@ -113,19 +128,10 @@ Dialog {
         text: qsTr("Done")
         onClicked: root.accept()
     }
-    
-    onStatusChanged: {
-        if (status == DialogStatus.Open) {
-            proxyCheckBox.checked = settings.networkProxyEnabled;
-            hostField.text = settings.networkProxyHost;
-            portField.value = settings.networkProxyPort;
-            usernameField.text = settings.networkProxyUsername;
-            passwordField.text = settings.networkProxyPassword;
-            flickable.contentY = 0;
-        }
-    }
+
     onAccepted: {
         settings.networkProxyEnabled = proxyCheckBox.checked;
+        settings.networkProxyType = proxyTypeSelector.value;
         settings.networkProxyHost = hostField.text;
         settings.networkProxyPort = portField.value;
         settings.networkProxyUsername = usernameField.text;

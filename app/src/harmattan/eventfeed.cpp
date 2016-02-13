@@ -42,9 +42,7 @@ QString base64SerializedVariant(const QVariant &value) {
 EventFeed::EventFeed() :
     QObject(),
     m_dbusIf(0)
-{
-    self = this;
-    
+{   
     if (!publishedSubscriptions().isEmpty()) {
         connectSignals();
     }
@@ -87,6 +85,8 @@ QVariantList EventFeed::publishedSubscriptions() const {
         while (!file.atEnd()) {
             published << file.readLine().trimmed().toInt();
         }
+        
+        file.close();
     }
 #ifdef CUTENEWS_DEBUG
     qDebug() << "EventFeed::publishedSubscriptions" << published;
@@ -106,6 +106,7 @@ void EventFeed::addPublishedSubscription(int subscriptionId) {
     
     if (file.open(QFile::Append | QFile::Text)) {
         file.write(QByteArray::number(subscriptionId) + "\n");
+        file.close();
         emit publishedSubscriptionsChanged();
         connectSignals();
     }
@@ -132,6 +133,7 @@ void EventFeed::removePublishedSubscription(int subscriptionId) {
                 file.write(v.toByteArray() + "\n");
             }
             
+            file.close();
             emit publishedSubscriptionsChanged();
         }
     }
@@ -173,6 +175,7 @@ void EventFeed::addPublishedSubscriptions(QSqlQuery query, int requestId) {
                 file.write(v.toByteArray() + "\n");
             }
             
+            file.close();
             emit publishedSubscriptionsChanged();
         }
     }

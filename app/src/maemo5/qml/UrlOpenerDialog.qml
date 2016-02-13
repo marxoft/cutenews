@@ -99,19 +99,5 @@ Dialog {
         }
     }
 
-    onStatusChanged: {
-        switch (status) {
-        case DialogStatus.Open:
-            nameField.forceActiveFocus();
-            break;
-        case DialogStatus.Closed: {
-            nameField.clear();
-            regexpField.clear();
-            commandField.clear();
-            break;
-        }
-        default:
-            break;
-        }
-    }
+    onStatusChanged: if (status == DialogStatus.Open) nameField.forceActiveFocus();
 }

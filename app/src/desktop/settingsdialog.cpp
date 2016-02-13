@@ -49,7 +49,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     m_layout(new QVBoxLayout(this))
 {
     setWindowTitle(tr("Preferences"));
-    setAttribute(Qt::WA_DeleteOnClose, true);
     setMinimumSize(QSize(400, 400));
     
     m_tabs->addTab(tr("General"));

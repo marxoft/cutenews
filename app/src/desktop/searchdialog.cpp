@@ -16,31 +16,26 @@
 
 #include "searchdialog.h"
 #include <QDialogButtonBox>
-#include <QGridLayout>
-#include <QLabel>
+#include <QFormLayout>
 #include <QLineEdit>
 
 SearchDialog::SearchDialog(QWidget *parent) :
     QDialog(parent),
     m_buttonBox(new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this)),
-    m_layout(new QGridLayout(this)),
+    m_layout(new QFormLayout(this)),
     m_searchEdit(new QLineEdit(this))
 {
     setWindowTitle(tr("Search all articles"));
     setMinimumWidth(400);
-    setAttribute(Qt::WA_DeleteOnClose, true);
     
-    m_layout->addWidget(new QLabel(tr("Query") + ":", 0, 0));
-    m_layout->addWidget(m_searchEdit, 0, 1);
-    m_layout->addWidget(m_buttonBox, 1, 0, 1, 2);
-    m_layout->setColumnStretch(1, 1);
+    m_layout->addRow(tr("&Query:"), m_searchEdit);
+    m_layout->addWidget(m_buttonBox);
     
     connect(m_buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
     connect(m_buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
 }
 
-void SearchDialog::accept() {
+QString SearchDialog::query() const {
     const QString text = m_searchEdit->text();
-    emit search(text.startsWith("WHERE ") ? text : QString("WHERE title LIKE '%%1%'").arg(text));    
-    QDialog::accept();
+    return text.startsWith("WHERE ") ? text : QString("WHERE title LIKE '%%1%'").arg(text);
 }

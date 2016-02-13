@@ -43,7 +43,7 @@ Window {
             id: downloadModel
         }
         delegate: DownloadDelegate {
-            onClicked: dialogs.showPropertiesDialog()
+            onClicked: popupLoader.open(propertiesDialog, root)
             onPressAndHold: contextMenu.popup()
         }
     }
@@ -51,7 +51,7 @@ Window {
     Label {
         anchors.centerIn: parent
         font.pointSize: platformStyle.fontSizeLarge
-        color: platformStyle.secondaryTextColor
+        color: platformStyle.disabledTextColor
         text: qsTr("No downloads")
         visible: downloads.count == 0
     }
@@ -72,34 +72,15 @@ Window {
         }
     }
     
-    QtObject {
-        id: dialogs
-        
-        property DownloadPropertiesDialog propertiesDialog
-        
-        function showPropertiesDialog() {
-            if (!propertiesDialog) {
-                propertiesDialog = propertiesDialogComponent.createObject(root);
-            }
-            
-            propertiesDialog.open();
-        }
+    PopupLoader {
+        id: popupLoader
     }
     
     Component {
-        id: propertiesDialogComponent
+        id: propertiesDialog
         
         DownloadPropertiesDialog {
-            onStatusChanged: {
-                switch (status) {
-                case DialogStatus.Opening:
-                    download = downloads.get(view.currentIndex);
-                    break;
-                case DialogStatus.Closed:
-                    download = null;
-                    break;
-                }
-            }
+            download: downloads.get(view.currentIndex);
         }
     }
 }

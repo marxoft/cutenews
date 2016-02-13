@@ -21,7 +21,7 @@ Dialog {
     id: root
     
     title: qsTr("About")
-    height: column.height + platformStyle.paddingMedium
+    height: Math.min(360, column.height + platformStyle.paddingMedium)
     
     Column {
         id: column
@@ -57,7 +57,7 @@ Dialog {
             width: parent.width
             wrapMode: Text.WordWrap
             text: qsTr("A user-friendly news and podcast aggregator.")
-                  + "<br><br>&copy; Stuart Howarth 2015"
+                  + "<br><br>&copy; Stuart Howarth 2016"
         }
     }
 }

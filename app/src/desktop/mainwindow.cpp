@@ -68,18 +68,18 @@ MainWindow::MainWindow(QWidget *parent) :
     m_toolsMenu(new QMenu(tr("&Tools"), this)),
     m_toolBar(new QToolBar(this)),
     m_updateAllSubscriptionsAction(new QAction(QIcon::fromTheme("view-refresh"), tr("Update all"), this)),
-    m_markAllSubscriptionsReadAction(new QAction(QIcon::fromTheme("dialog-yes"), tr("Mark all read"), this)),
+    m_markAllSubscriptionsReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Mark all read"), this)),
     m_newSubscriptionAction(new QAction(QIcon::fromTheme("list-add"), tr("New subscription"), this)),
     m_importSubscriptionsAction(new QAction(QIcon::fromTheme("document-open"), tr("Import from OPML"), this)),
     m_quitAction(new QAction(QIcon::fromTheme("application-exit"), tr("Quit"), this)),
     m_updateSubscriptionAction(new QAction(QIcon::fromTheme("view-refresh"), tr("Update"), this)),
-    m_markSubscriptionReadAction(new QAction(QIcon::fromTheme("dialog-yes"), tr("Mark all read"), this)),
+    m_markSubscriptionReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Mark all read"), this)),
     m_deleteSubscriptionAction(new QAction(QIcon::fromTheme("edit-delete"), tr("Unsubscribe"), this)),
     m_subscriptionPropertiesAction(new QAction(QIcon::fromTheme("document-properties"), tr("Properties"), this)),
     m_nextUnreadArticleAction(new QAction(QIcon::fromTheme("go-jump"), tr("Next unread article"), this)),
     m_nextArticleAction(new QAction(QIcon::fromTheme("go-next"), tr("Next article"), this)),
     m_previousArticleAction(new QAction(QIcon::fromTheme("go-previous"), tr("Previous article"), this)),
-    m_toggleArticleReadAction(new QAction(QIcon::fromTheme("dialog-yes"), tr("Toggle read status"), this)),
+    m_toggleArticleReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Toggle read status"), this)),
     m_toggleArticleFavouriteAction(new QAction(QIcon::fromTheme("user-bookmarks"), tr("Toggle favourite status"), this)),
     m_deleteArticleAction(new QAction(QIcon::fromTheme("edit-delete"), tr("Delete"), this)),
     m_copyArticleUrlAction(new QAction(tr("Copy URL"), this)),
@@ -370,12 +370,10 @@ void MainWindow::markAllSubscriptionsRead() {
 
 void MainWindow::newSubscriptionRequested(QAction *action) {
     if ((action) && (action->data().toInt() == Subscription::Plugin)) {
-        PluginDialog *dialog = new PluginDialog(action->text(), this);
-        dialog->open();
+        PluginDialog(action->text(), this).exec();
     }
-    else {
-        SubscriptionDialog *dialog = new SubscriptionDialog(this);
-        dialog->open();
+    else{
+        SubscriptionDialog(this).exec();
     }
 }
 
@@ -419,23 +417,41 @@ void MainWindow::showCurrentSubscriptionProperties() {
         const int sourceType = m_subscriptionsView->currentIndex().data(SubscriptionModel::SourceTypeRole).toInt();
         
         if (sourceType == Subscription::Plugin) {
-            PluginDialog *dialog = new PluginDialog(id, this);
-            dialog->open();
+            PluginDialog(id, this).exec();
         }
         else {
-            SubscriptionDialog *dialog = new SubscriptionDialog(id, this);
-            dialog->open();
+            SubscriptionDialog(id, this).exec();
         }
     }
 }
 
 void MainWindow::nextUnreadArticle() {
-    QModelIndexList list = m_articlesProxyModel->match(m_articlesView->currentIndex(), ArticleModel::ReadRole, false, 1,
-                                                       Qt::MatchExactly);
+    if (m_articlesModel->status() == ArticleModel::Active) {
+        return;
+    }
+    
+    disconnect(m_articlesModel, SIGNAL(statusChanged(ArticleModel::Status)), this, SLOT(nextUnreadArticle()));
+    
+    const QModelIndex index =
+    m_articlesView->currentIndex().isValid() ? m_articlesView->currentIndex()
+                                             : m_articlesProxyModel->index(0, 0, QModelIndex());
+    
+    QModelIndexList list = m_articlesProxyModel->match(index, ArticleModel::ReadRole, false, 1);
     
     if (!list.isEmpty()) {
         setCurrentArticle(list.first());
+        return;
     }
+    
+    list = m_subscriptionsModel->match(m_subscriptionsView->currentIndex(), SubscriptionModel::ReadRole, false, 1);
+    
+    if (!list.isEmpty()) {
+        connect(m_articlesModel, SIGNAL(statusChanged(ArticleModel::Status)), this, SLOT(nextUnreadArticle()));
+        setCurrentSubscription(list.first());
+        return;
+    }
+    
+    statusBar()->showMessage(tr("No unread articles"));
 }
 
 void MainWindow::nextArticle() {
@@ -671,14 +687,15 @@ void MainWindow::showDownloadsTab() {
 }
 
 void MainWindow::showSearchDialog() {
-    SearchDialog *dialog = new SearchDialog(this);
-    dialog->open();
-    connect(dialog, SIGNAL(search(QString)), this, SLOT(searchArticles(QString)));
+    SearchDialog dialog(this);
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        searchArticles(dialog.query());
+    }   
 }
 
 void MainWindow::showSettingsDialog() {
-    SettingsDialog *dialog = new SettingsDialog(this);
-    dialog->open();
+    SettingsDialog(this).exec();
 }
 
 void MainWindow::onSubscriptionsCountChanged(int count) {
@@ -694,7 +711,6 @@ void MainWindow::onSubscriptionsCountChanged(int count) {
 void MainWindow::onArticlesCountChanged(int count) {
     const bool enable = (count > 0);
     m_markSubscriptionReadAction->setEnabled(enable);
-    m_nextUnreadArticleAction->setEnabled(enable);
     m_nextArticleAction->setEnabled(enable);
     m_previousArticleAction->setEnabled(enable);
     m_toggleArticleReadAction->setEnabled(enable);
@@ -703,5 +719,5 @@ void MainWindow::onArticlesCountChanged(int count) {
     m_copyArticleUrlAction->setEnabled(enable);
     m_openArticleInTabAction->setEnabled(enable);
     m_openArticleInBrowserAction->setEnabled(enable);
-    m_openArticleExternallyAction->setEnabled(enable);
+    m_openArticleExternallyAction->setEnabled(enable);    
 }

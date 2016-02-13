@@ -14,32 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SEARCHDIALOG_H
-#define SEARCHDIALOG_H
+#ifndef VIEWMODEMODEL_H
+#define VIEWMODEMODEL_H
 
-#include <QDialog>
+#include "selectionmodel.h"
 
-class QDialogButtonBox;
-class QFormLayout;
-class QLineEdit;
-
-class SearchDialog : public QDialog
+class ViewModeModel : public SelectionModel
 {
     Q_OBJECT
     
-    Q_PROPERTY(QString query READ query)
-    
 public:
-    explicit SearchDialog(QWidget *parent = 0);
-    
-    QString query() const;
-
-private:
-    QDialogButtonBox *m_buttonBox;
-    
-    QFormLayout *m_layout;
-    
-    QLineEdit *m_searchEdit;
+    explicit ViewModeModel(QObject *parent = 0) :
+        SelectionModel(parent)
+    {
+        append(tr("Dark on light"), QString("light"));
+        append(tr("Light on dark"), QString("dark"));
+    }
 };
 
-#endif // SEARCHDIALOG_H
+#endif // VIEWMODEMODEL_H

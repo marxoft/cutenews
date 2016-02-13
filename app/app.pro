@@ -24,8 +24,7 @@ HEADERS += \
     src/base/transfer.h \
     src/base/transfers.h \
     src/base/urlopenermodel.h \
-    src/base/utils.h \
-    src/base/viewmodemodel.h
+    src/base/utils.h
 
 SOURCES += \
     src/base/article.cpp \
@@ -55,12 +54,15 @@ maemo5 {
         src/base/transfermodel.h \
         src/maemo5/cutenews.h \
         src/maemo5/definitions.h \
+        src/maemo5/eventfeed.h \
         src/maemo5/settings.h \
-        src/maemo5/userinterfacemodel.h
+        src/maemo5/userinterfacemodel.h \
+        src/maemo5/viewmodemodel.h
     
     SOURCES += \
         src/base/transfermodel.cpp \
         src/maemo5/cutenews.cpp \
+        src/maemo5/eventfeed.cpp \
         src/maemo5/main.cpp \
         src/maemo5/settings.cpp
     
@@ -76,10 +78,12 @@ maemo5 {
         src/maemo5/qml/EnclosureDelegate.qml \
         src/maemo5/qml/EnclosuresDialog.qml \
         src/maemo5/qml/FavouritesWindow.qml \
+        src/maemo5/qml/ListSelectorButton.qml \
         src/maemo5/qml/MainWindow.qml \
         src/maemo5/qml/NetworkProxyDialog.qml \
         src/maemo5/qml/OssoView.qml \
         src/maemo5/qml/PluginDialog.qml \
+        src/maemo5/qml/PopupLoader.qml \
         src/maemo5/qml/SearchDialog.qml \
         src/maemo5/qml/SearchWindow.qml \
         src/maemo5/qml/SettingsDialog.qml \
@@ -154,7 +158,8 @@ maemo5 {
         src/harmattan/maskeffect.h \
         src/harmattan/screenorientationmodel.h \
         src/harmattan/settings.h \
-        src/harmattan/shareui.h
+        src/harmattan/shareui.h \
+        src/harmattan/viewmodemodel.h
     
     SOURCES += \
         src/harmattan/cutenews.cpp \

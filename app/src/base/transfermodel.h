@@ -67,7 +67,10 @@ public:
     Q_INVOKABLE bool setData(int row, const QVariant &value, const QByteArray &role);
     Q_INVOKABLE bool setItemData(int row, const QVariantMap &roles);
     
-    Q_INVOKABLE int match(const QByteArray &role, const QVariant &value) const;
+    QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits = 1,
+                          Qt::MatchFlags flags = Qt::MatchFlags(Qt::MatchExactly | Qt::MatchWrap)) const;
+    Q_INVOKABLE int match(int start, const QByteArray &role, const QVariant &value,
+                          int flags = Qt::MatchFlags(Qt::MatchExactly | Qt::MatchWrap)) const;
     
 private:
     int indexOf(Transfer *transfer) const;

@@ -55,7 +55,7 @@ void Transfers::addDownloadTransfer(const QUrl &url, int subscriptionId) {
     Transfer *transfer = new Transfer(this);
     transfer->setNetworkAccessManager(m_nam);
     transfer->setId(QString::number(Utils::createId()));
-    transfer->setDownloadPath(Settings::instance()->downloadPath() + ".incomplete/" + transfer->id());
+    transfer->setDownloadPath(Settings::downloadPath() + ".incomplete/" + transfer->id());
     transfer->setFileName(url.path().section('/', -1));
     transfer->setSubscriptionId(subscriptionId);
     transfer->setUrl(url);
@@ -66,7 +66,7 @@ void Transfers::addDownloadTransfer(const QUrl &url, int subscriptionId) {
     emit countChanged(count());
     emit transferAdded(transfer);
     
-    if (Settings::instance()->startTransfersAutomatically()) {
+    if (Settings::startTransfersAutomatically()) {
         transfer->queue();
     }
 }
@@ -167,14 +167,14 @@ void Transfers::load() {
         emit countChanged(count());
         emit transferAdded(transfer);
     
-        if (Settings::instance()->startTransfersAutomatically()) {
+        if (Settings::startTransfersAutomatically()) {
             transfer->queue();
         }
     }
 }
 
 void Transfers::getNextTransfers() {
-    const int max = Settings::instance()->maximumConcurrentTransfers();
+    const int max = Settings::maximumConcurrentTransfers();
     
     for (int priority = Transfer::HighPriority; priority <= Transfer::LowPriority; priority++) {
         foreach (Transfer *transfer, m_transfers) {
@@ -233,14 +233,14 @@ void Transfers::onTransferStatusChanged() {
             return;
         }
                 
-        if (active() < Settings::instance()->maximumConcurrentTransfers()) {
+        if (active() < Settings::maximumConcurrentTransfers()) {
             m_queueTimer.start();
         }
     }
 }
 
 void Transfers::onMaximumConcurrentTransfersChanged() {
-    const int max = Settings::instance()->maximumConcurrentTransfers();
+    const int max = Settings::maximumConcurrentTransfers();
     int act = active();
     
     if (act < max) {

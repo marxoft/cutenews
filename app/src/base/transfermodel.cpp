@@ -212,15 +212,14 @@ bool TransferModel::setItemData(int row, const QVariantMap &roles) {
     
     return ok;
 }
+QModelIndexList TransferModel::match(const QModelIndex &start, int role, const QVariant &value, int hits,
+                                     Qt::MatchFlags flags) const {
+    return QAbstractListModel::match(start, role, value, hits, flags);
+}
 
-int TransferModel::match(const QByteArray &role, const QVariant &value) const {
-    for (int i = 0; i < Transfers::instance()->count(); i++) {
-        if (data(i, role) == value) {
-            return i;
-        }
-    }
-    
-    return -1;
+int TransferModel::match(int start, const QByteArray &role, const QVariant &value, int flags) const {
+    const QModelIndexList indexes = match(index(start), m_roles.key(role), value, Qt::MatchFlags(flags));
+    return indexes.isEmpty() ? -1 : indexes.first().row();
 }
 
 int TransferModel::indexOf(Transfer *transfer) const {

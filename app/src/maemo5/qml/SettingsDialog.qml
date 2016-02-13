@@ -22,7 +22,7 @@ Dialog {
     id: root
     
     title: qsTr("Settings")
-    height: Math.min(350, column.height + platformStyle.paddingMedium)
+    height: Math.min(360, column.height + platformStyle.paddingMedium)
     
     Flickable {
         id: flickable
@@ -47,23 +47,27 @@ Dialog {
             }
             spacing: platformStyle.paddingMedium
             
-            ValueButton {
+            ListSelectorButton {
                 width: parent.width
                 text: qsTr("User interface")
-                pickSelector: userInterfaceSelector
+                model: UserInterfaceModel {}
+                value: settings.userInterface
+                onSelected: settings.userInterface = value
             }
             
-            ValueButton {
+            ListSelectorButton {
                 width: parent.width
                 text: qsTr("Article view mode")
-                pickSelector: viewModeSelector
+                model: ViewModeModel {}
+                value: settings.viewMode
+                onSelected: settings.viewMode = value
             }
         
             ValueButton {
                 width: parent.width
                 text: qsTr("Download path")
                 valueText: settings.downloadPath
-                onClicked: dialogs.showFileDialog()
+                onClicked: popupLoader.open(fileDialog, root)
             }
         
             CheckBox {
@@ -76,13 +80,13 @@ Dialog {
             Button {
                 width: parent.width
                 text: qsTr("Network proxy")
-                onClicked: dialogs.showNetworkProxyDialog() 
+                onClicked: popupLoader.open(proxyDialog, root)
             }
         
             Button {
                 width: parent.width
                 text: qsTr("Url openers")
-                onClicked: dialogs.showUrlOpenersDialog()
+                onClicked: popupLoader.open(urlOpenersDialog, root)
             }
         }
     }
@@ -99,58 +103,12 @@ Dialog {
         onClicked: root.accept()
     }
     
-    ListPickSelector {
-        id: userInterfaceSelector
-        
-        model: UserInterfaceModel {}
-        textRole: "name"
-        currentIndex: model.match("value", settings.userInterface)
-        onSelected: settings.userInterface = model.data(currentIndex, "value")
-    }
-    
-    ListPickSelector {
-        id: viewModeSelector
-        
-        model: ViewModeModel {}
-        textRole: "name"
-        currentIndex: model.match("value", settings.viewMode)
-        onSelected: settings.viewMode = model.data(currentIndex, "value")
-    }
-    
-    QtObject {
-        id: dialogs
-        
-        property FileDialog fileDialog
-        property NetworkProxyDialog proxyDialog
-        property UrlOpenersDialog urlOpenersDialog
-        
-        function showFileDialog() {
-            if (!fileDialog) {
-                fileDialog = fileDialogComponent.createObject(root);
-            }
-            
-            fileDialog.open();
-        }
-        
-        function showNetworkProxyDialog() {
-            if (!proxyDialog) {
-                proxyDialog = proxyDialogComponent.createObject(root);
-            }
-            
-            proxyDialog.open();
-        }
-        
-        function showUrlOpenersDialog() {
-            if (!urlOpenersDialog) {
-                urlOpenersDialog = urlOpenersDialogComponent.createObject(root);
-            }
-            
-            urlOpenersDialog.open();
-        }
+    PopupLoader {
+        id: popupLoader
     }
     
     Component {
-        id: fileDialogComponent
+        id: fileDialog
         
         FileDialog {
             selectFolder: true
@@ -160,16 +118,14 @@ Dialog {
     }
     
     Component {
-        id: proxyDialogComponent
+        id: proxyDialog
         
         NetworkProxyDialog {}
     }
     
     Component {
-        id: urlOpenersDialogComponent
+        id: urlOpenersDialog
         
         UrlOpenersDialog {}
-    }
-    
-    onStatusChanged: if (status == DialogStatus.Open) flickable.contentY = 0;
+    }    
 }

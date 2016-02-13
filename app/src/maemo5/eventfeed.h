@@ -14,44 +14,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CUTENEWS_H
-#define CUTENEWS_H
+#ifndef EVENTFEED_H
+#define EVENTFEED_H
 
 #include <QObject>
-#include <QPointer>
+#include <QList>
+#include <QSqlQuery>
+#include <QVariantMap>
 
-class QDeclarativeEngine;
+class QDBusPendingCallWatcher;
 
-class CuteNews : public QObject
+class EventFeed : public QObject
 {
     Q_OBJECT
     
-    Q_CLASSINFO("D-Bus Interface", "org.marxoft.cutenews")
-    
 public:
-    ~CuteNews();
+    ~EventFeed();
     
-    static CuteNews* instance();
+    static EventFeed* instance();    
     
-public Q_SLOTS:
-    Q_SCRIPTABLE bool showArticle(int articleId);
-    Q_SCRIPTABLE bool showWidget();
-    Q_SCRIPTABLE bool showWindow();
-
-Q_SIGNALS:
-    void articleRequested(int articleId);
+private Q_SLOTS:    
+    void postArticlesToFeed(QSqlQuery query, int requestId);
+    void postNextArticle();
+    void onArticlePosted(QDBusPendingCallWatcher *watcher);
+    
+    void onArticlesAdded(int count, int subscriptionId);
+        
+    void onSubscriptionDeleted(int subscriptionId);
     
 private:
-    CuteNews();
+    EventFeed();
     
-    void initEngine();
-    QObject* createQmlObject(const QString &fileName);
+    static EventFeed *self;
     
-    static CuteNews *self;
-    
-    QDeclarativeEngine *m_engine;
-    QPointer<QObject> m_widget;
-    QPointer<QObject> m_window;    
+    QList<QVariantMap> m_items;
 };
-    
-#endif // CUTENEWS_H
+
+#endif // EVENTFEED_H

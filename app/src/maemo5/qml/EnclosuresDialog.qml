@@ -24,7 +24,7 @@ Dialog {
     property Article article
     
     title: qsTr("Enclosures")
-    height: Math.min(350, view.count * 70 + platformStyle.paddingMedium)
+    height: Math.min(360, view.count * 70 + platformStyle.paddingMedium)
     
     ListView {
         id: view
@@ -68,7 +68,5 @@ Dialog {
                 root.accept();
             }
         }
-    }
-    
-    onStatusChanged: if (status == DialogStatus.Open) view.positionViewAtIndex(0, ListView.Beginning);
+    }    
 }

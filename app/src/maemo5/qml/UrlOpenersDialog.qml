@@ -22,7 +22,7 @@ Dialog {
     id: root
     
     title: qsTr("URL openers")
-    height: 350
+    height: 360
     
     ListView {
         id: view
@@ -36,7 +36,14 @@ Dialog {
         }
         model: urlopener
         delegate: UrlOpenerDelegate {
-            onClicked: dialogs.showUrlOpenerDialog(urlopener.itemData(index))
+            onClicked: {
+                var dialog = popupLoader.load(urlOpenerDialog, root);
+                var opener = urlopener.itemData(index);
+                dialog.name = opener.name;
+                dialog.regExp = opener.regExp;
+                dialog.command = opener.command;
+                dialog.open();
+            }
             onPressAndHold: contextMenu.popup()
         }
     }
@@ -44,7 +51,7 @@ Dialog {
     Label {
         anchors.centerIn: view
         font.pointSize: platformStyle.fontSizeLarge
-        color: platformStyle.secondaryTextColor
+        color: platformStyle.disabledTextColor
         text: qsTr("No URL openers")
         visible: urlopener.count == 0
     }
@@ -54,7 +61,14 @@ Dialog {
         
         MenuItem {
             text: qsTr("Edit")
-            onTriggered: dialogs.showUrlOpenerDialog(urlopener.itemData(view.currentIndex))
+            onTriggered: {
+                var dialog = popupLoader.load(urlOpenerDialog, root);
+                var opener = urlopener.itemData(view.currentIndex);
+                dialog.name = opener.name;
+                dialog.regExp = opener.regExp;
+                dialog.command = opener.command;
+                dialog.open();
+            }
         }
         
         MenuItem {
@@ -75,34 +89,16 @@ Dialog {
         }
         style: DialogButtonStyle {}
         text: qsTr("New")
-        onClicked: dialogs.showUrlOpenerDialog()
+        onClicked: popupLoader.open(urlOpenerDialog, root)
     }
     
-    QtObject {
-        id: dialogs
-        
-        property UrlOpenerDialog urlOpenerDialog
-        
-        function showUrlOpenerDialog(opener) {
-            if (!urlOpenerDialog) {
-                urlOpenerDialog = urlOpenerDialogComponent.createObject(root);
-            }
-            
-            if (opener) {
-                urlOpenerDialog.name = opener.name;
-                urlOpenerDialog.regExp = opener.value.regExp;
-                urlOpenerDialog.command = opener.value.command;
-            }
-            
-            urlOpenerDialog.open();
-        }
+    PopupLoader {
+        id: popupLoader
     }
     
     Component {
-        id: urlOpenerDialogComponent
+        id: urlOpenerDialog
         
         UrlOpenerDialog {}
-    }
-    
-    onStatusChanged: if (status == DialogStatus.Open) view.positionViewAtIndex(0, ListView.Beginning);
+    }    
 }

@@ -188,14 +188,9 @@ QModelIndexList SubscriptionModel::match(const QModelIndex &start, int role, con
     return QAbstractListModel::match(start, role, value, hits, flags);
 }
 
-int SubscriptionModel::match(const QByteArray &role, const QVariant &value) const {
-    for (int i = 0; i < m_list.size(); i++) {
-        if (m_list.at(i)->property(role) == value) {
-            return i;
-        }
-    }
-    
-    return -1;
+int SubscriptionModel::match(int start, const QByteArray &role, const QVariant &value, int flags) const {
+    const QModelIndexList indexes = match(index(start), m_roles.key(role), value, Qt::MatchFlags(flags));
+    return indexes.isEmpty() ? -1 : indexes.first().row();
 }
 
 void SubscriptionModel::clear() {

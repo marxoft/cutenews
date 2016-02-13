@@ -45,7 +45,8 @@ Browser::Browser(QWidget *parent) :
     m_toolBar->addAction(m_webView->pageAction(QWebPage::Reload));
     m_toolBar->setMovable(false);
     m_toolBar->hide();
-
+    
+    m_webView->setPalette(QApplication::palette("QWebView"));
     m_webView->setContextMenuPolicy(Qt::CustomContextMenu);
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
 

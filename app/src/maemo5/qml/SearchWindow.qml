@@ -50,7 +50,7 @@ Window {
     Label {
         anchors.centerIn: parent
         font.pointSize: platformStyle.fontSizeLarge
-        color: platformStyle.secondaryTextColor
+        color: platformStyle.disabledTextColor
         text: qsTr("No articles")
         visible: (articleModel.status == ArticleModel.Ready) && (articleModel.count == 0)
     }

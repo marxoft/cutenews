@@ -44,7 +44,7 @@ Window {
         MenuItem {
             text: qsTr("Enclosures") + (article ? " (" + article.enclosures.length + ")" : "")
             enabled: (article != null) && (article.enclosures.length > 0)
-            onTriggered: dialogs.showEnclosuresDialog()
+            onTriggered: popupLoader.open(enclosuresDialog, root)
         }
     }
     
@@ -115,25 +115,16 @@ Window {
         }
     }
     
-    QtObject {
-        id: dialogs
-        
-        property EnclosuresDialog enclosuresDialog
-        
-        function showEnclosuresDialog() {
-            if (!enclosuresDialog) {
-                enclosuresDialog = enclosuresDialogComponent.createObject(root);
-            }
-            
-            enclosuresDialog.article = article;
-            enclosuresDialog.open();
-        }
+    PopupLoader {
+        id: popupLoader
     }
     
     Component {
-        id: enclosuresDialogComponent
+        id: enclosuresDialog
         
-        EnclosuresDialog {}
+        EnclosuresDialog {
+            article: root.article
+        }
     }
     
     StateGroup {

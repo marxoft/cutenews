@@ -92,6 +92,7 @@ QString Article::author() const {
 
 void Article::setAuthor(const QString &a) {
     if (a != author()) {
+        m_author = a;
         emit authorChanged();
         emit dataChanged(this);
     }

@@ -1,0 +1,15 @@
+#!/bin/sh
+
+set -e
+
+case "$1" in
+    remove)
+    su -c "/opt/cutenews/bin/disable_events" - user
+    ;;
+    
+    *)
+    
+    ;;
+esac
+
+exit 0

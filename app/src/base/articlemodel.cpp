@@ -148,7 +148,7 @@ QVariant ArticleModel::data(const QModelIndex &index, int role) const {
             switch (role) {
             case Qt::DecorationRole:
                 if (article->isFavourite()) {
-                    return QIcon::fromTheme("user-bookmarks");
+                    return QIcon::fromTheme("mail-mark-important");
                 }
                 
                 break;
@@ -248,14 +248,9 @@ QModelIndexList ArticleModel::match(const QModelIndex &start, int role, const QV
     return QAbstractListModel::match(start, role, value, hits, flags);
 }
 
-int ArticleModel::match(const QByteArray &role, const QVariant &value) const {
-    for (int i = 0; i < m_list.size(); i++) {
-        if (m_list.at(i)->property(role) == value) {
-            return i;
-        }
-    }
-    
-    return -1;
+int ArticleModel::match(int start, const QByteArray &role, const QVariant &value, int flags) const {
+    const QModelIndexList indexes = match(index(start), m_roles.key(role), value, Qt::MatchFlags(flags));
+    return indexes.isEmpty() ? -1 : indexes.first().row();
 }
 
 void ArticleModel::clear() {

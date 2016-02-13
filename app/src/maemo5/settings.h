@@ -40,7 +40,6 @@ class Settings : public QObject
                NOTIFY networkProxyChanged)
     Q_PROPERTY(bool openArticlesExternallyFromWidget READ openArticlesExternallyFromWidget
                WRITE setOpenArticlesExternallyFromWidget NOTIFY openArticlesExternallyFromWidgetChanged)
-    Q_PROPERTY(int screenOrientation READ screenOrientation WRITE setScreenOrientation NOTIFY screenOrientationChanged)
     Q_PROPERTY(bool startTransfersAutomatically READ startTransfersAutomatically WRITE setStartTransfersAutomatically
                NOTIFY startTransfersAutomaticallyChanged)
     Q_PROPERTY(int updateInterval READ updateInterval WRITE setUpdateInterval NOTIFY updateIntervalChanged)
@@ -54,65 +53,60 @@ public:
     
     static Settings* instance();
     
-    QString downloadPath() const;
+    static QString downloadPath();
     
-    bool enableAutomaticScrollingInWidget() const;
+    static bool enableAutomaticScrollingInWidget();
     
-    int maximumConcurrentTransfers() const;
+    static int maximumConcurrentTransfers();
     
-    bool networkProxyEnabled() const;
-    QString networkProxyHost() const;
-    QString networkProxyPassword() const;
-    int networkProxyPort() const;
-    int networkProxyType() const;
-    QString networkProxyUsername() const;
+    static bool networkProxyEnabled();
+    static QString networkProxyHost();
+    static QString networkProxyPassword();
+    static int networkProxyPort();
+    static int networkProxyType();
+    static QString networkProxyUsername();
     
-    bool openArticlesExternallyFromWidget() const;
+    static bool openArticlesExternallyFromWidget();
+        
+    static bool startTransfersAutomatically();
     
-    int screenOrientation() const;
+    static int updateInterval();
+    static bool updateOnStartup();
+    static bool workOffline();
     
-    bool startTransfersAutomatically() const;
+    static QString userInterface();
     
-    int updateInterval() const;
-    bool updateOnStartup() const;
-    bool workOffline() const;
-    
-    QString userInterface() const;
-    
-    QString viewMode() const;
-
-    Q_INVOKABLE QVariant value(const QString &key, const QVariant &defaultValue = QVariant()) const;
+    static QString viewMode();
 
 public Q_SLOTS:
-    void setDownloadPath(const QString &path);
+    static void setDownloadPath(const QString &path);
     
-    void setEnableAutomaticScrollingInWidget(bool enabled);
+    static void setEnableAutomaticScrollingInWidget(bool enabled);
         
-    void setMaximumConcurrentTransfers(int maximum);
+    static void setMaximumConcurrentTransfers(int maximum);
     
-    void setNetworkProxy();
-    void setNetworkProxyEnabled(bool enabled);
-    void setNetworkProxyHost(const QString &host);
-    void setNetworkProxyPassword(const QString &password);
-    void setNetworkProxyPort(int port);
-    void setNetworkProxyType(int type);
-    void setNetworkProxyUsername(const QString &username);
+    static void setNetworkProxy();
+    static void setNetworkProxyEnabled(bool enabled);
+    static void setNetworkProxyHost(const QString &host);
+    static void setNetworkProxyPassword(const QString &password);
+    static void setNetworkProxyPort(int port);
+    static void setNetworkProxyType(int type);
+    static void setNetworkProxyUsername(const QString &username);
     
-    void setOpenArticlesExternallyFromWidget(bool enabled);
+    static void setOpenArticlesExternallyFromWidget(bool enabled);
         
-    void setScreenOrientation(int orientation);
+    static void setStartTransfersAutomatically(bool enabled);
     
-    void setStartTransfersAutomatically(bool enabled);
+    static void setUpdateInterval(int interval);
+    static void setUpdateOnStartup(bool enabled);
+    static void setWorkOffline(bool enabled);
     
-    void setUpdateInterval(int interval);
-    void setUpdateOnStartup(bool enabled);
-    void setWorkOffline(bool enabled);
+    static void setUserInterface(const QString &ui);
     
-    void setUserInterface(const QString &ui);
-    
-    void setViewMode(const QString &mode);
+    static void setViewMode(const QString &mode);
 
-    void setValue(const QString &key, const QVariant &value);
+    static void setValue(const QString &key, const QVariant &value);
+    static QVariant value(const QString &key, const QVariant &defaultValue = QVariant());
 
 Q_SIGNALS:
     void downloadPathChanged();
@@ -120,7 +114,6 @@ Q_SIGNALS:
     void maximumConcurrentTransfersChanged();
     void networkProxyChanged();
     void openArticlesExternallyFromWidgetChanged();
-    void screenOrientationChanged();
     void startTransfersAutomaticallyChanged();
     void updateIntervalChanged();
     void updateOnStartupChanged();

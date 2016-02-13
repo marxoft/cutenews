@@ -20,7 +20,6 @@
 #include "feedparser.h"
 #include "json.h"
 #include "opmlparser.h"
-#include "settings.h"
 #include "subscription.h"
 #include "subscriptionplugins.h"
 #include "utils.h"

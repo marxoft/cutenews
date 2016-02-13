@@ -247,7 +247,7 @@ int Subscription::unreadArticles() const {
 }
 
 void Subscription::setUnreadArticles(int u) {
-    if (u != unreadArticles()) {
+    if ((u != unreadArticles()) && (u >= 0)) {
         m_unreadArticles = u;
         emit unreadArticlesChanged();
         emit dataChanged(this);

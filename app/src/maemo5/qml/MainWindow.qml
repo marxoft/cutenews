@@ -27,7 +27,7 @@ ApplicationWindow {
     menuBar: MenuBar {
         MenuItem {
             text: qsTr("Import from OPML")
-            onTriggered: dialogs.showImportDialog()
+            onTriggered: popupLoader.open(importDialog, appWindow)
         }
         
         MenuItem {
@@ -38,17 +38,17 @@ ApplicationWindow {
         MenuItem {
             text: qsTr("Search")
             enabled: settings.userInterface == "touch"
-            onTriggered: dialogs.showSearchDialog()
+            onTriggered: popupLoader.open(searchDialog, appWindow)
         }
         
         MenuItem {
             text: qsTr("Settings")
-            onTriggered: dialogs.showSettingsDialog()
+            onTriggered: popupLoader.open(settingsDialog, appWindow)
         }
         
         MenuItem {
             text: qsTr("About")
-            onTriggered: dialogs.showAboutDialog()
+            onTriggered: popupLoader.open(aboutDialog, appWindow)
         }
     }
     
@@ -92,123 +92,21 @@ ApplicationWindow {
         }
     }
     
-    QtObject {
-        id: dialogs
-        
-        property FileDialog importDialog
-        property ListPickSelector subscriptionTypeDialog
-        property SubscriptionDialog subscriptionDialog
-        property PluginDialog pluginDialog
-        property SearchDialog searchDialog
-        property SettingsDialog settingsDialog
-        property AboutDialog aboutDialog
-        
-        function showImportDialog() {
-            if (!importDialog) {
-                importDialog = importDialogComponent.createObject(appWindow);
-            }
-            
-            importDialog.open();
-        }
-        
-        function showSubscriptionTypeDialog() {
-            if (!subscriptionTypeDialog) {
-                subscriptionTypeDialog = subscriptionTypeDialogComponent.createObject(appWindow);
-            }
-            
-            subscriptionTypeDialog.open();
-        }
-        
-        function showSubscriptionDialog(subscriptionId, sourceType) {
-            if (!subscriptionDialog) {
-                subscriptionDialog = subscriptionDialogComponent.createObject(appWindow);
-            }
-            
-            subscriptionDialog.subscriptionId = (subscriptionId ? subscriptionId : -1);
-            subscriptionDialog.sourceType = (sourceType ? sourceType : Subscription.Url);
-            subscriptionDialog.open();
-        }
-        
-        function showPluginDialog(subscriptionId, pluginName) {
-            if (!pluginDialog) {
-                pluginDialog = pluginDialogComponent.createObject(appWindow);
-            }
-            
-            pluginDialog.subscriptionId = (subscriptionId ? subscriptionId : -1);
-            pluginDialog.pluginName = (pluginName ? pluginName : "");
-            pluginDialog.open();
-        }
-        
-        function showSearchDialog() {
-            if (!searchDialog) {
-                searchDialog = searchDialogComponent.createObject(appWindow);
-            }
-            
-            searchDialog.open();
-        }
-        
-        function showSettingsDialog() {
-            if (!settingsDialog) {
-                settingsDialog = settingsDialogComponent.createObject(appWindow);
-            }
-            
-            settingsDialog.open();
-        }
-        
-        function showAboutDialog() {
-            if (!aboutDialog) {
-                aboutDialog = aboutDialogComponent.createObject(appWindow);
-            }
-            
-            aboutDialog.open();
-        }
+    PopupLoader {
+        id: popupLoader
     }
     
     Component {
-        id: importDialogComponent
+        id: importDialog
         
         FileDialog {
             nameFilters: ["*.opml"]
             onAccepted: subscriptions.importFromOpml(filePath)
         }
     }
-    
-    Component {
-        id: subscriptionTypeDialogComponent
-        
-        ListPickSelector {
-            title: qsTr("Subscription type")
-            model: SubscriptionSourceTypeModel {}
-            textRole: "name"
-            onSelected: {
-                var sourceType = model.data(currentIndex, "value");
-                
-                switch (sourceType) {
-                case Subscription.Plugin:
-                    dialogs.showPluginDialog(-1, model.data(currentIndex, "name"));
-                    break;
-                default:
-                    dialogs.showSubscriptionDialog(-1, sourceType);
-                    break;
-                }
-            }
-        }
-    }
-    
-    Component {
-        id: subscriptionDialogComponent
-        
-        SubscriptionDialog {}
-    }
-    
-    Component {
-        id: pluginDialogComponent
-        
-        PluginDialog {}
-    }
         
     Component {
-        id: searchDialogComponent
+        id: searchDialog
         
         SearchDialog {
             onAccepted: windowStack.push(Qt.resolvedUrl("SearchWindow.qml"), {title: qsTr("Search") + " - " + query,
@@ -218,13 +116,13 @@ ApplicationWindow {
     }
     
     Component {
-        id: settingsDialogComponent
+        id: settingsDialog
         
         SettingsDialog {}
     }
     
     Component {
-        id: aboutDialogComponent
+        id: aboutDialog
         
         AboutDialog {}
     }
@@ -239,6 +137,9 @@ ApplicationWindow {
         onUserInterfaceChanged: loader.loadUi()
     }
     
-    Component.onCompleted: loader.loadUi();
+    Component.onCompleted: {
+        loader.loadUi();
+        urlopener.load();
+    }
 }
                 

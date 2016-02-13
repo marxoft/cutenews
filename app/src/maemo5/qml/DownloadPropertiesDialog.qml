@@ -24,8 +24,7 @@ Dialog {
     property Transfer download
     
     title: qsTr("Download properties")
-    height: column.height + platformStyle.paddingMedium
-    
+    height: Math.min(360, column.height + platformStyle.paddingMedium)
     
     Flickable {
         id: flickable
@@ -133,7 +132,5 @@ Dialog {
                 }
             }
         }
-    }
-    
-    onStatusChanged: if (status == DialogStatus.Open) flickable.contentY = 0;
+    }    
 }

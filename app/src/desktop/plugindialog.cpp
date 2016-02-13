@@ -47,7 +47,6 @@ PluginDialog::PluginDialog(const QString &pluginName, QWidget *parent) :
 {
     setWindowTitle(tr("Subscription properties"));
     setMinimumWidth(500);
-    setAttribute(Qt::WA_DeleteOnClose, true);
     
     m_scrollArea->setWidgetResizable(true);
     m_scrollArea->setFrameShape(QScrollArea::NoFrame);

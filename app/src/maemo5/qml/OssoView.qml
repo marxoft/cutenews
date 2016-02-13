@@ -259,7 +259,7 @@ Item {
             
             iconName: "general_add"
             activeFocusOnPress: false
-            onClicked: dialogs.showSubscriptionTypeDialog()
+            onClicked: popupLoader.open(subscriptionTypeDialog, root)
         }
         
         ToolButton {
@@ -269,16 +269,22 @@ Item {
             activeFocusOnPress: false
             enabled: subscriptionView.currentIndex > 1
             onClicked: {
-                var sourceType = subscriptionModel.data(subscriptionView.currentIndex, "sourceType");
+                var subscription = subscriptionModel.itemData(subscriptionView.currentIndex);
                 
-                switch (sourceType) {
-                case Subscription.Plugin:
-                    dialogs.showPluginDialog(subscriptionModel.data(subscriptionView.currentIndex, "id"));
+                switch (subscription.sourceType) {
+                case Subscription.Plugin: {
+                    var dialog = popupLoader.load(pluginDialog, root);
+                    dialog.subscriptionId = subscription.id;
+                    dialog.open();
                     break;
-                default:
-                    dialogs.showSubscriptionDialog(subscriptionModel.data(subscriptionView.currentIndex, "id"),
-                                                   sourceType);
+                }
+                default: {
+                    var dialog = popupLoader.load(subscriptionDialog, root);
+                    dialog.subscriptionId = subscription.id;
+                    dialog.sourceType = subscription.sourceType;
+                    dialog.open();
                     break;
+                }
                 }
             }
         }
@@ -335,6 +341,50 @@ Item {
     Connections {
         target: cutenews
         onArticleRequested: showArticle(articleId)
+    }
+    
+    PopupLoader {
+        id: popupLoader
+    }
+    
+    Component {
+        id: subscriptionTypeDialog
+        
+        ListPickSelector {
+            title: qsTr("Subscription type")
+            model: SubscriptionSourceTypeModel {}
+            textRole: "name"
+            onSelected: {
+                var sourceType = model.data(currentIndex, "value");
+                
+                switch (sourceType) {
+                case Subscription.Plugin: {
+                    var dialog = popupLoader.load(pluginDialog, root);
+                    dialog.pluginName = model.data(currentIndex, "name");
+                    dialog.open();
+                    break;
+                }
+                default: {
+                    var dialog = popupLoader.load(subscriptionDialog, root);
+                    dialog.sourceType = sourceType;
+                    dialog.open();
+                    break;
+                }
+                }
+            }
+        }
+    }
+    
+    Component {
+        id: subscriptionDialog
+        
+        SubscriptionDialog {}
+    }
+    
+    Component {
+        id: pluginDialog
+        
+        PluginDialog {}
     }
     
     Component.onCompleted: {

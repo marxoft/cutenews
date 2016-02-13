@@ -43,7 +43,6 @@ SubscriptionDialog::SubscriptionDialog(QWidget *parent) :
     m_subscriptionId(-1)
 {
     setWindowTitle(tr("Subscription properties"));
-    setAttribute(Qt::WA_DeleteOnClose, true);
     
     m_subscriptionTypeModel->append(tr("URL"), Subscription::Url);
     m_subscriptionTypeModel->append(tr("Local file"), Subscription::LocalFile);

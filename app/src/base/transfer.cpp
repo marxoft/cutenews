@@ -551,7 +551,7 @@ void Transfer::followRedirect(const QUrl &u) {
 }
 
 void Transfer::moveDownloadedFiles() {
-    QDir destDir(Settings::instance()->downloadPath());
+    QDir destDir(Settings::downloadPath());
     
     if (!destDir.mkpath(destDir.path())) {
         setErrorString(tr("Cannot make download path %1").arg(destDir.path()));

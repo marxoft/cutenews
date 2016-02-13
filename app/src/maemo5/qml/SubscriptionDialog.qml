@@ -54,7 +54,7 @@ Dialog {
             
             text: qsTr("Browse")
             enabled: sourceType != Subscription.Url
-            onClicked: dialogs.showFileDialog() 
+            onClicked: popupLoader.open(fileDialog, root);
         }
         
         CheckBox {
@@ -86,22 +86,12 @@ Dialog {
         }
     }
     
-    QtObject {
-        id: dialogs
-        
-        property FileDialog fileDialog        
-        
-        function showFileDialog() {
-            if (!fileDialog) {
-                fileDialog = fileDialogComponent.createObject(root);
-            }
-            
-            fileDialog.open();
-        }
+    PopupLoader {
+        id: popupLoader
     }
     
     Component {
-        id: fileDialogComponent
+        id: fileDialog
         
         FileDialog {
             onAccepted: sourceField.text = filePath
@@ -125,14 +115,5 @@ Dialog {
         else {
             subscriptions.create(sourceField.text, sourceType, enclosuresCheckBox.checked);
         }
-        
-        sourceField.clear();
-        sourceType = Subscription.Url;
-        enclosuresCheckBox.checked = false;
-    }
-    onRejected: {
-        sourceField.clear();
-        sourceType = Subscription.Url;
-        enclosuresCheckBox.checked = false;
     }
 }

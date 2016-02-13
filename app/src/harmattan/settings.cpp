@@ -37,29 +37,35 @@ Settings* Settings::instance() {
     return self ? self : self = new Settings;
 }
 
-QString Settings::activeColor() const {
+QString Settings::activeColor() {
     return value("Appearance/activeColor", "#0881cb").toString();
 }
 
 void Settings::setActiveColor(const QString &color) {
     if (color != activeColor()) {
         setValue("Appearance/activeColor", color);
-        emit activeColorChanged();
+        
+        if (self) {
+            emit self->activeColorChanged();
+        }
     }
 }
 
-QString Settings::activeColorString() const {
+QString Settings::activeColorString() {
     return value("Appearance/activeColorString", "color7").toString();
 }
 
 void Settings::setActiveColorString(const QString &s) {
     if (s != activeColorString()) {
         setValue("Appearance/activeColorString", s);
-        emit activeColorStringChanged();
+        
+        if (self) {
+            emit self->activeColorStringChanged();
+        }
     }
 }
 
-QString Settings::downloadPath() const {
+QString Settings::downloadPath() {
     QString path = value("Transfers/downloadPath", DOWNLOAD_PATH).toString();
 
     if (!path.endsWith("/")) {
@@ -72,18 +78,24 @@ QString Settings::downloadPath() const {
 void Settings::setDownloadPath(const QString &path) {
     if (path != downloadPath()) {
         setValue("Transfers/downloadPath", path);
-        emit downloadPathChanged();
+        
+        if (self) {
+            emit self->downloadPathChanged();
+        }
     }
 }
 
-int Settings::maximumConcurrentTransfers() const {
+int Settings::maximumConcurrentTransfers() {
     return qBound(1, value("Transfers/maximumConcurrentTransfers", 1).toInt(), MAX_CONCURRENT_TRANSFERS);
 }
 
 void Settings::setMaximumConcurrentTransfers(int maximum) {
     if (maximum != maximumConcurrentTransfers()) {
         setValue("Transfers/maximumConcurrentTransfers", qBound(1, maximum, MAX_CONCURRENT_TRANSFERS));
-        emit maximumConcurrentTransfersChanged();
+        
+        if (self) {
+            emit self->maximumConcurrentTransfersChanged();
+        }
     }
 }
 
@@ -103,29 +115,35 @@ void Settings::setNetworkProxy() {
 #endif
 }
 
-bool Settings::networkProxyEnabled() const {
+bool Settings::networkProxyEnabled() {
     return value("Network/networkProxyEnabled", false).toBool();
 }
 
 void Settings::setNetworkProxyEnabled(bool enabled) {
     if (enabled != networkProxyEnabled()) {
         setValue("Network/networkProxyEnabled", enabled);
-        emit networkProxyChanged();
+        
+        if (self) {
+            emit self->networkProxyChanged();
+        }
     }
 }
 
-QString Settings::networkProxyHost() const {
+QString Settings::networkProxyHost() {
     return value("Network/networkProxyHost").toString();
 }
 
 void Settings::setNetworkProxyHost(const QString &host) {
     if (host != networkProxyHost()) {
         setValue("Network/networkProxyHost", host);
-        emit networkProxyChanged();
+        
+        if (self) {
+            emit self->networkProxyChanged();
+        }
     }
 }
 
-QString Settings::networkProxyPassword() const {
+QString Settings::networkProxyPassword() {
     return QByteArray::fromBase64(value("Network/networkProxyPassword").toByteArray());
 }
 
@@ -134,77 +152,98 @@ void Settings::setNetworkProxyPassword(const QString &password) {
     
     if (pass != networkProxyPassword()) {
         setValue("Network/networkProxyPassword", pass);
-        emit networkProxyChanged();
+        
+        if (self) {
+            emit self->networkProxyChanged();
+        }
     }
 }
 
-int Settings::networkProxyPort() const {
+int Settings::networkProxyPort() {
     return value("Network/networkProxyPort", 80).toInt();
 }
 
 void Settings::setNetworkProxyPort(int port) {
     if (port != networkProxyPort()) {
         setValue("Network/networkProxyPort", port);
-        emit networkProxyChanged();
+        
+        if (self) {
+            emit self->networkProxyChanged();
+        }
     }
 }
 
-int Settings::networkProxyType() const {
+int Settings::networkProxyType() {
     return value("Network/networkProxyType", QNetworkProxy::ProxyType(QNetworkProxy::HttpProxy)).toInt();
 }
 
 void Settings::setNetworkProxyType(int type) {
     if (type != networkProxyType()) {
         setValue("Network/networkProxyType", type);
-        emit networkProxyChanged();
+        
+        if (self) {
+            emit self->networkProxyChanged();
+        }
     }
 }
 
-QString Settings::networkProxyUsername() const {
+QString Settings::networkProxyUsername() {
     return value("Network/networkProxyUsername").toString();
 }
 
 void Settings::setNetworkProxyUsername(const QString &username) {
     if (username != networkProxyUsername()) {
         setValue("Network/networkProxyUsername", username);
-        emit networkProxyChanged();
+        
+        if (self) {
+            emit self->networkProxyChanged();
+        }
     }
 }
 
-int Settings::screenOrientation() const {
+int Settings::screenOrientation() {
     return value("Appearance/screenOrientation", 0).toInt();
 }
 
 void Settings::setScreenOrientation(int orientation) {
     if (orientation != screenOrientation()) {
         setValue("Appearance/screenOrientation", orientation);
-        emit screenOrientationChanged();
+        
+        if (self) {
+            emit self->screenOrientationChanged();
+        }
     }
 }
 
-bool Settings::startTransfersAutomatically() const {
+bool Settings::startTransfersAutomatically() {
     return value("Transfers/startTransfersAutomatically", true).toBool();
 }
 
 void Settings::setStartTransfersAutomatically(bool enabled) {
     if (enabled != startTransfersAutomatically()) {
         setValue("Transfers/startTransfersAutomatically", enabled);
-        emit startTransfersAutomaticallyChanged();
+        
+        if (self) {
+            emit self->startTransfersAutomaticallyChanged();
+        }
     }
 }
 
-int Settings::updateInterval() const {
+int Settings::updateInterval() {
     return value("Subscriptions/updateInterval", 0).toInt();
 }
 
 void Settings::setUpdateInterval(int interval) {
     if (interval != updateInterval()) {
         setValue("Subscriptions/updateInterval", interval);
-        emit updateIntervalChanged();
+        
+        if (self) {
+            emit self->updateIntervalChanged();
+        }
     }
 }
 
-bool Settings::updateOnStartup() const {
+bool Settings::updateOnStartup() {
     return value("Subscriptions/updateOnStartup", false).toBool();
 }
 
@@ -215,29 +254,35 @@ void Settings::setUpdateOnStartup(bool enabled) {
     }
 }
 
-bool Settings::workOffline() const {
+bool Settings::workOffline() {
     return value("Subscriptions/workOffline", false).toBool();
 }
 
 void Settings::setWorkOffline(bool enabled) {
     if (enabled != workOffline()) {
         setValue("Subscriptions/workOffline", enabled);
-        emit workOfflineChanged();
+        
+        if (self) {
+            emit self->workOfflineChanged();
+        }
     }
 }
 
-QString Settings::viewMode() const {
+QString Settings::viewMode() {
     return value("Appearance/viewMode", QString("light")).toString();
 }
 
 void Settings::setViewMode(const QString &mode) {
     if (mode != viewMode()) {
         setValue("Appearance/viewMode", mode);
-        emit viewModeChanged();
+        
+        if (self) {
+            emit self->viewModeChanged();
+        }
     }
 }
 
-QVariant Settings::value(const QString &key, const QVariant &defaultValue) const {
+QVariant Settings::value(const QString &key, const QVariant &defaultValue) {
     return QSettings().value(key, defaultValue);
 }
 
