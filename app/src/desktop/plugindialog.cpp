@@ -226,7 +226,7 @@ QWidget* PluginDialog::loadList(const QString &title, const QString &key,
 
     combobox->setProperty("key", key);    
     combobox->setModel(model);
-    combobox->setCurrentIndex(model->match("value", value));
+    combobox->setCurrentIndex(model->match(0, "value", value));
     hbox->addWidget(new QLabel(title + ":", widget));
     hbox->addWidget(combobox);
     connect(combobox, SIGNAL(activated(int)), this, SLOT(onListChanged(int)));
