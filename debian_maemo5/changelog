@@ -1,3 +1,11 @@
+cutenews (0.6.0) unstable; urgency=low
+
+  * Add support for Hildon Event Feed (install cutenewsevents package to enable and configure).
+  * Bug fix: Author sometimes not displayed when viewing an article.
+  * Bug fix: Unread articles sometimes set to a negative value.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sat, 13 Feb 2016 16:04:34 +0100
+
 cutenews (0.5.0) unstable; urgency=low
 
   * Add optional automatic scrolling in the homescreen widget.
