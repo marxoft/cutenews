@@ -295,6 +295,7 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     if (!parser.readChannel()) {
         setStatusText(tr("Error parsing XML for %1").arg(Database::subscriptionTitle(m_query)));
         setStatus(Error);
+        next();
         return;
     }
     
@@ -306,6 +307,7 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     if (!parser.readNextArticle()) {
         setStatusText(tr("Error parsing XML for %1").arg(Database::subscriptionTitle(m_query)));
         setStatus(Error);
+        next();
         return;
     }
     

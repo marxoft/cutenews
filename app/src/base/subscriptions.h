@@ -93,7 +93,7 @@ private Q_SLOTS:
 Q_SIGNALS:
     void activeSubscriptionChanged(int subscriptionId);
     void progressChanged(int progress);
-    void statusChanged(Status status);
+    void statusChanged(Subscriptions::Status status);
     void statusTextChanged(const QString &text);
 
 private:
