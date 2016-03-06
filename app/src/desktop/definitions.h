@@ -37,6 +37,8 @@ static const QRegExp ILLEGAL_FILENAME_CHARS_RE("[\"\\/@&~=:?#!|<>*^]");
 
 static const QString VERSION_NUMBER("0.4.0");
 
+static const QString WEB_INTERFACE_PATH("/opt/cutenews/webif/");
+
 #if QT_VERSION >= 0x050000
 static const QString DATABASE_PATH(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/cuteNews/");
 static const QString DOWNLOAD_PATH(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/cuteNews/");

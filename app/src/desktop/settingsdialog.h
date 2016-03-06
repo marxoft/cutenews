@@ -44,6 +44,7 @@ public Q_SLOTS:
 private:
     void showGeneralTab();
     void showNetworkTab();
+    void showInterfacesTab();
     
 private Q_SLOTS:
     void setCurrentTab(int index);
@@ -56,22 +57,27 @@ private:
     NetworkProxyTypeModel *m_proxyTypeModel;
     
     QCheckBox *m_downloadsCheckBox;
+    QCheckBox *m_webInterfaceAuthenticationCheckBox;
     
     QComboBox *m_proxyTypeSelector;
     
     QDialogButtonBox *m_buttonBox;
     
     QGroupBox *m_proxyGroupBox;
+    QGroupBox *m_webInterfaceGroupBox;
     
     QLineEdit *m_downloadPathEdit;
     QLineEdit *m_proxyHostEdit;
     QLineEdit *m_proxyUsernameEdit;
     QLineEdit *m_proxyPasswordEdit;
+    QLineEdit *m_webInterfaceUsernameEdit;
+    QLineEdit *m_webInterfacePasswordEdit;
     
     QPushButton *m_downloadPathButton;
     
     QSpinBox *m_downloadsSpinBox;
     QSpinBox *m_proxyPortSpinBox;
+    QSpinBox *m_webInterfacePortSpinBox;
     
     QStackedWidget *m_stack;
     
@@ -79,6 +85,7 @@ private:
     
     QWidget *m_generalTab;
     QWidget *m_networkTab;
+    QWidget *m_interfacesTab;
     
     QVBoxLayout *m_layout;
 };

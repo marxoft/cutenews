@@ -30,7 +30,7 @@ class Settings : public QObject
     Q_PROPERTY(int maximumConcurrentTransfers READ maximumConcurrentTransfers WRITE setMaximumConcurrentTransfers
                NOTIFY maximumConcurrentTransfersChanged)
     Q_PROPERTY(bool networkProxyEnabled READ networkProxyEnabled WRITE setNetworkProxyEnabled
-               NOTIFY networkProxyChanged)
+               NOTIFY networkProxyEnabledChanged)
     Q_PROPERTY(QString networkProxyHost READ networkProxyHost WRITE setNetworkProxyHost NOTIFY networkProxyChanged)
     Q_PROPERTY(QString networkProxyPassword READ networkProxyPassword WRITE setNetworkProxyPassword
                NOTIFY networkProxyChanged)
@@ -109,17 +109,18 @@ public Q_SLOTS:
     static QVariant value(const QString &key, const QVariant &defaultValue = QVariant());
 
 Q_SIGNALS:
-    void downloadPathChanged();
-    void enableAutomaticScrollingInWidgetChanged();
-    void maximumConcurrentTransfersChanged();
+    void downloadPathChanged(const QString &path);
+    void enableAutomaticScrollingInWidgetChanged(bool enabled);
+    void maximumConcurrentTransfersChanged(int maximum);
     void networkProxyChanged();
-    void openArticlesExternallyFromWidgetChanged();
-    void startTransfersAutomaticallyChanged();
-    void updateIntervalChanged();
-    void updateOnStartupChanged();
-    void workOfflineChanged();
-    void userInterfaceChanged();
-    void viewModeChanged();
+    void networkProxyEnabledChanged(bool enabled);
+    void openArticlesExternallyFromWidgetChanged(bool enabled);
+    void startTransfersAutomaticallyChanged(bool enabled);
+    void updateIntervalChanged(int interval);
+    void updateOnStartupChanged(bool enabled);
+    void workOfflineChanged(bool enabled);
+    void userInterfaceChanged(const QString &ui);
+    void viewModeChanged(const QString &mode);
 
 private:
     Settings();

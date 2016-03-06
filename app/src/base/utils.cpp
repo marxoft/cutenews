@@ -18,6 +18,9 @@
 #include <QRegExp>
 #include <QDir>
 #include <QDateTime>
+#if QT_VERSION >= 0x050000
+#include <QUrlQuery>
+#endif
 
 static bool RAND_SEEDED = false;
 
@@ -118,4 +121,93 @@ QString Utils::unescape(const QString &s) {
     }
 
     return QString::fromUtf8(us);
+}
+
+QList< QPair<QString, QString> > Utils::urlQueryItems(const QUrl &url) {
+#if QT_VERSION >= 0x050000
+    return QUrlQuery(url).queryItems();
+#else
+    return url.queryItems();
+#endif
+}
+
+QVariantMap Utils::urlQueryItemMap(const QUrl &url) {
+    QList< QPair<QString, QString> > queryItems = urlQueryItems(url);
+    QVariantMap map;
+    
+    while (!queryItems.isEmpty()) {
+        const QPair<QString, QString> &queryItem = queryItems.takeFirst();
+        map[queryItem.first] = queryItem.second;
+    }
+    
+    return map;
+}
+
+QString Utils::urlQueryItemValue(const QUrl &url, const QString &queryItem, const QString &defaultValue) {
+#if QT_VERSION >= 0x050000
+    const QUrlQuery query(url);
+    return query.hasQueryItem(queryItem) ? query.queryItemValue(queryItem) : defaultValue;
+#else
+    return url.hasQueryItem(queryItem) ? url.queryItemValue(queryItem) : defaultValue;
+#endif
+}
+
+QString Utils::urlQueryToSqlQuery(const QUrl &url) {
+    if (!url.hasQuery()) {
+        return QString();
+    }
+    
+    QVariantMap map = urlQueryItemMap(url);
+    int limit = 0;
+    int offset = 0;
+    QString orderBy("id");
+    QString order("ASC");
+    QString queryString;
+    QString sqlQuery;
+    
+    if (map.contains("limit")) {
+        limit = qMax(1, map.value("limit").toInt());
+        map.remove("limit");
+    }
+    
+    if (map.contains("offset")) {
+        offset = qMax(0, map.value("offset").toInt());
+        map.remove("offset");
+    }
+    
+    if (map.contains("sort")) {
+        orderBy = map.value("sort").toString();
+        map.remove("sort");
+    }
+    
+    if (map.contains("sortDescending")) {
+        if (map.value("sortDescending").toBool()) {
+            order = QString("DESC");
+        }
+        
+        map.remove("sortDescending");
+    }
+    
+    QMapIterator<QString, QVariant> iterator(map);
+    
+    while (iterator.hasNext()) {
+        iterator.next();
+        queryString.append(QString("%1 = '%2'").arg(iterator.key()).arg(iterator.value().toString()));
+        
+        if (iterator.hasNext()) {
+            queryString.append(" AND ");
+        }
+    }
+    
+    if (!queryString.isEmpty()) {
+        sqlQuery.append("WHERE " + queryString);
+    }
+    
+    sqlQuery.append(QString(" ORDER BY %1 %2").arg(orderBy).arg(order));
+    
+    if (limit > 0) {
+        sqlQuery.append(QString(" LIMIT %1, %2").arg(offset).arg(limit));
+    }
+    
+    return sqlQuery;
 }

@@ -31,7 +31,7 @@ class Settings : public QObject
     Q_PROPERTY(int maximumConcurrentTransfers READ maximumConcurrentTransfers WRITE setMaximumConcurrentTransfers
                NOTIFY maximumConcurrentTransfersChanged)
     Q_PROPERTY(bool networkProxyEnabled READ networkProxyEnabled WRITE setNetworkProxyEnabled
-               NOTIFY networkProxyChanged)
+               NOTIFY networkProxyEnabledChanged)
     Q_PROPERTY(QString networkProxyHost READ networkProxyHost WRITE setNetworkProxyHost NOTIFY networkProxyChanged)
     Q_PROPERTY(QString networkProxyPassword READ networkProxyPassword WRITE setNetworkProxyPassword
                NOTIFY networkProxyChanged)
@@ -106,17 +106,18 @@ public Q_SLOTS:
     static void setValue(const QString &key, const QVariant &value);
 
 Q_SIGNALS:
-    void activeColorChanged();
-    void activeColorStringChanged();
-    void downloadPathChanged();
-    void maximumConcurrentTransfersChanged();
+    void activeColorChanged(const QColor &color);
+    void activeColorStringChanged(const QString &colorString);
+    void downloadPathChanged(const QString &path);
+    void maximumConcurrentTransfersChanged(int maximum);
     void networkProxyChanged();
-    void screenOrientationChanged();
-    void startTransfersAutomaticallyChanged();
-    void updateIntervalChanged();
-    void updateOnStartupChanged();
-    void workOfflineChanged();
-    void viewModeChanged();
+    void networkProxyEnabledChanged(bool enabled);
+    void screenOrientationChanged(int orientation);
+    void startTransfersAutomaticallyChanged(bool enabled);
+    void updateIntervalChanged(int interval);
+    void updateOnStartupChanged(bool enabled);
+    void workOfflineChanged(bool enabled);
+    void viewModeChanged(const QString &mode);
 
 private:
     Settings();

@@ -19,6 +19,7 @@
 
 #include <QObject>
 #include <QUrl>
+#include <QVariantMap>
 
 class Utils : public QObject
 {
@@ -36,11 +37,17 @@ public:
     Q_INVOKABLE static QString formatMSecs(qint64 ms);
     Q_INVOKABLE static QString formatSecs(qint64 s);  
 
-    Q_INVOKABLE static bool isLocalFile(const QUrl &url);
+    Q_INVOKABLE static bool isLocalFile(const QUrl &url);    
     
     Q_INVOKABLE static QString toRichText(QString s);  
     
     Q_INVOKABLE static QString unescape(const QString &s);
+    
+    static QList< QPair<QString, QString> > urlQueryItems(const QUrl &url);
+    Q_INVOKABLE static QVariantMap urlQueryItemMap(const QUrl &url);
+    Q_INVOKABLE static QString urlQueryItemValue(const QUrl &url, const QString &queryItem,
+                                                 const QString &defaultValue = QString());
+    Q_INVOKABLE static QString urlQueryToSqlQuery(const QUrl &url);
 };
 
 #endif // UTILS_H

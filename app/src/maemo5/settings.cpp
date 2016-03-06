@@ -52,7 +52,7 @@ void Settings::setDownloadPath(const QString &path) {
         setValue("Transfers/downloadPath", path);
         
         if (self) {
-            emit self->downloadPathChanged();
+            emit self->downloadPathChanged(downloadPath());
         }
     }
 }
@@ -66,7 +66,7 @@ void Settings::setEnableAutomaticScrollingInWidget(bool enabled) {
         setValue("Widget/automaticScrollingEnabled", enabled);
         
         if (self) {
-            emit self->enableAutomaticScrollingInWidgetChanged();
+            emit self->enableAutomaticScrollingInWidgetChanged(enabled);
         }
     }
 }
@@ -77,10 +77,11 @@ int Settings::maximumConcurrentTransfers() {
 
 void Settings::setMaximumConcurrentTransfers(int maximum) {
     if (maximum != maximumConcurrentTransfers()) {
-        setValue("Transfers/maximumConcurrentTransfers", qBound(1, maximum, MAX_CONCURRENT_TRANSFERS));
+        maximum = qBound(1, maximum, MAX_CONCURRENT_TRANSFERS);
+        setValue("Transfers/maximumConcurrentTransfers", maximum);
         
         if (self) {
-            emit self->maximumConcurrentTransfersChanged();
+            emit self->maximumConcurrentTransfersChanged(maximum);
         }
     }
 }
@@ -110,7 +111,7 @@ void Settings::setNetworkProxyEnabled(bool enabled) {
         setValue("Network/networkProxyEnabled", enabled);
         
         if (self) {
-            emit self->networkProxyChanged();
+            emit self->networkProxyEnabledChanged(enabled);
         }
     }
 }
@@ -196,7 +197,7 @@ void Settings::setOpenArticlesExternallyFromWidget(bool enabled) {
         setValue("Widget/openArticlesExternally", enabled);
         
         if (self) {
-            emit self->openArticlesExternallyFromWidgetChanged();
+            emit self->openArticlesExternallyFromWidgetChanged(enabled);
         }
     }
 }
@@ -210,7 +211,7 @@ void Settings::setStartTransfersAutomatically(bool enabled) {
         setValue("Transfers/startTransfersAutomatically", enabled);
         
         if (self) {
-            emit self->startTransfersAutomaticallyChanged();
+            emit self->startTransfersAutomaticallyChanged(enabled);
         }
     }
 }
@@ -224,7 +225,7 @@ void Settings::setUpdateInterval(int interval) {
         setValue("Subscriptions/updateInterval", interval);
         
         if (self) {
-            emit self->updateIntervalChanged();
+            emit self->updateIntervalChanged(intervale);
         }
     }
 }
@@ -238,7 +239,7 @@ void Settings::setUpdateOnStartup(bool enabled) {
         setValue("Subscriptions/updateOnStartup", enabled);
         
         if (self) {
-            emit self->updateOnStartupChanged();
+            emit self->updateOnStartupChanged(enabled);
         }
     }
 }
@@ -252,7 +253,7 @@ void Settings::setWorkOffline(bool enabled) {
         setValue("Subscriptions/workOffline", enabled);
         
         if (self) {
-            emit self->workOfflineChanged();
+            emit self->workOfflineChanged(enabled);
         }
     }
 }
@@ -266,7 +267,7 @@ void Settings::setUserInterface(const QString &ui) {
         setValue("Appearance/userInterface", ui);
         
         if (self) {
-            emit self->userInterfaceChanged();
+            emit self->userInterfaceChanged(ui);
         }
     }
 }
@@ -280,7 +281,7 @@ void Settings::setViewMode(const QString &mode) {
         setValue("Appearance/viewMode", mode);
         
         if (self) {
-            emit self->viewModeChanged();
+            emit self->viewModeChanged(mode);
         }
     }
 }

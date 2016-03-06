@@ -118,7 +118,7 @@ private Q_SLOTS:
 Q_SIGNALS:
     void countChanged(int count);
     void limitChanged(int limit);
-    void statusChanged(Status status);
+    void statusChanged(ArticleModel::Status status);
     
 private:    
     QList<Article*> m_list;

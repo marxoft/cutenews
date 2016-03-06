@@ -1,0 +1,248 @@
+.Button {
+    height: 24px;
+    min-width: 24px;
+    padding: 0 8px 0 8px;
+    margin: 0;
+    border-color: #444852;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 2px;
+    font-family: inherit;
+    font-size: inherit;
+    text-align: center;
+    background-color: #383c45;
+    color: #ffffff;
+}
+
+.Button:hover {
+    border-color: #5294e2;
+}
+
+.Button:active {
+    background-color: #2f343b;
+    border-color: #1f2328;
+}
+
+.Menu {
+    display: none;
+    position: absolute;
+    z-index: 10;
+    background-color: #383c45;
+    padding: 0;
+}
+
+.MenuItem {
+    min-width: 200px;
+    padding: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.MenuItem:hover {
+    background-color: #444852;
+    cursor: pointer;
+}
+
+.MenuItem:active {
+    background-color: #444852;
+    cursor: pointer;
+}
+
+.ProgressBar {
+    height: 24px;
+    background-color: #383c45;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #444852;
+    border-radius: 2px;
+}
+
+.ProgressBarFill {
+    background-color: #5294e2;
+    height: 100%;
+}
+
+.ProgressBarLabel {
+    width: 100%;
+    float: left;
+    line-height: 24px;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.Selector {
+    height: 24px;
+    min-width: 24px;
+    border-color: #444852;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 2px;
+    padding: 0 8px 0 8px;
+    margin: 0;
+    font-family: inherit;
+    font-size: inherit;
+    text-align: center;
+    background-color: #383c45;
+    color: #ffffff;
+}
+
+.Selector:hover {
+    border-color: #5294e2;
+}
+
+.Selector:active {
+    background-color: #2f343b;
+    border-color: #1f2328;
+}
+
+.Spacer {
+    float: left;
+    position: relative;
+    width: 1px;
+    height: 24px;
+    margin: 6px;
+    background-color: #444852;
+    border-right: 1px solid #2f343b;
+}
+
+.StatusBar {
+    background-color: #444852;
+    border-top: 1px solid #2f343b;
+    height: 24px;
+    line-height: 24px;
+    padding-left: 8px;
+    padding-right: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.TabBar {
+    display: inline-block;
+    background-color: #444852;
+    border-bottom: 1px solid #2f343b;
+    height: 36px;
+}
+
+.TabButton {
+    float: left;
+    height: 30px;
+    line-height: 30px;
+    min-width: 30px;
+    margin-top: 4px;
+    padding: 0 8px 0 8px;
+    position: relative;
+    color: #ffffff;
+    background-color: #444852;
+    border-color: #444852;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 2px;
+    font-family: inherit;
+    font-size: inherit;
+    text-align: center;
+}
+
+.TabButton:hover {
+    text-decoration: none;
+    cursor: default;
+}
+
+.TabButton:active {
+    height: 36px;
+    line-height: 36px;
+    margin-top: 0;
+    background-color: #2f343b;
+    border-left-color: #1f2328;
+    border-right-color: #1f2328;
+    border-top-color: #1f2328;
+}
+
+.TabButton[data-current="true"] {
+    height: 36px;
+    line-height: 36px;
+    margin-top: 0;
+    background-color: #2f343b;
+    border-left-color: #1f2328;
+    border-right-color: #1f2328;
+    border-top-color: #1f2328;
+}
+
+.TableHeader {
+    width: 100%;
+    height: 20px;
+    line-height: 20px;
+    font-weight: bold;
+    padding: 2px;
+    border-bottom: 1px solid #444852;;
+    display: inline-block;
+}
+
+.TableRow {
+    width: 100%;
+    height: 20px;
+    line-height: 20px;
+    padding: 2px;
+    display: inline-block;
+}
+
+.TableRow:hover {
+    cursor: default;
+}
+
+.TableRow[data-current="true"] {
+    background-color: #5294e2;
+}
+
+.TableColumn {
+    float: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.TableView {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    list-style-type: none;
+}
+
+.ToolBar {
+    display: inline-block;
+    background-color: #444852;
+    border-bottom: 1px solid #2f343b;
+    height: 36px;
+}
+
+.ToolButton {
+    float: left;
+    height: 36px;
+    min-width: 36px;
+    padding: 0 8px 0 8px;
+    margin: 0;
+    position: relative;
+    background-color: #444852;
+    color: #ffffff;
+    border-color: #444852;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 2px;
+    text-align: center;
+    font-family: inherit;
+    font-size: inherit;
+}
+
+.ToolButton:hover {
+    background-color: #383c45;
+    border-color: #5294e2;
+    cursor: default;
+}
+
+.ToolButton:active {
+    background-color: #2f343b;
+    border-color: #1f2328;
+}

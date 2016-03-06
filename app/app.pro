@@ -260,7 +260,10 @@ maemo5 {
         dbus_interface
         
 } else:unix {
-    DEFINES += USE_FAVICONS WIDGETS_UI
+    DEFINES += \
+        USE_FAVICONS \
+        WIDGETS_UI \
+        WEB_INTERFACE
     
     QT += dbus
     
@@ -326,6 +329,9 @@ maemo5 {
     
     dbus_interface.path = /usr/share/dbus-1/interfaces
     
+    web_interface.files = webif
+    web_interface.path = /opt/cutenews
+        
     target.path = /opt/cutenews/bin
     
     INSTALLS += \
@@ -335,7 +341,44 @@ maemo5 {
         icon22 \
         icon16 \
         dbus_service \
-        dbus_interface
+        dbus_interface \
+        web_interface
+}
+
+contains(DEFINES,WEB_INTERFACE) {
+    INCLUDEPATH += \
+        src/qhttpserver \
+        src/webif
+    
+    HEADERS += \
+        src/qhttpserver/http_parser.h \
+        src/qhttpserver/qhttpconnection.h \
+        src/qhttpserver/qhttprequest.h \
+        src/qhttpserver/qhttpresponse.h \
+        src/qhttpserver/qhttpserver.h \
+        src/qhttpserver/qhttpserverapi.h \
+        src/webif/articleserver.h \
+        src/webif/fileserver.h \
+        src/webif/pluginserver.h \
+        src/webif/settingsserver.h \
+        src/webif/transferserver.h \
+        src/webif/subscriptionserver.h \
+        src/webif/webserver.h
+    
+    SOURCES += \
+        src/qhttpserver/http_parser.c \
+        src/qhttpserver/qhttpconnection.cpp \
+        src/qhttpserver/qhttprequest.cpp \
+        src/qhttpserver/qhttpresponse.cpp \
+        src/qhttpserver/qhttpserver.cpp \
+        src/qhttpserver/qhttpserverfwd.h \
+        src/webif/articleserver.cpp \
+        src/webif/fileserver.cpp \
+        src/webif/pluginserver.cpp \
+        src/webif/settingsserver.cpp \
+        src/webif/subscriptionserver.cpp \
+        src/webif/transferserver.cpp \
+        src/webif/webserver.cpp
 }
 
 INSTALLS += target

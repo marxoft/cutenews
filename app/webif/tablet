@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>cuteNews</title>
+<link rel="icon" href="images/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="css/tablet.css" />
+<link rel="stylesheet" type="text/css" href="css/widgets.css" />
+<script src="js/cutenews.js"></script>
+<script src="js/tablet.js"></script>
+<script src="js/utils.js"></script>
+</head>
+<body onload="init()">
+<div id="tabBar" class="TabBar">
+<a id="feedsTabButton" class="TabButton" accessKey="a" href="#feeds" title="Show feeds" data-current="true" onclick="showFeedsTab()">
+Feeds
+</a>
+<a id="downloadsTabButton" class="TabButton" accessKey="d" href="#downloads" title="Show downloads" data-current="false" onclick="showDownloadsTab()">
+Downloads
+</a>
+</div>
+<div id="feedsTab" class="Tab">
+<div id="feedsToolBar" class="ToolBar">
+<input type="button" id="updateButton" class="ToolButton" title="Update current subscription" value="Update" onclick="updateCurrentSubscription()" />
+<input type="button" id="updateAllButton" class="ToolButton" accessKey="u" title="Update all subscriptions" value="Update all" onclick="updateAllSubscriptions()" />
+</div>
+<ul id="subscriptionsTable" class="TableView">
+</ul>
+<ul id="articlesList">
+</ul>
+</div>
+<div id="downloadsTab" class="Tab" data-current="false">
+<div id="downloadsToolBar" class="ToolBar">
+<input type="button" id="startDownloadsButton" class="ToolButton" accessKey="s" title="Start all downloads" value="Start" onclick="startDownloads()" />
+<input type="button" id="pauseDownloadsButton" class="ToolButton" accessKey="p" title="Pause all downloads" value="Pause" onclick="pauseDownloads()" />
+</div>
+<div id="downloadsHeader" class="TableHeader">
+<div id="downloadsFileNameHeader" class="DownloadFileNameColumn">
+Filename
+</div>
+<div id="downloadsPriorityHeader" class="DownloadPriorityColumn">
+Priority
+</div>
+<div id="downloadsProgressHeader" class="DownloadProgressColumn">
+Progress
+</div>
+<div id="downloadsStatusHeader" class="DownloadStatusColumn">
+Status
+</div>
+<div id="downloadsActionsHeader" class="DownloadActionsColumn">
+Actions
+</div>
+</div>
+<ul id="downloadsTable" class="TableView">
+</ul>
+</div>
+<div id="statusBar" class="StatusBar">
+</div>
+</body>
+</html>

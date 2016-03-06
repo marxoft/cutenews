@@ -21,6 +21,7 @@
 #include "subscriptionplugins.h"
 #include "subscriptions.h"
 #include "transfers.h"
+#include "webserver.h"
 #include <QApplication>
 #include <QIcon>
 #include <QSqlQuery>
@@ -54,12 +55,14 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     QScopedPointer<Settings> settings(Settings::instance());
     QScopedPointer<Subscriptions> subscriptions(Subscriptions::instance());
     QScopedPointer<Transfers> transfers(Transfers::instance());
+    QScopedPointer<WebServer> server(WebServer::instance());
     
     CuteNews cutenews;
     
     Database::init();
     Settings::instance()->setNetworkProxy();
     Transfers::instance()->load();
+    
     SubscriptionPlugins::load();
     
     QThread thread;

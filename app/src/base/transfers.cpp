@@ -31,8 +31,8 @@ Transfers::Transfers() :
     m_queueTimer.setInterval(1000);
     
     connect(&m_queueTimer, SIGNAL(timeout()), this, SLOT(startNextTransfers()));
-    connect(Settings::instance(), SIGNAL(maximumConcurrentTransfersChanged()),
-            this, SLOT(onMaximumConcurrentTransfersChanged()));
+    connect(Settings::instance(), SIGNAL(maximumConcurrentTransfersChanged(int)),
+            this, SLOT(setMaximumConcurrentTransfers(int)));
 }
 
 Transfers::~Transfers() {
@@ -239,21 +239,20 @@ void Transfers::onTransferStatusChanged() {
     }
 }
 
-void Transfers::onMaximumConcurrentTransfersChanged() {
-    const int max = Settings::maximumConcurrentTransfers();
+void Transfers::setMaximumConcurrentTransfers(int maximum) {
     int act = active();
     
-    if (act < max) {
+    if (act < maximum) {
         startNextTransfers();
     }
-    else if (act > max) {
+    else if (act > maximum) {
         for (int priority = Transfer::LowPriority; priority >= Transfer::HighPriority; priority--) {
             for (int i = m_active.size() - 1; i >= 0; i--) {
                 if (m_active.at(i)->priority() == priority) {
                     m_active.at(i)->pause();
                     act--;
                 
-                    if (act == max) {
+                    if (act == maximum) {
                         return;
                     }
                 }

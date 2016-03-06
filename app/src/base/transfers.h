@@ -43,6 +43,8 @@ public:
     Q_INVOKABLE Transfer* get(const QString &id) const;
     
 public Q_SLOTS:
+    void setMaximumConcurrentTransfers(int maximum);
+    
     bool start();
     bool pause();
     bool start(const QString &id);
@@ -66,7 +68,6 @@ private Q_SLOTS:
     void startNextTransfers();
     
     void onTransferStatusChanged();
-    void onMaximumConcurrentTransfersChanged();
     
 Q_SIGNALS:
     void activeChanged(int a);
@@ -81,7 +82,7 @@ private:
     QTimer m_queueTimer;
     
     QList<Transfer*> m_transfers;
-    QList<Transfer*> m_active;
+    QList<Transfer*> m_active;    
 };
     
 #endif // TRANSFERS_H

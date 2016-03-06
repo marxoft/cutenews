@@ -556,7 +556,6 @@ void MainWindow::downloadCurrentEnclosure() {
 void MainWindow::setCurrentSubscription(const QModelIndex &index) {
     if (index != m_subscriptionsView->currentIndex()) {
         m_subscriptionsView->setCurrentIndex(index);
-        return;
     }
     
     m_infoLabel->setText(tr("<b>Feed:</b> <a href='%1'>%2</a><br><b>Source:</b> <a href='%3'>%3</a>")

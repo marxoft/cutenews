@@ -100,7 +100,7 @@ private Q_SLOTS:
 
 Q_SIGNALS:
     void countChanged(int count);
-    void statusChanged(Status status);
+    void statusChanged(SubscriptionModel::Status status);
     
 private:
     QList<Subscription*> m_list;

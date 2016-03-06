@@ -46,7 +46,7 @@ void Settings::setActiveColor(const QString &color) {
         setValue("Appearance/activeColor", color);
         
         if (self) {
-            emit self->activeColorChanged();
+            emit self->activeColorChanged(color);
         }
     }
 }
@@ -60,7 +60,7 @@ void Settings::setActiveColorString(const QString &s) {
         setValue("Appearance/activeColorString", s);
         
         if (self) {
-            emit self->activeColorStringChanged();
+            emit self->activeColorStringChanged(s);
         }
     }
 }
@@ -80,7 +80,7 @@ void Settings::setDownloadPath(const QString &path) {
         setValue("Transfers/downloadPath", path);
         
         if (self) {
-            emit self->downloadPathChanged();
+            emit self->downloadPathChanged(downloadPath());
         }
     }
 }
@@ -91,10 +91,11 @@ int Settings::maximumConcurrentTransfers() {
 
 void Settings::setMaximumConcurrentTransfers(int maximum) {
     if (maximum != maximumConcurrentTransfers()) {
-        setValue("Transfers/maximumConcurrentTransfers", qBound(1, maximum, MAX_CONCURRENT_TRANSFERS));
+        maximum = qBound(1, maximum, MAX_CONCURRENT_TRANSFERS);
+        setValue("Transfers/maximumConcurrentTransfers", maximum);
         
         if (self) {
-            emit self->maximumConcurrentTransfersChanged();
+            emit self->maximumConcurrentTransfersChanged(maximum);
         }
     }
 }
@@ -124,7 +125,7 @@ void Settings::setNetworkProxyEnabled(bool enabled) {
         setValue("Network/networkProxyEnabled", enabled);
         
         if (self) {
-            emit self->networkProxyChanged();
+            emit self->networkProxyEnabledChanged(enabled);
         }
     }
 }
@@ -210,7 +211,7 @@ void Settings::setScreenOrientation(int orientation) {
         setValue("Appearance/screenOrientation", orientation);
         
         if (self) {
-            emit self->screenOrientationChanged();
+            emit self->screenOrientationChanged(orientation);
         }
     }
 }
@@ -224,7 +225,7 @@ void Settings::setStartTransfersAutomatically(bool enabled) {
         setValue("Transfers/startTransfersAutomatically", enabled);
         
         if (self) {
-            emit self->startTransfersAutomaticallyChanged();
+            emit self->startTransfersAutomaticallyChanged(enabled);
         }
     }
 }
@@ -238,7 +239,7 @@ void Settings::setUpdateInterval(int interval) {
         setValue("Subscriptions/updateInterval", interval);
         
         if (self) {
-            emit self->updateIntervalChanged();
+            emit self->updateIntervalChanged(interval);
         }
     }
 }
@@ -250,7 +251,7 @@ bool Settings::updateOnStartup() {
 void Settings::setUpdateOnStartup(bool enabled) {
     if (enabled != updateOnStartup()) {
         setValue("Subscriptions/updateOnStartup", enabled);
-        emit updateOnStartupChanged();
+        emit updateOnStartupChanged(enabled);
     }
 }
 
@@ -263,7 +264,7 @@ void Settings::setWorkOffline(bool enabled) {
         setValue("Subscriptions/workOffline", enabled);
         
         if (self) {
-            emit self->workOfflineChanged();
+            emit self->workOfflineChanged(enabled);
         }
     }
 }
@@ -277,7 +278,7 @@ void Settings::setViewMode(const QString &mode) {
         setValue("Appearance/viewMode", mode);
         
         if (self) {
-            emit self->viewModeChanged();
+            emit self->viewModeChanged(mode);
         }
     }
 }

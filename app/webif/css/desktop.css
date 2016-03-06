@@ -1,0 +1,214 @@
+body {
+    background-color: #383c45;
+    color: #ffffff;
+    font-family: "Droid Sans", Helvetica, sans-serif;
+    font-size: 11pt;
+}
+
+a {
+    color: #5294e2;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+#tabBar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+}
+
+#statusBar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.Tab {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 37px;
+    bottom: 28px;
+}
+
+#feedsToolBar {
+    width: 100%;
+}
+
+#subscriptionsTable {
+    position: fixed;
+    top: 74px;
+    bottom: 24px;
+    width: 240px;
+}
+
+#subscriptionsTable .TableRow[data-read="false"] {
+    font-weight: bold;
+}
+
+.SubscriptionIconColumn {
+    width: 16px;
+    height: 16px;
+    float: left;
+    padding: 2px 4px 0 0;
+}
+
+.SubscriptionTitleColumn {
+    width: 165px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    float: left;
+    padding-right: 4px;
+}
+
+.SubscriptionUnreadColumn {
+    width: 36px;
+    text-align: right;
+    float: left;
+    padding-right: 4px;
+}
+
+#articles {
+    position: fixed;
+    left: 240px;
+    right: 0;
+    top: 74px;
+    height: 204px;
+}
+
+#articlesTable {
+    width: 100%;
+    height: 182px;
+}
+
+#articlesTable .TableRow[data-read="false"] {
+    font-weight: bold;
+}
+
+.ArticleDateColumn {
+    width: 20%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    float: left;
+    padding-right: 4px;
+}
+
+.ArticleTitleColumn {
+    width: 75%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    float: left;
+}
+
+#article {
+    position: fixed;
+    top: 290px;
+    bottom: 24px;
+    left: 240px;
+    right: 0;
+    background-color: #ffffff;
+    color: #000000;
+    overflow: auto;
+}
+
+#articleBody {
+    margin: 8px 8px 0 8px;
+}
+
+#articleControls {
+    margin: 0 8px 0 8px;
+    display: none;
+}
+
+#articleEnclosures {
+    margin: 0 8px 8px 8px;
+    display: none;
+}
+
+.EnclosureUrlColumn {
+    width: 60%;
+    float: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 4px;
+}
+
+.EnclosureInfoColumn {
+    width: 20%;
+    float: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 4px;
+}
+
+.EnclosureActionsColumn {
+    float: right;
+}
+
+#downloadsTab {
+    display: none;
+}
+
+#downloadsToolBar {
+    width: 100%;
+}
+
+#downloadsTable {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 104px;
+    bottom: 28px;
+}
+
+#downloadsTable .TableRow {
+    height: 26px;
+    line-height: 26px;
+}
+
+.DownloadFileNameColumn {
+    width: 30%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    float: left;
+    padding-right: 4px;
+}
+
+.DownloadPriorityColumn {
+    width: 15%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    float: left;
+    padding-right: 4px;
+}
+
+.DownloadProgressColumn {
+    width: 20%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    float: left;
+    padding-right: 4px;
+}
+
+.DownloadStatusColumn {
+    width: 15%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    float: left;
+    padding-right: 4px;
+}
+

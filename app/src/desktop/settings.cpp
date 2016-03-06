@@ -52,7 +52,7 @@ void Settings::setDownloadPath(const QString &path) {
         setValue("Transfers/downloadPath", path);
         
         if (self) {
-            emit self->downloadPathChanged();
+            emit self->downloadPathChanged(downloadPath());
         }
     }
 }
@@ -63,10 +63,11 @@ int Settings::maximumConcurrentTransfers() {
 
 void Settings::setMaximumConcurrentTransfers(int maximum) {
     if (maximum != maximumConcurrentTransfers()) {
-        setValue("Transfers/maximumConcurrentTransfers", qBound(1, maximum, MAX_CONCURRENT_TRANSFERS));
+        maximum = qBound(1, maximum, MAX_CONCURRENT_TRANSFERS);
+        setValue("Transfers/maximumConcurrentTransfers", maximum);
         
         if (self) {
-            emit self->maximumConcurrentTransfersChanged();
+            emit self->maximumConcurrentTransfersChanged(maximum);
         }
     }
 }
@@ -96,7 +97,7 @@ void Settings::setNetworkProxyEnabled(bool enabled) {
         setValue("Network/networkProxyEnabled", enabled);
         
         if (self) {
-            emit self->networkProxyChanged();
+            emit self->networkProxyEnabledChanged(enabled);
         }
     }
 }
@@ -182,7 +183,7 @@ void Settings::setStartTransfersAutomatically(bool enabled) {
         setValue("Transfers/startTransfersAutomatically", enabled);
         
         if (self) {
-            emit self->startTransfersAutomaticallyChanged();
+            emit self->startTransfersAutomaticallyChanged(enabled);
         }
     }
 }
@@ -196,7 +197,7 @@ void Settings::setUpdateInterval(int interval) {
         setValue("Subscriptions/updateInterval", interval);
         
         if (self) {
-            emit self->updateIntervalChanged();
+            emit self->updateIntervalChanged(interval);
         }
     }
 }
@@ -210,7 +211,77 @@ void Settings::setUpdateOnStartup(bool enabled) {
         setValue("Subscriptions/updateOnStartup", enabled);
         
         if (self) {
-            emit self->updateOnStartupChanged();
+            emit self->updateOnStartupChanged(enabled);
+        }
+    }
+}
+
+bool Settings::webInterfaceAuthenticationEnabled() {
+    return value("WebInterface/webInterfaceAuthenticationEnabled", false).toBool();
+}
+
+void Settings::setWebInterfaceAuthenticationEnabled(bool enabled) {
+    if (enabled != webInterfaceAuthenticationEnabled()) {
+        setValue("WebInterface/webInterfaceAuthenticationEnabled", enabled);
+        
+        if (self) {
+            emit self->webInterfaceAuthenticationEnabledChanged(enabled);
+        }
+    }
+}
+
+bool Settings::webInterfaceEnabled() {
+    return value("WebInterface/webInterfaceEnabled", false).toBool();
+}
+
+void Settings::setWebInterfaceEnabled(bool enabled) {
+    if (enabled != webInterfaceEnabled()) {
+        setValue("WebInterface/webInterfaceEnabled", enabled);
+        
+        if (self) {
+            emit self->webInterfaceEnabledChanged(enabled);
+        }
+    }
+}
+
+QString Settings::webInterfacePassword() {
+    return value("WebInterface/webInterfacePassword").toString();
+}
+
+void Settings::setWebInterfacePassword(const QString &password) {
+    if (password != webInterfacePassword()) {
+        setValue("WebInterface/webInterfacePassword", password);
+        
+        if (self) {
+            emit self->webInterfacePasswordChanged(password);
+        }
+    }
+}
+
+int Settings::webInterfacePort() {
+    return value("WebInterface/webInterfacePort", 8080).toInt();
+}
+
+void Settings::setWebInterfacePort(int port) {
+    if (port != webInterfacePort()) {
+        setValue("WebInterface/webInterfacePort", port);
+        
+        if (self) {
+            emit self->webInterfacePortChanged(port);
+        }
+    }
+}
+
+QString Settings::webInterfaceUsername() {
+    return value("WebInterface/webInterfaceUsername").toString();
+}
+
+void Settings::setWebInterfaceUsername(const QString &username) {
+    if (username != webInterfaceUsername()) {
+        setValue("WebInterface/webInterfaceUsername", username);
+        
+        if (self) {
+            emit self->webInterfaceUsernameChanged(username);
         }
     }
 }
@@ -224,7 +295,7 @@ void Settings::setWorkOffline(bool enabled) {
         setValue("Subscriptions/workOffline", enabled);
         
         if (self) {
-            emit self->workOfflineChanged();
+            emit self->workOfflineChanged(enabled);
         }
     }
 }

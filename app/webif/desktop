@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>cuteNews</title>
+<link rel="icon" href="images/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="css/desktop.css" />
+<link rel="stylesheet" type="text/css" href="css/widgets.css" />
+<script src="js/cutenews.js"></script>
+<script src="js/desktop.js"></script>
+<script src="js/utils.js"></script>
+</head>
+<body onload="init()">
+<div id="tabBar" class="TabBar">
+<a id="feedsTabButton" class="TabButton" accessKey="a" href="#feeds" title="Show feeds" data-current="true" onclick="showFeedsTab()">
+Feeds
+</a>
+<a id="downloadsTabButton" class="TabButton" accessKey="d" href="#downloads" title="Show downloads" data-current="false" onclick="showDownloadsTab()">
+Downloads
+</a>
+</div>
+<div id="feedsTab" class="Tab">
+<div id="feedsToolBar" class="ToolBar">
+<input type="button" id="updateButton" class="ToolButton" title="Update current subscription" value="Update" onclick="updateCurrentSubscription()" />
+<input type="button" id="updateAllButton" class="ToolButton" accessKey="u" title="Update all subscriptions" value="Update all" onclick="updateAllSubscriptions()" />
+<div class="Spacer">
+</div>
+<input type="button" id="previousArticleButton" class="ToolButton" title="Go to the previous article" value="<" onclick="previousArticle()" />
+<input type="button" id="nextArticleButton" class="ToolButton" title="Go to the next article" value=">" onclick="nextArticle()" />
+<input type="button" id="nextUnreadArticleButton" class="ToolButton" accessKey="n" title="Go to the next unread article" value=">> Next unread article" onclick="nextUnreadArticle()" />
+</div>
+<ul id="subscriptionsTable" class="TableView">
+</ul>
+<div id="articles">
+<div id="articlesHeader" class="TableHeader">
+<div id="articlesDateHeader" class="ArticleDateColumn">
+Date
+</div>
+<div id="articlesTitleHeader" class="ArticleTitleColumn">
+Title
+</div>
+</div>
+<ul id="articlesTable" class="TableView">
+</ul>
+</div>
+<div id="article">
+<div id="articleBody">
+</div>
+<div id="articleControls">
+Favourite
+<input id="articleFavouriteCheckBox" type="checkbox" onclick="markArticleFavourite(currentArticle, this.checked)" />
+Read
+<input id="articleReadCheckBox" type="checkbox" onclick="markArticleRead(currentArticle, this.checked)" />
+</div>
+<div id="articleEnclosures">
+<h4>Enclosures</h4>
+<ul id="enclosuresTable" class="TableView">
+</ul>
+</div>
+</div>
+</div>
+<div id="downloadsTab" class="Tab" data-current="false">
+<div id="downloadsToolBar" class="ToolBar">
+<input type="button" id="startDownloadsButton" class="ToolButton" accessKey="s" title="Start all downloads" value="Start" onclick="startDownloads()" />
+<input type="button" id="pauseDownloadsButton" class="ToolButton" accessKey="p" title="Pause all downloads" value="Pause" onclick="pauseDownloads()" />
+</div>
+<div id="downloadsHeader" class="TableHeader">
+<div id="downloadsFileNameHeader" class="DownloadFileNameColumn">
+Filename
+</div>
+<div id="downloadsPriorityHeader" class="DownloadPriorityColumn">
+Priority
+</div>
+<div id="downloadsProgressHeader" class="DownloadProgressColumn">
+Progress
+</div>
+<div id="downloadsStatusHeader" class="DownloadStatusColumn">
+Status
+</div>
+<div id="downloadsActionsHeader" class="DownloadActionsColumn">
+Actions
+</div>
+</div>
+<ul id="downloadsTable" class="TableView">
+</ul>
+</div>
+<div id="statusBar" class="StatusBar">
+</div>
+</body>
+</html>

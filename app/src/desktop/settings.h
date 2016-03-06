@@ -28,7 +28,7 @@ class Settings : public QObject
     Q_PROPERTY(int maximumConcurrentTransfers READ maximumConcurrentTransfers WRITE setMaximumConcurrentTransfers
                NOTIFY maximumConcurrentTransfersChanged)
     Q_PROPERTY(bool networkProxyEnabled READ networkProxyEnabled WRITE setNetworkProxyEnabled
-               NOTIFY networkProxyChanged)
+               NOTIFY networkProxyEnabledChanged)
     Q_PROPERTY(QString networkProxyHost READ networkProxyHost WRITE setNetworkProxyHost NOTIFY networkProxyChanged)
     Q_PROPERTY(QString networkProxyPassword READ networkProxyPassword WRITE setNetworkProxyPassword
                NOTIFY networkProxyChanged)
@@ -40,6 +40,15 @@ class Settings : public QObject
                NOTIFY startTransfersAutomaticallyChanged)
     Q_PROPERTY(int updateInterval READ updateInterval WRITE setUpdateInterval NOTIFY updateIntervalChanged)
     Q_PROPERTY(bool updateOnStartup READ updateOnStartup WRITE setUpdateOnStartup NOTIFY updateOnStartupChanged)
+    Q_PROPERTY(bool webInterfaceAuthenticationEnabled READ webInterfaceAuthenticationEnabled
+               WRITE setWebInterfaceAuthenticationEnabled NOTIFY webInterfaceAuthenticationEnabledChanged)
+    Q_PROPERTY(bool webInterfaceEnabled READ webInterfaceEnabled WRITE setWebInterfaceEnabled
+               NOTIFY webInterfaceEnabledChanged)
+    Q_PROPERTY(QString webInterfacePassword READ webInterfacePassword WRITE setWebInterfacePassword
+               NOTIFY webInterfacePasswordChanged)
+    Q_PROPERTY(int webInterfacePort READ webInterfacePort WRITE setWebInterfacePort NOTIFY webInterfacePortChanged)
+    Q_PROPERTY(QString webInterfaceUsername READ webInterfaceUsername WRITE setWebInterfaceUsername
+               NOTIFY webInterfaceUsernameChanged)
     Q_PROPERTY(bool workOffline READ workOffline WRITE setWorkOffline NOTIFY workOfflineChanged)
     
 public:
@@ -62,6 +71,13 @@ public:
     
     static int updateInterval();
     static bool updateOnStartup();
+    
+    static bool webInterfaceAuthenticationEnabled();
+    static bool webInterfaceEnabled();
+    static QString webInterfacePassword();
+    static int webInterfacePort();
+    static QString webInterfaceUsername();
+    
     static bool workOffline();
         
     static QVariant value(const QString &key, const QVariant &defaultValue = QVariant());
@@ -83,18 +99,31 @@ public Q_SLOTS:
     
     static void setUpdateInterval(int interval);
     static void setUpdateOnStartup(bool enabled);
+    
+    static void setWebInterfaceAuthenticationEnabled(bool enabled);
+    static void setWebInterfaceEnabled(bool enabled);
+    static void setWebInterfacePassword(const QString &password);
+    static void setWebInterfacePort(int port);
+    static void setWebInterfaceUsername(const QString &username);
+    
     static void setWorkOffline(bool enabled);
         
     static void setValue(const QString &key, const QVariant &value);
 
 Q_SIGNALS:
-    void downloadPathChanged();
-    void maximumConcurrentTransfersChanged();
+    void downloadPathChanged(const QString &path);
+    void maximumConcurrentTransfersChanged(int maximum);
     void networkProxyChanged();
-    void startTransfersAutomaticallyChanged();
-    void updateIntervalChanged();
-    void updateOnStartupChanged();
-    void workOfflineChanged();
+    void networkProxyEnabledChanged(bool enabled);
+    void startTransfersAutomaticallyChanged(bool enabled);
+    void updateIntervalChanged(int interval);
+    void updateOnStartupChanged(bool enabled);
+    void webInterfaceAuthenticationEnabledChanged(bool enabled);
+    void webInterfaceEnabledChanged(bool enabled);
+    void webInterfacePasswordChanged(const QString &password);
+    void webInterfacePortChanged(int port);
+    void webInterfaceUsernameChanged(const QString &username);
+    void workOfflineChanged(bool enabled);
 
 private:
     Settings();
