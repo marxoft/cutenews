@@ -176,7 +176,8 @@ MainWindow::MainWindow(QWidget *parent) :
     
     m_toolsMenu->addAction(m_searchAction);
     m_toolsMenu->addAction(m_settingsAction);
-    
+
+    m_toolBar->setWindowTitle(tr("Main toolbar"));
     m_toolBar->setAllowedAreas(Qt::TopToolBarArea);
     m_toolBar->setMovable(false);
     m_toolBar->addAction(m_newSubscriptionAction);
