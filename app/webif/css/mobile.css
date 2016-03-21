@@ -1,0 +1,196 @@
+body {
+    background-color: #383c45;
+    color: #fff;
+    font-family: "Droid Sans", Helvetica, sans-serif;
+    font-size: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    color: #5294e2;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+label {
+    line-height: 48px;
+}
+
+.Button {
+    height: 48px;
+}
+
+.ListView {
+    overflow: hidden;
+}
+
+.Menu {
+    background-color: #444852;
+}
+
+.MenuItem {
+    height: 48px;
+}
+
+.ProgressBar {
+    height: 48px;
+}
+
+.ProgressBarLabel {
+    line-height: 48px;
+}
+
+.Selector {
+    height: 48px;
+}
+
+.TextField {
+    height: 48px;
+}
+
+.Title {
+    float: left;
+    line-height: 48px;
+    padding: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ToolBar {
+    width: 100%;
+    height: 64px;
+}
+
+.ToolButton {
+    min-width: 64px;
+}
+
+.ToolButtonRow {
+    float: right;
+    height: 64px;
+}
+
+#subscriptionsTitle {
+    width: 80%;
+}
+
+#subscriptionsMenu {
+    top: 65px;
+    right: 0;
+}
+
+#subscriptionsList .ListItem[data-read="false"] {
+    font-weight: bold;
+}
+
+#subscriptionsList .CountBubble {
+    float: right;
+    min-width: 24px;
+    padding: 10px;
+}
+
+#subscriptionsList .ListItemText {
+    line-height: 24px;
+    width: 80%;
+}
+
+#articlesTitle {
+    width: 80%;
+}
+
+#articlesList .ListItem[data-read="false"] {
+    font-weight: bold;
+}
+
+#articlesList .ListItemText {
+    line-height: 24px;
+}
+
+#enclosuresList .Button {
+    float: right;
+}
+
+#enclosuresList .ListItemText {
+    line-height: 24px;
+}
+
+#articleTitle {
+    width: 60%;
+}
+
+#articleMenu {
+    top: 65px;
+    right: 0;
+}
+
+#article {
+    padding: 8px;
+}
+
+#articleBody img {
+    max-width: 100%;
+}
+
+#articleBody iframe {
+    max-width: 100%;
+}
+
+#downloadsList .ListItemText {
+    line-height: 24px;
+    width: 60%;
+}
+
+#downloadsList .ProgressBar {
+    float: right;
+    width: 30%;
+}
+
+#subscriptionTypeSelector {
+    float: right;
+    width: 50%;
+}
+
+#subscriptionSourceField {
+    float: right;
+    width: 50%;
+}
+
+#downloadPathField {
+    float: right;
+    width: 50%;
+}
+
+#concurrentDownloadsSelector {
+    float: right;
+    width: 50%;
+}
+
+#networkProxyTypeSelector {
+    float: right;
+    width: 50%;
+}
+
+#networkProxyHostField {
+    float: right;
+    width: 50%;
+}
+
+#networkProxyPortField {
+    float: right;
+    width: 50%;
+}
+
+#networkProxyUsernameField {
+    float: right;
+    width: 50%;
+}
+
+#networkProxyPasswordField {
+    float: right;
+    width: 50%;
+}

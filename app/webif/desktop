@@ -4,23 +4,24 @@
 <meta charset="utf-8">
 <title>cuteNews</title>
 <link rel="icon" href="images/favicon.ico" />
-<link rel="stylesheet" type="text/css" href="css/desktop.css" />
 <link rel="stylesheet" type="text/css" href="css/widgets.css" />
+<link rel="stylesheet" type="text/css" href="css/desktop.css" />
 <script src="js/cutenews.js"></script>
-<script src="js/desktop.js"></script>
 <script src="js/utils.js"></script>
+<script src="js/desktop.js"></script>
 </head>
 <body onload="init()">
 <div id="tabBar" class="TabBar">
-<a id="feedsTabButton" class="TabButton" accessKey="a" href="#feeds" title="Show feeds" data-current="true" onclick="showFeedsTab()">
+<a id="feedsTabButton" class="TabButton" accessKey="a" href="#feedsTab" title="Show feeds" data-current="true" onclick="showFeedsTab()">
 Feeds
 </a>
-<a id="downloadsTabButton" class="TabButton" accessKey="d" href="#downloads" title="Show downloads" data-current="false" onclick="showDownloadsTab()">
+<a id="downloadsTabButton" class="TabButton" accessKey="d" href="#downloadsTab" title="Show downloads" data-current="false" onclick="showDownloadsTab()">
 Downloads
 </a>
 </div>
-<div id="feedsTab" class="Tab">
+<div id="feedsTab" class="Tab" data-current="true">
 <div id="feedsToolBar" class="ToolBar">
+<input type="button" id="newSubscriptionButton" class="ToolButton" title="Add a new subscription" value="New subscription" onclick="showNewSubscriptionDialog()" />
 <input type="button" id="updateButton" class="ToolButton" title="Update current subscription" value="Update" onclick="updateCurrentSubscription()" />
 <input type="button" id="updateAllButton" class="ToolButton" accessKey="u" title="Update all subscriptions" value="Update all" onclick="updateAllSubscriptions()" />
 <div class="Spacer">
@@ -28,6 +29,9 @@ Downloads
 <input type="button" id="previousArticleButton" class="ToolButton" title="Go to the previous article" value="<" onclick="previousArticle()" />
 <input type="button" id="nextArticleButton" class="ToolButton" title="Go to the next article" value=">" onclick="nextArticle()" />
 <input type="button" id="nextUnreadArticleButton" class="ToolButton" accessKey="n" title="Go to the next unread article" value=">> Next unread article" onclick="nextUnreadArticle()" />
+<div class="Spacer">
+</div>
+<input type="button" id="feedsSettingsButton" class="ToolButton" title="Show the settings dialog" value="Settings" onclick="showSettingsDialog()" />
 </div>
 <ul id="subscriptionsTable" class="TableView">
 </ul>
@@ -47,10 +51,10 @@ Title
 <div id="articleBody">
 </div>
 <div id="articleControls">
-Favourite
 <input id="articleFavouriteCheckBox" type="checkbox" onclick="markArticleFavourite(currentArticle, this.checked)" />
-Read
+Favourite
 <input id="articleReadCheckBox" type="checkbox" onclick="markArticleRead(currentArticle, this.checked)" />
+Read
 </div>
 <div id="articleEnclosures">
 <h4>Enclosures</h4>
@@ -59,10 +63,13 @@ Read
 </div>
 </div>
 </div>
-<div id="downloadsTab" class="Tab" data-current="false">
+<div id="downloadsTab" class="Tab">
 <div id="downloadsToolBar" class="ToolBar">
 <input type="button" id="startDownloadsButton" class="ToolButton" accessKey="s" title="Start all downloads" value="Start" onclick="startDownloads()" />
 <input type="button" id="pauseDownloadsButton" class="ToolButton" accessKey="p" title="Pause all downloads" value="Pause" onclick="pauseDownloads()" />
+<div class="Spacer">
+</div>
+<input type="button" id="downloadsSettingsButton" class="ToolButton" title="Show the settings dialog" value="Settings" onclick="showSettingsDialog()" />
 </div>
 <div id="downloadsHeader" class="TableHeader">
 <div id="downloadsFileNameHeader" class="DownloadFileNameColumn">
@@ -85,6 +92,103 @@ Actions
 </ul>
 </div>
 <div id="statusBar" class="StatusBar">
+</div>
+<div id="dialogBackground" class="PopupBackground">
+</div>
+<div id="newSubscriptionDialog" class="Dialog">
+<div id="newSubscriptionDialogTitle" class="DialogTitle">
+Subscription properties
+</div>
+<div id="newSubscriptionDialogContent" class="DialogContent">
+<div class="HBox">
+<label for="subscriptionTypeSelector">Subscription type:</label>
+<select id="subscriptionTypeSelector" class="Selector">
+<option value="0">URL</option>
+<option value="1">Local file</option>
+<option value="2">Command</option>
+</select>
+</div>
+<div class="HBox">
+<label for="subscriptionSourceField">Source:</label>
+<input type="text" id="subscriptionSourceField" class="TextField" />
+</div>
+<div class="HBox">
+<input type="checkbox" id="subscriptionEnclosuresCheckBox" class="CheckBox" />
+<label for="subscriptionEnclosuresCheckBox">Download enclosures</label>
+</div>
+</div>
+<div class="DialogButtonBox">
+<input type="button" id="cancelNewSubscriptionButton"  class="Button" value="Cancel" onclick="cancelNewSubscriptionDialog()" />
+<input type="button" id="addSubscriptionButton" class="Button" value="Save" onclick="addNewSubscription(); cancelNewSubscriptionDialog();" />
+</div>
+</div>
+<div id="settingsDialog" class="Dialog">
+<div id="settingsDialogTitle" class="DialogTitle">
+Settings
+</div>
+<div id="settingsDialogContent" class="DialogContent">
+<div id="settingsTabBar" class="TabBar">
+<a id="generalSettingsTabButton" class="TabButton" href="#generalSettingsTab" data-current="true" onclick="showGeneralSettings()">
+General
+</a>
+<a id="networkSettingsTabButton" class="TabButton" href="#networkSettingsTab" data-current="false" onclick="showNetworkSettings()">
+Network
+</a>
+</div>
+<div id="generalSettingsTab" class="Tab" data-current="true">
+<div class="HBox">
+<label for="downloadPathField">Download path:</label>
+<input type="text" id="downloadPathField" class="TextField" />
+</div>
+<div class="HBox">
+<label for="concurrentDownloadsSelector">Maximum concurrent downloads:</label>
+<select id="concurrentDownloadsSelector" class="Selector">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+</select>
+</div>
+<div class="HBox">
+<input type="checkbox" id="automaticDownloadsCheckBox" class="CheckBox" />
+<label for="automaticDownloadsCheckBox">Start downloads automatically</label>
+</div>
+</div>
+<div id="networkSettingsTab" class="Tab">
+<div class="HBox">
+<input type="checkbox" id="networkProxyCheckBox" class="CheckBox" />
+<label for="networkProxyCheckBox">Use network proxy</label>
+</div>
+<div class="HBox">
+<label for="networkProxyTypeSelector">Type:</label>
+<select id="networkProxyTypeSelector" class="Selector">
+<option value="3">HTTP</option>
+<option value="4">HTTP caching</option>
+<option value="1">SOCKS5</option>
+</select>
+</div>
+<div class="HBox">
+<label for="networkProxyHostField">Host:</label>
+<input type="text" id="networkProxyHostField" class="TextField" />
+</div>
+<div class="HBox">
+<label for="networkProxyPortField">Port:</label>
+<input type="text" id="networkProxyPortField" class="TextField" />
+</div>
+<div class="HBox">
+<label for="networkProxyUsernameField">Username:</label>
+<input type="text" id="networkProxyUsernameField" class="TextField" />
+</div>
+<div class="HBox">
+<label for="networkProxyPasswordField">Password:</label>
+<input type="text" id="networkProxyPasswordField" class="TextField" />
+</div>
+</div>
+</div>
+<div class="DialogButtonBox">
+<input type="button" id="cancelSettingsDialogButton"  class="Button" value="Cancel" onclick="cancelSettingsDialog()" />
+<input type="button" id="saveSettingsButton" class="Button" value="Save" onclick="saveSettings(); cancelSettingsDialog();" />
+</div>
 </div>
 </body>
 </html>

@@ -1,9 +1,9 @@
 .Button {
-    height: 24px;
-    min-width: 24px;
+    height: 32px;
+    min-width: 72px;
     padding: 0 8px 0 8px;
     margin: 0;
-    border-color: #444852;
+    border-color: #2f343b;
     border-width: 1px;
     border-style: solid;
     border-radius: 2px;
@@ -11,7 +11,7 @@
     font-size: inherit;
     text-align: center;
     background-color: #383c45;
-    color: #ffffff;
+    color: #fff;
 }
 
 .Button:hover {
@@ -23,16 +23,109 @@
     border-color: #1f2328;
 }
 
+.CountBubble {
+    padding: 8px;
+    text-align: center;
+    background-color: #383c45;
+    border: 1px solid #2f343b;
+    border-radius: 2px;
+}
+
+.Dialog {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    background-color: #444852;
+    border: 1px solid #2f343b;
+    border-radius: 2px;
+}
+
+.DialogButtonBox {
+    display: inline-block;
+    float: right;
+    padding: 8px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.DialogButtonBox .Button {
+    float: left;
+    margin-right: 8px;
+}
+
+.DialogContent {
+    padding: 8px;
+}
+
+.DialogTitle {
+    background-color: #2f343b;
+    font-style: italic;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 4px;
+}
+
+.GroupBox {
+    border: 1px solid #2f343b;
+    border-radius: 2px;
+    padding: 8px;
+}
+
+.HBox {
+    padding: 8px;
+}
+
+.ListItem {
+    width: 100%;
+    height: 64px;
+    border-bottom: 1px solid #2f343b;
+}
+
+.ListItem:active {
+    background-color: #5294e2;
+}
+
+.ListItem:hover {
+    cursor: default;
+}
+
+.ListItemContent {
+    padding: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ListItemText {
+    float: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 48px;
+    width: 100%;
+}
+
+.ListView {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    list-style-type: none;
+}
+
 .Menu {
     display: none;
     position: absolute;
-    z-index: 10;
     background-color: #383c45;
+    margin: 0;
     padding: 0;
+    width: 200px;
 }
 
 .MenuItem {
-    min-width: 200px;
     padding: 2px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -41,12 +134,22 @@
 
 .MenuItem:hover {
     background-color: #444852;
-    cursor: pointer;
+    cursor: default;
 }
 
 .MenuItem:active {
     background-color: #444852;
-    cursor: pointer;
+    cursor: default;
+}
+
+.PopupBackground {
+    display: none;
+    background-color: transparent;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
 }
 
 .ProgressBar {
@@ -54,7 +157,7 @@
     background-color: #383c45;
     border-width: 1px;
     border-style: solid;
-    border-color: #444852;
+    border-color: #2f343b;
     border-radius: 2px;
 }
 
@@ -73,20 +176,23 @@
     white-space: nowrap;
 }
 
+.ScrollArea {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
 .Selector {
     height: 24px;
     min-width: 24px;
-    border-color: #444852;
+    border-color: #2f343b;
     border-width: 1px;
     border-style: solid;
     border-radius: 2px;
-    padding: 0 8px 0 8px;
     margin: 0;
     font-family: inherit;
     font-size: inherit;
-    text-align: center;
     background-color: #383c45;
-    color: #ffffff;
+    color: #fff;
 }
 
 .Selector:hover {
@@ -120,6 +226,14 @@
     white-space: nowrap;
 }
 
+.Tab {
+    display: none;
+}
+
+.Tab[data-current="true"] {
+    display: block;
+}
+
 .TabBar {
     display: inline-block;
     background-color: #444852;
@@ -135,7 +249,7 @@
     margin-top: 4px;
     padding: 0 8px 0 8px;
     position: relative;
-    color: #ffffff;
+    color: #fff;
     background-color: #444852;
     border-color: #444852;
     border-width: 1px;
@@ -155,29 +269,27 @@
     height: 36px;
     line-height: 36px;
     margin-top: 0;
-    background-color: #2f343b;
-    border-left-color: #1f2328;
-    border-right-color: #1f2328;
-    border-top-color: #1f2328;
+    background-color: #383c45;
+    border-left-color: #2f343b;
+    border-right-color: #2f343b;
+    border-top-color: #2f343b;
 }
 
 .TabButton[data-current="true"] {
     height: 36px;
     line-height: 36px;
     margin-top: 0;
-    background-color: #2f343b;
-    border-left-color: #1f2328;
-    border-right-color: #1f2328;
-    border-top-color: #1f2328;
+    background-color: #383c45;
+    border-left-color: #2f343b;
+    border-right-color: #2f343b;
+    border-top-color: #2f343b;
 }
 
 .TableHeader {
     width: 100%;
     height: 20px;
     line-height: 20px;
-    font-weight: bold;
     padding: 2px;
-    border-bottom: 1px solid #444852;;
     display: inline-block;
 }
 
@@ -211,6 +323,15 @@
     list-style-type: none;
 }
 
+.TextField {
+    border: 1px solid #2f343b;
+    border-radius: 2px;
+    background-color: #444852;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+}
+
 .ToolBar {
     display: inline-block;
     background-color: #444852;
@@ -220,13 +341,13 @@
 
 .ToolButton {
     float: left;
-    height: 36px;
+    height: 100%;
     min-width: 36px;
     padding: 0 8px 0 8px;
     margin: 0;
     position: relative;
     background-color: #444852;
-    color: #ffffff;
+    color: #fff;
     border-color: #444852;
     border-width: 1px;
     border-style: solid;
@@ -245,4 +366,8 @@
 .ToolButton:active {
     background-color: #2f343b;
     border-color: #1f2328;
+}
+
+.Window {
+    background-color: #444852;
 }

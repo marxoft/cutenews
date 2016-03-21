@@ -26,7 +26,7 @@ function init() {
     loadSubscriptions();
     checkStatus();
     
-    if (location.hash == "#downloads") {
+    if (location.hash == "#downloadsTab") {
         showDownloadsTab();
     }
     
@@ -43,15 +43,15 @@ function init() {
 function showFeedsTab() {
     document.getElementById("downloadsTabButton").setAttribute("data-current", "false");
     document.getElementById("feedsTabButton").setAttribute("data-current", "true");
-    document.getElementById("downloadsTab").style.display = "none";
-    document.getElementById("feedsTab").style.display = "block";
+    document.getElementById("downloadsTab").setAttribute("data-current", "false");
+    document.getElementById("feedsTab").setAttribute("data-current", "true");
 }
 
 function showDownloadsTab() {
     document.getElementById("feedsTabButton").setAttribute("data-current", "false");
     document.getElementById("downloadsTabButton").setAttribute("data-current", "true");
-    document.getElementById("feedsTab").style.display = "none";
-    document.getElementById("downloadsTab").style.display = "block";
+    document.getElementById("feedsTab").setAttribute("data-current", "false");
+    document.getElementById("downloadsTab").setAttribute("data-current", "true");
     loadDownloads();
 }
 
@@ -151,7 +151,8 @@ function setCurrentSubscription(index) {
     else if (table.scrollTop > row.offsetTop) {
         table.scrollTop = row.offsetTop;
     }
-    
+
+    document.getElementById("article").scrollTop = 0;
     document.getElementById("articleBody").innerHTML = "<b>Feed:</b> <a target=\"_blank\" href=\""
     + row.getAttribute("data-url") + "\">" + row.getAttribute("data-url") + "</a><br><b>Source:</b> "
     + (row.getAttribute("data-sourcetype") < 3 ? "<a target=\"_blank\" href=\"" + row.getAttribute("data-source")
@@ -177,6 +178,25 @@ function updateAllSubscriptions() {
     }
     
     cutenews.updateSubscriptions(checkStatus);
+}
+
+function showNewSubscriptionDialog() {
+    document.getElementById("dialogBackground").style.display = "block";
+    document.getElementById("newSubscriptionDialog").style.display = "block";
+}
+
+function cancelNewSubscriptionDialog() {
+    document.getElementById("newSubscriptionDialog").style.display = "none";
+    document.getElementById("dialogBackground").style.display = "none";
+    document.getElementById("subscriptionTypeSelector").selectedIndex = 0;
+    document.getElementById("subscriptionSourceField").value = "";
+    document.getElementById("subscriptionEnclosuresCheckBox").checked = false;
+}
+
+function addNewSubscription() {
+    cutenews.addSubscription(document.getElementById("subscriptionSourceField").value,
+                             document.getElementById("subscriptionTypeSelector").selectedIndex,
+                             document.getElementById("subscriptionEnclosuresCheckBox").checked);
 }
 
 function checkStatus() {
@@ -285,6 +305,7 @@ function setCurrentArticle(index) {
         table.scrollTop = row.offsetTop - 28;
     }
 
+    document.getElementById("article").scrollTop = 0;
     document.getElementById("articleBody").innerHTML = "<a target=\"_blank\" href=\""
     + row.getAttribute("data-url") + "\">" + row.getAttribute("title") + "</a><br><br><b>Author:</b> "
     + row.getAttribute("data-author") + "<br><b>Categories:</b> " + row.getAttribute("data-categories")
@@ -483,8 +504,8 @@ function insertDownload(index, download) {
     progressBar.setAttribute("class", "ProgressBar");
     var label = document.createElement("div");
     label.setAttribute("class", "ProgressBarLabel");
-    label.appendChild(document.createTextNode(formatBytes(download.bytesTransferred) + " of "
-                      + formatBytes(download.size) + " (" + download.progress + "%)"));
+    label.innerHTML = formatBytes(download.bytesTransferred) + " of "
+                      + formatBytes(download.size) + " (" + download.progress + "%)";
     var fill = document.createElement("div");
     fill.setAttribute("class", "ProgressBarFill");
     fill.style.width = download.progress + "%";
@@ -574,4 +595,71 @@ function startDownloads() {
 
 function pauseDownloads() {
     cutenews.pauseDownloads(function () { loadDownloads(); });
+}
+
+function showSettingsDialog() {
+    document.getElementById("dialogBackground").style.display = "block";
+    document.getElementById("settingsDialog").style.display = "block";
+    showGeneralSettings();
+    loadSettings();
+}
+
+function showGeneralSettings() {
+    document.getElementById("networkSettingsTabButton").setAttribute("data-current", "false");
+    document.getElementById("generalSettingsTabButton").setAttribute("data-current", "true");
+    document.getElementById("networkSettingsTab").setAttribute("data-current", "false");
+    document.getElementById("generalSettingsTab").setAttribute("data-current", "true");
+}
+
+function showNetworkSettings() {
+    document.getElementById("generalSettingsTabButton").setAttribute("data-current", "false");
+    document.getElementById("networkSettingsTabButton").setAttribute("data-current", "true");
+    document.getElementById("generalSettingsTab").setAttribute("data-current", "false");
+    document.getElementById("networkSettingsTab").setAttribute("data-current", "true");
+}
+
+function cancelSettingsDialog() {
+    document.getElementById("settingsDialog").style.display = "none";
+    document.getElementById("dialogBackground").style.display = "none";
+}
+
+function loadSettings() {
+    cutenews.getSettings(function (settings) {
+        document.getElementById("downloadPathField").value = settings.downloadPath;
+        document.getElementById("concurrentDownloadsSelector").selectedIndex = settings.maximumConcurrentDownloads - 1;
+        document.getElementById("automaticDownloadsCheckBox").checked = settings.startTransfersAutomatically;
+
+        var selector = document.getElementById("networkProxyTypeSelector");
+        document.getElementById("networkProxyCheckBox").checked = settings.networkProxyEnabled;
+        document.getElementById("networkProxyHostField").value = settings.networkProxyHost;
+        document.getElementById("networkProxyPortField").value = settings.networkProxyPort;
+        document.getElementById("networkProxyUsernameField").value = settings.networkProxyUsername;
+        document.getElementById("networkProxyPasswordField").value = settings.networkProxyPassword;
+
+        for (var i = 0; i < selector.options.length; i++) {
+            if (selector.options[i].value == settings.networkProxyType) {
+                selector.selectedIndex = i;
+                break;
+            }
+        }
+    }
+    );
+}
+        
+
+function saveSettings() {
+    var settings = {};
+    settings["downloadPath"] = document.getElementById("downloadPathField").value;
+    settings["maximumConcurrentTransfers"] = document.getElementById("concurrentDownloadsSelector").selectedIndex + 1;
+    settings["startTransfersAutomatically"] = document.getElementById("automaticDownloadsCheckBox").checked;
+
+    var selector = document.getElementById("networkProxyTypeSelector");
+    settings["networkProxyEnabled"] = document.getElementById("networkProxyCheckBox").checked;
+    settings["networkProxyType"] = selector.options[selector.selectedIndex].value;
+    settings["networkProxyHost"] = document.getElementById("networkProxyHostField").value;
+    settings["networkProxyPort"] = document.getElementById("networkProxyPortField").value;
+    settings["networkProxyUsername"] = document.getElementById("networkProxyUsernameField").value;
+    settings["networkProxyPassword"] = document.getElementById("networkProxyPasswordField").value;
+
+    cutenews.setSettings(settings);
 }

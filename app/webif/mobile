@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>cuteNews</title>
+<link rel="icon" href="images/favicon.ico" />
+<link rel="stylesheet" type="text/css" href="css/widgets.css" />
+<link rel="stylesheet" type="text/css" href="css/mobile.css" />
+<script src="js/cutenews.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/mobile.js"></script>
+</head>
+<body onload="init()">
+<div id="subscriptionsTab" class="Tab" data-current="true">
+<div id="subscriptionsToolBar" class="ToolBar">
+<div id="subscriptionsTitle" class="Title">
+Subscriptions
+</div>
+<div class="ToolButtonRow">
+<input type="button" id="subscriptionsMenuButton" class="ToolButton" title="Show menu" value="|||" onclick="showSubscriptionsMenu()" />
+</div>
+</div>
+<ul id="subscriptionsList" class="ListView">
+</ul>
+<div id="subscriptionsMenuBackground" class="PopupBackground" onclick="cancelSubscriptionsMenu()">
+</div>
+<div id="subscriptionsMenu" class="Menu">
+<ul id="subscriptionsMenuList" class="ListView">
+<li id="updateSubscriptionsMenuItem" class="ListItem" onclick="updateAllSubscriptions(); cancelSubscriptionsMenu()">
+<div class="ListItemContent">
+<div class="ListItemText">
+Update
+</div>
+</div>
+</li>
+<li id="newSubscriptionMenuItem" class="ListItem" onclick="showNewSubscriptionTab('subscriptionsTab'); cancelSubscriptionsMenu()">
+<div class="ListItemContent">
+<div class="ListItemText">
+New subscription
+</div>
+</div>
+</li>
+<li id="downloadsMenuItem" class="ListItem" onclick="showDownloadsTab('subscriptionsTab'); cancelSubscriptionsMenu()">
+<div class="ListItemContent">
+<div class="ListItemText">
+Downloads
+</div>
+</div>
+</li>
+<li id="settingsMenuItem" class="ListItem" onclick="showSettingsTab('subscriptionsTab'); cancelSubscriptionsMenu()">
+<div class="ListItemContent">
+<div class="ListItemText">
+Settings
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div id="articlesTab" class="Tab">
+<div id="articlesToolBar" class="ToolBar">
+<input type="button" id="articlesBackButton" class="ToolButton" title="Go back" value="<<" onclick="showSubscriptionsTab('articlesTab', true)" />
+<div id="articlesTitle" class="Title">
+Articles
+</div>
+</div>
+<ul id="articlesList" class="ListView">
+</ul>
+</div>
+</div>
+<div id="articleTab" class="Tab">
+<div id="articleToolBar" class="ToolBar">
+<input type="button" id="articleBackButton" class="ToolButton" title="Go back" value="<<" onclick="showArticlesTab('articleTab', true)" />
+<div id="articleTitle" class="Title">
+Article
+</div>
+<div class="ToolButtonRow">
+<input type="button" id="previousArticleButton" class="ToolButton" title="Go to previous article" value="<" onclick="previousArticle()" />
+<input type="button" id="nextArticleButton" class="ToolButton" title="Go to next article" value=">" onclick="nextArticle()" />
+<input type="button" id="articleMenuButton" class="ToolButton" title="Show menu" value="|||" onclick="showArticleMenu()" />
+</div>
+</div>
+<div id="articleMenuBackground" class="PopupBackground" onclick="cancelArticleMenu()">
+</div>
+<div id="articleMenu" class="Menu">
+<ul id="articleMenuList" class="ListView">
+<li id="openArticleMenuItem" class="ListItem" onclick="openArticleExternally(currentArticle); cancelArticleMenu()">
+<div class="ListItemContent">
+<div class="ListItemText">
+Open externally
+</div>
+</div>
+</li>
+<li id="articleReadMenuItem" class="ListItem" onclick="toggleArticleRead(currentArticle); cancelArticleMenu()">
+<div class="ListItemContent">
+<div id="articleReadLabel" class="ListItemText">
+Mark as read
+</div>
+</div>
+</li>
+<li id="articleFavouriteMenuItem" class="ListItem" onclick="toggleArticleFavourite(currentArticle); cancelArticleMenu()">
+<div class="ListItemContent">
+<div id="articleFavouriteLabel" class="ListItemText">
+Favourite
+</div>
+</div>
+</li>
+</ul>
+</div>
+<div id="article">
+<div id="articleBody">
+</div>
+<div id="articleEnclosures">
+<h4>Enclosures</h4>
+<ul id="enclosuresList" class="ListView">
+</ul>
+<div id="enclosureMenuBackground" class="PopupBackground" onclick="cancelEnclosureMenu()">
+</div>
+<div id="enclosureMenu" class="Menu">
+<ul id="enclosureMenuList" class="ListView">
+<li id="openEnclosureMenuItem" class="ListItem" onclick="openEnclosureExternally(currentEnclosure); cancelEnclosureMenu()">
+<div class="ListItemContent">
+<div class="ListItemText">
+Open externally
+</div>
+</div>
+</li>
+<li id="downloadEnclosureMenuItem" class="ListItem" onclick="downloadEnclosure(currentEnclosure); cancelEnclosureMenu()">
+<div class="ListItemContent">
+<div class="ListItemText">
+Download
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="downloadsTab" class="Tab">
+<div id="downloadsToolBar" class="ToolBar">
+<input type="button" id="downloadsBackButton" class="ToolButton" title="Go back" value="<<" onclick="showSubscriptionsTab('downloadsTab')" />
+<div id="downloadsTitle" class="Title">
+Downloads
+</div>
+<div class="ToolButtonRow">
+<input type="button" id="startDownloadsButton" class="ToolButton" title="Start all downloads" value="Start" onclick="startDownloads()" />
+<input type="button" id="pauseDownloadsButton" class="ToolButton" title="Pause all downloads" value="Pause" onclick="pauseDownloads()" />
+</div>
+</div>
+<ul id="downloadsList" class="ListView">
+</ul>
+<div id="downloadMenuBackground" class="PopupBackground" onclick="cancelDownloadMenu()">
+</div>
+<div id="downloadMenu" class="Menu">
+<ul id="downloadMenuList" class="ListView">
+<li id="startDownloadMenuItem" class="ListItem" onclick="startDownload(currentDownload); cancelDownloadMenu()">
+<div class="ListItemContent">
+<div class="ListItemText">
+Start
+</div>
+</div>
+</li>
+<li id="pauseDownloadMenuItem" class="ListItem" onclick="pauseDownload(currentDownload); cancelDownloadMenu()">
+<div class="ListItemContent">
+<div class="ListItemText">
+Pause
+</div>
+</div>
+</li>
+<li id="cancelDownloadMenuItem" class="ListItem" onclick="cancelDownload(currentDownload); cancelDownloadMenu()">
+<div class="ListItemContent">
+<div class="ListItemText">
+Remove
+</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div id="newSubscriptionTab" class="Tab">
+<div id="newSubscriptionToolBar" class="ToolBar">
+<div id="newSubscriptionTitle" class="Title">
+Subscription properties
+</div>
+<div class="ToolButtonRow">
+<input type="button" id="cancelNewSubscriptionButton" class="ToolButton" value="Cancel" onclick="showSubscriptionsTab('newSubscriptionTab')" />
+<input type="button" id="addSubscriptionButton" class="ToolButton" value="Save" onclick="addNewSubscription(); showSubscriptionsTab('newSubscriptionTab');" />
+</div>
+</div>
+<div class="HBox">
+<label for="subscriptionTypeSelector">Subscription type:</label>
+<select id="subscriptionTypeSelector" class="Selector">
+<option value="0">URL</option>
+<option value="1">Local file</option>
+<option value="2">Command</option>
+</select>
+</div>
+<div class="HBox">
+<label for="subscriptionSourceField">Source:</label>
+<input type="text" id="subscriptionSourceField" class="TextField" />
+</div>
+<div class="HBox">
+<input type="checkbox" id="subscriptionEnclosuresCheckBox" class="CheckBox" />
+<label for="subscriptionEnclosuresCheckBox">Download enclosures</label>
+</div>
+</div>
+<div id="settingsTab" class="Tab">
+<div id="settingsToolBar" class="ToolBar">
+<div id="settingsTitle" class="Title">
+Settings
+</div>
+<div class="ToolButtonRow">
+<input type="button" id="cancelSettingsButton" class="ToolButton" value="Cancel" onclick="showSubscriptionsTab('settingsTab')" />
+<input type="button" id="saveSettingsButton" class="ToolButton" value="Save" onclick="saveSettings(); showSubscriptionsTab('settingsTab');" />
+</div>
+</div>
+<div class="HBox">
+<label for="downloadPathField">Download path:</label>
+<input type="text" id="downloadPathField" class="TextField" />
+</div>
+<div class="HBox">
+<label for="concurrentDownloadsSelector">Maximum concurrent downloads:</label>
+<select id="concurrentDownloadsSelector" class="Selector">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+</select>
+</div>
+<div class="HBox">
+<input type="checkbox" id="automaticDownloadsCheckBox" class="CheckBox" />
+<label for="automaticDownloadsCheckBox">Start downloads automatically</label>
+</div>
+<div class="HBox">
+<input type="checkbox" id="networkProxyCheckBox" class="CheckBox" />
+<label for="networkProxyCheckBox">Use network proxy</label>
+</div>
+<div class="HBox">
+<label for="networkProxyTypeSelector">Type:</label>
+<select id="networkProxyTypeSelector" class="Selector">
+<option value="3">HTTP</option>
+<option value="4">HTTP caching</option>
+<option value="1">SOCKS5</option>
+</select>
+</div>
+<div class="HBox">
+<label for="networkProxyHostField">Host:</label>
+<input type="text" id="networkProxyHostField" class="TextField" />
+</div>
+<div class="HBox">
+<label for="networkProxyPortField">Port:</label>
+<input type="text" id="networkProxyPortField" class="TextField" />
+</div>
+<div class="HBox">
+<label for="networkProxyUsernameField">Username:</label>
+<input type="text" id="networkProxyUsernameField" class="TextField" />
+</div>
+<div class="HBox">
+<label for="networkProxyPasswordField">Password:</label>
+<input type="text" id="networkProxyPasswordField" class="TextField" />
+</div>
+</div>
+</body>
+</html>

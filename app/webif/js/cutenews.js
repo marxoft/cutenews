@@ -124,6 +124,11 @@ CuteNews.prototype.put = function (path, json_data, callback_ok, callback_error)
     request.send(JSON.stringify(json_data));
 }
 
+CuteNews.prototype.addSubscription = function (source, sourceType, downloadEnclosures, callback_ok, callback_error) {
+    this.post(SUBSCRIPTIONS_PATH, {"source": source, "sourceType": sourceType,
+                                   "downloadEnclosures": downloadEnclosures}, callback_ok, callback_error);
+}
+
 CuteNews.prototype.deleteSubscription = function (id, callback_ok, callback_error) {
     this.del(SUBSCRIPTIONS_PATH + "/" + id, callback_ok, callback_error);
 }

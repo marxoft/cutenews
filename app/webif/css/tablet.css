@@ -1,8 +1,10 @@
 body {
     background-color: #383c45;
-    color: #ffffff;
+    color: #fff;
     font-family: "Droid Sans", Helvetica, sans-serif;
-    font-size: 11pt;
+    font-size: 16px;
+    margin: 0;
+    padding: 0;
 }
 
 a {
@@ -12,6 +14,10 @@ a {
 
 a:hover {
     text-decoration: underline;
+}
+
+.TableRow .Button {
+    height: 24px;
 }
 
 #tabBar {
@@ -28,7 +34,7 @@ a:hover {
     bottom: 0;
 }
 
-.Tab {
+#feedsTab {
     position: fixed;
     left: 0;
     right: 0;
@@ -38,6 +44,22 @@ a:hover {
 
 #feedsToolBar {
     width: 100%;
+}
+
+#newSubscriptionDialog {
+    width: 400px;
+    height: 200px;
+    margin: -100px -200px;
+}
+
+#subscriptionTypeSelector {
+    float: right;
+    width: 236px;
+}
+
+#subscriptionSourceField {
+    float: right;
+    width: 232px;
 }
 
 #subscriptionsTable {
@@ -94,6 +116,14 @@ a:hover {
     border-bottom: 1px solid #444852
 }
 
+.Article img {
+    max-width: 100%;
+}
+
+#Article iframe {
+    max-width: 100%;
+}
+
 .EnclosureUrlColumn {
     width: 60%;
     float: left;
@@ -117,7 +147,11 @@ a:hover {
 }
 
 #downloadsTab {
-    display: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 37px;
+    bottom: 28px;
 }
 
 #downloadsToolBar {
@@ -171,4 +205,49 @@ a:hover {
     white-space: nowrap;
     float: left;
     padding-right: 4px;
+}
+
+#settingsDialog {
+    width: 400px;
+    height: 360px;
+    margin: -180px -200px;
+}
+
+#settingsTabBar {
+    width: 100%;
+}
+
+#downloadPathField {
+    float: right;
+    width: 250px;
+}
+
+#concurrentDownloadsSelector {
+    float: right;
+    width: 130px;
+}
+
+#networkProxyTypeSelector {
+    float: right;
+    width: 286px;
+}
+
+#networkProxyHostField {
+    float: right;
+    width: 282px;
+}
+
+#networkProxyPortField {
+    float: right;
+    width: 282px;
+}
+
+#networkProxyUsernameField {
+    float: right;
+    width: 282px;
+}
+
+#networkProxyPasswordField {
+    float: right;
+    width: 282px;
 }
