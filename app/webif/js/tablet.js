@@ -23,6 +23,7 @@ var cutenews = new CuteNews();
 function init() {
     document.getElementById("feedsTabButton").onclick = function () { showFeedsTab(); }
     document.getElementById("downloadsTabButton").onclick = function () { showDownloadsTab(); }
+    document.getElementById("newSubscriptionButton").onclick = function () { showNewSubscriptionDialog(); }
 
     var updateButton = document.getElementById("updateButton");
     updateButton.disabled = true;
