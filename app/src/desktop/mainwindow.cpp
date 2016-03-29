@@ -15,6 +15,7 @@
  */
 
 #include "mainwindow.h"
+#include "aboutdialog.h"
 #include "articlemodel.h"
 #include "browser.h"
 #include "database.h"
@@ -66,6 +67,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_enclosureContextMenu(new QMenu(this)),
     m_viewMenu(new QMenu(tr("&View"), this)),
     m_toolsMenu(new QMenu(tr("&Tools"), this)),
+    m_helpMenu(new QMenu(tr("&Help"), this)),
     m_toolBar(new QToolBar(this)),
     m_updateAllSubscriptionsAction(new QAction(QIcon::fromTheme("view-refresh"), tr("&Update all"), this)),
     m_cancelSubscriptionUpdatesAction(new QAction(QIcon::fromTheme("dialog-cancel"), tr("&Cancel updates"), this)),
@@ -96,6 +98,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_closeTabAction(new QAction(QIcon::fromTheme("view-close"), tr("Close &tab"), this)),
     m_searchAction(new QAction(QIcon::fromTheme("edit-find"), tr("&Search all articles"), this)),
     m_settingsAction(new QAction(QIcon::fromTheme("document-properties"), tr("&Preferences"), this)),
+    m_aboutAction(new QAction(QIcon::fromTheme("help-contents"), tr("&About"), this)),
     m_horizontalSplitter(new QSplitter(Qt::Horizontal, this)),
     m_verticalSplitter(new QSplitter(Qt::Vertical, this)),
     m_stack(new QStackedWidget(this)),
@@ -122,6 +125,7 @@ MainWindow::MainWindow(QWidget *parent) :
     menuBar()->addMenu(m_articleMenu);
     menuBar()->addMenu(m_viewMenu);
     menuBar()->addMenu(m_toolsMenu);
+    menuBar()->addMenu(m_helpMenu);
     
     m_articlesProxyModel->setSourceModel(m_articlesModel);
     m_articlesProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
@@ -177,6 +181,8 @@ MainWindow::MainWindow(QWidget *parent) :
     
     m_toolsMenu->addAction(m_searchAction);
     m_toolsMenu->addAction(m_settingsAction);
+
+    m_helpMenu->addAction(m_aboutAction);
 
     m_toolBar->setWindowTitle(tr("Main toolbar"));
     m_toolBar->setAllowedAreas(Qt::TopToolBarArea);
@@ -346,6 +352,8 @@ MainWindow::MainWindow(QWidget *parent) :
     
     connect(m_searchAction, SIGNAL(triggered()), this, SLOT(showSearchDialog()));
     connect(m_settingsAction, SIGNAL(triggered()), this, SLOT(showSettingsDialog()));
+
+    connect(m_aboutAction, SIGNAL(triggered()), this, SLOT(showAboutDialog()));
     
     connect(m_subscriptionsView, SIGNAL(customContextMenuRequested(QPoint)),
             this, SLOT(showSubscriptionContextMenu(QPoint)));
@@ -730,6 +738,10 @@ void MainWindow::showSearchDialog() {
 
 void MainWindow::showSettingsDialog() {
     SettingsDialog(this).exec();
+}
+
+void MainWindow::showAboutDialog() {
+    AboutDialog(this).exec();
 }
 
 void MainWindow::onSubscriptionsCountChanged(int count) {

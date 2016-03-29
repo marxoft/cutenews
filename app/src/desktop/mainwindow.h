@@ -93,9 +93,10 @@ private Q_SLOTS:
     void closeCurrentTab();
     
     void showDownloadsTab();
-    
+
     void showSearchDialog();
     void showSettingsDialog();
+    void showAboutDialog();
     
     void onSubscriptionsCountChanged(int count);
     void onSubscriptionsStatusChanged(Subscriptions::Status status);
@@ -118,6 +119,7 @@ private:
     QMenu *m_enclosureContextMenu;
     QMenu *m_viewMenu;
     QMenu *m_toolsMenu;
+    QMenu *m_helpMenu;
         
     QToolBar *m_toolBar;
     
@@ -155,6 +157,8 @@ private:
     
     QAction *m_searchAction;
     QAction *m_settingsAction;
+
+    QAction *m_aboutAction;
     
     QSplitter *m_horizontalSplitter;
     QSplitter *m_verticalSplitter;

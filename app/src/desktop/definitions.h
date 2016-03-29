@@ -35,7 +35,7 @@ static const int ICON_SIZE = 16;
 
 static const QRegExp ILLEGAL_FILENAME_CHARS_RE("[\"\\/@&~=:?#!|<>*^]");
 
-static const QString VERSION_NUMBER("0.4.0");
+static const QString VERSION_NUMBER("0.7.0");
 
 static const QString WEB_INTERFACE_PATH("/opt/cutenews/webif/");
 
