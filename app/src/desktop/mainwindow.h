@@ -45,7 +45,10 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
-    
+
+protected:
+    virtual void closeEvent(QCloseEvent *e);
+
 private Q_SLOTS:
     void markAllSubscriptionsRead();
     void newSubscriptionRequested(QAction *action = 0);

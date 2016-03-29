@@ -40,6 +40,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QPushButton>
+#include <QSettings>
 #include <QSortFilterProxyModel>
 #include <QSplitter>
 #include <QStackedWidget>
@@ -316,7 +317,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_markAllSubscriptionsReadAction, SIGNAL(triggered()), this, SLOT(markAllSubscriptionsRead()));
     connect(m_newSubscriptionAction, SIGNAL(triggered()), this, SLOT(newSubscriptionRequested()));
     connect(m_importSubscriptionsAction, SIGNAL(triggered()), this, SLOT(importSubscriptions()));
-    connect(m_quitAction, SIGNAL(triggered()), QCoreApplication::instance(), SLOT(quit()));
+    connect(m_quitAction, SIGNAL(triggered()), this, SLOT(close()));
     
     connect(m_updateSubscriptionAction, SIGNAL(triggered()), this, SLOT(updateCurrentSubscription()));
     connect(m_markSubscriptionReadAction, SIGNAL(triggered()), this, SLOT(markCurrentSubscriptionRead()));
@@ -369,6 +370,23 @@ MainWindow::MainWindow(QWidget *parent) :
     onSubscriptionsStatusChanged(Subscriptions::instance()->status());
     
     m_subscriptionsModel->load();
+
+    QSettings settings;
+    settings.beginGroup("MainWindow");
+    restoreGeometry(settings.value("windowGeometry").toByteArray());
+    m_horizontalSplitter->restoreState(settings.value("horizontalSplitterState").toByteArray());
+    m_verticalSplitter->restoreState(settings.value("verticalSplitterState").toByteArray());
+    settings.endGroup();
+}
+
+void MainWindow::closeEvent(QCloseEvent *e) {
+    QSettings settings;
+    settings.beginGroup("MainWindow");
+    settings.setValue("windowGeometry", saveGeometry());
+    settings.setValue("horizontalSplitterState", m_horizontalSplitter->saveState());
+    settings.setValue("verticalSplitterState", m_verticalSplitter->saveState());
+    settings.endGroup();
+    QMainWindow::closeEvent(e);
 }
 
 void MainWindow::markAllSubscriptionsRead() {

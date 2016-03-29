@@ -48,8 +48,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     QSslConfiguration config = QSslConfiguration::defaultConfiguration();
     config.setProtocol(QSsl::TlsV1);
     QSslConfiguration::setDefaultConfiguration(config);
-    QIcon::setThemeName("Lubuntu");
-#endif  
+#endif
     
     QScopedPointer<Database> database(Database::instance());
     QScopedPointer<Settings> settings(Settings::instance());
