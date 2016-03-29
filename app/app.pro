@@ -278,6 +278,7 @@ maemo5 {
     
     HEADERS += \
         src/base/transfermodel.h \
+        src/desktop/aboutdialog.h \
         src/desktop/browser.h \
         src/desktop/cutenews.h \
         src/desktop/definitions.h \
@@ -291,6 +292,7 @@ maemo5 {
     
     SOURCES += \
         src/base/transfermodel.cpp \
+        src/desktop/aboutdialog.cpp \
         src/desktop/browser.cpp \
         src/desktop/cutenews.cpp \
         src/desktop/downloadsview.cpp \
