@@ -23,20 +23,61 @@ var canFetchArticles = false;
 var cutenews = new CuteNews();
 
 function init() {
+    document.getElementById("feedsTabButton").onclick = function () { showFeedsTab(); }
+    document.getElementById("downloadsTabButton").onclick = function () { showDownloadsTab(); }
+
+    var updateButton = document.getElementById("updateButton");
+    updateButton.disabled = true;
+    updateButton.onclick = function () { updateSubscription(currentSubscription); }
+
+    var updateAllButton = document.getElementById("updateAllButton");
+    updateAllButton.disabled = true;
+    updateAllButton.onclick = function () { updateAllSubscriptions(); }
+
+    var prevButton = document.getElementById("previousArticleButton");
+    prevButton.disabled = true;
+    prevButton.onclick = function () { previousArticle(); }
+
+    var nextButton = document.getElementById("nextArticleButton");
+    nextButton.disabled = true;
+    nextButton.onclick = function () { nextArticle(); }
+
+    var nextUnreadButton = document.getElementById("nextUnreadArticleButton");
+    nextUnreadButton.disabled = true;
+    nextUnreadButton.onclick = function () { nextUnreadArticle(); }
+
+    document.getElementById("feedsSettingsButton").onclick = function () { showSettingsDialog(); }
+    document.getElementById("articleFavouriteCheckBox").onclick = function () { markArticleFavourite(currentArticle, this.checked); }
+    document.getElementById("articleReadCheckBox").onclick = function () { markArticleRead(currentArticle, this.checked); }
+
+    var startButton = document.getElementById("startDownloadsButton");
+    startButton.disabled = true;
+    startButton.onclick = function () { startDownloads(); }
+
+    var pauseButton = document.getElementById("pauseDownloadsButton");
+    pauseButton.disabled = true;
+    pauseButton.onclick = function () { pauseDownloads(); }
+
+    document.getElementById("downloadsSettingsButton").onclick = function () { showSettingsDialog(); }
+    document.getElementById("cancelNewSubscriptionButton").onclick = function () { cancelNewSubscriptionDialog(); }
+    document.getElementById("addSubscriptionButton").onclick = function () { addNewSubsciption(); cancelNewSubscriptionDialog(); }
+    document.getElementById("generalSettingsTabButton").onclick = function () { showGeneralSettings(); }
+    document.getElementById("networkSettingsTabButton").onclick = function () { showNetworkSettings(); }
+    document.getElementById("cancelSettingsDialogButton").onclick = function () { cancelSettingsDialog(); }
+    document.getElementById("saveSettingsButton").onclick = function () { saveSettings(); cancelSettingsDialog(); }
+    document.getElementById("articlesTable").onscroll = function () {
+        if ((this.scrollTop == this.scrollHeight - this.clientHeight) && (canFetchArticles)) {
+            loadArticles(document.getElementById("subscriptionsTable")
+                         .childNodes[currentSubscription].getAttribute("data-id"),
+                         this.childNodes.length, 20, false);
+        }
+    }
+
     loadSubscriptions();
     checkStatus();
     
     if (location.hash == "#downloadsTab") {
         showDownloadsTab();
-    }
-    
-    var table = document.getElementById("articlesTable");
-    table.onscroll = function () {
-        if ((table.scrollTop == table.scrollHeight - table.clientHeight) && (canFetchArticles)) {
-            loadArticles(document.getElementById("subscriptionsTable")
-                         .childNodes[currentSubscription].getAttribute("data-id"),
-                         table.childNodes.length, 20, false);
-        }
     }
 }
 
@@ -61,6 +102,8 @@ function loadSubscriptions() {
         for (var i = 0; i < subscriptions.length; i++) {
             appendSubscription(subscriptions[i]);
         }
+
+        document.getElementById("updateAllButton").disabled = (subscriptions.length == 0);
     }
     );
 }
@@ -89,7 +132,7 @@ function insertSubscription(index, subscription) {
     row.setAttribute("data-sourcetype", subscription.sourceType);
     row.setAttribute("data-unreadarticles", subscription.unreadArticles);
     row.setAttribute("data-url", subscription.url);
-    row.onclick = function () { setCurrentSubscription(index); };
+    row.onclick = function () { setCurrentSubscription(index); }
     
     var col = document.createElement("div");
     col.setAttribute("class", "SubscriptionIconColumn");
@@ -160,15 +203,19 @@ function setCurrentSubscription(index) {
     + row.getAttribute("data-description");
     document.getElementById("articleControls").style.display = "none";
     document.getElementById("articleEnclosures").style.display = "none";
+    document.getElementById("updateButton").disabled = (currentStatus.status == 1);
+    document.getElementById("previousArticleButton").disabled = true;
+    document.getElementById("nextArticleButton").disabled = true;
+    document.getElementById("nextUnreadArticleButton").disabled = true;
     loadArticles(row.getAttribute("data-id"), 0, 20, true);
 }
 
-function updateCurrentSubscription() {
-    if ((currentStatus.status == 1) || (currentSubscription == -1)) {
+function updateSubscription(index) {
+    if (currentStatus.status == 1) {
         return;
     }
     
-    var id = document.getElementById("subscriptionsTable").childNodes[currentSubscription].getAttribute("data-id");
+    var id = document.getElementById("subscriptionsTable").childNodes[index].getAttribute("data-id");
     cutenews.updateSubscription(id, checkStatus);
 }
 
@@ -178,6 +225,14 @@ function updateAllSubscriptions() {
     }
     
     cutenews.updateSubscriptions(checkStatus);
+}
+
+function cancelSubscriptionUpdates() {
+    if (currentStatus.status != 1) {
+        return;
+    }
+
+    cutenews.cancelSubscriptionUpdates(checkStatus);
 }
 
 function showNewSubscriptionDialog() {
@@ -201,12 +256,31 @@ function addNewSubscription() {
 
 function checkStatus() {
     cutenews.getSubscriptionUpdateStatus(function (updateStatus) {
-        currentStatus = updateStatus;
-        document.getElementById("statusBar").innerHTML = currentStatus.statusText;
+        document.getElementById("statusBar").innerHTML = updateStatus.statusText;
+
+        if (updateStatus.status != currentStatus.status) {
+            var updateButton = document.getElementById("updateButton");
+            var updateAllButton = document.getElementById("updateAllButton");
+
+            if (updateStatus.status == 1) {
+                updateButton.disabled = true;
+                updateAllButton.title = "Cancel subscription updates";
+                updateAllButton.value = "Cancel updates";
+                updateAllButton.onclick = function () { cancelSubscriptionUpdates(); }
+            }
+            else {
+                updateButton.disabled = (currentSubscription == -1);
+                updateAllButton.title = "Update all subscriptions";
+                updateAllButton.value = "Update all";
+                updateAllButton.onclick = function () { updateAllSubscriptions(); }
+            }
+        }
         
-        if (currentStatus.status == 1) {
+        if (updateStatus.status == 1) {
             window.setTimeout(checkStatus, 3000);
         }
+
+        currentStatus = updateStatus;
     }
     );
 }
@@ -223,6 +297,10 @@ function loadArticles(subscriptionId, offset, limit, clear) {
         }
         
         canFetchArticles = true;
+        document.getElementById("nextArticleButton").disabled =
+            (currentArticle == document.getElementById("articlesTable").childNodes.length - 1);
+        document.getElementById("nextUnreadArticleButton").disabled =
+            document.getElementById("subscriptionsTable").childNodes[currentSubscription].getAttribute("data-read") == "true";
     }
     );
 }
@@ -289,6 +367,8 @@ function setCurrentArticle(index) {
     }
     
     var table = document.getElementById("articlesTable");
+    document.getElementById("previousArticleButton").disabled = (index == 0);
+    document.getElementById("nextArticleButton").disabled = (index == table.childNodes.length - 1);
         
     if (currentArticle != -1) {
         table.childNodes[currentArticle].setAttribute("data-current", "false");
@@ -366,7 +446,7 @@ function setCurrentArticle(index) {
     }
     else {
         document.getElementById("articleEnclosures").style.display = "none";
-    }
+    }    
 }
 
 function previousArticle() {
@@ -427,10 +507,12 @@ function markArticleRead(index, read) {
         if (unread == 0) {
             subscription.childNodes[2].innerHTML = "";
             subscription.setAttribute("data-read", "true");
+            document.getElementById("nextUnreadArticleButton").disabled = true;
         }
         else {
             subscription.childNodes[2].innerHTML = unread;
             subscription.setAttribute("data-read", "false");
+            document.getElementById("nextUnreadArticleButton").disabled = false;
         }
     }
     );
@@ -442,6 +524,9 @@ function loadDownloads() {
         for (var i = 0; i < downloads.length; i++) {
             appendDownload(downloads[i]);
         }
+
+        document.getElementById("startDownloadsButton").disabled =
+            (document.getElementById("pauseDownloadsButton").disabled = (downloads.length == 0));
     }
     );
 }

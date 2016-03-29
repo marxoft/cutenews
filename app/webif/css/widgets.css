@@ -14,11 +14,11 @@
     color: #fff;
 }
 
-.Button:hover {
+.Button:enabled:hover {
     border-color: #5294e2;
 }
 
-.Button:active {
+.Button:enabled:active {
     background-color: #2f343b;
     border-color: #1f2328;
 }
@@ -195,11 +195,11 @@
     color: #fff;
 }
 
-.Selector:hover {
+.Selector:enabled:hover {
     border-color: #5294e2;
 }
 
-.Selector:active {
+.Selector:enabled:active {
     background-color: #2f343b;
     border-color: #1f2328;
 }
@@ -265,7 +265,7 @@
     cursor: default;
 }
 
-.TabButton:active {
+.TabButton:enabled:active {
     height: 36px;
     line-height: 36px;
     margin-top: 0;
@@ -357,13 +357,13 @@
     font-size: inherit;
 }
 
-.ToolButton:hover {
+.ToolButton:enabled:hover {
     background-color: #383c45;
     border-color: #5294e2;
     cursor: default;
 }
 
-.ToolButton:active {
+.ToolButton:enabled:active {
     background-color: #2f343b;
     border-color: #1f2328;
 }

@@ -21,20 +21,47 @@ var canFetchArticles = false;
 var cutenews = new CuteNews();
 
 function init() {
+    document.getElementById("feedsTabButton").onclick = function () { showFeedsTab(); }
+    document.getElementById("downloadsTabButton").onclick = function () { showDownloadsTab(); }
+
+    var updateButton = document.getElementById("updateButton");
+    updateButton.disabled = true;
+    updateButton.onclick = function () { updateSubscription(currentSubscription); }
+
+    var updateAllButton = document.getElementById("updateAllButton");
+    updateAllButton.disabled = true;
+    updateAllButton.onclick = function () { updateAllSubscriptions(); }
+
+    document.getElementById("feedsSettingsButton").onclick = function () { showSettingsDialog(); }
+
+    var startButton = document.getElementById("startDownloadsButton");
+    startButton.disabled = true;
+    startButton.onclick = function () { startDownloads(); }
+
+    var pauseButton = document.getElementById("pauseDownloadsButton");
+    pauseButton.disabled = true;
+    pauseButton.onclick = function () { pauseDownloads(); }
+
+    document.getElementById("downloadsSettingsButton").onclick = function () { showSettingsDialog(); }
+    document.getElementById("cancelNewSubscriptionButton").onclick = function () { cancelNewSubscriptionDialog(); }
+    document.getElementById("addSubscriptionButton").onclick = function () { addNewSubsciption(); cancelNewSubscriptionDialog(); }
+    document.getElementById("generalSettingsTabButton").onclick = function () { showGeneralSettings(); }
+    document.getElementById("networkSettingsTabButton").onclick = function () { showNetworkSettings(); }
+    document.getElementById("cancelSettingsDialogButton").onclick = function () { cancelSettingsDialog(); }
+    document.getElementById("saveSettingsButton").onclick = function () { saveSettings(); cancelSettingsDialog(); }
+    document.getElementById("articlesList").onscroll = function () {
+        if ((this.scrollTop == this.scrollHeight - this.clientHeight) && (canFetchArticles)) {
+            loadArticles(document.getElementById("subscriptionsTable")
+                         .childNodes[currentSubscription].getAttribute("data-id"),
+                         this.childNodes.length, 20, false);
+        }
+    }
+
     loadSubscriptions();
     checkStatus();
     
     if (location.hash == "#downloadsTab") {
         showDownloadsTab();
-    }
-    
-    var list = document.getElementById("articlesList");
-    list.onscroll = function () {
-        if ((list.scrollTop == list.scrollHeight - list.clientHeight) && (canFetchArticles)) {
-            loadArticles(document.getElementById("subscriptionsTable")
-                         .childNodes[currentSubscription].getAttribute("data-id"),
-                         list.childNodes.length, 10, false);
-        }
     }
 }
 
@@ -59,6 +86,8 @@ function loadSubscriptions() {
         for (var i = 0; i < subscriptions.length; i++) {
             appendSubscription(subscriptions[i]);
         }
+
+        document.getElementById("updateAllButton").disabled = (subscriptions.length == 0);
     }
     );
 }
@@ -87,7 +116,7 @@ function insertSubscription(index, subscription) {
     row.setAttribute("data-sourcetype", subscription.sourceType);
     row.setAttribute("data-unreadarticles", subscription.unreadArticles);
     row.setAttribute("data-url", subscription.url);
-    row.onclick = function () { setCurrentSubscription(index); };
+    row.onclick = function () { setCurrentSubscription(index); }
     
     var col = document.createElement("div");
     col.setAttribute("class", "SubscriptionIconColumn");
@@ -149,16 +178,17 @@ function setCurrentSubscription(index) {
     else if (table.scrollTop > row.offsetTop) {
         table.scrollTop = row.offsetTop;
     }
-    
-    loadArticles(row.getAttribute("data-id"), 0, 10, true);
+
+    document.getElementById("updateButton").disabled = (currentStatus.status == 1);
+    loadArticles(row.getAttribute("data-id"), 0, 20, true);
 }
 
-function updateCurrentSubscription() {
-    if ((currentStatus.status == 1) || (currentSubscription == -1)) {
+function updateSubscription(index) {
+    if (currentStatus.status == 1) {
         return;
     }
     
-    var id = document.getElementById("subscriptionsTable").childNodes[currentSubscription].getAttribute("data-id");
+    var id = document.getElementById("subscriptionsTable").childNodes[index].getAttribute("data-id");
     cutenews.updateSubscription(id, checkStatus);
 }
 
@@ -191,12 +221,31 @@ function addNewSubscription() {
 
 function checkStatus() {
     cutenews.getSubscriptionUpdateStatus(function (updateStatus) {
-        currentStatus = updateStatus;
-        document.getElementById("statusBar").innerHTML = currentStatus.statusText;
+        document.getElementById("statusBar").innerHTML = updateStatus.statusText;
+
+        if (updateStatus.status != currentStatus.status) {
+            var updateButton = document.getElementById("updateButton");
+            var updateAllButton = document.getElementById("updateAllButton");
+
+            if (updateStatus.status == 1) {
+                updateButton.disabled = true;
+                updateAllButton.title = "Cancel subscription updates";
+                updateAllButton.value = "Cancel updates";
+                updateAllButton.onclick = function () { cancelSubscriptionUpdates(); }
+            }
+            else {
+                updateButton.disabled = (currentSubscription == -1);
+                updateAllButton.title = "Update all subscriptions";
+                updateAllButton.value = "Update all";
+                updateAllButton.onclick = function () { updateAllSubscriptions(); }
+            }
+        }
         
-        if (currentStatus.status == 1) {
+        if (updateStatus.status == 1) {
             window.setTimeout(checkStatus, 3000);
         }
+
+        currentStatus = updateStatus;
     }
     );
 }
@@ -339,6 +388,9 @@ function loadDownloads() {
         for (var i = 0; i < downloads.length; i++) {
             appendDownload(downloads[i]);
         }
+
+        document.getElementById("startDownloadsButton").disabled =
+            (document.getElementById("pauseDownloadsButton").disabled = (downloads.length == 0));
     }
     );
 }

@@ -155,7 +155,7 @@ CuteNews.prototype.updateSubscriptions = function (callback_ok, callback_error) 
     this.get(SUBSCRIPTIONS_PATH + "/update", callback_ok, callback_error);
 }
 
-CuteNews.prototype.cancelSubscriptionUpdate = function (callback_ok, callback_error) {
+CuteNews.prototype.cancelSubscriptionUpdates = function (callback_ok, callback_error) {
     this.get(SUBSCRIPTIONS_PATH + "/cancel", callback_ok, callback_error);
 }
 

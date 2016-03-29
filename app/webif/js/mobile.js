@@ -24,6 +24,82 @@ var canFetchArticles = false;
 var cutenews = new CuteNews();
 
 function init() {
+    document.getElementById("subscriptionsMenuButton").onclick = function () { showSubscriptionsMenu(); }
+    document.getElementById("subscriptionsMenuBackground").onclick = function () { cancelSubscriptionsMenu(); }
+    document.getElementById("updateSubscriptionsMenuItem").onclick = function () {
+        updateAllSubscriptions();
+        cancelSubscriptionsMenu();
+    }
+    
+    document.getElementById("newSubscriptionMenuItem").onclick = function () {
+        showNewSubscriptionTab("subscriptionsTab");
+        cancelSubscriptionsMenu();
+    }
+
+    document.getElementById("downloadsMenuItem").onclick = function () {
+        showDownloadsTab("subscriptionsTab");
+        cancelSubscriptionsMenu();
+    }
+
+    document.getElementById("settingsMenuItem").onclick = function () {
+        showSettingsTab("subscriptionsTab");
+        cancelSubscriptionsMenu();
+    }
+
+    document.getElementById("articlesBackButton").onclick = function () { showSubscriptionsTab("articlesTab", true); }
+    document.getElementById("articleBackButton").onclick = function () { showArticlesTab("articleTab", true); }
+    document.getElementById("previousArticleButton").onclick = function () { previousArticle(); }
+    document.getElementById("nextArticleButton").onclick = function () { nextArticle(); }
+    document.getElementById("nextUnreadArticleButton").onclick = function () { nextUnreadArticle(); }
+    document.getElementById("articleMenuButton").onclick = function () { showArticleMenu(); }
+    document.getElementById("articleMenuBackground").onclick = function () { cancelArticleMenu(); }
+    document.getElementById("openArticleMenuItem").onclick = function () {
+        openArticleExternally(currentArticle);
+        cancelArticleMenu();
+    }
+    
+    document.getElementById("articleReadMenuItem").onclick = function () {
+        toggleArticleRead(currentArticle);
+        cancelArticleMenu();
+    }
+    
+    document.getElementById("articleFavouriteMenuItem").onclick = function () {
+        toggleArticleFavourite(currentArticle);
+        cancelArticleMenu();
+    }
+
+    document.getElementById("enclosureMenuBackground").onclick = function () { cancelEnclosureMenu(); }
+    document.getElementById("openEnclosureMenuItem").onclick = function () {
+        openEnclosureExternally(currentEnclosure);
+        cancelEnclosureMenu();
+    }
+
+    document.getElementById("downloadEnclosureMenuItem").onclick = function () {
+        downloadEnclosure(currentEnclosure);
+        cancelEnclosureMenu();
+    }
+
+    document.getElementById("downloadsBackButton").onclick = function () { showSubscriptionsTab("downloadsTab"); }
+    document.getElementById("startDownloadsButton").onclick = function () { startDownloads(); }
+    document.getElementById("pauseDownloadsButton").onclick = function () { pauseDownloads(); }
+    document.getElementById("downloadMenuBackground").onclick = function () { cancelDownloadMenu(); }
+    document.getElementById("cancelDownloadMenuItem").onclick = function () {
+        cancelDownload(currentDownload);
+        cancelDownloadMenu();
+    }
+
+    document.getElementById("cancelNewSubscriptionButton").onclick = function () { showSubscriptionsTab("newSubscriptionTab"); }
+    document.getElementById("addSubscriptionButton").onclick = function () {
+        addNewSubscription();
+        showSubscriptionsTab("newSubscriptionTab");
+    }
+
+    document.getElementById("cancelSettingsButton").onclick = function () { showSubscriptionsTab("settingsTab"); }
+    document.getElementById("saveSettingsButton").onclick = function () {
+        saveSettings();
+        showSubscriptionsTab("settingsTab");
+    }    
+    
     loadSubscriptions();
     checkStatus();
 }
@@ -220,12 +296,12 @@ function setCurrentSubscription(index) {
     loadArticles(item.getAttribute("data-id"), 0, 50, true);
 }
 
-function updateCurrentSubscription() {
-    if ((currentStatus.status == 1) || (currentSubscription == -1)) {
+function updateSubscription(index) {
+    if (currentStatus.status == 1) {
         return;
     }
     
-    var id = document.getElementById("subscriptionsList").childNodes[currentSubscription].getAttribute("data-id");
+    var id = document.getElementById("subscriptionsList").childNodes[index].getAttribute("data-id");
     cutenews.updateSubscription(id, checkStatus);
 }
 
@@ -237,17 +313,43 @@ function updateAllSubscriptions() {
     cutenews.updateSubscriptions(checkStatus);
 }
 
+function cancelSubscriptionUpdates() {
+    if (currentStatus.status != 1) {
+        return;
+    }
+
+    cutenews.cancelSubscriptionUpdates(checkStatus);
+}
+
 function checkStatus() {
     cutenews.getSubscriptionUpdateStatus(function (updateStatus) {
-        currentStatus = updateStatus;
+        if (updateStatus.status != currentStatus.status) {
+            
+            if (updateStatus.status == 1) {
+                document.getElementById("updateSubscriptionsLabel").innerHTML = "Cancel updates";
+                document.getElementById("updateSubscriptionsMenuItem").onclick = function () {
+                    cancelSubscriptionUpdates();
+                    cancelSubscriptionsMenu();
+                }
+            }
+            else {
+                document.getElementById("updateSubscriptionsLabel").innerHTML = "Update";
+                document.getElementById("updateSubscriptionsMenuItem").onclick = function () {
+                    updateAllSubscriptions();
+                    cancelSubscriptionsMenu();
+                }
+            }
+        }
         
-        if (currentStatus.status == 1) {
-            document.getElementById("subscriptionsTitle").innerHTML = currentStatus.statusText;
+        if (updateStatus.status == 1) {
+            document.getElementById("subscriptionsTitle").innerHTML = updateStatus.statusText;
             window.setTimeout(checkStatus, 3000);
         }
         else {
             document.getElementById("subscriptionsTitle").innerHTML = "Subscriptions";
         }
+
+        currentStatus = updateStatus;
     }
     );
 }
@@ -326,6 +428,8 @@ function clearArticles() {
 
 function setCurrentArticle(index) {    
     var list = document.getElementById("articlesList");
+    document.getElementById("previousArticleButton").disabled = (index == 0);
+    document.getElementById("nextArticleButton").disabled = (index == list.childNodes.length - 1);
         
     if (currentArticle != -1) {
         list.childNodes[currentArticle].setAttribute("data-current", "false");
@@ -459,9 +563,11 @@ function markArticleRead(index, read) {
         
         if (unread == 0) {
             subscription.setAttribute("data-read", "true");
+            document.getElementById("nextUnreadArticleButton").disabled = true;
         }
         else {
             subscription.setAttribute("data-read", "false");
+            document.getElementById("nextUnreadArticleButton").disabled = false;
         }
     }
     );
@@ -528,6 +634,9 @@ function loadDownloads() {
         for (var i = 0; i < downloads.length; i++) {
             appendDownload(downloads[i]);
         }
+
+        document.getElementById("startDownloadsButton").disabled =
+            (document.getElementById("pauseDownloadsButton").disabled = (downloads.length == 0));
     }
     );
 }
@@ -633,12 +742,18 @@ function showDownloadMenu(event) {
     var status = parseInt(document.getElementById("downloadsList").childNodes[currentDownload].getAttribute("data-status"));
 
     if (status > 4) {
-        document.getElementById("startDownloadMenuItem").style.display = "none";
-        document.getElementById("pauseDownloadMenuItem").style.display = "block";
+        document.getElementById("startPauseDownloadLabel").innerHTML = "Pause";
+        document.getElementById("startPauseDownloadMenuItem").onclick = function () {
+            pauseDownload(currentDownload);
+            cancelDownloadMenu();
+        }
     }
     else {
-        document.getElementById("startDownloadMenuItem").style.display = "block";
-        document.getElementById("pauseDownloadMenuItem").style.display = "none";
+        document.getElementById("startPauseDownloadLabel").innerHTML = "Start";
+        document.getElementById("startPauseDownloadMenuItem").onclick = function () {
+            startDownload(currentDownload);
+            cancelDownloadMenu();
+        }
     }
     
     document.getElementById("downloadMenuBackground").style.display = "block";

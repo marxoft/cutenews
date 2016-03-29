@@ -17,37 +17,37 @@
 Subscriptions
 </div>
 <div class="ToolButtonRow">
-<input type="button" id="subscriptionsMenuButton" class="ToolButton" title="Show menu" value="|||" onclick="showSubscriptionsMenu()" />
+<input type="button" id="subscriptionsMenuButton" class="ToolButton" title="Show menu" value="|||" />
 </div>
 </div>
 <ul id="subscriptionsList" class="ListView">
 </ul>
-<div id="subscriptionsMenuBackground" class="PopupBackground" onclick="cancelSubscriptionsMenu()">
+<div id="subscriptionsMenuBackground" class="PopupBackground">
 </div>
 <div id="subscriptionsMenu" class="Menu">
 <ul id="subscriptionsMenuList" class="ListView">
-<li id="updateSubscriptionsMenuItem" class="ListItem" onclick="updateAllSubscriptions(); cancelSubscriptionsMenu()">
+<li id="updateSubscriptionsMenuItem" class="ListItem">
 <div class="ListItemContent">
-<div class="ListItemText">
+<div id="updateSubscriptionsLabel" class="ListItemText">
 Update
 </div>
 </div>
 </li>
-<li id="newSubscriptionMenuItem" class="ListItem" onclick="showNewSubscriptionTab('subscriptionsTab'); cancelSubscriptionsMenu()">
+<li id="newSubscriptionMenuItem" class="ListItem">
 <div class="ListItemContent">
 <div class="ListItemText">
 New subscription
 </div>
 </div>
 </li>
-<li id="downloadsMenuItem" class="ListItem" onclick="showDownloadsTab('subscriptionsTab'); cancelSubscriptionsMenu()">
+<li id="downloadsMenuItem" class="ListItem">
 <div class="ListItemContent">
 <div class="ListItemText">
 Downloads
 </div>
 </div>
 </li>
-<li id="settingsMenuItem" class="ListItem" onclick="showSettingsTab('subscriptionsTab'); cancelSubscriptionsMenu()">
+<li id="settingsMenuItem" class="ListItem">
 <div class="ListItemContent">
 <div class="ListItemText">
 Settings
@@ -59,7 +59,7 @@ Settings
 </div>
 <div id="articlesTab" class="Tab">
 <div id="articlesToolBar" class="ToolBar">
-<input type="button" id="articlesBackButton" class="ToolButton" title="Go back" value="<<" onclick="showSubscriptionsTab('articlesTab', true)" />
+<input type="button" id="articlesBackButton" class="ToolButton" title="Go back" value="<<" />
 <div id="articlesTitle" class="Title">
 Articles
 </div>
@@ -70,35 +70,36 @@ Articles
 </div>
 <div id="articleTab" class="Tab">
 <div id="articleToolBar" class="ToolBar">
-<input type="button" id="articleBackButton" class="ToolButton" title="Go back" value="<<" onclick="showArticlesTab('articleTab', true)" />
+<input type="button" id="articleBackButton" class="ToolButton" title="Go back" value="<<" />
 <div id="articleTitle" class="Title">
 Article
 </div>
 <div class="ToolButtonRow">
-<input type="button" id="previousArticleButton" class="ToolButton" title="Go to previous article" value="<" onclick="previousArticle()" />
-<input type="button" id="nextArticleButton" class="ToolButton" title="Go to next article" value=">" onclick="nextArticle()" />
-<input type="button" id="articleMenuButton" class="ToolButton" title="Show menu" value="|||" onclick="showArticleMenu()" />
+<input type="button" id="previousArticleButton" class="ToolButton" title="Go to previous article" value="<" />
+<input type="button" id="nextArticleButton" class="ToolButton" title="Go to next article" value=">" />
+<input type="button" id="nextUnreadArticleButton" class="ToolButton" title="Go to next unread article" value=">>" />
+<input type="button" id="articleMenuButton" class="ToolButton" title="Show menu" value="|||" />
 </div>
 </div>
-<div id="articleMenuBackground" class="PopupBackground" onclick="cancelArticleMenu()">
+<div id="articleMenuBackground" class="PopupBackground">
 </div>
 <div id="articleMenu" class="Menu">
 <ul id="articleMenuList" class="ListView">
-<li id="openArticleMenuItem" class="ListItem" onclick="openArticleExternally(currentArticle); cancelArticleMenu()">
+<li id="openArticleMenuItem" class="ListItem">
 <div class="ListItemContent">
 <div class="ListItemText">
 Open externally
 </div>
 </div>
 </li>
-<li id="articleReadMenuItem" class="ListItem" onclick="toggleArticleRead(currentArticle); cancelArticleMenu()">
+<li id="articleReadMenuItem" class="ListItem">
 <div class="ListItemContent">
 <div id="articleReadLabel" class="ListItemText">
 Mark as read
 </div>
 </div>
 </li>
-<li id="articleFavouriteMenuItem" class="ListItem" onclick="toggleArticleFavourite(currentArticle); cancelArticleMenu()">
+<li id="articleFavouriteMenuItem" class="ListItem">
 <div class="ListItemContent">
 <div id="articleFavouriteLabel" class="ListItemText">
 Favourite
@@ -114,18 +115,18 @@ Favourite
 <h4>Enclosures</h4>
 <ul id="enclosuresList" class="ListView">
 </ul>
-<div id="enclosureMenuBackground" class="PopupBackground" onclick="cancelEnclosureMenu()">
+<div id="enclosureMenuBackground" class="PopupBackground">
 </div>
 <div id="enclosureMenu" class="Menu">
 <ul id="enclosureMenuList" class="ListView">
-<li id="openEnclosureMenuItem" class="ListItem" onclick="openEnclosureExternally(currentEnclosure); cancelEnclosureMenu()">
+<li id="openEnclosureMenuItem" class="ListItem">
 <div class="ListItemContent">
 <div class="ListItemText">
 Open externally
 </div>
 </div>
 </li>
-<li id="downloadEnclosureMenuItem" class="ListItem" onclick="downloadEnclosure(currentEnclosure); cancelEnclosureMenu()">
+<li id="downloadEnclosureMenuItem" class="ListItem">
 <div class="ListItemContent">
 <div class="ListItemText">
 Download
@@ -139,36 +140,29 @@ Download
 </div>
 <div id="downloadsTab" class="Tab">
 <div id="downloadsToolBar" class="ToolBar">
-<input type="button" id="downloadsBackButton" class="ToolButton" title="Go back" value="<<" onclick="showSubscriptionsTab('downloadsTab')" />
+<input type="button" id="downloadsBackButton" class="ToolButton" title="Go back" value="<<" />
 <div id="downloadsTitle" class="Title">
 Downloads
 </div>
 <div class="ToolButtonRow">
-<input type="button" id="startDownloadsButton" class="ToolButton" title="Start all downloads" value="Start" onclick="startDownloads()" />
-<input type="button" id="pauseDownloadsButton" class="ToolButton" title="Pause all downloads" value="Pause" onclick="pauseDownloads()" />
+<input type="button" id="startDownloadsButton" class="ToolButton" title="Start all downloads" value="Start" />
+<input type="button" id="pauseDownloadsButton" class="ToolButton" title="Pause all downloads" value="Pause" />
 </div>
 </div>
 <ul id="downloadsList" class="ListView">
 </ul>
-<div id="downloadMenuBackground" class="PopupBackground" onclick="cancelDownloadMenu()">
+<div id="downloadMenuBackground" class="PopupBackground">
 </div>
 <div id="downloadMenu" class="Menu">
 <ul id="downloadMenuList" class="ListView">
-<li id="startDownloadMenuItem" class="ListItem" onclick="startDownload(currentDownload); cancelDownloadMenu()">
+<li id="startPauseDownloadMenuItem" class="ListItem">
 <div class="ListItemContent">
-<div class="ListItemText">
+<div id="startPauseDownloadLabel" class="ListItemText">
 Start
 </div>
 </div>
 </li>
-<li id="pauseDownloadMenuItem" class="ListItem" onclick="pauseDownload(currentDownload); cancelDownloadMenu()">
-<div class="ListItemContent">
-<div class="ListItemText">
-Pause
-</div>
-</div>
-</li>
-<li id="cancelDownloadMenuItem" class="ListItem" onclick="cancelDownload(currentDownload); cancelDownloadMenu()">
+<li id="cancelDownloadMenuItem" class="ListItem">
 <div class="ListItemContent">
 <div class="ListItemText">
 Remove
@@ -184,8 +178,8 @@ Remove
 Subscription properties
 </div>
 <div class="ToolButtonRow">
-<input type="button" id="cancelNewSubscriptionButton" class="ToolButton" value="Cancel" onclick="showSubscriptionsTab('newSubscriptionTab')" />
-<input type="button" id="addSubscriptionButton" class="ToolButton" value="Save" onclick="addNewSubscription(); showSubscriptionsTab('newSubscriptionTab');" />
+<input type="button" id="cancelNewSubscriptionButton" class="ToolButton" value="Cancel" />
+<input type="button" id="addSubscriptionButton" class="ToolButton" value="Save" />
 </div>
 </div>
 <div class="HBox">
@@ -211,8 +205,8 @@ Subscription properties
 Settings
 </div>
 <div class="ToolButtonRow">
-<input type="button" id="cancelSettingsButton" class="ToolButton" value="Cancel" onclick="showSubscriptionsTab('settingsTab')" />
-<input type="button" id="saveSettingsButton" class="ToolButton" value="Save" onclick="saveSettings(); showSubscriptionsTab('settingsTab');" />
+<input type="button" id="cancelSettingsButton" class="ToolButton" value="Cancel" />
+<input type="button" id="saveSettingsButton" class="ToolButton" value="Save" />
 </div>
 </div>
 <div class="HBox">

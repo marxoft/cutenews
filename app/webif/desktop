@@ -12,26 +12,26 @@
 </head>
 <body onload="init()">
 <div id="tabBar" class="TabBar">
-<a id="feedsTabButton" class="TabButton" accessKey="a" href="#feedsTab" title="Show feeds" data-current="true" onclick="showFeedsTab()">
+<a id="feedsTabButton" class="TabButton" accessKey="a" href="#feedsTab" title="Show feeds" data-current="true">
 Feeds
 </a>
-<a id="downloadsTabButton" class="TabButton" accessKey="d" href="#downloadsTab" title="Show downloads" data-current="false" onclick="showDownloadsTab()">
+<a id="downloadsTabButton" class="TabButton" accessKey="d" href="#downloadsTab" title="Show downloads" data-current="false">
 Downloads
 </a>
 </div>
 <div id="feedsTab" class="Tab" data-current="true">
 <div id="feedsToolBar" class="ToolBar">
-<input type="button" id="newSubscriptionButton" class="ToolButton" title="Add a new subscription" value="New subscription" onclick="showNewSubscriptionDialog()" />
-<input type="button" id="updateButton" class="ToolButton" title="Update current subscription" value="Update" onclick="updateCurrentSubscription()" />
-<input type="button" id="updateAllButton" class="ToolButton" accessKey="u" title="Update all subscriptions" value="Update all" onclick="updateAllSubscriptions()" />
+<input type="button" id="newSubscriptionButton" class="ToolButton" title="Add a new subscription" value="New subscription" />
+<input type="button" id="updateButton" class="ToolButton" title="Update current subscription" value="Update" />
+<input type="button" id="updateAllButton" class="ToolButton" accessKey="u" title="Update all subscriptions" value="Update all" />
 <div class="Spacer">
 </div>
-<input type="button" id="previousArticleButton" class="ToolButton" title="Go to the previous article" value="<" onclick="previousArticle()" />
-<input type="button" id="nextArticleButton" class="ToolButton" title="Go to the next article" value=">" onclick="nextArticle()" />
-<input type="button" id="nextUnreadArticleButton" class="ToolButton" accessKey="n" title="Go to the next unread article" value=">> Next unread article" onclick="nextUnreadArticle()" />
+<input type="button" id="previousArticleButton" class="ToolButton" title="Go to the previous article" value="<" />
+<input type="button" id="nextArticleButton" class="ToolButton" title="Go to the next article" value=">" />
+<input type="button" id="nextUnreadArticleButton" class="ToolButton" accessKey="n" title="Go to the next unread article" value=">> Next unread article" />
 <div class="Spacer">
 </div>
-<input type="button" id="feedsSettingsButton" class="ToolButton" title="Show the settings dialog" value="Settings" onclick="showSettingsDialog()" />
+<input type="button" id="feedsSettingsButton" class="ToolButton" title="Show the settings dialog" value="Settings" />
 </div>
 <ul id="subscriptionsTable" class="TableView">
 </ul>
@@ -51,9 +51,9 @@ Title
 <div id="articleBody">
 </div>
 <div id="articleControls">
-<input id="articleFavouriteCheckBox" type="checkbox" onclick="markArticleFavourite(currentArticle, this.checked)" />
+<input id="articleFavouriteCheckBox" type="checkbox" />
 Favourite
-<input id="articleReadCheckBox" type="checkbox" onclick="markArticleRead(currentArticle, this.checked)" />
+<input id="articleReadCheckBox" type="checkbox" />
 Read
 </div>
 <div id="articleEnclosures">
@@ -65,11 +65,11 @@ Read
 </div>
 <div id="downloadsTab" class="Tab">
 <div id="downloadsToolBar" class="ToolBar">
-<input type="button" id="startDownloadsButton" class="ToolButton" accessKey="s" title="Start all downloads" value="Start" onclick="startDownloads()" />
-<input type="button" id="pauseDownloadsButton" class="ToolButton" accessKey="p" title="Pause all downloads" value="Pause" onclick="pauseDownloads()" />
+<input type="button" id="startDownloadsButton" class="ToolButton" accessKey="s" title="Start all downloads" value="Start" />
+<input type="button" id="pauseDownloadsButton" class="ToolButton" accessKey="p" title="Pause all downloads" value="Pause" />
 <div class="Spacer">
 </div>
-<input type="button" id="downloadsSettingsButton" class="ToolButton" title="Show the settings dialog" value="Settings" onclick="showSettingsDialog()" />
+<input type="button" id="downloadsSettingsButton" class="ToolButton" title="Show the settings dialog" value="Settings" />
 </div>
 <div id="downloadsHeader" class="TableHeader">
 <div id="downloadsFileNameHeader" class="DownloadFileNameColumn">
@@ -118,8 +118,8 @@ Subscription properties
 </div>
 </div>
 <div class="DialogButtonBox">
-<input type="button" id="cancelNewSubscriptionButton"  class="Button" value="Cancel" onclick="cancelNewSubscriptionDialog()" />
-<input type="button" id="addSubscriptionButton" class="Button" value="Save" onclick="addNewSubscription(); cancelNewSubscriptionDialog();" />
+<input type="button" id="cancelNewSubscriptionButton"  class="Button" value="Cancel" />
+<input type="button" id="addSubscriptionButton" class="Button" value="Save" />
 </div>
 </div>
 <div id="settingsDialog" class="Dialog">
@@ -128,10 +128,10 @@ Settings
 </div>
 <div id="settingsDialogContent" class="DialogContent">
 <div id="settingsTabBar" class="TabBar">
-<a id="generalSettingsTabButton" class="TabButton" href="#generalSettingsTab" data-current="true" onclick="showGeneralSettings()">
+<a id="generalSettingsTabButton" class="TabButton" href="#generalSettingsTab" data-current="true">
 General
 </a>
-<a id="networkSettingsTabButton" class="TabButton" href="#networkSettingsTab" data-current="false" onclick="showNetworkSettings()">
+<a id="networkSettingsTabButton" class="TabButton" href="#networkSettingsTab" data-current="false">
 Network
 </a>
 </div>
@@ -186,8 +186,8 @@ Network
 </div>
 </div>
 <div class="DialogButtonBox">
-<input type="button" id="cancelSettingsDialogButton"  class="Button" value="Cancel" onclick="cancelSettingsDialog()" />
-<input type="button" id="saveSettingsButton" class="Button" value="Save" onclick="saveSettings(); cancelSettingsDialog();" />
+<input type="button" id="cancelSettingsDialogButton"  class="Button" value="Cancel" />
+<input type="button" id="saveSettingsButton" class="Button" value="Save" />
 </div>
 </div>
 </body>
