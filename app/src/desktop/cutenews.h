@@ -29,9 +29,13 @@ class CuteNews : public QObject
     Q_CLASSINFO("D-Bus Interface", "org.marxoft.cutenews")
     
 public:
-    explicit CuteNews(QObject *parent = 0);
+    ~CuteNews();
+
+    static CuteNews* instance();
     
 public Q_SLOTS:
+    bool quit();
+    
     Q_SCRIPTABLE bool showArticle(int articleId);
     Q_SCRIPTABLE bool showWindow();
 
@@ -39,6 +43,10 @@ Q_SIGNALS:
     void articleRequested(int articleId);
 
 private:
+    CuteNews();
+    
+    static CuteNews *self;
+    
     QPointer<MainWindow> m_window;
 };
     

@@ -15,18 +15,53 @@
  */
 
 #include "cutenews.h"
+#include "database.h"
 #include "mainwindow.h"
+#include "transfers.h"
+#include <QCoreApplication>
 #include <QDBusConnection>
+#include <QThread>
 #ifdef CUTENEWS_DEBUG
 #include <QDebug>
 #endif
 
-CuteNews::CuteNews(QObject *parent) :
-    QObject(parent)
+CuteNews* CuteNews::self = 0;
+
+CuteNews::CuteNews() :
+    QObject()
 {
     QDBusConnection connection = QDBusConnection::sessionBus();
     connection.registerService("org.marxoft.cutenews");
     connection.registerObject("/org/marxoft/cutenews", this, QDBusConnection::ExportScriptableSlots);
+}
+
+CuteNews::~CuteNews() {
+    self = 0;
+}
+
+CuteNews* CuteNews::instance() {
+    return self ? self : self = new CuteNews;
+}
+
+bool CuteNews::quit() {
+    QThread *dbThread = Database::instance()->thread();
+
+    if ((dbThread) && (dbThread != QThread::currentThread())) {
+        if (dbThread->isRunning()) {
+#ifdef CUTENEWS_DEBUG
+            qDebug() << "Database thread still running. Calling QThread::quit()";
+#endif
+            connect(dbThread, SIGNAL(finished()), this, SLOT(quit()), Qt::UniqueConnection);
+            dbThread->quit();
+            return false;
+        }
+    }
+#ifdef CUTENEWS_DEBUG
+    qDebug() << "Database thread finished. Quitting the application";
+#endif
+    Transfers::instance()->save();
+    QCoreApplication::quit();
+    return true;
 }
 
 bool CuteNews::showArticle(int articleId) {

@@ -43,21 +43,21 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     app.setApplicationVersion(VERSION_NUMBER);
     app.setWindowIcon(QIcon::fromTheme("cutenews"));
     app.setAttribute(Qt::AA_DontShowIconsInMenus, false);
+    app.setQuitOnLastWindowClosed(false);
 
 #if QT_VERSION < 0x050000
     QSslConfiguration config = QSslConfiguration::defaultConfiguration();
     config.setProtocol(QSsl::TlsV1);
     QSslConfiguration::setDefaultConfiguration(config);
 #endif
-    
+
+    QScopedPointer<CuteNews> cutenews(CuteNews::instance());
     QScopedPointer<Database> database(Database::instance());
     QScopedPointer<Settings> settings(Settings::instance());
     QScopedPointer<Subscriptions> subscriptions(Subscriptions::instance());
     QScopedPointer<Transfers> transfers(Transfers::instance());
     QScopedPointer<WebServer> server(WebServer::instance());
-    
-    CuteNews cutenews;
-    
+        
     Database::init();
     Settings::instance()->setNetworkProxy();
     Transfers::instance()->load();
@@ -69,14 +69,13 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     thread.start();
     
     registerTypes();
+
+    QObject::connect(&app, SIGNAL(lastWindowClosed()), CuteNews::instance(), SLOT(quit()));
         
-    QObject::connect(&app, SIGNAL(aboutToQuit()), &thread, SLOT(quit()));
-    QObject::connect(&app, SIGNAL(aboutToQuit()), Transfers::instance(), SLOT(save()));
-    
     const QStringList args = app.arguments();
     
     if (args.contains("--window")) {
-        cutenews.showWindow();
+        CuteNews::instance()->showWindow();
     }
     
     return app.exec();
