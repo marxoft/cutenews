@@ -28,7 +28,7 @@
 static const int ALL_ARTICLES_SUBSCRIPTION_ID = -1;
 static const int FAVOURITES_SUBSCRIPTION_ID = 0;
 
-static const int MAX_CONCURRENT_TRANSFERS = 1;
+static const int MAX_CONCURRENT_TRANSFERS = 4;
 static const int MAX_REDIRECTS = 8;
 
 static const int ICON_SIZE = 16;
