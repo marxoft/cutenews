@@ -142,7 +142,7 @@ function insertSubscription(index, subscription) {
     icon.width = "16";
     icon.height = "16";
     icon.align = "left";
-    icon.src = subscription.iconPath;
+    icon.src = subscription.iconPath ? subscription.iconPath : "images/cutenews.png";
     col.appendChild(icon);
     row.appendChild(col);
     
