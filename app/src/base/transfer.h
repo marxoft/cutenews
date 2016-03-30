@@ -68,6 +68,7 @@ public:
         Failed,
         Completed,
         Queued,
+        Connecting,
         Downloading,
         Uploading,
         Unknown

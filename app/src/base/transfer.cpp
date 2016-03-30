@@ -264,6 +264,7 @@ void Transfer::setStatus(Status s) {
         case Transfer::Queued:
             if (m_tuiTransfer) m_tuiTransfer->setPending(statusString());
             break;
+        case Transfer::Connecting:
         case Transfer::Downloading:
             if (m_tuiTransfer) m_tuiTransfer->markResumed();
             break;
@@ -301,6 +302,8 @@ QString Transfer::statusString() const {
         return tr("Completed");
     case Queued:
         return tr("Queued");
+    case Connecting:
+        return tr("Connecting");
     case Downloading:
         return tr("Downloading");
     case Uploading:
@@ -374,6 +377,7 @@ QByteArray Transfer::readAll() const {
 void Transfer::queue() {
     switch (status()) {
     case Queued:
+    case Connecting:
     case Downloading:
     case Uploading:
         return;
@@ -386,6 +390,7 @@ void Transfer::queue() {
 
 void Transfer::start() {
     switch (status()) {
+    case Connecting:
     case Downloading:
     case Uploading:
         return;
@@ -454,6 +459,7 @@ void Transfer::getSubscriptionSource() {
 #ifdef CUTENEWS_DEBUG
     qDebug() << "Transfer::getSubscriptionSource. Subscription id" << subscriptionId() << ", request id" << m_requestId;
 #endif
+    setStatus(Connecting);
     connect(Database::instance(), SIGNAL(queryReady(QSqlQuery, int)),
             this, SLOT(onSubscriptionSourceReady(QSqlQuery, int)));
     Database::execQuery(QString("SELECT source, sourceType FROM subscriptions WHERE id = %1").arg(subscriptionId()),
