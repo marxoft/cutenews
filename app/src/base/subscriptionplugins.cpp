@@ -69,7 +69,7 @@ void SubscriptionPlugins::load() {
     foreach (QString path, PLUGIN_PATHS) {
         dir.setPath(path);
 
-        foreach (QString fileName, dir.entryList(QStringList() << "*.plugin", QDir::Files)) {
+        foreach (const QString &fileName, dir.entryList(QStringList() << "*.plugin", QDir::Files)) {
 #ifdef CUTENEWS_DEBUG
             qDebug() << "SubscriptionPlugins::load: Plugin found:" << fileName;
 #endif

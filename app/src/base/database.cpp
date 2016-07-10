@@ -281,7 +281,7 @@ void Database::_p_addSubscription(const QVariantList &properties) {
     QSqlQuery query(getDatabase());
     query.prepare("INSERT INTO subscriptions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     
-    foreach (QVariant property, properties) {
+    foreach (const QVariant &property, properties) {
         query.addBindValue(property);
     }
 #ifdef CUTENEWS_DEBUG
@@ -299,7 +299,7 @@ void Database::_p_addSubscriptions(const QList<QVariantList> &subscriptions) {
     QSqlQuery query(getDatabase());
     query.prepare("INSERT INTO subscriptions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     
-    foreach (QVariantList subscription, subscriptions) {
+    foreach (const QVariantList &subscription, subscriptions) {
         query.addBindValue(subscription);
     }
 #ifdef CUTENEWS_DEBUG
@@ -357,7 +357,7 @@ void Database::_p_updateSubscription(int id, const QVariantMap &properties) {
                                .arg(id);
     query.prepare(statement);
     
-    foreach (QVariant value, properties.values()) {
+    foreach (const QVariant &value, properties.values()) {
         query.addBindValue(value);
     }
 #ifdef CUTENEWS_DEBUG
@@ -424,7 +424,7 @@ void Database::_p_addArticle(const QVariantList &properties, int subscriptionId)
     QSqlQuery query(getDatabase());
     query.prepare("INSERT INTO articles VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     
-    foreach (QVariant property, properties) {
+    foreach (const QVariant &property, properties) {
         query.addBindValue(property);
     }
 #ifdef CUTENEWS_DEBUG
@@ -442,7 +442,7 @@ void Database::_p_addArticles(const QList<QVariantList> &articles, int subscript
     QSqlQuery query(getDatabase());
     query.prepare("INSERT INTO articles VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     
-    foreach (QVariantList article, articles) {
+    foreach (const QVariantList &article, articles) {
         query.addBindValue(article);
     }
 #ifdef CUTENEWS_DEBUG

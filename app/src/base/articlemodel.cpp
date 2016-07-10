@@ -201,7 +201,7 @@ QVariant ArticleModel::data(const QModelIndex &index, int role) const {
 }
 
 QVariant ArticleModel::data(int row, const QByteArray &role) const {
-    if (Article *article = get(row)) {
+    if (const Article *article = get(row)) {
         return article->property(role);
     }
     
@@ -211,7 +211,7 @@ QVariant ArticleModel::data(int row, const QByteArray &role) const {
 QMap<int, QVariant> ArticleModel::itemData(const QModelIndex &index) const {
     QMap<int, QVariant> map;
         
-    if (Article *article = get(index.row())) {
+    if (const Article *article = get(index.row())) {
         QHashIterator<int, QByteArray> iterator(m_roles);
         
         while (iterator.hasNext()) {
@@ -226,8 +226,8 @@ QMap<int, QVariant> ArticleModel::itemData(const QModelIndex &index) const {
 QVariantMap ArticleModel::itemData(int row) const {
     QVariantMap map;
         
-    if (Article *article = get(row)) {
-        foreach (QByteArray role, m_roles.values()) {
+    if (const Article *article = get(row)) {
+        foreach (const QByteArray &role, m_roles.values()) {
             map[role] = article->property(role);
         }
     }

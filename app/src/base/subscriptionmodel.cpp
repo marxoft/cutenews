@@ -141,7 +141,7 @@ QVariant SubscriptionModel::data(const QModelIndex &index, int role) const {
 }
 
 QVariant SubscriptionModel::data(int row, const QByteArray &role) const {
-    if (Subscription *subscription = get(row)) {
+    if (const Subscription *subscription = get(row)) {
         return subscription->property(role);
     }
     
@@ -151,7 +151,7 @@ QVariant SubscriptionModel::data(int row, const QByteArray &role) const {
 QMap<int, QVariant> SubscriptionModel::itemData(const QModelIndex &index) const {
     QMap<int, QVariant> map;
         
-    if (Subscription *subscription = get(index.row())) {
+    if (const Subscription *subscription = get(index.row())) {
         QHashIterator<int, QByteArray> iterator(m_roles);
         
         while (iterator.hasNext()) {
@@ -166,8 +166,8 @@ QMap<int, QVariant> SubscriptionModel::itemData(const QModelIndex &index) const 
 QVariantMap SubscriptionModel::itemData(int row) const {
     QVariantMap map;
         
-    if (Subscription *subscription = get(row)) {
-        foreach (QByteArray role, m_roles.values()) {
+    if (const Subscription *subscription = get(row)) {
+        foreach (const QByteArray &role, m_roles.values()) {
             map[role] = subscription->property(role);
         }
     }

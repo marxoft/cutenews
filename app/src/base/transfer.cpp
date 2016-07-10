@@ -567,7 +567,7 @@ void Transfer::moveDownloadedFiles() {
     
     QDir downDir(downloadPath());
     
-    foreach (QString oldFileName, downDir.entryList(QDir::Files)) {
+    foreach (const QString &oldFileName, downDir.entryList(QDir::Files)) {
         int i = 0;
         QString newFileName = QString("%1/%2").arg(destDir.path()).arg(oldFileName);
 

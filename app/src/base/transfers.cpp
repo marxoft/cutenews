@@ -136,7 +136,7 @@ void Transfers::save() {
     QSettings settings(STORAGE_PATH + "transfers", QSettings::NativeFormat);
     settings.clear();
     
-    foreach (Transfer *transfer, m_transfers) {
+    foreach (const Transfer *transfer, m_transfers) {
         settings.beginGroup(transfer->id());
         settings.setValue("downloadPath", transfer->downloadPath());
         settings.setValue("fileName", transfer->fileName());
@@ -150,7 +150,7 @@ void Transfers::save() {
 void Transfers::load() {
     QSettings settings(STORAGE_PATH + "transfers", QSettings::NativeFormat);
 
-    foreach (QString group, settings.childGroups()) {
+    foreach (const QString &group, settings.childGroups()) {
         settings.beginGroup(group);
         Transfer *transfer = new Transfer(this);
         transfer->setId(group);

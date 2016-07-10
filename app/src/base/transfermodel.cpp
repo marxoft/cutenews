@@ -86,7 +86,7 @@ QVariant TransferModel::headerData(int section, Qt::Orientation orientation, int
 #endif
 
 QVariant TransferModel::data(const QModelIndex &index, int role) const {
-    if (Transfer *transfer = Transfers::instance()->get(index.row())) {
+    if (const Transfer *transfer = Transfers::instance()->get(index.row())) {
 #ifdef WIDGETS_UI
         switch (index.column()) {
         case 0:
@@ -133,7 +133,7 @@ QVariant TransferModel::data(const QModelIndex &index, int role) const {
 QMap<int, QVariant> TransferModel::itemData(const QModelIndex &index) const {
     QMap<int, QVariant> map;
     
-    if (Transfer *transfer = Transfers::instance()->get(index.row())) {
+    if (const Transfer *transfer = Transfers::instance()->get(index.row())) {
         QHashIterator<int, QByteArray> iterator(m_roles);
         
         while (iterator.hasNext()) {
@@ -155,22 +155,20 @@ bool TransferModel::setData(const QModelIndex &index, const QVariant &value, int
 
 bool TransferModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) {
     QMapIterator<int, QVariant> iterator(roles);
-    bool ok = false;
     
     while (iterator.hasNext()) {
         iterator.next();
-        ok = setData(index, iterator.value(), iterator.key());
         
-        if (!ok) {
+        if (!setData(index, iterator.value(), iterator.key())) {
             return false;
         }
     }
     
-    return ok;
+    return true;
 }
 
 QVariant TransferModel::data(int row, const QByteArray &role) const {
-    if (Transfer *transfer = Transfers::instance()->get(row)) {
+    if (const Transfer *transfer = Transfers::instance()->get(row)) {
         return transfer->property(role);
     }
 
@@ -180,8 +178,8 @@ QVariant TransferModel::data(int row, const QByteArray &role) const {
 QVariantMap TransferModel::itemData(int row) const {
     QVariantMap map;
     
-    if (Transfer *transfer = Transfers::instance()->get(row)) {
-        foreach (QByteArray value, m_roles.values()) {
+    if (const Transfer *transfer = Transfers::instance()->get(row)) {
+        foreach (const QByteArray &value, m_roles.values()) {
             map[value] = transfer->property(value);
         }
     }
@@ -199,18 +197,16 @@ bool TransferModel::setData(int row, const QVariant &value, const QByteArray &ro
 
 bool TransferModel::setItemData(int row, const QVariantMap &roles) {
     QMapIterator<QString, QVariant> iterator(roles);
-    bool ok = false;
     
     while (iterator.hasNext()) {
         iterator.next();
-        ok = setData(row, iterator.value(), iterator.key().toUtf8());
-
-        if (!ok) {
+        
+        if (!setData(row, iterator.value(), iterator.key().toUtf8())) {
             return false;
         }
     }
     
-    return ok;
+    return true;
 }
 QModelIndexList TransferModel::match(const QModelIndex &start, int role, const QVariant &value, int hits,
                                      Qt::MatchFlags flags) const {

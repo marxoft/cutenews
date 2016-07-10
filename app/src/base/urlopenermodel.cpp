@@ -44,10 +44,10 @@ UrlOpenerModel::UrlOpenerModel(QObject *parent) :
 
 bool UrlOpenerModel::open(const QString &url) {
     for (int i = 0; i < rowCount(); i++) {
-        QVariantMap opener = data(i, "value").toMap();
+        const QVariantMap opener = data(i, "value").toMap();
         
         if (QRegExp(opener.value("regExp").toString()).indexIn(url) == 0) {
-            QString command = opener.value("command").toString().replace("%URL%", url);
+            const QString command = opener.value("command").toString().replace("%URL%", url);
 #ifdef CUTENEWS_DEBUG
             qDebug() << "UrlOpener::open: Opening" << url << "with command" << command;
 #endif
@@ -67,7 +67,7 @@ void UrlOpenerModel::load() {
     clear();
     QSettings settings(STORAGE_PATH + "urlopeners", QSettings::NativeFormat);
 
-    foreach (QString group, settings.childGroups()) {
+    foreach (const QString &group, settings.childGroups()) {
         settings.beginGroup(group);
         QString regExp(settings.value("regExp").toString());
         QString command(settings.value("command").toString());
