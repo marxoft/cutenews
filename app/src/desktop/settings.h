@@ -25,6 +25,12 @@ class Settings : public QObject
     Q_OBJECT
     
     Q_PROPERTY(QString downloadPath READ downloadPath WRITE setDownloadPath NOTIFY downloadPathChanged)
+    Q_PROPERTY(QByteArray mainWindowGeometry READ mainWindowGeometry WRITE setMainWindowGeometry)
+    Q_PROPERTY(QByteArray mainWindowState READ mainWindowState WRITE setMainWindowState)
+    Q_PROPERTY(QByteArray mainWindowHorizontalSplitterState READ mainWindowHorizontalSplitterState
+               WRITE setMainWindowHorizontalSplitterState)
+    Q_PROPERTY(QByteArray mainWindowVerticalSplitterState READ mainWindowVerticalSplitterState
+               WRITE setMainWindowVerticalSplitterState)
     Q_PROPERTY(int maximumConcurrentTransfers READ maximumConcurrentTransfers WRITE setMaximumConcurrentTransfers
                NOTIFY maximumConcurrentTransfersChanged)
     Q_PROPERTY(bool networkProxyEnabled READ networkProxyEnabled WRITE setNetworkProxyEnabled
@@ -58,6 +64,11 @@ public:
     
     static QString downloadPath();
     
+    static QByteArray mainWindowGeometry();
+    static QByteArray mainWindowState();
+    static QByteArray mainWindowHorizontalSplitterState();
+    static QByteArray mainWindowVerticalSplitterState();
+    
     static int maximumConcurrentTransfers();
     
     static bool networkProxyEnabled();
@@ -84,6 +95,11 @@ public:
 
 public Q_SLOTS:
     static void setDownloadPath(const QString &path);
+    
+    static void setMainWindowGeometry(const QByteArray &geometry);
+    static void setMainWindowState(const QByteArray &state);
+    static void setMainWindowHorizontalSplitterState(const QByteArray &state);
+    static void setMainWindowVerticalSplitterState(const QByteArray &state);
         
     static void setMaximumConcurrentTransfers(int maximum);
     

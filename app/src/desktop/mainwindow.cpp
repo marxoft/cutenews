@@ -22,6 +22,7 @@
 #include "downloadsview.h"
 #include "plugindialog.h"
 #include "searchdialog.h"
+#include "settings.h"
 #include "settingsdialog.h"
 #include "subscription.h"
 #include "subscriptiondialog.h"
@@ -41,7 +42,6 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QPushButton>
-#include <QSettings>
 #include <QSortFilterProxyModel>
 #include <QSplitter>
 #include <QStackedWidget>
@@ -184,6 +184,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_helpMenu->addAction(m_aboutAction);
 
+    m_toolBar->setObjectName("mainWindowToolBar");
     m_toolBar->setWindowTitle(tr("Main toolbar"));
     m_toolBar->setAllowedAreas(Qt::TopToolBarArea);
     m_toolBar->setMovable(false);
@@ -358,6 +359,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_subscriptionsView, SIGNAL(customContextMenuRequested(QPoint)),
             this, SLOT(showSubscriptionContextMenu(QPoint)));
     connect(m_subscriptionsView, SIGNAL(activated(QModelIndex)), this, SLOT(setCurrentSubscription(QModelIndex)));
+    connect(m_subscriptionsView, SIGNAL(clicked(QModelIndex)), this, SLOT(setCurrentSubscription(QModelIndex)));
     
     connect(m_articlesView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showArticleContextMenu(QPoint)));
     connect(m_articlesView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openCurrentArticleInBrowser()));
@@ -379,21 +381,17 @@ MainWindow::MainWindow(QWidget *parent) :
     
     m_subscriptionsModel->load();
 
-    QSettings settings;
-    settings.beginGroup("MainWindow");
-    restoreGeometry(settings.value("windowGeometry").toByteArray());
-    m_horizontalSplitter->restoreState(settings.value("horizontalSplitterState").toByteArray());
-    m_verticalSplitter->restoreState(settings.value("verticalSplitterState").toByteArray());
-    settings.endGroup();
+    restoreGeometry(Settings::mainWindowGeometry());
+    restoreState(Settings::mainWindowState());
+    m_horizontalSplitter->restoreState(Settings::mainWindowHorizontalSplitterState());
+    m_verticalSplitter->restoreState(Settings::mainWindowVerticalSplitterState());
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
-    QSettings settings;
-    settings.beginGroup("MainWindow");
-    settings.setValue("windowGeometry", saveGeometry());
-    settings.setValue("horizontalSplitterState", m_horizontalSplitter->saveState());
-    settings.setValue("verticalSplitterState", m_verticalSplitter->saveState());
-    settings.endGroup();
+    Settings::setMainWindowGeometry(saveGeometry());
+    Settings::setMainWindowState(saveState());
+    Settings::setMainWindowHorizontalSplitterState(m_horizontalSplitter->saveState());
+    Settings::setMainWindowVerticalSplitterState(m_verticalSplitter->saveState());
     QMainWindow::closeEvent(e);
 }
 
@@ -618,7 +616,7 @@ void MainWindow::setCurrentArticle(const QModelIndex &index) {
         m_enclosuresView->hide();
     }
     else {
-        foreach (QVariant enclosure, enclosures) {
+        foreach (const QVariant &enclosure, enclosures) {
             const QVariantMap map = enclosure.toMap();
             const int size = map.value("length").toLongLong();
             

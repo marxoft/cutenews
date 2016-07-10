@@ -57,6 +57,38 @@ void Settings::setDownloadPath(const QString &path) {
     }
 }
 
+QByteArray Settings::mainWindowGeometry() {
+    return value("MainWindow/windowGeometry").toByteArray();
+}
+
+void Settings::setMainWindowGeometry(const QByteArray &geometry) {
+    setValue("MainWindow/windowGeometry", geometry);
+}
+
+QByteArray Settings::mainWindowState() {
+    return value("MainWindow/windowState").toByteArray();
+}
+
+void Settings::setMainWindowState(const QByteArray &state) {
+    setValue("MainWindow/windowState", state);
+}
+
+QByteArray Settings::mainWindowHorizontalSplitterState() {
+    return value("MainWindow/horizontalSplitterState").toByteArray();
+}
+
+void Settings::setMainWindowHorizontalSplitterState(const QByteArray &state) {
+    setValue("MainWindow/horizontalSplitterState", state);
+}
+
+QByteArray Settings::mainWindowVerticalSplitterState() {
+    return value("MainWindow/verticalSplitterState").toByteArray();
+}
+
+void Settings::setMainWindowVerticalSplitterState(const QByteArray &state) {
+    setValue("MainWindow/verticalSplitterState", state);
+}
+
 int Settings::maximumConcurrentTransfers() {
     return qBound(1, value("Transfers/maximumConcurrentTransfers", 1).toInt(), MAX_CONCURRENT_TRANSFERS);
 }
