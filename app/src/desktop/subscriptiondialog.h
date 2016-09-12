@@ -20,13 +20,15 @@
 #include <QDialog>
 #include <QVariantMap>
 
-class SelectionModel;
+class DBConnection;
+class SubscriptionSourceTypeModel;
+class UpdateIntervalTypeModel;
 class QCheckBox;
 class QComboBox;
 class QDialogButtonBox;
-class QGridLayout;
+class QFormLayout;
 class QLineEdit;
-class QSqlQuery;
+class QSpinBox;
 
 class SubscriptionDialog : public QDialog
 {
@@ -34,35 +36,40 @@ class SubscriptionDialog : public QDialog
 
 public:
     explicit SubscriptionDialog(QWidget *parent = 0);
-    explicit SubscriptionDialog(int subscriptionId, QWidget *parent = 0);
+    explicit SubscriptionDialog(const QString &subscriptionId, QWidget *parent = 0);
 
 public Q_SLOTS:
     void accept();
 
 private Q_SLOTS:
     void setSubscriptionType(int type);
+    void setUpdateIntervalType(int type);
     
     void showFileDialog();
     
-    void onSubscriptionFetched(const QSqlQuery &query, int requestId);
+    void onSubscriptionFetched(DBConnection *connection);
+    void onSubscriptionUpdated(DBConnection *connection);
 
 private:
-    SelectionModel *m_subscriptionTypeModel;
+    SubscriptionSourceTypeModel *m_subscriptionTypeModel;
+    UpdateIntervalTypeModel *m_updateIntervalModel;
     
     QCheckBox *m_enclosuresCheckBox;
     
     QComboBox *m_subscriptionTypeSelector;
+    QComboBox *m_updateIntervalSelector;
     
     QDialogButtonBox *m_buttonBox;
     
-    QGridLayout *m_layout;
+    QFormLayout *m_layout;
     
     QLineEdit *m_sourceEdit;
     
     QPushButton *m_sourceButton;
-        
-    int m_requestId;
-    int m_subscriptionId;
+
+    QSpinBox *m_updateIntervalSpinBox;
+    
+    QString m_subscriptionId;
 };
     
 #endif // SUBSCRIPTIONDIALOG_H

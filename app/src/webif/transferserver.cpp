@@ -23,20 +23,25 @@
 
 static QVariantMap transferToMap(const Transfer *transfer) {
     QVariantMap map;
-    map["bytesTransferred"] = transfer->bytesTransferred();
-    map["downloadPath"] = transfer->downloadPath();
-    map["errorString"] = transfer->errorString();
-    map["fileName"] = transfer->fileName();
-    map["id"] = transfer->id();
-    map["priority"] = transfer->priority();
-    map["priorityString"] = transfer->priorityString();
-    map["progress"] = transfer->progress();
-    map["size"] = transfer->size();
-    map["status"] = transfer->status();
-    map["statusString"] = transfer->statusString();
-    map["subscriptionId"] = transfer->subscriptionId();
-    map["transferType"] = transfer->transferType();
-    map["url"] = transfer->url();
+    map["bytesTransferred"] = transfer->property("bytesTransferred");
+    map["category"] = transfer->property("category");
+    map["customCommand"] = transfer->property("customCommand");
+    map["customCommandOverrideEnabled"] = transfer->property("customCommandOverrideEnabled");
+    map["downloadPath"] = transfer->property("downloadPath");
+    map["errorString"] = transfer->property("errorString");
+    map["fileName"] = transfer->property("fileName");
+    map["id"] = transfer->property("id");
+    map["name"] = transfer->property("name");
+    map["priority"] = transfer->property("priority");
+    map["priorityString"] = transfer->property("priorityString");
+    map["progress"] = transfer->property("progress");
+    map["progressString"] = transfer->property("progressString");
+    map["size"] = transfer->property("size");
+    map["status"] = transfer->property("status");
+    map["statusString"] = transfer->property("statusString");
+    map["subscriptionId"] = transfer->property("subscriptionId");
+    map["transferType"] = transfer->property("transferType");
+    map["url"] = transfer->property("url");
     return map;
 }
 
@@ -86,13 +91,13 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
         if (request->method() == QHttpRequest::HTTP_POST) {
             const QVariantMap properties = QtJson::Json::parse(request->body()).toMap();
             const QString url = properties.value("url").toString();
-            const int subscriptionId = properties.value("subscriptionId").toInt();
+            const QString subscriptionId = properties.value("subscriptionId").toString();
             
-            if ((url.isEmpty()) || (subscriptionId == -1)) {
+            if ((url.isEmpty()) || (subscriptionId.isEmpty())) {
                 writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
             }
             else {
-                Transfers::instance()->addDownloadTransfer(url, subscriptionId);
+                Transfers::instance()->addEnclosureDownload(url, subscriptionId);
                 writeResponse(response, QHttpResponse::STATUS_CREATED);
             }
             

@@ -20,6 +20,7 @@
 #include <QObject>
 #include <QPointer>
 
+class DBConnection;
 class QDeclarativeEngine;
 
 class CuteNews : public QObject
@@ -34,12 +35,13 @@ public:
     static CuteNews* instance();
     
 public Q_SLOTS:
-    Q_SCRIPTABLE bool showArticle(int articleId);
+    Q_SCRIPTABLE bool quit();
+    Q_SCRIPTABLE bool showArticle(const QString &articleId);
     Q_SCRIPTABLE bool showWidget();
     Q_SCRIPTABLE bool showWindow();
 
 Q_SIGNALS:
-    void articleRequested(int articleId);
+    void articleRequested(const QString &articleId);
     
 private:
     CuteNews();
@@ -49,6 +51,10 @@ private:
     
     static CuteNews *self;
     
+    static const QString WIDGET_FILENAME;
+    static const QString WINDOW_FILENAME;
+    
+    DBConnection *m_connection;
     QDeclarativeEngine *m_engine;
     QPointer<QObject> m_widget;
     QPointer<QObject> m_window;    

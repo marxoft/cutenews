@@ -41,7 +41,7 @@ Dialog {
             
             width: row.width - button.width - row.spacing
             text: qsTr("Publish articles to event feed")
-            checked: settings.publishArticles
+            checked: settings.enabled
         }
         
         Button {
@@ -50,7 +50,7 @@ Dialog {
             style: DialogButtonStyle {}
             text: qsTr("Done")
             onClicked: {
-                if (checkBox.checked == settings.publishArticles) {
+                if (checkBox.checked == settings.enabled) {
                     root.accept();
                     return;
                 }
@@ -72,8 +72,8 @@ Dialog {
     Settings {
         id: settings
         
-        property bool publishArticles
+        property bool enabled
         
-        fileName: "/home/user/.config/cuteNews/EventFeed.conf"
+        fileName: "/home/user/.config/cutenews/eventfeed"
     }
 }

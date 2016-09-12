@@ -20,11 +20,12 @@
 #include <QWidget>
 #include <QUrl>
 
-class QVBoxLayout;
+class CachingNetworkAccessManager;
+class QAction;
 class QLineEdit;
 class QMenu;
-class QAction;
 class QToolBar;
+class QVBoxLayout;
 class QWebView;
 
 class Browser : public QWidget
@@ -40,7 +41,7 @@ public:
     explicit Browser(const QUrl &url, QWidget *parent = 0);
     
     QString toHtml() const;
-    void setHtml(const QString &h);
+    void setHtml(const QString &h, const QUrl &baseUrl = QUrl());
 
     QString title() const;
     
@@ -64,7 +65,9 @@ Q_SIGNALS:
     void titleChanged(const QString &title);
     void urlChanged(const QUrl &url);
     
-private:    
+private:
+    CachingNetworkAccessManager *m_nam;
+    
     QLineEdit *m_urlEdit;
     
     QToolBar *m_toolBar;
@@ -79,7 +82,7 @@ private:
     QAction *m_tabAction;
     QAction *m_browserAction;
     QAction *m_externalAction;
-
+    
     QUrl m_url;
 };
 

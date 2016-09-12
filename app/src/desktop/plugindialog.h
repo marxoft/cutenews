@@ -20,57 +20,70 @@
 #include <QDialog>
 #include <QVariantMap>
 
+class DBConnection;
+class UpdateIntervalTypeModel;
 class QCheckBox;
+class QComboBox;
 class QDialogButtonBox;
+class QFormLayout;
 class QScrollArea;
-class QSqlQuery;
-class QVBoxLayout;
+class QSpinBox;
 
 class PluginDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit PluginDialog(const QString &pluginName, QWidget *parent = 0);
-    explicit PluginDialog(int subscriptionId, QWidget *parent = 0);
+    explicit PluginDialog(const QString &pluginId, QWidget *parent = 0);
+    explicit PluginDialog(const QString &pluginId, const QString &subscriptionId, QWidget *parent = 0);
 
 public Q_SLOTS:
-    void accept();
+    virtual void accept();
+
+private Q_SLOTS:    
+    void setBooleanValue(bool value);
+    void setIntegerValue(int value);
+    void setListValue(int value);
+    void setTextValue(const QString &value);
+
+    void setUpdateIntervalType(int type);
+    
+    void onSubscriptionFetched(DBConnection *connection);
+    void onSubscriptionUpdated(DBConnection *connection);
 
 private:
-    QVariant initParam(const QString &key, const QVariant &value);
+    void loadUi();
     
-    bool loadUi();
-    
-    QWidget* loadBoolean(const QString &title, const QString &key, bool checked);
-    QWidget* loadInteger(const QString &title, const QString &key, int minimum, int maximum, int singleStep, int value);
-    QWidget* loadList(const QString &title, const QString &key, const QList< QPair<QString, QString> > &elements,
-                      const QString &value);
-    QWidget* loadText(const QString &title, const QString &key, const QString &text);
+    void addCheckBox(QFormLayout *layout, const QString &label, const QString &key, bool value);
+    void addComboBox(QFormLayout *layout, const QString &label, const QString &key, const QVariantList &options,
+                     const QVariant &value);
+    void addGroupBox(QFormLayout *layout, const QString &label, const QString &key, const QVariantList &settings);
+    void addLineEdit(QFormLayout *layout, const QString &label, const QString &key, const QString &value,
+                     bool isPassword = false);
+    void addSpinBox(QFormLayout *layout, const QString &label, const QString &key, int minimum, int maximum,
+                    int step, int value);
+    void addWidget(QFormLayout *layout, const QVariantMap &setting, const QString &group = QString());
 
-private Q_SLOTS:            
-    void onBooleanChanged(bool isChecked);
-    void onIntegerChanged(int currentValue);
-    void onListChanged(int currentIndex);
-    void onTextChanged(const QString &currentText);
+    UpdateIntervalTypeModel *m_updateIntervalModel;
     
-    void onSubscriptionFetched(const QSqlQuery &query, int requestId);
-
-private:    
     QCheckBox *m_enclosuresCheckBox;
+
+    QComboBox *m_updateIntervalSelector;
+
+    QSpinBox *m_updateIntervalSpinBox;
         
     QDialogButtonBox *m_buttonBox;
             
     QScrollArea *m_scrollArea;
+    QWidget *m_widget;
         
-    QVBoxLayout *m_layout;
+    QFormLayout *m_form;
+    QFormLayout *m_layout;
         
-    int m_requestId;
-    int m_subscriptionId;
+    QString m_pluginId;
+    QString m_subscriptionId;
     
-    QString m_pluginName;
-    
-    QVariantMap m_params;
+    QVariantMap m_settings;
 };
     
 #endif // PLUGINDIALOG_H

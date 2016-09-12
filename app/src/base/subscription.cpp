@@ -15,59 +15,27 @@
  */
 
 #include "subscription.h"
-#include "database.h"
-#include <QSqlQuery>
-#include <QSqlError>
+#include "dbconnection.h"
+#include "dbnotify.h"
+#include "json.h"
 
 Subscription::Subscription(QObject *parent) :
     QObject(parent),
-    m_id(-1),
-    m_cacheSize(0),
     m_downloadEnclosures(false),
     m_sourceType(Url),
     m_status(Idle),
     m_updateInterval(0),
-    m_unreadArticles(0)
+    m_unreadArticles(0),
+    m_autoUpdate(false)
 {
-    connect(Database::instance(), SIGNAL(articlesAdded(int, int)), this, SLOT(onArticlesAdded(int, int)));
-    connect(Database::instance(), SIGNAL(articleDeleted(int, int)), this, SLOT(onArticleDeleted(int, int)));
-    connect(Database::instance(), SIGNAL(articleRead(int, int, bool)), this, SLOT(onArticleRead(int, int, bool)));
-    connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
-            this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
-    connect(Database::instance(), SIGNAL(subscriptionRead(int, bool)), this, SLOT(onSubscriptionRead(int, bool)));
-    connect(Database::instance(), SIGNAL(subscriptionUpdated(int)), this, SLOT(onSubscriptionUpdated(int)));
 }
 
-Subscription::Subscription(const QSqlQuery &query, QObject *parent) :
-    QObject(parent),
-    m_id(Database::subscriptionId(query)),
-    m_cacheSize(Database::subscriptionCacheSize(query)),
-    m_description(Database::subscriptionDescription(query)),
-    m_downloadEnclosures(Database::subscriptionDownloadEnclosures(query)),
-    m_iconPath(Database::subscriptionIconPath(query)),
-    m_lastUpdated(Database::subscriptionLastUpdated(query)),
-    m_source(Database::subscriptionSource(query)),
-    m_sourceType(SourceType(Database::subscriptionSourceType(query))),
-    m_status(Ready),
-    m_title(Database::subscriptionTitle(query)),
-    m_updateInterval(Database::subscriptionUpdateInterval(query)),
-    m_url(Database::subscriptionUrl(query)),
-    m_unreadArticles(Database::subscriptionUnreadArticles(query))
-{
-    connect(Database::instance(), SIGNAL(articlesAdded(int, int)), this, SLOT(onArticlesAdded(int, int)));
-    connect(Database::instance(), SIGNAL(articleDeleted(int, int)), this, SLOT(onArticleDeleted(int, int)));
-    connect(Database::instance(), SIGNAL(articleRead(int, int, bool)), this, SLOT(onArticleRead(int, int, bool)));
-    connect(Database::instance(), SIGNAL(subscriptionRead(int, bool)), this, SLOT(onSubscriptionRead(int, bool)));
-    connect(Database::instance(), SIGNAL(subscriptionUpdated(int)), this, SLOT(onSubscriptionUpdated(int)));
-}
-
-Subscription::Subscription(int id, int cacheSize, const QString &description, bool downloadEnclosures,
+Subscription::Subscription(const QString &id, const QString &description, bool downloadEnclosures,
                            const QString &iconPath, const QDateTime &lastUpdated, const QVariant &source,
-                           SourceType sourceType, const QString &title, int updateInterval, const QUrl &url,
+                           SourceType sourceType, const QString &title, int updateInterval, const QString &url,
                            int unreadArticles, QObject *parent) :
     QObject(parent),
     m_id(id),
-    m_cacheSize(cacheSize),
     m_description(description),
     m_downloadEnclosures(downloadEnclosures),
     m_iconPath(iconPath),
@@ -78,35 +46,19 @@ Subscription::Subscription(int id, int cacheSize, const QString &description, bo
     m_title(title),
     m_updateInterval(updateInterval),
     m_url(url),
-    m_unreadArticles(unreadArticles)
+    m_unreadArticles(unreadArticles),
+    m_autoUpdate(false)
 {
-    connect(Database::instance(), SIGNAL(articlesAdded(int, int)), this, SLOT(onArticlesAdded(int, int)));
-    connect(Database::instance(), SIGNAL(articleDeleted(int, int)), this, SLOT(onArticleDeleted(int, int)));
-    connect(Database::instance(), SIGNAL(articleRead(int, int, bool)), this, SLOT(onArticleRead(int, int, bool)));
-    connect(Database::instance(), SIGNAL(subscriptionRead(int, bool)), this, SLOT(onSubscriptionRead(int, bool)));
-    connect(Database::instance(), SIGNAL(subscriptionUpdated(int)), this, SLOT(onSubscriptionUpdated(int)));
 }
 
-int Subscription::id() const {
+QString Subscription::id() const {
     return m_id;
 }
 
-void Subscription::setId(int i) {
+void Subscription::setId(const QString &i) {
     if (i != id()) {
         m_id = i;
         emit idChanged();
-        emit dataChanged(this);
-    }
-}
-
-int Subscription::cacheSize() const {
-    return m_cacheSize;
-}
-
-void Subscription::setCacheSize(int s) {
-    if (s != cacheSize()) {
-        m_cacheSize = s;
-        emit cacheSizeChanged();
         emit dataChanged(this);
     }
 }
@@ -230,11 +182,11 @@ void Subscription::setUpdateInterval(int i) {
     }
 }
 
-QUrl Subscription::url() const {
+QString Subscription::url() const {
     return m_url;
 }
 
-void Subscription::setUrl(const QUrl &u) {
+void Subscription::setUrl(const QString &u) {
     if (u != url()) {
         m_url = u;
         emit urlChanged();
@@ -254,75 +206,103 @@ void Subscription::setUnreadArticles(int u) {
     }
 }
 
-void Subscription::load(int id) {
+bool Subscription::autoUpdate() const {
+    return m_autoUpdate;
+}
+
+void Subscription::setAutoUpdate(bool enabled) {
+    if (enabled != autoUpdate()) {
+        m_autoUpdate = enabled;
+        emit autoUpdateChanged();
+
+        if (enabled) {
+            connect(DBNotify::instance(), SIGNAL(articlesAdded(QStringList, QString)),
+                    this, SLOT(onArticlesAdded(QStringList, QString)));
+            connect(DBNotify::instance(), SIGNAL(articlesDeleted(QStringList, QString)),
+                    this, SLOT(onArticlesDeleted(QStringList, QString)));
+            connect(DBNotify::instance(), SIGNAL(articleRead(QString, QString, bool)),
+                    this, SLOT(onArticleRead(QString, QString, bool)));
+            connect(DBNotify::instance(), SIGNAL(allArticlesRead()), this, SLOT(onAllArticlesRead()));
+            connect(DBNotify::instance(), SIGNAL(subscriptionRead(QString, bool)),
+                    this, SLOT(onSubscriptionRead(QString, bool)));
+            connect(DBNotify::instance(), SIGNAL(subscriptionUpdated(QString)),
+                    this, SLOT(onSubscriptionUpdated(QString)));
+        }
+        else {
+            disconnect(DBNotify::instance(), 0, this, 0);
+        }
+    }
+}
+
+void Subscription::load(const QString &id) {
     setId(id);
     setStatus(Active);
-    connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
-            this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
-    Database::fetchSubscription(id, id);
+    DBConnection::connection(this, SLOT(onSubscriptionFetched(DBConnection*)))->fetchSubscription(id);
 }
 
-void Subscription::onArticlesAdded(int count, int subscriptionId) {
+void Subscription::onArticlesAdded(const QStringList &articleIds, const QString &subscriptionId) {
     if (subscriptionId == id()) {
-        setUnreadArticles(unreadArticles() + count);
+        setUnreadArticles(unreadArticles() + articleIds.size());
     }
 }
 
-void Subscription::onArticleDeleted(int, int subscriptionId) {
+void Subscription::onArticlesDeleted(const QStringList &, const QString &subscriptionId) {
     if (subscriptionId == id()) {
         setStatus(Active);
-        connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
-                this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
-        Database::fetchSubscription(id(), id());
+        DBConnection::connection(this, SLOT(onSubscriptionFetched(DBConnection*)))->fetchSubscription(subscriptionId);
     }
 }
 
-void Subscription::onArticleRead(int, int subscriptionId, bool isRead) {
+void Subscription::onArticleRead(const QString &, const QString &subscriptionId, bool isRead) {
     if (subscriptionId == id()) {
         setUnreadArticles(isRead ? unreadArticles() - 1 : unreadArticles() + 1);
     }
 }
 
-void Subscription::onSubscriptionFetched(const QSqlQuery &query, int requestId) {
-    if (requestId == id()) {
-        disconnect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
-                   this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
-        
-        setCacheSize(Database::subscriptionCacheSize(query)),
-        setDescription(Database::subscriptionDescription(query));
-        setDownloadEnclosures(Database::subscriptionDownloadEnclosures(query));
-        setIconPath(Database::subscriptionIconPath(query));
-        setLastUpdated(Database::subscriptionLastUpdated(query));
-        setSource(Database::subscriptionSource(query));
-        setSourceType(SourceType(Database::subscriptionSourceType(query)));
-        setTitle(Database::subscriptionTitle(query));
-        setUpdateInterval(Database::subscriptionUpdateInterval(query));
-        setUrl(Database::subscriptionUrl(query));
-        setUnreadArticles(Database::subscriptionUnreadArticles(query));
-        setErrorString(query.lastError().text());
-        setStatus(query.lastError().isValid() ? Error : Ready);
-    }
+void Subscription::onAllArticlesRead() {
+    setUnreadArticles(0);
 }
 
-void Subscription::onSubscriptionRead(int subscriptionId, bool isRead) {
+void Subscription::onSubscriptionFetched(DBConnection *connection) {
+    if (connection->status() == DBConnection::Ready) {        
+        setDescription(connection->value(1).toString());
+        setDownloadEnclosures(connection->value(2).toBool());
+        setIconPath(connection->value(3).toString());
+        setLastUpdated(QDateTime::fromTime_t(connection->value(4).toInt()));
+        setSourceType(SourceType(connection->value(6).toInt()));
+        setSource(sourceType() == Plugin ? QtJson::Json::parse(connection->value(5).toString())
+                                         : connection->value(5).toString());
+        setTitle(connection->value(7).toString());
+        setUpdateInterval(connection->value(8).toInt());
+        setUrl(connection->value(9).toString());
+        setUnreadArticles(connection->value(10).toInt());
+        setErrorString(QString());
+        setStatus(Ready);
+    }
+    else {
+        setErrorString(connection->errorString());
+        setStatus(Error);
+    }
+    
+    connection->deleteLater();
+    emit finished(this);
+}
+
+void Subscription::onSubscriptionRead(const QString &subscriptionId, bool isRead) {
     if (subscriptionId == id()) {
         if (isRead) {
             setUnreadArticles(0);
         }
         else {
             setStatus(Active);
-            connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
-                    this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
-            Database::fetchSubscription(subscriptionId, subscriptionId);
+            DBConnection::connection(this, SLOT(onSubscriptionFetched(DBConnection*)))->fetchSubscription(subscriptionId);
         }
     }
 }
 
-void Subscription::onSubscriptionUpdated(int subscriptionId) {
+void Subscription::onSubscriptionUpdated(const QString &subscriptionId) {
     if (subscriptionId == id()) {
         setStatus(Active);
-        connect(Database::instance(), SIGNAL(subscriptionFetched(QSqlQuery, int)),
-                this, SLOT(onSubscriptionFetched(QSqlQuery, int)));
-        Database::fetchSubscription(subscriptionId, subscriptionId);
+        DBConnection::connection(this, SLOT(onSubscriptionFetched(DBConnection*)))->fetchSubscription(subscriptionId);
     }
 }

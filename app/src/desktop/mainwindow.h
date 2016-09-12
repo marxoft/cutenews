@@ -24,8 +24,9 @@
 class Article;
 class ArticleModel;
 class Browser;
-class DownloadsView;
+class DBConnection;
 class SubscriptionModel;
+class TransfersView;
 class UrlOpenerModel;
 class QLabel;
 class QMenu;
@@ -45,12 +46,12 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
+    ~MainWindow();
 
 protected:
     virtual void closeEvent(QCloseEvent *e);
 
 private Q_SLOTS:
-    void markAllSubscriptionsRead();
     void newSubscriptionRequested(QAction *action = 0);
     void importSubscriptions();
     
@@ -92,7 +93,7 @@ private Q_SLOTS:
     void closeTab(int index);
     void closeCurrentTab();
     
-    void showDownloadsTab();
+    void showTransfersTab();
 
     void showSearchDialog();
     void showSettingsDialog();
@@ -103,8 +104,13 @@ private Q_SLOTS:
     void onArticlesCountChanged(int count);
     
     void onCurrentTabChanged(int index);
+    
+    void onConnectionFinished(DBConnection *connection);
+    
+    void onOfflineModeEnabledChanged(bool enabled);
 
-private:
+private:    
+    DBConnection *m_connection;
     SubscriptionModel *m_subscriptionsModel;
     ArticleModel *m_articlesModel;
     QSortFilterProxyModel *m_articlesProxyModel;
@@ -125,6 +131,7 @@ private:
     
     QAction *m_updateAllSubscriptionsAction;
     QAction *m_cancelSubscriptionUpdatesAction;
+    QAction *m_offlineModeAction;
     QAction *m_markAllSubscriptionsReadAction;
     QAction *m_newSubscriptionAction;
     QAction *m_importSubscriptionsAction;
@@ -152,7 +159,7 @@ private:
     QAction *m_openEnclosureExternallyAction;
     QAction *m_downloadEnclosureAction;
     
-    QAction *m_downloadsAction;
+    QAction *m_transfersAction;
     QAction *m_closeTabAction;
     
     QAction *m_searchAction;
@@ -182,7 +189,7 @@ private:
     QVBoxLayout *m_tabsLayout;
     QVBoxLayout *m_articleLayout;
     
-    QPointer<DownloadsView> m_downloadsTab;
+    QPointer<TransfersView> m_transfersTab;
 };  
     
 #endif // MAINWINDOW_H

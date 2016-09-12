@@ -18,9 +18,9 @@
 #define SUBSCRIPTIONSERVER_H
 
 #include <QObject>
-#include <QHash>
-#include <QSqlQuery>
+#include <QQueue>
 
+class DBConnection;
 class QHttpRequest;
 class QHttpResponse;
 
@@ -34,11 +34,12 @@ public:
     bool handleRequest(QHttpRequest *request, QHttpResponse *response);
 
 private Q_SLOTS:
-    void onSubscriptionFetched(const QSqlQuery &query, int requestId);
-    void onSubscriptionsFetched(QSqlQuery query, int requestId);
+    void onConnectionFinished(DBConnection *connection);
+    void onSubscriptionFetched(DBConnection *connection);
+    void onSubscriptionsFetched(DBConnection *connection);
 
-private:
-    QHash<int, QHttpResponse*> m_requests;
+private:    
+    QQueue<QHttpResponse*> m_responses;
 };
 
 #endif // SUBSCRIPTIONSERVER_H

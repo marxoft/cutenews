@@ -2,8 +2,8 @@
 
 set -e
 
-CONFIG_FILE="/home/user/.config/cuteNews/EventFeed.conf"
-DATABASE_FILE="/home/user/.config/cuteNews/cuteNews.db"
+CONFIG_FILE="/home/user/.config/cutenews/eventfeed"
+DATABASE_FILE="/home/user/cutenews/cutenews.db"
 
 EVENT_FEED_SERVICE="org.hildon.eventfeed"
 EVENT_FEED_PATH="/org/hildon/eventfeed"

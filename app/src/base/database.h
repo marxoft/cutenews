@@ -17,122 +17,53 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
-#include <QObject>
-#include <QVariantMap>
+#include "definitions.h"
+#include "logger.h"
+#include <QDir>
+#include <QSqlDatabase>
+#include <QSqlError>
+#include <QSqlQuery>
 
-class QSqlQuery;
-class QDateTime;
-class QUrl;
-
-class Database : public QObject
-{
-    Q_OBJECT
+bool initDatabase() {
+    if (!DATABASE_PATH.isEmpty()) {
+        if (!QDir().mkpath(DATABASE_PATH)) {
+            Logger::log("initDatabase(). Unable to make path " + DATABASE_PATH);
+            return false;
+        }
+    }
     
-public:
-    ~Database();
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName(DATABASE_NAME);
     
-    static Database* instance();
+    if (!db.isOpen()) {
+        db.open();
+    }
     
-    static int subscriptionId(const QSqlQuery &query);
-    static int subscriptionCacheSize(const QSqlQuery &query);
-    static QString subscriptionDescription(const QSqlQuery &query);
-    static bool subscriptionDownloadEnclosures(const QSqlQuery &query);
-    static QString subscriptionIconPath(const QSqlQuery &query);
-    static QDateTime subscriptionLastUpdated(const QSqlQuery &query);
-    static QVariant subscriptionSource(const QSqlQuery &query);
-    static int subscriptionSourceType(const QSqlQuery &query);
-    static QString subscriptionTitle(const QSqlQuery &query);
-    static int subscriptionUpdateInterval(const QSqlQuery &query);
-    static QUrl subscriptionUrl(const QSqlQuery &query);
-    static int subscriptionUnreadArticles(const QSqlQuery &query);
+    QSqlQuery query = db.exec("CREATE TABLE IF NOT EXISTS subscriptions (id TEXT PRIMARY KEY NOT NULL, \
+    description TEXT, downloadEnclosures INTEGER, iconPath TEXT, lastUpdated INTEGER, source TEXT, \
+    sourceType INTEGER, title TEXT, updateInterval INTEGER, url TEXT)");
+    QSqlError error = query.lastError();
     
-    static int articleId(const QSqlQuery &query);
-    static QString articleAuthor(const QSqlQuery &query);
-    static QString articleBody(const QSqlQuery &query);
-    static QStringList articleCategories(const QSqlQuery &query);
-    static QDateTime articleDate(const QSqlQuery &query);
-    static QVariantList articleEnclosures(const QSqlQuery &query);
-    static bool articleIsFavourite(const QSqlQuery &query);
-    static bool articleIsRead(const QSqlQuery &query);
-    static int articleSubscriptionId(const QSqlQuery &query);
-    static QString articleTitle(const QSqlQuery &query);
-    static QUrl articleUrl(const QSqlQuery &query);
-        
-    Q_INVOKABLE static QString errorString();
-
-public Q_SLOTS:
-    static bool init();
+    if (error.isValid()) {
+        Logger::log("initDatabase(). Error: " +  error.text());
+        db.close();
+        return false;
+    }
     
-    static bool addSubscription(const QVariantList &properties);
-    static bool addSubscriptions(const QList<QVariantList> &subscriptions);
-    static bool deleteSubscription(int id);
-    static bool updateSubscription(int id, const QVariantMap &properties);
-    static bool markSubscriptionRead(int id, bool isRead);
+    query = db.exec("CREATE TABLE IF NOT EXISTS articles (id TEXT PRIMARY KEY NOT NULL, author TEXT, body TEXT, \
+    categories TEXT, date INTEGER, enclosures TEXT, isFavourite INTEGER, isRead INTEGER, lastRead INTEGER, \
+    subscriptionId TEXT REFERENCES subscriptions(id) ON DELETE CASCADE, title TEXT, url TEXT)");
+    error = query.lastError();
     
-    static bool fetchSubscription(int subscriptionId, int requestId);
-    static bool fetchSubscriptions(int requestId);
-    static bool fetchSubscriptions(const QString &criteria, int requestId);
+    if (error.isValid()) {
+        Logger::log("initDatabase(). Error: " +  error.text());
+        db.close();
+        return false;
+    }
     
-    static bool addArticle(const QVariantList &properties, int subscriptionId);
-    static bool addArticles(const QList<QVariantList> &articles, int subscriptionId);
-    static bool deleteArticle(int id);
-    static bool markArticleFavourite(int id, bool isFavourite);
-    static bool markArticleRead(int id, bool isRead);
-    
-    static bool fetchArticle(int articleId, int requestId);
-    static bool fetchArticles(int requestId);
-    static bool fetchArticles(const QString &criteria, int requestId);
-    
-    static bool execQuery(const QString &statement, int requestId);
-
-private Q_SLOTS:
-    void _p_addSubscription(const QVariantList &properties);
-    void _p_addSubscriptions(const QList<QVariantList> &subscriptions);
-    void _p_deleteSubscription(int id);
-    void _p_updateSubscription(int id, const QVariantMap &properties);
-    void _p_markSubscriptionRead(int id, bool isRead);
-    
-    void _p_fetchSubscription(int subscriptionId, int requestId);
-    void _p_fetchSubscriptions(int requestId);
-    void _p_fetchSubscriptions(const QString &criteria, int requestId);
-    
-    void _p_addArticle(const QVariantList &properties, int subscriptionId);
-    void _p_addArticles(const QList<QVariantList> &articles, int subscriptionId);
-    void _p_deleteArticle(int id);
-    void _p_markArticleFavourite(int id, bool isFavourite);
-    void _p_markArticleRead(int id, bool isRead);
-    
-    void _p_fetchArticle(int articleId, int requestId);
-    void _p_fetchArticles(int requestId);
-    void _p_fetchArticles(const QString &criteria, int requestId);
-    
-    void _p_execQuery(const QString &statement, int requestId);
-    
-Q_SIGNALS:
-    void subscriptionsAdded(int count);
-    void subscriptionDeleted(int id);
-    void subscriptionUpdated(int id);
-    void subscriptionRead(int id, bool isRead);
-    
-    void subscriptionFetched(const QSqlQuery &query, int requestId);
-    void subscriptionsFetched(const QSqlQuery &query, int requestId);
-    
-    void articlesAdded(int count, int subscriptionId);
-    void articleDeleted(int articleId, int subscriptionId);
-    void articleFavourited(int id, bool isFavourite);
-    void articleRead(int articleId, int subscriptionId, bool isRead);
-    
-    void articleFetched(const QSqlQuery &query, int requestId);
-    void articlesFetched(const QSqlQuery &query, int requestId);
-    
-    void queryReady(const QSqlQuery &query, int requestId);
-    
-    void error(const QString &errorString);
-
-private:
-    Database();
-    
-    static Database *self;
-};
+    Logger::log("initDatabase(). OK", Logger::LowVerbosity);
+    db.close();
+    return true;
+}
 
 #endif // DATABASE_H

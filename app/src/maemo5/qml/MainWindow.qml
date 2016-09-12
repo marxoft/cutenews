@@ -31,8 +31,8 @@ ApplicationWindow {
         }
         
         MenuItem {
-            text: qsTr("Downloads") + " (" + downloads.count + ")"
-            onTriggered: windowStack.push(Qt.resolvedUrl("DownloadsWindow.qml"))
+            text: qsTr("Downloads") + " (" + transfers.count + ")"
+            onTriggered: windowStack.push(Qt.resolvedUrl("TransfersWindow.qml"))
         }
         
         MenuItem {
@@ -129,7 +129,11 @@ ApplicationWindow {
     
     Connections {
         target: database
-        onError: informationBox.information(qsTr("Database error") + ": " + errorString)
+        onFinished: {
+            if (database.status == DBConnection.Error) {
+                informationBox.information(database.errorString);
+            }
+        }
     }
     
     Connections {

@@ -17,47 +17,34 @@
 #ifndef TRANSFER_H
 #define TRANSFER_H
 
-#include <QString>
-#include <QUrl>
-#include <QFile>
-#include <QSqlQuery>
-#include <qplatformdefs.h>
-
-#ifdef MEEGO_EDITION_HARMATTAN
-namespace TransferUI {
-    class Client;
-    class Transfer;
-}
-#endif
+#include <QObject>
+#include <QPointer>
 
 class QNetworkAccessManager;
-class QNetworkReply;
-class QProcess;
 
 class Transfer : public QObject
 {
     Q_OBJECT
     
-    Q_PROPERTY(qint64 bytesTransferred READ bytesTransferred NOTIFY progressChanged)
-    Q_PROPERTY(QString downloadPath READ downloadPath WRITE setDownloadPath NOTIFY downloadPathChanged)
+    Q_PROPERTY(qint64 bytesTransferred READ bytesTransferred NOTIFY bytesTransferredChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY statusChanged)
-    Q_PROPERTY(QString fileName READ fileName WRITE setFileName NOTIFY fileNameChanged)
     Q_PROPERTY(QString id READ id WRITE setId NOTIFY idChanged)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
     Q_PROPERTY(Priority priority READ priority WRITE setPriority NOTIFY priorityChanged)
     Q_PROPERTY(QString priorityString READ priorityString NOTIFY priorityChanged)
     Q_PROPERTY(int progress READ progress NOTIFY progressChanged)
+    Q_PROPERTY(QString progressString READ progressString NOTIFY progressChanged)
     Q_PROPERTY(qint64 size READ size WRITE setSize NOTIFY sizeChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString statusString READ statusString NOTIFY statusChanged)
-    Q_PROPERTY(int subscriptionId READ subscriptionId WRITE setSubscriptionId NOTIFY subscriptionIdChanged)
-    Q_PROPERTY(TransferType transferType READ transferType WRITE setTransferType NOTIFY transferTypeChanged)
-    Q_PROPERTY(QUrl url READ url WRITE setUrl NOTIFY urlChanged)
+    Q_PROPERTY(TransferType transferType READ transferType CONSTANT)
+    Q_PROPERTY(QString url READ url WRITE setUrl NOTIFY urlChanged)
     
     Q_ENUMS(Priority Status TransferType)
     
 public:
     enum Priority {
-        HighPriority,
+        HighPriority = 0,
         NormalPriority,
         LowPriority
     };
@@ -71,37 +58,36 @@ public:
         Connecting,
         Downloading,
         Uploading,
+        ExecutingCustomCommand,
         Unknown
     };
     
     enum TransferType {
-        Download,
+        Download = 0,
+        EnclosureDownload,
         Upload
     };
     
-    explicit Transfer(QObject *parent = 0);
-    ~Transfer();
+    explicit Transfer(TransferType transferType, QObject *parent = 0);
     
     void setNetworkAccessManager(QNetworkAccessManager *manager);
     
     qint64 bytesTransferred() const;
     
-    QString downloadPath() const;
-    void setDownloadPath(const QString &path);
-    
     QString errorString() const;
-        
-    QString fileName() const;
-    void setFileName(const QString &fn);
     
     QString id() const;
     void setId(const QString &i);
+    
+    QString name() const;
+    void setName(const QString &n);
         
     Priority priority() const;
     void setPriority(Priority p);
     QString priorityString() const;
     
     int progress() const;
+    QString progressString() const;
         
     qint64 size() const;
     void setSize(qint64 s);
@@ -109,81 +95,50 @@ public:
     Status status() const;
     QString statusString() const;
     
-    int subscriptionId() const;
-    void setSubscriptionId(int i);
-    
     TransferType transferType() const;
     void setTransferType(TransferType type);
     
-    QUrl url() const;
-    void setUrl(const QUrl &u);
-    
-    Q_INVOKABLE QByteArray readAll() const;
-    
+    QString url() const;
+    void setUrl(const QString &u);
+
 public Q_SLOTS:
-    void queue();
-    void start();
-    void pause();
-    void cancel();
-    
-private:
-    void setErrorString(const QString &es);
-    
-    void setProgress(int p);
-            
-    void setStatus(Status s);
-    
-    void getSubscriptionSource();
-            
-    void startDownload(const QUrl &u);
-    void followRedirect(const QUrl &u);
-            
-    void moveDownloadedFiles();    
-    
-private Q_SLOTS:
-    void onProcessError();
-    void onProcessFinished(int exitCode);
-        
-    void onReplyMetaDataChanged();
-    void onReplyReadyRead();
-    void onReplyFinished();
-    
-    void onSubscriptionSourceReady(QSqlQuery query, int requestId);
+    virtual void queue() = 0;
+    virtual void start() = 0;
+    virtual void pause() = 0;
+    virtual void cancel() = 0;
     
 Q_SIGNALS:
-    void downloadPathChanged();
-    void fileNameChanged();
+    void bytesTransferredChanged();
+    void finished();
     void idChanged();
+    void nameChanged();
     void priorityChanged();
     void progressChanged();
     void sizeChanged();
     void statusChanged();
-    void subscriptionIdChanged();
-    void transferTypeChanged();
     void urlChanged();
 
+protected:
+    void setBytesTransferred(qint64 b);
+    
+    void setErrorString(const QString &es);
+    
+    void setProgress(int p);
+    
+    void setStatus(Status s);
+    
+    QNetworkAccessManager* networkAccessManager();
+
 private:
-#ifdef MEEGO_EDITION_HARMATTAN
-    static TransferUI::Client *tuiClient;
-    TransferUI::Transfer *m_tuiTransfer;
-#endif
-        
-    QNetworkAccessManager *m_nam;
-    QNetworkReply *m_reply;
-    QProcess *m_process;
-        
-    QFile m_file;
+    QPointer<QNetworkAccessManager> m_nam;
     
     bool m_ownNetworkAccessManager;
-    bool m_canceled;
         
-    QString m_downloadPath;
-    
     QString m_errorString;
         
-    QString m_fileName;
-    
     QString m_id;
+    
+    QString m_name;
     
     Priority m_priority;
     
@@ -191,21 +146,12 @@ private:
         
     qint64 m_size;
     qint64 m_bytesTransferred;
-    
-    int m_redirects;
-    
+        
     Status m_status;
-    
-    int m_subscriptionId;
     
     TransferType m_transferType;
     
-    QUrl m_url;
-    
-    int m_requestId;
-#ifdef SYMBIAN_OS
-    QByteArray m_buffer;
-#endif
+    QString m_url;
 };
-    
+
 #endif // TRANSFER_H

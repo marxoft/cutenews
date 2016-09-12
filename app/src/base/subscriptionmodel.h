@@ -18,8 +18,8 @@
 #define SUBSCRIPTIONMODEL_H
 
 #include <QAbstractListModel>
-#include <QSqlQuery>
 
+class DBConnection;
 class Subscription;
 
 class SubscriptionModel : public QAbstractListModel
@@ -35,7 +35,6 @@ class SubscriptionModel : public QAbstractListModel
 public:
     enum Roles {
         IdRole = Qt::UserRole + 1,
-        CacheSizeRole,
         DescriptionRole,
         DownloadEnclosuresRole,
         IconPathRole,
@@ -87,22 +86,21 @@ public Q_SLOTS:
     void clear();
     void load();
 
-private:
-    void setErrorString(const QString &e);
-    
-    void setStatus(Status s);
-
 private Q_SLOTS:
     void onSubscriptionChanged(Subscription *subscription);
-    void onSubscriptionsAdded(int count);
-    void onSubscriptionDeleted(int id);
-    void onSubscriptionsFetched(QSqlQuery query, int requestId);
+    void onSubscriptionsAdded(const QStringList &ids);
+    void onSubscriptionDeleted(const QString &id);
+    void onSubscriptionsFetched(DBConnection *connection);
 
 Q_SIGNALS:
     void countChanged(int count);
     void statusChanged(SubscriptionModel::Status status);
     
 private:
+    void setErrorString(const QString &e);
+    
+    void setStatus(Status s);
+    
     QList<Subscription*> m_list;
     
     QHash<int, QByteArray> m_roles;

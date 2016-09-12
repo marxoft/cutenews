@@ -21,11 +21,11 @@ import cuteNews 1.0
 Dialog {
     id: root
     
-    property int subscriptionId: -1
-    property string pluginName
+    property string subscriptionId
+    property string pluginId
         
     title: qsTr("Subscription properties")
-    height: Math.min(360, container.height + platformStyle.paddingMedium)
+    height: 360
     
     Flickable {
         id: flickable
@@ -46,9 +46,9 @@ Dialog {
             anchors {
                 left: parent.left
                 right: parent.right
-                bottom: parent.bottom
+                top: parent.top
             }
-            height: column.height + enclosuresCheckBox.height + platformStyle.paddingMedium
+            height: column.height + flow.height + platformStyle.paddingMedium * 6
             
             Column {
                 id: column
@@ -56,7 +56,8 @@ Dialog {
                 anchors {
                     left: parent.left
                     right: parent.right
-                    top: parent.top
+                    bottom: flow.top
+                    bottomMargin: platformStyle.paddingMedium
                 }
                 spacing: platformStyle.paddingMedium
                 
@@ -64,21 +65,76 @@ Dialog {
                     id: repeater
                 
                     Loader {
-                        width: column.width
-                        height: item ? item.height : 0
+                        function initSourceComponent() {
+                            switch (modelData.type) {
+                            case "boolean":
+                                sourceComponent = checkBox;
+                                break;
+                            case "group":
+                                sourceComponent = group;
+                                break;
+                            case "integer":
+                                sourceComponent = integerField;
+                                break;
+                            case "list":
+                                sourceComponent = valueSelector;
+                                break;
+                            case "password":
+                                sourceComponent = passwordField;
+                                break;
+                            case "text":
+                                sourceComponent = textField;
+                                break;
+                            default:
+                                break;
+                            }
+                            
+                            if (item) {
+                                item.init(modelData);
+                            }
+                        }
+                        
+                        Component.onCompleted: initSourceComponent()
                     }
                 }
             }
             
-            CheckBox {
-                id: enclosuresCheckBox
-        
+            Flow {
+                id: flow
+                
                 anchors {
                     left: parent.left
                     right: parent.right
                     bottom: parent.bottom
                 }
-                text: qsTr("Download enclosures automatically")
+                spacing: platformStyle.paddingMedium
+                
+                Label {
+                    width: parent.width
+                    text: qsTr("Update interval (0 to disable)")
+                }
+                
+                SpinBox {
+                    id: updateIntervalSpinBox
+                    
+                    width: parent.width - updateIntervalSelector.width - parent.spacing
+                }
+                
+                ComboBox {
+                    id: updateIntervalSelector
+                    
+                    model: UpdateIntervalTypeModel {
+                        id: updateIntervalModel
+                    }
+                    textRole: "name"
+                }
+                
+                CheckBox {
+                    id: enclosuresCheckBox
+                    
+                    width: parent.width
+                    text: qsTr("Download enclosures automatically")
+                }
             }
         }
     }
@@ -96,105 +152,210 @@ Dialog {
     }
     
     Component {
-        id: booleanComponent
+        id: checkBox
         
         CheckBox {
-            id: checkBox
-            
-            property alias title: checkBox.text
             property string key
-            property alias value: checkBox.checked
-            
-            onClicked: internal.setParam(key, value)
+
+            function init(modelData, group) {
+                key = (group ? group + "/" : "") + modelData.key;
+                text = modelData.label;
+                checked = internal.getValue(key, modelData.value) === true;
+            }
+
+            width: column.width
+            visible: !inputContext.visible
+            onCheckedChanged: internal.setValue(key, checked)
         }
     }
     
     Component {
-        id: integerComponent
+        id: group
         
-        Item {
-            property alias title: label.text
-            property string key
-            property alias min: spinbox.minimum
-            property alias max: spinbox.maximum
-            property alias step: spinbox.singleStep
-            property alias value: spinbox.value
-            
-            width: parent.width
-            height: label.height + spinbox.height + platformStyle.paddingMedium
+        Column {            
+            function init(modelData) {
+                label.text = modelData.label;
+                repeater.key = modelData.key;
+                repeater.model = modelData.settings;
+            }
+
+            width: column.width
+            spacing: platformStyle.paddingLarge
             
             Label {
                 id: label
+
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                color: platformStyle.secondaryTextColor
+            }
+            
+            Repeater {
+                id: repeater
+
+                property string key
                 
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    top: parent.top
+                Loader {
+                    function initSourceComponent() {
+                        switch (modelData.type) {
+                        case "boolean":
+                            sourceComponent = checkBox;
+                            break;
+                        case "integer":
+                            sourceComponent = integerField;
+                            break;
+                        case "list":
+                            sourceComponent = valueSelector;
+                            break;
+                        case "password":
+                            sourceComponent = passwordField;
+                            break;
+                        case "text":
+                            sourceComponent = textField;
+                            break;
+                        default:
+                            break;
+                        }
+
+                        if (item) {
+                            item.init(modelData, repeater.key);
+                        }
+                    }
+
+                    Component.onCompleted: initSourceComponent()
                 }
+            }
+        }
+    }
+    
+    Component {
+        id: integerField
+        
+        Column {
+            function init(modelData, group) {
+                label.text = modelData.label;
+                field.key = (group ? group + "/" : "") + modelData.key;
+                
+                if (modelData.minimum) {
+                    field.minimum = modelData.minimum;
+                }
+                
+                if (modelData.maximum) {
+                    field.maximum = modelData.maximum;
+                }
+                
+                if (modelData.step) {
+                    field.singleStep = modelData.step;
+                }
+                
+                field.value = internal.getValue(field.key, modelData.value) || 0;
+            }
+
+            width: column.width
+            spacing: platformStyle.paddingMedium
+            
+            Label {
+                id: label
+
+                width: parent.width
                 elide: Text.ElideRight
-                text: parent.title
             }
             
             SpinBox {
-                id: spinbox
-                
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    bottom: parent.bottom
-                }
-                onValueChanged: internal.setParam(key, value)
+                id: field
+
+                property string key
+
+                width: parent.width
+                onValueChanged: internal.setValue(key, value)
             }
         }
     }
     
     Component {
-        id: listSelectorComponent
+        id: passwordField
         
-        ListSelectorButton {
-            id: listSelector
-            
-            property alias title: listSelector.text
-            property string key
-            
-            model: SelectionModel {}
-            onSelected: internal.setParam(key, value)
-        }
-    }
-    
-    Component {
-        id: textComponent
-        
-        Item {
-            property alias title: label.text
-            property string key
-            property alias value: textField.text
-            
-            width: parent.width
-            height: label.height + textField.height + platformStyle.paddingMedium
+        Column {
+            function init(modelData, group) {
+                label.text = modelData.label;
+                field.key = (group ? group + "/" : "") + modelData.key;
+                field.text = internal.getValue(field.key, modelData.value) || "";
+            }
+
+            width: column.width
+            spacing: platformStyle.paddingMedium
             
             Label {
                 id: label
-                
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    top: parent.top
-                }
+
+                width: parent.width
                 elide: Text.ElideRight
-                text: parent.title
             }
             
             TextField {
-                id: textField
-                
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    bottom: parent.bottom
-                }
-                onTextChanged: internal.setParam(key, value)
+                id: field
+
+                property string key
+
+                width: parent.width
+                echoMode: TextInput.Password
+                onTextChanged: internal.setValue(key, text)
             }
+        }
+    }
+    
+    Component {
+        id: textField
+        
+        Column {
+            function init(modelData, group) {
+                label.text = modelData.label;
+                field.key = (group ? group + "/" : "") + modelData.key;
+                field.text = internal.getValue(field.key, modelData.value) || "";
+            }
+
+            width: column.width
+            spacing: platformStyle.paddingMedium
+            
+            Label {
+                id: label
+
+                width: parent.width
+                elide: Text.ElideRight
+            }
+            
+            TextField {
+                id: field
+
+                property string key
+
+                width: parent.width
+                onTextChanged: internal.setValue(key, text)
+            }
+        }
+    }
+    
+    Component {
+        id: valueSelector
+        
+        ListSelectorButton {
+            property string key
+
+            function init(modelData, group) {
+                key = (group ? group + "/" : "") + modelData.key
+                text = modelData.label;
+
+                for (var i = 0; i < modelData.options.length; i++) {
+                    var option = modelData.options[i];
+                    model.append(option.label, option.value);
+                }
+
+                value = internal.getValue(key, modelData.value) || model.data(0, "value");
+            }
+
+            width: column.width
+            model: SelectionModel {}
+            onSelected: internal.setValue(key, value)
         }
     }
     
@@ -203,16 +364,23 @@ Dialog {
         
         onStatusChanged: {
             if (status == Subscription.Ready) {
-                pluginName = source.pluginName;
-                enclosuresCheckBox.checked = downloadEnclosures
-            
-                if (source.params) {
-                    internal.params = source.params;                
+                pluginId = source.pluginId;
+                enclosuresCheckBox.checked = downloadEnclosures;
+                
+                if (updateInterval > 0) {
+                    for (var i = updateIntervalModel.count - 1; i >= 0; i--) {
+                        var value = updateIntervalModel.data(i, "value");
+                        
+                        if ((value > 0) && (updateInterval % value == 0)) {
+                            updateIntervalSpinBox.value = updateInterval / value;
+                            updateIntervalSelector.currentIndex = i;
+                            break;
+                        }
+                    }
                 }
-            
-                if (plugins.hasParams(pluginName)) {
-                    internal.loadParams(plugins.filePath(pluginName));
-                }
+                
+                internal.settings = source.settings;
+                repeater.model = plugins.getConfig(pluginId).settings;
             }
         }
     }
@@ -220,123 +388,55 @@ Dialog {
     QtObject {
         id: internal
         
-        property variant params
+        property variant settings
         
-        function getParam(key, defaultValue) {
-            if ((params) && (params.hasOwnProperty(key))) {
-                return params[key];
+        function getValue(key, defaultValue) {
+            if ((settings) && (settings.hasOwnProperty(key))) {
+                return settings[key];
             }
             
             return defaultValue;
         }
         
-        function setParam(key, value) {
-            var p = params ? params : {};
+        function setValue(key, value) {
+            var p = settings ? settings : {};
             p[key] = value;
-            params = p;
+            settings = p;
         }
                 
         function stringifySource() {
             var s = {};
-            s["pluginName"] = pluginName;
-            s["params"] = params;
+            s["pluginId"] = pluginId;
+            s["settings"] = settings;
             return JSON.stringify(s);
-        }
-        
-        function loadParams(fileName) {
-            var request = new XMLHttpRequest();
-            request.onreadystatechange = function() {
-                if (request.readyState === XMLHttpRequest.DONE) {
-                    var paramsNode = request.responseXML.documentElement.childNodes[1];
-                    var count = paramsNode.childNodes.length;
-                    
-                    if (count == 0) {
-                        return;
-                    }
-                    
-                    repeater.model = count - 1;
-                                        
-                    for (var i = 0; i < count; i++) {
-                        var node = paramsNode.childNodes[i];
-                        var loader = repeater.itemAt(i);
-                    
-                        if (node.nodeName === "boolean") {
-                            loader.sourceComponent = booleanComponent;
-                            loader.item.title = findAttribute(node, "title");
-                            loader.item.key = findAttribute(node, "name");
-                            loader.item.value = getParam(loader.item.key, findAttribute(node, "default") == "true");
-                        }
-                        else if (node.nodeName === "integer") {
-                            loader.sourceComponent = integerComponent;
-                            loader.item.title = findAttribute(node, "title");
-                            loader.item.key = findAttribute(node, "name");
-                            loader.item.min = findAttribute(node, "min", 0);
-                            loader.item.max = findAttribute(node, "max", 100);
-                            loader.item.step = findAttribute(node, "step", 1);
-                            loader.item.value = getParam(loader.item.key, findAttribute(node, "default", 0));
-                        }
-                        else if (node.nodeName === "list") {
-                            loader.sourceComponent = listSelectorComponent;
-                            loader.item.title = findAttribute(node, "title");
-                            loader.item.key = findAttribute(node, "name");
-                        
-                            for (var j = 0; j < node.childNodes.length; j++) {
-                                var listNode = node.childNodes[j];
-
-                                if (listNode.nodeName === "element") {
-                                    loader.item.model.append(findAttribute(listNode, "name"),
-                                                             findAttribute(listNode, "value"));
-                                }
-                            }
-                        
-                            loader.item.value = getParam(loader.item.key, findAttribute(node, "default"));
-                        }
-                        else if (node.nodeName === "text") {
-                            loader.sourceComponent = textComponent;
-                            loader.item.title = findAttribute(node, "title");
-                            loader.item.key = findAttribute(node, "name");
-                            loader.item.value = getParam(loader.item.key, findAttribute(node, "default"));
-                        }
-                    }
-                }
-            }
-
-            request.open("GET", fileName);
-            request.send();
-        }
-
-        function findAttribute(node, name, defaultValue) {
-            for (var i = 0; i < node.attributes.length; i++) {
-                var att = node.attributes[i];
-
-                if (att.name === name) {
-                    return att.value;
-                }
-            }
-
-            return defaultValue == undefined ? "" : defaultValue;
         }
     }
     
     onStatusChanged: {
-        if (status == DialogStatus.Open) {
-            internal.params = null;
+        if (status == DialogStatus.Opening) {
+            internal.settings = null;
             
-            if (subscriptionId > 0) {
+            if (subscriptionId) {
                 subscription.load(subscriptionId);
             }
-            else if ((pluginName) && (plugins.hasParams(pluginName))) {
-                internal.loadParams(plugins.filePath(pluginName));
+            else if (pluginId) {
+                repeater.model = plugins.getConfig(pluginId).settings;
             }
         }
     }
     onAccepted: {
-        if (subscriptionId > 0) {
+        var interval = updateIntervalSpinBox.value;
+        
+        if (interval > 0) {
+            interval *= updateIntervalModel.data(updateIntervalSelector.currentIndex, "value");
+        }
+        
+        if (subscriptionId) {
             database.updateSubscription(subscriptionId, {source: internal.stringifySource(),
-                                        downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0});
+                downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0, updateInterval: interval});
         }
         else {
-            subscriptions.create(internal.stringifySource(), Subscription.Plugin, enclosuresCheckBox.checked);
+            subscriptions.create(internal.stringifySource(), Subscription.Plugin, enclosuresCheckBox.checked, interval);
         }        
     }
 }

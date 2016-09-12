@@ -18,9 +18,9 @@
 #define ARTICLESERVER_H
 
 #include <QObject>
-#include <QHash>
-#include <QSqlQuery>
+#include <QQueue>
 
+class DBConnection;
 class QHttpRequest;
 class QHttpResponse;
 
@@ -34,11 +34,12 @@ public:
     bool handleRequest(QHttpRequest *request, QHttpResponse *response);
 
 private Q_SLOTS:
-    void onArticleFetched(const QSqlQuery &query, int requestId);
-    void onArticlesFetched(QSqlQuery query, int requestId);
+    void onArticleFetched(DBConnection *connection);
+    void onArticlesFetched(DBConnection *connection);
+    void onConnectionFinished(DBConnection *connection);
 
-private:
-    QHash<int, QHttpResponse*> m_requests;
+private:    
+    QQueue<QHttpResponse*> m_responses;
 };
 
 #endif // ARTICLESERVER_H

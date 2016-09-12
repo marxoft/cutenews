@@ -15,26 +15,23 @@
  */
 
 #include "utils.h"
-#include <QRegExp>
 #include <QDir>
+#include <QFile>
+#include <QRegExp>
 #include <QDateTime>
+#include <QUuid>
 #if QT_VERSION >= 0x050000
 #include <QUrlQuery>
 #endif
-
-static bool RAND_SEEDED = false;
 
 Utils::Utils(QObject *parent) :
     QObject(parent)
 {
 }
 
-int Utils::createId() {
-    if (!RAND_SEEDED) {
-        qsrand(QDateTime::currentMSecsSinceEpoch());
-    }
-    
-    return qrand();
+QString Utils::createId() {
+    const QString uuid = QUuid::createUuid().toString();
+    return uuid.mid(1, uuid.size() - 2);
 }
 
 QString Utils::formatBytes(qint64 bytes) {
@@ -92,8 +89,41 @@ QString Utils::formatSecs(qint64 s) {
     return s > 0 ? QString("%1:%2").arg(s / 60, 2, 10, QChar('0')).arg(s % 60, 2, 10, QChar('0')) : QString("--:--");
 }
 
+QString Utils::getSanitizedFileName(const QString &fileName) {
+    return QString(fileName).replace(QRegExp("[\\/\\\\\\|]"), "_");
+}
+
 bool Utils::isLocalFile(const QUrl &url) {
     return (url.scheme() == "file") || (url.toString().startsWith("/"));
+}
+
+bool Utils::removeDirectory(const QString &directory) {
+#if QT_VERSION >= 0x050000
+    return QDir(directory).removeRecursively();
+#else
+    QDir dir(directory);
+    bool ok = false;
+
+    if (dir.exists()) {
+        foreach (const QFileInfo &info, dir.entryInfoList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden
+                                                          | QDir::AllDirs | QDir::Files, QDir::DirsFirst)) {
+            if (info.isDir()) {
+                ok = removeDirectory(info.absoluteFilePath());
+            }
+            else {
+                ok = QFile::remove(info.absoluteFilePath());
+            }
+
+            if (!ok) {
+                return ok;
+            }
+        }
+
+        ok = dir.rmdir(directory);
+    }
+
+    return ok;
+#endif
 }
 
 QString Utils::toRichText(QString s) {
@@ -160,7 +190,7 @@ QString Utils::urlQueryToSqlQuery(const QUrl &url) {
     QVariantMap map = urlQueryItemMap(url);
     int limit = 0;
     int offset = 0;
-    QString orderBy("id");
+    QString orderBy(url.path().section("/", -1) + ".rowid");
     QString order("ASC");
     QString queryString;
     QString sqlQuery;

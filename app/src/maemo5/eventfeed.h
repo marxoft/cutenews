@@ -18,10 +18,11 @@
 #define EVENTFEED_H
 
 #include <QObject>
-#include <QList>
-#include <QSqlQuery>
+#include <QDBusPendingCallWatcher>
+#include <QStringList>
 #include <QVariantMap>
 
+class DBConnection;
 class QDBusPendingCallWatcher;
 
 class EventFeed : public QObject
@@ -34,18 +35,26 @@ public:
     static EventFeed* instance();    
     
 private Q_SLOTS:    
-    void postArticlesToFeed(QSqlQuery query, int requestId);
+    void postArticlesToFeed(DBConnection *connection);
     void postNextArticle();
     void onArticlePosted(QDBusPendingCallWatcher *watcher);
     
-    void onArticlesAdded(int count, int subscriptionId);
+    void onArticlesAdded(const QStringList &articleIds, const QString &subscriptionId);
         
-    void onSubscriptionDeleted(int subscriptionId);
+    void onSubscriptionDeleted(const QString &subscriptionId);
     
 private:
     EventFeed();
     
+    static QDBusPendingCall addItemToEventFeed(const QVariantMap &item);
+    static QDBusPendingCall removeItemsFromEventFeed(const QString &subscriptionId);
+    
     static EventFeed *self;
+    
+    static const QString EVENT_FEED_SERVICE;
+    static const QString EVENT_FEED_PATH;
+    static const QString EVENT_FEED_INTERFACE;
+    static const QString EVENT_ACTION;
     
     QList<QVariantMap> m_items;
 };

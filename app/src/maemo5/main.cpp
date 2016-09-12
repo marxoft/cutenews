@@ -16,10 +16,13 @@
 
 #include "cutenews.h"
 #include "database.h"
+#include "dbconnection.h"
+#include "dbnotify.h"
 #include "definitions.h"
 #include "eventfeed.h"
+#include "logger.h"
+#include "pluginmanager.h"
 #include "settings.h"
-#include "subscriptionplugins.h"
 #include "subscriptions.h"
 #include "transfers.h"
 #include <QThread>
@@ -32,32 +35,42 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     app.setOrganizationName("cuteNews");
     app.setApplicationName("cuteNews");
     app.setApplicationVersion(VERSION_NUMBER);
+    app.setQuitOnLastWindowClosed(false);
+    
+    const QStringList args = app.arguments();
+    const int verbosity = args.indexOf("-v") + 1;
+    
+    if ((verbosity > 1) && (verbosity < args.size())) {
+        Logger::setVerbosity(qMax(1, args.at(verbosity).toInt()));
+    }
+    else {
+        Logger::setFileName(Settings::loggerFileName());
+        Logger::setVerbosity(Settings::loggerVerbosity());
+    }
     
     QSslConfiguration config = QSslConfiguration::defaultConfiguration();
     config.setProtocol(QSsl::TlsV1);
     QSslConfiguration::setDefaultConfiguration(config);
     
+    initDatabase();
+    
     QScopedPointer<CuteNews> cutenews(CuteNews::instance());
-    QScopedPointer<Database> database(Database::instance());
-    QScopedPointer<EventFeed> eventfeed(EventFeed::instance());
+    QScopedPointer<DBNotify> notify(DBNotify::instance());
+    QScopedPointer<EventFeed> feed(EventFeed::instance());
+    QScopedPointer<PluginManager> plugins(PluginManager::instance());
     QScopedPointer<Settings> settings(Settings::instance());
     QScopedPointer<Subscriptions> subscriptions(Subscriptions::instance());
-    QScopedPointer<Transfers> transfers(Transfers::instance());    
-    
-    Database::init();
-    Settings::setNetworkProxy();
-    SubscriptionPlugins::load();
-    Transfers::instance()->load();
+    QScopedPointer<Transfers> transfers(Transfers::instance());
     
     QThread thread;
-    Database::instance()->moveToThread(&thread);
     thread.start();
+    DBConnection::setAsynchronousThread(&thread);
     
-    QObject::connect(&app, SIGNAL(aboutToQuit()), &thread, SLOT(quit()));
-    QObject::connect(&app, SIGNAL(aboutToQuit()), Transfers::instance(), SLOT(save()));
-    
-    const QStringList args = app.arguments();
-    
+    Settings::setNetworkProxy();
+    subscriptions.data()->setOfflineModeEnabled(Settings::offlineModeEnabled());
+    plugins.data()->load();
+    transfers.data()->load();
+        
     if (args.contains("--window")) {
         cutenews.data()->showWindow();
     }
@@ -65,6 +78,16 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     if (args.contains("--widget")) {
         cutenews.data()->showWidget();
     }
+    
+    if ((Settings::updateSubscriptionsOnStartup()) && (!Settings::offlineModeEnabled())) {
+        subscriptions.data()->updateAll();
+    }
+
+    QObject::connect(settings.data(), SIGNAL(offlineModeEnabledChanged(bool)),
+                     subscriptions.data(), SLOT(setOfflineModeEnabled(bool)));
+    QObject::connect(settings.data(), SIGNAL(maximumConcurrentTransfersChanged(int)),
+                     transfers.data(), SLOT(setMaximumConcurrentTransfers(int)));
+    QObject::connect(&app, SIGNAL(lastWindowClosed()), cutenews.data(), SLOT(quit()));    
     
     return app.exec();
 }

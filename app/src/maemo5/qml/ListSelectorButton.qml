@@ -28,7 +28,7 @@ ValueButton {
     signal selected
     
     function _updateValueText() {
-        if (model) {
+        if ((model) && (model.count)) {
             valueText = model.data(Math.max(0, model.match(0, "value", value)), "name");
         }
     }

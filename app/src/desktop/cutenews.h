@@ -25,22 +25,22 @@ class MainWindow;
 class CuteNews : public QObject
 {
     Q_OBJECT
-    
+#ifdef DBUS_INTERFACE
     Q_CLASSINFO("D-Bus Interface", "org.marxoft.cutenews")
-    
+#endif
 public:
     ~CuteNews();
 
     static CuteNews* instance();
     
 public Q_SLOTS:
-    bool quit();
+    Q_SCRIPTABLE bool quit();
     
-    Q_SCRIPTABLE bool showArticle(int articleId);
+    Q_SCRIPTABLE bool showArticle(const QString &id);
     Q_SCRIPTABLE bool showWindow();
 
 Q_SIGNALS:
-    void articleRequested(int articleId);
+    void articleRequested(const QString &id);
 
 private:
     CuteNews();

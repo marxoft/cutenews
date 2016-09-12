@@ -18,9 +18,9 @@
 #define ARTICLEMODEL_H
 
 #include <QAbstractListModel>
-#include <QSqlQuery>
 
 class Article;
+class DBConnection;
 
 class ArticleModel : public QAbstractListModel
 {
@@ -96,31 +96,30 @@ public:
 
 public Q_SLOTS:
     void clear();
-    void load(int subscriptionId);
+    void load(const QString &subscriptionId);
     void search(const QString &query);
-    void reload();
-
-private:
-    void setErrorString(const QString &e);
-    
-    void setStatus(Status s);
-    
-    void fetchArticles(const QString &query = QString());
+    void reload();    
 
 private Q_SLOTS:
     void onArticleChanged(Article *article);
-    void onArticlesAdded(int count, int subscriptionId);
-    void onArticleDeleted(int articleId, int subscriptionId);
-    void onArticleFavourited(int articleId, bool isFavourite);
-    void onArticlesFetched(QSqlQuery query, int requestId);
-    void onSubscriptionDeleted(int id);
+    void onArticlesAdded(const QStringList &articleIds, const QString &subscriptionId);
+    void onArticlesDeleted(const QStringList &articleIds, const QString &subscriptionId);
+    void onArticleFavourited(const QString &articleId, bool isFavourite);
+    void onArticlesFetched(DBConnection *connection);
+    void onSubscriptionDeleted(const QString &id);
 
 Q_SIGNALS:
     void countChanged(int count);
     void limitChanged(int limit);
     void statusChanged(ArticleModel::Status status);
     
-private:    
+private:
+    void setErrorString(const QString &e);
+    
+    void setStatus(Status s);
+    
+    void fetchArticles(const QString &query = QString());
+    
     QList<Article*> m_list;
     
     QHash<int, QByteArray> m_roles;
@@ -134,7 +133,7 @@ private:
     
     Status m_status;
     
-    int m_subscriptionId;
+    QString m_subscriptionId;
     
     QString m_query;
 };

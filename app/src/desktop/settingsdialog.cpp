@@ -48,6 +48,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     m_webInterfaceUsernameEdit(0),
     m_webInterfacePasswordEdit(0),
     m_downloadPathButton(0),
+    m_expirySpinBox(0),
     m_downloadsSpinBox(0),
     m_proxyPortSpinBox(0),
     m_webInterfacePortSpinBox(0),
@@ -78,8 +79,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
 }
 
 void SettingsDialog::accept() {
-    if (m_generalTab) {
-        Settings::instance()->setNetworkProxy();
+    if (m_networkTab) {
+        Settings::setNetworkProxy();
     }
     
     QDialog::accept();
@@ -92,16 +93,22 @@ void SettingsDialog::showGeneralTab() {
         m_downloadsCheckBox->setChecked(Settings::startTransfersAutomatically());
         m_downloadPathEdit = new QLineEdit(Settings::downloadPath(), m_generalTab);
         m_downloadPathButton = new QPushButton(QIcon::fromTheme("document-open"), tr("Browse"), m_generalTab);
+        m_expirySpinBox = new QSpinBox(m_generalTab);
+        m_expirySpinBox->setSuffix(tr(" day(s)"));
+        m_expirySpinBox->setRange(-1, 90);
+        m_expirySpinBox->setValue(Settings::readArticleExpiry());
         m_downloadsSpinBox = new QSpinBox(m_generalTab);
         m_downloadsSpinBox->setRange(1, MAX_CONCURRENT_TRANSFERS);
         m_downloadsSpinBox->setValue(Settings::maximumConcurrentTransfers());
         
         QFormLayout *form = new QFormLayout(m_generalTab);
+        form->addRow(tr("&Delete read articles older than (-1 to disable):"), m_expirySpinBox);
         form->addRow(tr("Download &path:"), m_downloadPathEdit);
         form->addWidget(m_downloadPathButton);
         form->addRow(tr("&Maximum concurrent downloads:"), m_downloadsSpinBox);
-        form->addWidget(m_downloadsCheckBox);
-        
+        form->addRow(m_downloadsCheckBox);
+
+        connect(m_expirySpinBox, SIGNAL(valueChanged(int)), Settings::instance(), SLOT(setReadArticleExpiry(int)));
         connect(m_downloadsCheckBox, SIGNAL(toggled(bool)),
                 Settings::instance(), SLOT(setStartTransfersAutomatically(bool)));
         connect(m_downloadPathEdit, SIGNAL(textChanged(QString)), Settings::instance(), SLOT(setDownloadPath(QString)));
@@ -176,7 +183,7 @@ void SettingsDialog::showInterfacesTab() {
         
         QFormLayout *form = new QFormLayout(m_webInterfaceGroupBox);
         form->addRow(tr("&Port:"), m_webInterfacePortSpinBox);
-        form->addWidget(m_webInterfaceAuthenticationCheckBox);
+        form->addRow(m_webInterfaceAuthenticationCheckBox);
         form->addRow(tr("&Username:"), m_webInterfaceUsernameEdit);
         form->addRow(tr("&Password:"), m_webInterfacePasswordEdit);
         

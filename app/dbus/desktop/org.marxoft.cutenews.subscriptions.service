@@ -1,3 +1,3 @@
 [D-BUS Service]
 Name=org.marxoft.cutenews.subscriptions
-Exec=/opt/cutenews/bin/cutenews
+Exec=/usr/bin/cutenews

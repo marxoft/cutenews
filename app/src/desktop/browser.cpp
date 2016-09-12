@@ -15,6 +15,7 @@
  */
 
 #include "browser.h"
+#include "cachingnetworkaccessmanager.h"
 #include <QApplication>
 #include <QClipboard>
 #include <QLineEdit>
@@ -27,11 +28,12 @@
 #include <QMenu>
 #include <QAction>
 
-static const QByteArray CSS =
-QByteArray("data:text/css;charset=utf-8;base64,") + QByteArray("img { max-width: 100%; } iframe { max-width: 100%; }").toBase64();
+static const QByteArray CSS = QByteArray("data:text/css;charset=utf-8;base64,")
+                              + QByteArray("img { max-width: 100%; } iframe { max-width: 100%; }").toBase64();
 
 Browser::Browser(QWidget *parent) :
     QWidget(parent),
+    m_nam(new CachingNetworkAccessManager(this)),
     m_urlEdit(new QLineEdit(this)),
     m_toolBar(new QToolBar(this)),
     m_layout(new QVBoxLayout(this)),
@@ -41,7 +43,7 @@ Browser::Browser(QWidget *parent) :
     m_tabAction(new QAction(tr("Open in tab"), this)),
     m_browserAction(new QAction(tr("Open in browser"), this)),
     m_externalAction(new QAction(tr("Open externally"), this))
-{    
+{
     m_toolBar->addAction(m_webView->pageAction(QWebPage::Back));
     m_toolBar->addAction(m_webView->pageAction(QWebPage::Forward));
     m_toolBar->addWidget(m_urlEdit);
@@ -51,6 +53,7 @@ Browser::Browser(QWidget *parent) :
     
     m_webView->setStyleSheet("background: #fff");
     m_webView->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_webView->page()->setNetworkAccessManager(m_nam);
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
     m_webView->settings()->setUserStyleSheetUrl(QUrl::fromEncoded(CSS));
 
@@ -78,6 +81,7 @@ Browser::Browser(QWidget *parent) :
 
 Browser::Browser(const QUrl &url, QWidget *parent) :
     QWidget(parent),
+    m_nam(new CachingNetworkAccessManager(this)),
     m_urlEdit(new QLineEdit(this)),
     m_toolBar(new QToolBar(this)),
     m_layout(new QVBoxLayout(this)),
@@ -95,6 +99,7 @@ Browser::Browser(const QUrl &url, QWidget *parent) :
     m_toolBar->setMovable(false);
 
     m_webView->setContextMenuPolicy(Qt::CustomContextMenu);
+    m_webView->page()->setNetworkAccessManager(m_nam);
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
 
     m_menu->addAction(m_webView->pageAction(QWebPage::Reload));
@@ -125,8 +130,8 @@ QString Browser::toHtml() const {
     return m_webView->page()->mainFrame()->toHtml();
 }
 
-void Browser::setHtml(const QString &h) {
-    m_webView->setHtml(h);
+void Browser::setHtml(const QString &h, const QUrl &baseUrl) {
+    m_webView->setHtml(h, baseUrl);
     m_toolBar->hide();
 }
 

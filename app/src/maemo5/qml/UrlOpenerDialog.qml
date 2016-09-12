@@ -25,7 +25,7 @@ Dialog {
     property alias command: commandField.text
 
     height: column.height + platformStyle.paddingMedium
-    title: qsTr("Add URL opener")
+    title: qsTr("URL opener")
     
     Column {
         id: column
@@ -62,7 +62,7 @@ Dialog {
 
         Label {
             width: parent.width
-            text: qsTr("Command") + " (" + qsTr("replace URL with") + " '%URL%')"
+            text: qsTr("Command (%u for URL)")
         }
 
         TextField {
@@ -82,21 +82,7 @@ Dialog {
         style: DialogButtonStyle {}
         text: qsTr("Done")
         enabled: (nameField.text != "") && (regexpField.text != "") && (commandField.text != "")
-        onClicked: {
-            var i = urlopener.match("name", nameField.text);
-            
-            if (i >= 0) {
-                urlopener.setItemData(i, {value: {name: nameField.text, regExp: regexpField.text,
-                                          command: commandField.text}});
-            }
-            else {
-                urlopener.append(nameField.text, {name: nameField.text, regExp: regexpField.text,
-                                 command: commandField.text});
-            }
-            
-            urlopener.save();
-            root.accept();
-        }
+        onClicked: root.accept()
     }
 
     onStatusChanged: if (status == DialogStatus.Open) nameField.forceActiveFocus();

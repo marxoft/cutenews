@@ -16,9 +16,20 @@
 
 #include "pluginserver.h"
 #include "json.h"
+#include "pluginmanager.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
-#include "subscriptionplugins.h"
+
+static QVariantMap pluginConfigToMap(const FeedPluginConfig *config) {
+    QVariantMap map;
+    map["displayName"] = config->displayName();
+    map["handlesEnclosures"] = config->handlesEnclosures();
+    map["id"] = config->id();
+    map["pluginType"] = config->pluginType();
+    map["settings"] = config->settings();
+    map["version"] = config->version();
+    return map;
+}
 
 static void writeResponse(QHttpResponse *response, int responseCode, const QByteArray &data = QByteArray()) {
     response->setHeader("Content-Type", "application/json");
@@ -38,7 +49,14 @@ bool PluginServer::handleRequest(QHttpRequest *request, QHttpResponse *response)
     }
     
     if (request->method() == QHttpRequest::HTTP_GET) {
-        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(SubscriptionPlugins::pluginNames()));
+        QVariantList configs;
+        const FeedPluginList plugins = PluginManager::instance()->plugins();
+        
+        for (int i = 0; i < plugins.size(); i++) {
+            configs << pluginConfigToMap(plugins.at(i).config);
+        }
+        
+        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(configs));
         return true;
     }
     

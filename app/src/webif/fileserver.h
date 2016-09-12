@@ -18,9 +18,14 @@
 #define FILESERVER_H
 
 #include <QObject>
+#include <QHash>
+#include <QQueue>
 
 class QHttpRequest;
 class QHttpResponse;
+class QNetworkAccessManager;
+class QNetworkDiskCache;
+class QNetworkReply;
 
 class FileServer : public QObject
 {
@@ -29,7 +34,21 @@ class FileServer : public QObject
 public:
     explicit FileServer(QObject *parent = 0);
     
-    static bool handleRequest(QHttpRequest *request, QHttpResponse *response);
+    bool handleRequest(QHttpRequest *request, QHttpResponse *response);
+
+private Q_SLOTS:
+    void writeCachedFile(QNetworkReply *reply);
+
+private:
+    QNetworkDiskCache* cache(const QString &cacheDir);
+    QNetworkAccessManager* networkAccessManager();
+    
+    void getCachedFile(const QString &cacheDir, const QUrl &url, QHttpResponse *response);
+
+    QNetworkAccessManager *m_nam;
+
+    QQueue<QHttpResponse*> m_queue;
+    QHash<QNetworkReply*, QHttpResponse*> m_replies;
 };
 
 #endif // FILESERVER_H

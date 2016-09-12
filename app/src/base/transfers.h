@@ -37,7 +37,7 @@ public:
     int active() const;
     int count() const;
     
-    Q_INVOKABLE void addDownloadTransfer(const QUrl &url, int subscriptionId);
+    Q_INVOKABLE void addEnclosureDownload(const QString &url, const QString &subscriptionId);
     
     Q_INVOKABLE Transfer* get(int i) const;
     Q_INVOKABLE Transfer* get(const QString &id) const;

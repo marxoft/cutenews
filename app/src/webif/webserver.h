@@ -21,10 +21,11 @@
 #include <QHash>
 
 class ArticleServer;
+class FileServer;
+class SubscriptionServer;
 class QHttpServer;
 class QHttpRequest;
 class QHttpResponse;
-class SubscriptionServer;
 
 class WebServer : public QObject
 {
@@ -97,6 +98,7 @@ private:
     QHttpServer *m_server;
     ArticleServer *m_articleServer;
     SubscriptionServer *m_subscriptionServer;
+    FileServer *m_fileServer;
     
     int m_port;
     

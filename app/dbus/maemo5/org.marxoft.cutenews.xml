@@ -3,7 +3,7 @@
 <node name="/org/marxoft/cutenews">
     <interface name="org.marxoft.cutenews">
     <method name="showArticle">
-        <arg name="id" type="i" direction="in" />
+        <arg name="id" type="s" direction="in" />
         <arg name="ok" type="b" direction="out" />
     </method>
     <method name="showWidget">

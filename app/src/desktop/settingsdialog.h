@@ -39,7 +39,7 @@ public:
     explicit SettingsDialog(QWidget *parent = 0);
 
 public Q_SLOTS:
-    void accept();
+    virtual void accept();
     
 private:
     void showGeneralTab();
@@ -74,7 +74,8 @@ private:
     QLineEdit *m_webInterfacePasswordEdit;
     
     QPushButton *m_downloadPathButton;
-    
+
+    QSpinBox *m_expirySpinBox;
     QSpinBox *m_downloadsSpinBox;
     QSpinBox *m_proxyPortSpinBox;
     QSpinBox *m_webInterfacePortSpinBox;

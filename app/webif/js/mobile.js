@@ -246,7 +246,7 @@ function insertSubscription(index, subscription) {
 
     var text = document.createElement("div");
     text.setAttribute("class", "ListItemText");
-    text.innerHTML = subscription.title + "<br>" + formatDateTime(new Date(subscription.lastUpdated));
+    text.innerHTML = subscription.title + "<br>" + formatDateTime(new Date(subscription.lastUpdated * 1000));
     content.appendChild(text);
     
     var bubble = document.createElement("div");
@@ -403,7 +403,7 @@ function insertArticle(index, article) {
 
     var text = document.createElement("div");
     text.setAttribute("class", "ListItemText");
-    text.innerHTML = article.title + "<br>" + formatDateTime(new Date(article.date));
+    text.innerHTML = article.title + "<br>" + formatDateTime(new Date(article.date * 1000));
     content.appendChild(text);
     
     item.appendChild(content);

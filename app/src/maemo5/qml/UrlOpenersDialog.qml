@@ -38,7 +38,7 @@ Dialog {
         delegate: UrlOpenerDelegate {
             onClicked: {
                 var dialog = popupLoader.load(urlOpenerDialog, root);
-                var opener = urlopener.itemData(index);
+                var opener = urlopener.itemData(index).value;
                 dialog.name = opener.name;
                 dialog.regExp = opener.regExp;
                 dialog.command = opener.command;
@@ -63,7 +63,7 @@ Dialog {
             text: qsTr("Edit")
             onTriggered: {
                 var dialog = popupLoader.load(urlOpenerDialog, root);
-                var opener = urlopener.itemData(view.currentIndex);
+                var opener = urlopener.itemData(view.currentIndex).value;
                 dialog.name = opener.name;
                 dialog.regExp = opener.regExp;
                 dialog.command = opener.command;
@@ -99,6 +99,19 @@ Dialog {
     Component {
         id: urlOpenerDialog
         
-        UrlOpenerDialog {}
+        UrlOpenerDialog {
+            onAccepted: {
+                var i = urlopener.match(0, "name", name);
+                
+                if (i >= 0) {
+                    urlopener.setItemData(i, {value: {name: name, regExp: regExp, command: command}});
+                }
+                else {
+                    urlopener.append(name, {name: name, regExp: regExp, command: command});
+                }
+                
+                urlopener.save();
+            }
+        }
     }    
 }

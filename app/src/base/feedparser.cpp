@@ -15,36 +15,31 @@
  */
 
 #include "feedparser.h"
-#ifdef CUTENEWS_DEBUG
-#include <QDebug>
-#endif
 
-FeedParser::FeedParser(QObject *parent) :
-    QObject(parent),
+FeedParser::FeedParser() :
     m_feedType(RSS)
 {
 }
 
-FeedParser::FeedParser(const QByteArray &content, QObject *parent) :
-    QObject(parent),
+FeedParser::FeedParser(const QByteArray &content) :
     m_feedType(RSS)
 {
     setContent(content);
 }
 
-FeedParser::FeedParser(const QString &content, QObject *parent) :
-    QObject(parent),
+FeedParser::FeedParser(const QString &content) :
     m_feedType(RSS)
 {
     setContent(content);
 }
 
-FeedParser::FeedParser(QIODevice *device, QObject *parent) :
-    QObject(parent),
+FeedParser::FeedParser(QIODevice *device) :
     m_feedType(RSS)
 {
     setContent(device);
 }
+
+FeedParser::~FeedParser() {}
 
 QString FeedParser::author() const {
     return m_author;
@@ -67,9 +62,6 @@ QDateTime FeedParser::date() const {
 }
 
 void FeedParser::setDate(const QDateTime &d) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "FeedParser::setDate" << d;
-#endif
     m_date = d;
 }
 
@@ -78,9 +70,6 @@ QString FeedParser::description() const {
 }
 
 void FeedParser::setDescription(const QString &d) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "FeedParser::setDescription" << d;
-#endif
     m_description = d;
 }
 
@@ -89,9 +78,6 @@ QVariantList FeedParser::enclosures() const {
 }
 
 void FeedParser::setEnclosures(const QVariantList &e) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "FeedParser::setEnclosures" << e;
-#endif
     m_enclosures = e;
 }
 
@@ -100,9 +86,6 @@ QString FeedParser::errorString() const {
 }
 
 void FeedParser::setErrorString(const QString &e) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "FeedParser::setErrorString" << e;
-#endif
     m_errorString = e;
 }
 
@@ -111,9 +94,6 @@ FeedParser::FeedType FeedParser::feedType() const {
 }
 
 void FeedParser::setFeedType(FeedParser::FeedType t) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "FeedParser::setFeedType" << t;
-#endif
     m_feedType = t;
 }
 
@@ -122,9 +102,6 @@ QString FeedParser::iconUrl() const {
 }
 
 void FeedParser::setIconUrl(const QString &i) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "FeedParser::setIconUrl" << i;
-#endif
     m_iconUrl = i;
 }
 
@@ -133,9 +110,6 @@ QString FeedParser::title() const {
 }
 
 void FeedParser::setTitle(const QString &t) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "FeedParser::setTitle" << t;
-#endif
     m_title = t;
 }
 
@@ -144,9 +118,6 @@ QString FeedParser::url() const {
 }
 
 void FeedParser::setUrl(const QString &u) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "FeedParser::setUrl" << u;
-#endif
     m_url = u;
 }
 
@@ -155,8 +126,7 @@ bool FeedParser::setContent(const QByteArray &content) {
     m_reader.addData(content);
     
     if (m_reader.hasError()) {
-        setErrorString(tr("Unable to parse XML"));
-        emit error();
+        setErrorString(QString("Unable to parse XML"));
         return false;
     }
     
@@ -168,8 +138,7 @@ bool FeedParser::setContent(const QString &content) {
     m_reader.addData(content);
     
     if (m_reader.hasError()) {
-        setErrorString(tr("Unable to parse XML"));
-        emit error();
+        setErrorString(QString("Unable to parse XML"));
         return false;
     }
     
@@ -178,8 +147,7 @@ bool FeedParser::setContent(const QString &content) {
 
 bool FeedParser::setContent(QIODevice *device) {    
     if ((!device) || ((!device->isOpen()) && (!device->open(QIODevice::ReadOnly)))) {
-        setErrorString(tr("Unable to open IO device"));
-        emit error();
+        setErrorString(QString("Unable to open IO device"));
         return false;
     }
     
@@ -187,8 +155,7 @@ bool FeedParser::setContent(QIODevice *device) {
     m_reader.setDevice(device);
     
     if (m_reader.hasError()) {
-        setErrorString(tr("Unable to parse XML"));
-        emit error();
+        setErrorString(QString("Unable to parse XML"));
         return false;
     }
     
@@ -220,9 +187,7 @@ bool FeedParser::readChannel() {
     if (feedType() == Atom) {
         while ((!m_reader.atEnd()) && (!m_reader.hasError())) {        
             const QStringRef name = m_reader.qualifiedName();
-#ifdef CUTENEWS_DEBUG
-            qDebug() << "FeedParser::readChannel:" << name;
-#endif
+            
             if ((name == "published") || ((name == "updated") && (date().isNull()))) {
                 readDate();
             }
@@ -239,7 +204,6 @@ bool FeedParser::readChannel() {
                 readUrl();
             }
             else if (name == "entry") {
-                emit ready();
                 return true;
             }
             else {
@@ -250,9 +214,7 @@ bool FeedParser::readChannel() {
     else {
         while ((!m_reader.atEnd()) && (!m_reader.hasError())) {        
             const QStringRef name = m_reader.qualifiedName();
-#ifdef CUTENEWS_DEBUG
-            qDebug() << "FeedParser::readChannel:" << name;
-#endif
+            
             if (name == "lastBuildDate") {
                 readDate();
             }
@@ -269,7 +231,6 @@ bool FeedParser::readChannel() {
                 readUrl();
             }
             else if (name == "item") {
-                emit ready();
                 return true;
             }
             else {
@@ -279,8 +240,7 @@ bool FeedParser::readChannel() {
     }
     
     if ((m_reader.hasError()) && (!m_reader.atEnd())) {
-        setErrorString(tr("Error parsing tag %1").arg(m_reader.qualifiedName().toString()));
-        emit error();
+        setErrorString(QString("Error parsing tag %1").arg(m_reader.qualifiedName().toString()));
     }
     
     return false;
@@ -293,9 +253,7 @@ bool FeedParser::readNextArticle() {
     if (feedType() == Atom) {
         while ((!m_reader.atEnd()) && (!m_reader.hasError())) {        
             const QStringRef name = m_reader.qualifiedName();
-#ifdef CUTENEWS_DEBUG
-            qDebug() << "FeedParser::readNextArticle:" << name;
-#endif
+            
             if (name == "author") {
                 readAuthor();
             }
@@ -324,7 +282,6 @@ bool FeedParser::readNextArticle() {
             }
             else if (name == "entry") {
                 m_reader.readNextStartElement();
-                emit ready();
                 return true;
             }
             else {
@@ -335,13 +292,11 @@ bool FeedParser::readNextArticle() {
     else {
         while ((!m_reader.atEnd()) && (!m_reader.hasError())) {        
             const QStringRef name = m_reader.qualifiedName();
-#ifdef CUTENEWS_DEBUG
-            qDebug() << "FeedParser::readNextArticle:" << name;
-#endif
+            
             if ((name == "dc:creator") || (name == "itunes:author")) {
                 readAuthor();
             }
-            else if ((name == "category") || (name == "itunes:keywords")) {
+            else if ((name == "category") || (name == "dc:subject") || (name == "itunes:keywords")) {
                 readCategories();
             }
             else if ((name == "pubDate") || (name == "dc:date")) {
@@ -361,7 +316,6 @@ bool FeedParser::readNextArticle() {
             }
             else if (name == "item") {
                 m_reader.readNextStartElement();
-                emit ready();
                 return true;
             }
             else {
@@ -371,8 +325,7 @@ bool FeedParser::readNextArticle() {
     }
     
     if ((m_reader.hasError()) && (!m_reader.atEnd())) {
-        setErrorString(tr("Error parsing tag %1").arg(m_reader.qualifiedName().toString()));
-        emit error();
+        setErrorString(QString("Error parsing tag %1").arg(m_reader.qualifiedName().toString()));
     }
     
     return false;
@@ -399,13 +352,13 @@ void FeedParser::readAuthor() {
 
 void FeedParser::readCategories() {    
     if (m_reader.qualifiedName() == "itunes:keywords") {
-        setCategories(m_reader.readElementText().replace(", ", ",").split(","));
+        setCategories(m_reader.readElementText().replace(", ", ",").split(",", QString::SkipEmptyParts));
         m_reader.readNextStartElement();
     }
     else {
         QStringList c;
         
-        while (m_reader.qualifiedName() == "category") {
+        while ((m_reader.qualifiedName() == "category") || (m_reader.qualifiedName() == "dc:subject")) {
             c << m_reader.readElementText();
             m_reader.readNextStartElement();
         }
@@ -417,10 +370,10 @@ void FeedParser::readCategories() {
 void FeedParser::readDate() {
     if (m_reader.qualifiedName() == "pubDate") {
         setDate(QDateTime::fromString(m_reader.readElementText().section(' ', 0, -2),
-                                              "ddd, dd MMM yyyy HH:mm:ss").toLocalTime());
+                                              "ddd, dd MMM yyyy HH:mm:ss"));
     }
     else {
-        setDate(QDateTime::fromString(m_reader.readElementText(), Qt::ISODate).toLocalTime());
+        setDate(QDateTime::fromString(m_reader.readElementText(), Qt::ISODate));
     }
     
     m_reader.readNextStartElement();
@@ -444,6 +397,12 @@ void FeedParser::readEnclosures() {
         e["type"] = attributes.value("type").toString();
         el << e;
         m_reader.readNextStartElement();
+        
+        if (m_reader.qualifiedName() == "media:credit") {
+            m_reader.readNextStartElement();
+            m_reader.readNextStartElement();
+        }
+
         m_reader.readNextStartElement();
     }
     

@@ -89,7 +89,15 @@ Dialog {
                 maximum: 1000000
                 value: settings.networkProxyPort
             }
-        
+            
+            CheckBox {
+                id: authenticationCheckBox
+                
+                width: parent.width
+                text: qsTr("Enable authentication");
+                checked: settings.networkProxyAuthenticationEnabled
+            }
+            
             Label {
                 width: parent.width
                 text: qsTr("Username")
@@ -134,6 +142,7 @@ Dialog {
         settings.networkProxyType = proxyTypeSelector.value;
         settings.networkProxyHost = hostField.text;
         settings.networkProxyPort = portField.value;
+        settings.networkProxyAuthenticationEnabled = authenticationCheckBox.checked;
         settings.networkProxyUsername = usernameField.text;
         settings.networkProxyPassword = passwordField.text;
         settings.setNetworkProxy();

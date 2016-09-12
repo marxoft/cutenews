@@ -17,39 +17,25 @@
 #ifndef FEEDPARSER_H
 #define FEEDPARSER_H
 
-#include <QObject>
 #include <QVariantList>
 #include <QStringList>
 #include <QDateTime>
 #include <QXmlStreamReader>
 
-class FeedParser : public QObject
+class FeedParser
 {
-    Q_OBJECT
-    
-    Q_PROPERTY(QString author READ author NOTIFY ready)
-    Q_PROPERTY(QStringList categories READ categories NOTIFY ready)
-    Q_PROPERTY(QDateTime date READ date NOTIFY ready)
-    Q_PROPERTY(QString description READ description NOTIFY ready)
-    Q_PROPERTY(QVariantList enclosures READ enclosures NOTIFY ready)
-    Q_PROPERTY(FeedType feedType READ feedType)
-    Q_PROPERTY(QString errorString READ errorString NOTIFY error)
-    Q_PROPERTY(QString iconUrl READ iconUrl NOTIFY ready)
-    Q_PROPERTY(QString title READ title NOTIFY ready)
-    Q_PROPERTY(QString url READ url NOTIFY ready)
-    
-    Q_ENUMS(FeedType)
 
 public:
     enum FeedType {
         RSS = 0,
         Atom
     };
-    
-    explicit FeedParser(QObject *parent = 0);
-    explicit FeedParser(const QByteArray &content, QObject *parent = 0);
-    explicit FeedParser(const QString &content, QObject *parent = 0);
-    explicit FeedParser(QIODevice *device, QObject *parent = 0);
+
+    explicit FeedParser();
+    explicit FeedParser(const QByteArray &content);
+    explicit FeedParser(const QString &content);
+    explicit FeedParser(QIODevice *device);
+    virtual ~FeedParser();
     
     QString author() const;
     
@@ -71,11 +57,10 @@ public:
     
     QString url() const;
     
-    Q_INVOKABLE bool setContent(const QByteArray &content);
-    Q_INVOKABLE bool setContent(const QString &content);
+    bool setContent(const QByteArray &content);
+    bool setContent(const QString &content);
     bool setContent(QIODevice *device);
     
-public Q_SLOTS:
     void clear();
     
     bool readChannel();
@@ -111,11 +96,6 @@ private:
     void readTitle();
     void readUrl();
 
-Q_SIGNALS:
-    void error();
-    void ready();
-
-private:
     QXmlStreamReader m_reader;
     
     QString m_author;

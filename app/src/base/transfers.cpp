@@ -16,6 +16,9 @@
 
 #include "transfers.h"
 #include "definitions.h"
+#include "download.h"
+#include "enclosuredownload.h"
+#include "logger.h"
 #include "settings.h"
 #include "utils.h"
 #include <QNetworkAccessManager>
@@ -31,8 +34,6 @@ Transfers::Transfers() :
     m_queueTimer.setInterval(1000);
     
     connect(&m_queueTimer, SIGNAL(timeout()), this, SLOT(startNextTransfers()));
-    connect(Settings::instance(), SIGNAL(maximumConcurrentTransfersChanged(int)),
-            this, SLOT(setMaximumConcurrentTransfers(int)));
 }
 
 Transfers::~Transfers() {
@@ -51,15 +52,17 @@ int Transfers::count() const {
     return m_transfers.size();
 }
 
-void Transfers::addDownloadTransfer(const QUrl &url, int subscriptionId) {
-    Transfer *transfer = new Transfer(this);
+void Transfers::addEnclosureDownload(const QString &url, const QString &subscriptionId) {
+    Logger::log(QString("Transfers::addEnclosureDownload(). URL: %1, Subscription ID: %2").arg(url).arg(subscriptionId),
+                Logger::LowVerbosity);
+    EnclosureDownload *transfer = new EnclosureDownload(this);
     transfer->setNetworkAccessManager(m_nam);
-    transfer->setId(QString::number(Utils::createId()));
+    transfer->setId(Utils::createId());
     transfer->setDownloadPath(Settings::downloadPath() + ".incomplete/" + transfer->id());
-    transfer->setFileName(url.path().section('/', -1));
+    transfer->setFileName(url.mid(url.lastIndexOf("/") + 1));
+    transfer->setName(transfer->fileName());
     transfer->setSubscriptionId(subscriptionId);
     transfer->setUrl(url);
-    
     connect(transfer, SIGNAL(statusChanged()), this, SLOT(onTransferStatusChanged()));
     
     m_transfers << transfer;
@@ -133,34 +136,60 @@ bool Transfers::cancel(const QString &id) {
 }
 
 void Transfers::save() {
-    QSettings settings(STORAGE_PATH + "transfers", QSettings::NativeFormat);
+    QSettings settings(APP_CONFIG_PATH + "transfers", QSettings::IniFormat);
     settings.clear();
+    settings.beginWriteArray("transfers");
     
-    foreach (const Transfer *transfer, m_transfers) {
-        settings.beginGroup(transfer->id());
-        settings.setValue("downloadPath", transfer->downloadPath());
-        settings.setValue("fileName", transfer->fileName());
-        settings.setValue("priority", Transfer::Priority(transfer->priority()));
-        settings.setValue("size", transfer->size());
-        settings.setValue("url", transfer->url());
-        settings.endGroup();
+    for (int i = 0; i < m_transfers.size(); i++) {
+        const Transfer *transfer = m_transfers.at(i);
+        settings.setArrayIndex(i);
+        settings.setValue("category", transfer->property("category"));
+        settings.setValue("customCommand", transfer->property("customCommand"));
+        settings.setValue("customCommandOverrideEnabled", transfer->property("customCommandOverrideEnabled"));
+        settings.setValue("downloadPath", transfer->property("downloadPath"));
+        settings.setValue("fileName", transfer->property("fileName"));
+        settings.setValue("id", transfer->property("id"));
+        settings.setValue("name", transfer->property("name"));
+        settings.setValue("priority", transfer->property("priority"));
+        settings.setValue("size", transfer->property("size"));
+        settings.setValue("subscriptionId", transfer->property("subscriptionId"));
+        settings.setValue("transferType", transfer->property("transferType"));
+        settings.setValue("url", transfer->property("url"));
     }
+    
+    settings.endArray();
+    Logger::log(QString("Transfers::save(). %1 transfers saved").arg(m_transfers.size()), Logger::LowVerbosity);
 }
 
 void Transfers::load() {
-    QSettings settings(STORAGE_PATH + "transfers", QSettings::NativeFormat);
+    QSettings settings(APP_CONFIG_PATH  + "transfers", QSettings::IniFormat);
+    const int size = settings.beginReadArray("transfers");
+    Logger::log(QString("Transfers::load(). Loading %1 transfers").arg(size), Logger::LowVerbosity);
 
-    foreach (const QString &group, settings.childGroups()) {
-        settings.beginGroup(group);
-        Transfer *transfer = new Transfer(this);
-        transfer->setId(group);
-        transfer->setDownloadPath(settings.value("downloadPath").toString());
-        transfer->setFileName(settings.value("fileName").toString());
-        transfer->setPriority(Transfer::Priority(settings.value("priority").toInt()));
-        transfer->setSize(settings.value("size").toLongLong());
-        transfer->setUrl(settings.value("url").toString());
-        settings.endGroup();
+    for (int i = 0; i < size; i++) {
+        settings.setArrayIndex(i);
+        Transfer *transfer;
+
+        switch (settings.value("transferType").toInt()) {
+        case Transfer::Download:
+            transfer = new Download(this);
+            break;
+        default:
+            transfer = new EnclosureDownload(this);
+            break;
+        }
         
+        transfer->setProperty("category", settings.value("category"));
+        transfer->setProperty("customCommand", settings.value("customCommand"));
+        transfer->setProperty("customCommandOverrideEnabled", transfer->property("customCommandOverrideEnabled"));
+        transfer->setProperty("downloadPath", settings.value("downloadPath"));
+        transfer->setProperty("fileName", settings.value("fileName"));
+        transfer->setProperty("id", settings.value("id"));
+        transfer->setProperty("name", settings.value("name"));
+        transfer->setProperty("priority", settings.value("priority"));
+        transfer->setProperty("size", settings.value("size"));
+        transfer->setProperty("subscriptionId", settings.value("subscriptionId"));
+        transfer->setProperty("url", settings.value("url"));
         connect(transfer, SIGNAL(statusChanged()), this, SLOT(onTransferStatusChanged()));
     
         m_transfers << transfer;
@@ -171,6 +200,8 @@ void Transfers::load() {
             transfer->queue();
         }
     }
+    
+    settings.endArray();
 }
 
 void Transfers::getNextTransfers() {
@@ -219,8 +250,11 @@ void Transfers::onTransferStatusChanged() {
     if (Transfer *transfer = qobject_cast<Transfer*>(sender())) {
         switch (transfer->status()) {
         case Transfer::Paused:
+            removeActiveTransfer(transfer);
+            break;
         case Transfer::Failed:
             removeActiveTransfer(transfer);
+            save();
             break;
         case Transfer::Canceled:
         case Transfer::Completed:

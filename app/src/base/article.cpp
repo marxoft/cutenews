@@ -15,46 +15,22 @@
  */
 
 #include "article.h"
-#include "database.h"
-#include <QSqlQuery>
-#include <QSqlError>
+#include "dbconnection.h"
+#include "dbnotify.h"
+#include "json.h"
 
 Article::Article(QObject *parent) :
     QObject(parent),
-    m_id(-1),
     m_favourite(false),
     m_read(false),
     m_status(Idle),
-    m_subscriptionId(-1)
+    m_autoUpdate(false)
 {
-    connect(Database::instance(), SIGNAL(articleFavourited(int, bool)), this, SLOT(onArticleFavourited(int, bool)));
-    connect(Database::instance(), SIGNAL(articleRead(int, int, bool)), this, SLOT(onArticleRead(int, int, bool)));
-    connect(Database::instance(), SIGNAL(subscriptionRead(int, bool)), this, SLOT(onSubscriptionRead(int, bool)));
 }
 
-Article::Article(const QSqlQuery &query, QObject *parent) :
-    QObject(parent),
-    m_id(Database::articleId(query)),
-    m_author(Database::articleAuthor(query)),
-    m_body(Database::articleBody(query)),
-    m_categories(Database::articleCategories(query)),
-    m_date(Database::articleDate(query)),
-    m_enclosures(Database::articleEnclosures(query)),
-    m_favourite(Database::articleIsFavourite(query)),
-    m_read(Database::articleIsRead(query)),
-    m_status(Ready),
-    m_subscriptionId(Database::articleSubscriptionId(query)),
-    m_title(Database::articleTitle(query)),
-    m_url(Database::articleUrl(query))
-{
-    connect(Database::instance(), SIGNAL(articleFavourited(int, bool)), this, SLOT(onArticleFavourited(int, bool)));
-    connect(Database::instance(), SIGNAL(articleRead(int, int, bool)), this, SLOT(onArticleRead(int, int, bool)));
-    connect(Database::instance(), SIGNAL(subscriptionRead(int, bool)), this, SLOT(onSubscriptionRead(int, bool)));
-}
-
-Article::Article(int id, const QString &author, const QString &body, const QStringList &categories,
+Article::Article(const QString &id, const QString &author, const QString &body, const QStringList &categories,
                  const QDateTime &date, const QVariantList &enclosures, bool isFavourite, bool isRead,
-                 int subscriptionId, const QString &title, const QUrl &url, QObject *parent) :
+                 const QString &subscriptionId, const QString &title, const QString &url, QObject *parent) :
     QObject(parent),
     m_id(id),
     m_author(author),
@@ -67,18 +43,16 @@ Article::Article(int id, const QString &author, const QString &body, const QStri
     m_status(Ready),
     m_subscriptionId(subscriptionId),
     m_title(title),
-    m_url(url)
+    m_url(url),
+    m_autoUpdate(false)
 {
-    connect(Database::instance(), SIGNAL(articleFavourited(int, bool)), this, SLOT(onArticleFavourited(int, bool)));
-    connect(Database::instance(), SIGNAL(articleRead(int, int, bool)), this, SLOT(onArticleRead(int, int, bool)));
-    connect(Database::instance(), SIGNAL(subscriptionRead(int, bool)), this, SLOT(onSubscriptionRead(int, bool)));
 }
 
-int Article::id() const {
+QString Article::id() const {
     return m_id;
 }
 
-void Article::setId(int i) {
+void Article::setId(const QString &i) {
     if (i != id()) {
         m_id = i;
         emit idChanged();
@@ -189,11 +163,11 @@ void Article::setStatus(Article::Status s) {
     }
 }
 
-int Article::subscriptionId() const {
+QString Article::subscriptionId() const {
     return m_subscriptionId;
 }
 
-void Article::setSubscriptionId(int i) {
+void Article::setSubscriptionId(const QString &i) {
     if (i != subscriptionId()) {
         m_subscriptionId = i;
         emit subscriptionIdChanged();
@@ -213,11 +187,11 @@ void Article::setTitle(const QString &t) {
     }
 }
 
-QUrl Article::url() const {
+QString Article::url() const {
     return m_url;
 }
 
-void Article::setUrl(const QUrl &u) {
+void Article::setUrl(const QString &u) {
     if (u != url()) {
         m_url = u;
         emit urlChanged();
@@ -225,46 +199,77 @@ void Article::setUrl(const QUrl &u) {
     }
 }
 
-void Article::load(int id) {
-    setId(id);
-    setStatus(Active);
-    connect(Database::instance(), SIGNAL(articleFetched(QSqlQuery, int)), this, SLOT(onArticleFetched(QSqlQuery, int)));
-    Database::fetchArticle(id, id);
+bool Article::autoUpdate() const {
+    return m_autoUpdate;
 }
 
-void Article::onArticleFetched(const QSqlQuery &query, int requestId) {
-    if (requestId == id()) {
-        disconnect(Database::instance(), SIGNAL(articleFetched(QSqlQuery, int)),
-                   this, SLOT(onArticleFetched(QSqlQuery, int)));
-        
-        setAuthor(Database::articleAuthor(query));
-        setBody(Database::articleBody(query));
-        setCategories(Database::articleCategories(query));
-        setDate(Database::articleDate(query));
-        setEnclosures(Database::articleEnclosures(query));
-        setFavourite(Database::articleIsFavourite(query));
-        setRead(Database::articleIsRead(query));
-        setSubscriptionId(Database::articleSubscriptionId(query));
-        setTitle(Database::articleTitle(query));
-        setUrl(Database::articleUrl(query));
-        setErrorString(query.lastError().text());
-        setStatus(query.lastError().isValid() ? Error : Ready);
+void Article::setAutoUpdate(bool enabled) {
+    if (enabled != autoUpdate()) {
+        m_autoUpdate = enabled;
+        emit autoUpdateChanged();
+
+        if (enabled) {
+            connect(DBNotify::instance(), SIGNAL(articleFavourited(QString, bool)),
+                    this, SLOT(onArticleFavourited(QString, bool)));
+            connect(DBNotify::instance(), SIGNAL(articleRead(QString, QString, bool)),
+                    this, SLOT(onArticleRead(QString, QString, bool)));
+            connect(DBNotify::instance(), SIGNAL(allArticlesRead()), this, SLOT(onAllArticlesRead()));
+            connect(DBNotify::instance(), SIGNAL(subscriptionRead(QString, bool)),
+                    this, SLOT(onSubscriptionRead(QString, bool)));
+        }
+        else {
+            disconnect(DBNotify::instance(), 0, this, 0);
+        }
     }
 }
 
-void Article::onArticleFavourited(int articleId, bool isFavourite) {
+void Article::load(const QString &id) {
+    setId(id);
+    setStatus(Active);
+    DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->fetchArticle(id);
+}
+
+void Article::onArticleFetched(DBConnection *connection) {
+    if (connection->status() == DBConnection::Ready) {        
+        setAuthor(connection->value(1).toString());
+        setBody(connection->value(2).toString());
+        setCategories(connection->value(3).toString().split(", ", QString::SkipEmptyParts));
+        setDate(QDateTime::fromTime_t(connection->value(4).toInt()));
+        setEnclosures(QtJson::Json::parse(connection->value(5).toString()).toList());
+        setFavourite(connection->value(6).toBool());
+        setRead(connection->value(7).toBool());
+        setSubscriptionId(connection->value(8).toString());
+        setTitle(connection->value(9).toString());
+        setUrl(connection->value(10).toString());
+        setErrorString(QString());
+        setStatus(Ready);
+    }
+    else {
+        setErrorString(connection->errorString());
+        setStatus(Error);
+    }
+    
+    connection->deleteLater();
+    emit finished(this);
+}
+
+void Article::onArticleFavourited(const QString &articleId, bool isFavourite) {
     if (articleId == id()) {
         setFavourite(isFavourite);
     }
 }
 
-void Article::onArticleRead(int articleId, int, bool isRead) {
+void Article::onArticleRead(const QString &articleId, const QString &, bool isRead) {
     if (articleId == id()) {
         setRead(isRead);
     }
 }
 
-void Article::onSubscriptionRead(int subscriptionId, bool isRead) {
+void Article::onAllArticlesRead() {
+    setRead(true);
+}
+
+void Article::onSubscriptionRead(const QString &subscriptionId, bool isRead) {
     if (subscriptionId == this->subscriptionId()) {
         setRead(isRead);
     }

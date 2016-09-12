@@ -178,11 +178,11 @@ CuteNews.prototype.getArticles = function (subscriptionId, offset, limit, callba
 }
 
 CuteNews.prototype.markArticleFavourite = function (id, favourite, callback_ok, callback_error) {
-    this.put(ARTICLES_PATH + "/" + id, {"favourite": favourite}, callback_ok, callback_error);
+    this.get(ARTICLES_PATH + "/" + (favourite ? "favourite?id=" : "unfavourite?id=") + id, callback_ok, callback_error);
 }
 
 CuteNews.prototype.markArticleRead = function (id, read, callback_ok, callback_error) {
-    this.put(ARTICLES_PATH + "/" + id, {"read": read}, callback_ok, callback_error);
+    this.get(ARTICLES_PATH + "/" + (read ? "read?id=" : "unread?id=") + id, callback_ok, callback_error);
 }
 
 CuteNews.prototype.getPlugins = function (callback_ok, callback_error) {

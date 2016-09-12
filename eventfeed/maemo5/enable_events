@@ -2,7 +2,8 @@
 
 set -e
 
-CONFIG_FILE="/home/user/.config/cuteNews/EventFeed.conf"
+CONFIG_DIR="/home/user/.config/cutenews"
+CONFIG_FILE="/home/user/.config/cutenews/eventfeed"
 
 EVENT_FEED_SERVICE="org.hildon.eventfeed"
 EVENT_FEED_PATH="/org/hildon/eventfeed"
@@ -11,7 +12,8 @@ EVENT_FEED_INTERFACE="org.hildon.eventfeed"
 REFRESH_ACTION="dbus-send --type=method_call --dest=org.marxoft.cutenews.subscriptions /org/marxoft/cutenews/subscriptions org.marxoft.cutenews.subscriptions.updateAll"
 
 echo "Enabling cuteNews event feed."
-echo "publishArticles=true" > "$CONFIG_FILE"
+mkdir -p "$CONFIG_DIR"
+echo "enabled=true" > "$CONFIG_FILE"
 echo "Adding cuteNews event feed refresh action."
 dbus-send --type=method_call --dest=$EVENT_FEED_SERVICE $EVENT_FEED_PATH $EVENT_FEED_INTERFACE.addRefreshAction string:"$REFRESH_ACTION"
 

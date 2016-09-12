@@ -118,7 +118,7 @@ Subscription properties
 </div>
 </div>
 <div class="DialogButtonBox">
-<input type="button" id="cancelNewSubscriptionButton"  class="Button" value="Cancel" />
+<input type="button" id="cancelNewSubscriptionButton" class="Button" value="Cancel" />
 <input type="button" id="addSubscriptionButton" class="Button" value="Save" />
 </div>
 </div>

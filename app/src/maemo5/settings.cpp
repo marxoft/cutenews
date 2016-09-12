@@ -18,9 +18,6 @@
 #include "definitions.h"
 #include <QSettings>
 #include <QNetworkProxy>
-#ifdef CUTENEWS_DEBUG
-#include <QDebug>
-#endif
 
 Settings* Settings::self = 0;
 
@@ -37,6 +34,116 @@ Settings* Settings::instance() {
     return self ? self : self = new Settings;
 }
 
+QStringList Settings::categoryNames() {
+    QSettings settings;
+    settings.beginGroup("Categories");
+    QStringList names = settings.childKeys();
+    names.prepend(tr("Default"));
+    settings.endGroup();
+    
+    return names;
+}
+
+QList<Category> Settings::categories() {
+    QList<Category> list;
+    QSettings settings;
+    settings.beginGroup("Categories");
+    
+    foreach (QString key, settings.childKeys()) {
+        Category category;
+        category.name = key;
+        category.path = settings.value(key).toString();
+        list << category;
+    }
+    
+    settings.endGroup();
+    
+    return list;
+}
+
+void Settings::setCategories(const QList<Category> &c) {
+    QSettings settings;
+    settings.remove("Categories");
+    settings.beginGroup("Categories");
+    
+    foreach (Category category, c) {
+        settings.setValue(category.name, category.path);
+    }
+    
+    settings.endGroup();
+
+    if (self) {
+        emit self->categoriesChanged();
+    }
+}
+
+void Settings::addCategory(const QString &name, const QString &path) {
+    if (path != downloadPath(name)) {
+        setValue("Categories/" + name, path);
+
+        if (self) {
+            emit self->categoriesChanged();
+        }
+    }
+}
+
+void Settings::removeCategory(const QString &name) {
+    QSettings settings;
+    settings.beginGroup("Categories");
+    
+    if (settings.contains(name)) {
+        settings.remove(name);
+
+        if (self) {
+            emit self->categoriesChanged();
+        }
+    }
+    
+    settings.endGroup();
+}
+
+QString Settings::defaultCategory() {
+    return value("Transfers/defaultCategory", tr("Default")).toString();
+}
+
+void Settings::setDefaultCategory(const QString &category) {
+    if (category != defaultCategory()) {
+        setValue("Transfers/defaultCategory", category);
+
+        if (self) {
+            emit self->defaultCategoryChanged(category);
+        }
+    }
+}
+
+QString Settings::customTransferCommand() {
+    return value("Transfers/customCommand").toString();
+}
+
+void Settings::setCustomTransferCommand(const QString &command) {
+    if (command != customTransferCommand()) {
+        setValue("Transfers/customCommand", command);
+
+        if (self) {
+            emit self->customTransferCommandChanged(command);
+        }
+    }
+}
+
+bool Settings::customTransferCommandEnabled() {
+    return value("Transfers/customCommandEnabled", false).toBool();
+}
+
+void Settings::setCustomTransferCommandEnabled(bool enabled) {
+    if (enabled != customTransferCommandEnabled()) {
+        setValue("Transfers/customCommandEnabled", enabled);
+        
+        if (self) {
+            emit self->customTransferCommandEnabledChanged(enabled);
+        }
+    }
+}
+
 QString Settings::downloadPath() {
     QString path = value("Transfers/downloadPath", DOWNLOAD_PATH).toString();
 
@@ -45,7 +152,11 @@ QString Settings::downloadPath() {
     }
     
     return path;
-}  
+}
+
+QString Settings::downloadPath(const QString &category) {
+    return value("Categories/" + category, downloadPath()).toString();
+}
 
 void Settings::setDownloadPath(const QString &path) {
     if (path != downloadPath()) {
@@ -71,6 +182,48 @@ void Settings::setEnableAutomaticScrollingInWidget(bool enabled) {
     }
 }
 
+bool Settings::eventFeedEnabled() {
+    return QSettings(APP_CONFIG_PATH + "eventfeed", QSettings::IniFormat).value("enabled", false).toBool();
+}
+
+void Settings::setEventFeedEnabled(bool enabled) {
+    if (enabled != eventFeedEnabled()) {
+        QSettings(APP_CONFIG_PATH + "eventfeed", QSettings::IniFormat).setValue("enabled", enabled);
+        
+        if (self) {
+            emit self->eventFeedEnabledChanged(enabled);
+        }
+    }
+}
+
+QString Settings::loggerFileName() {
+    return value("Logger/fileName", APP_CONFIG_PATH + "log").toString();
+}
+
+void Settings::setLoggerFileName(const QString &fileName) {
+    if (fileName != loggerFileName()) {
+        setValue("Logger/fileName", fileName);
+        
+        if (self) {
+            emit self->loggerFileNameChanged(fileName);
+        }
+    }
+}
+
+int Settings::loggerVerbosity() {
+    return value("Logger/verbosity", 0).toInt();
+}
+
+void Settings::setLoggerVerbosity(int verbosity) {
+    if (verbosity != loggerVerbosity()) {
+        setValue("Logger/verbosity", verbosity);
+        
+        if (self) {
+            emit self->loggerVerbosityChanged(verbosity);
+        }
+    }
+}
+
 int Settings::maximumConcurrentTransfers() {
     return qBound(1, value("Transfers/maximumConcurrentTransfers", 1).toInt(), MAX_CONCURRENT_TRANSFERS);
 }
@@ -92,14 +245,28 @@ void Settings::setNetworkProxy() {
         return;
     }
     
-    QNetworkProxy proxy(QNetworkProxy::ProxyType(networkProxyType()), networkProxyHost(), networkProxyPort(),
-                        networkProxyUsername(), networkProxyPassword());
+    QNetworkProxy proxy(QNetworkProxy::ProxyType(networkProxyType()), networkProxyHost(), networkProxyPort());
+    
+    if (networkProxyAuthenticationEnabled()) {
+        proxy.setUser(networkProxyUsername());
+        proxy.setPassword(networkProxyPassword());
+    }
     
     QNetworkProxy::setApplicationProxy(proxy);
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "Settings::setNetworkProxy" << networkProxyType() << networkProxyHost() << networkProxyPort()
-                                            << networkProxyUsername() << networkProxyPassword();
-#endif
+}
+
+bool Settings::networkProxyAuthenticationEnabled() {
+    return value("Network/networkProxyAuthenticationEnabled", false).toBool();
+}
+
+void Settings::setNetworkProxyAuthenticationEnabled(bool enabled) {
+    if (enabled != networkProxyAuthenticationEnabled()) {
+        setValue("Network/networkProxyAuthenticationEnabled", enabled);
+
+        if (self) {
+            emit self->networkProxyChanged();
+        }
+    }
 }
 
 bool Settings::networkProxyEnabled() {
@@ -188,6 +355,20 @@ void Settings::setNetworkProxyUsername(const QString &username) {
     }
 }
 
+bool Settings::offlineModeEnabled() {
+    return value("Network/offlineModeEnabled", false).toBool();
+}
+
+void Settings::setOfflineModeEnabled(bool enabled) {
+    if (enabled != offlineModeEnabled()) {
+        setValue("Network/offlineModeEnabled", enabled);
+        
+        if (self) {
+            emit self->offlineModeEnabledChanged(enabled);
+        }
+    }
+}
+
 bool Settings::openArticlesExternallyFromWidget() {
     return value("Widget/openArticlesExternally", false).toBool();
 }
@@ -198,6 +379,20 @@ void Settings::setOpenArticlesExternallyFromWidget(bool enabled) {
         
         if (self) {
             emit self->openArticlesExternallyFromWidgetChanged(enabled);
+        }
+    }
+}
+
+int Settings::readArticleExpiry() {
+    return value("Subscriptions/readArticleExpiry", -1).toInt();
+}
+
+void Settings::setReadArticleExpiry(int expiry) {
+    if (expiry != readArticleExpiry()) {
+        setValue("Subscriptions/readArticleExpiry", expiry);
+
+        if (self) {
+            emit self->readArticleExpiryChanged(expiry);
         }
     }
 }
@@ -216,44 +411,16 @@ void Settings::setStartTransfersAutomatically(bool enabled) {
     }
 }
 
-int Settings::updateInterval() {
-    return value("Subscriptions/updateInterval", 0).toInt();
-}
-
-void Settings::setUpdateInterval(int interval) {
-    if (interval != updateInterval()) {
-        setValue("Subscriptions/updateInterval", interval);
-        
-        if (self) {
-            emit self->updateIntervalChanged(intervale);
-        }
-    }
-}
-
-bool Settings::updateOnStartup() {
+bool Settings::updateSubscriptionsOnStartup() {
     return value("Subscriptions/updateOnStartup", false).toBool();
 }
 
-void Settings::setUpdateOnStartup(bool enabled) {
-    if (enabled != updateOnStartup()) {
+void Settings::setUpdateSubscriptionsOnStartup(bool enabled) {
+    if (enabled != updateSubscriptionsOnStartup()) {
         setValue("Subscriptions/updateOnStartup", enabled);
         
         if (self) {
-            emit self->updateOnStartupChanged(enabled);
-        }
-    }
-}
-
-bool Settings::workOffline() {
-    return value("Subscriptions/workOffline", false).toBool();
-}
-
-void Settings::setWorkOffline(bool enabled) {
-    if (enabled != workOffline()) {
-        setValue("Subscriptions/workOffline", enabled);
-        
-        if (self) {
-            emit self->workOfflineChanged(enabled);
+            emit self->updateSubscriptionsOnStartupChanged(enabled);
         }
     }
 }
@@ -287,12 +454,9 @@ void Settings::setViewMode(const QString &mode) {
 }
 
 QVariant Settings::value(const QString &key, const QVariant &defaultValue) {
-    return QSettings().value(key, defaultValue);
+    return QSettings(APP_CONFIG_PATH + "settings", QSettings::IniFormat).value(key, defaultValue);
 }
 
 void Settings::setValue(const QString &key, const QVariant &value) {
-    QSettings().setValue(key, value);
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "Settings::setValue" << key << value;
-#endif
+    QSettings(APP_CONFIG_PATH + "settings", QSettings::IniFormat).setValue(key, value);
 }

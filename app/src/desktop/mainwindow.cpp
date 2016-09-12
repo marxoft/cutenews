@@ -18,17 +18,17 @@
 #include "aboutdialog.h"
 #include "articlemodel.h"
 #include "browser.h"
-#include "database.h"
-#include "downloadsview.h"
+#include "dbconnection.h"
 #include "plugindialog.h"
+#include "pluginmanager.h"
 #include "searchdialog.h"
 #include "settings.h"
 #include "settingsdialog.h"
 #include "subscription.h"
 #include "subscriptiondialog.h"
 #include "subscriptionmodel.h"
-#include "subscriptionplugins.h"
 #include "transfers.h"
+#include "transfersview.h"
 #include "urlopenermodel.h"
 #include "utils.h"
 #include <QAction>
@@ -41,6 +41,7 @@
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
+#include <QMessageBox>
 #include <QPushButton>
 #include <QSortFilterProxyModel>
 #include <QSplitter>
@@ -54,6 +55,7 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
+    m_connection(DBConnection::connection(this, SLOT(onConnectionFinished(DBConnection*)))),
     m_subscriptionsModel(new SubscriptionModel(this)),
     m_articlesModel(new ArticleModel(this)),
     m_articlesProxyModel(new QSortFilterProxyModel(this)),
@@ -70,7 +72,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_helpMenu(new QMenu(tr("&Help"), this)),
     m_toolBar(new QToolBar(this)),
     m_updateAllSubscriptionsAction(new QAction(QIcon::fromTheme("view-refresh"), tr("&Update all"), this)),
-    m_cancelSubscriptionUpdatesAction(new QAction(QIcon::fromTheme("dialog-cancel"), tr("&Cancel updates"), this)),
+    m_cancelSubscriptionUpdatesAction(new QAction(QIcon::fromTheme("process-stop"), tr("&Cancel updates"), this)),
+    m_offlineModeAction(new QAction(QIcon::fromTheme("network-transmit-receive"), tr("Work &offline"), this)),
     m_markAllSubscriptionsReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Mark all &read"), this)),
     m_newSubscriptionAction(new QAction(QIcon::fromTheme("list-add"), tr("&New subscription"), this)),
     m_importSubscriptionsAction(new QAction(QIcon::fromTheme("document-open"), tr("&Import from OPML"), this)),
@@ -94,7 +97,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_openEnclosureInBrowserAction(new QAction(tr("Open in &browser"), this)),
     m_openEnclosureExternallyAction(new QAction(tr("Open &externally"), this)),
     m_downloadEnclosureAction(new QAction(tr("&Download"), this)),
-    m_downloadsAction(new QAction(QIcon::fromTheme("folder-download"), tr("Show &downloads"), this)),
+    m_transfersAction(new QAction(QIcon::fromTheme("folder-download"), tr("Show &downloads"), this)),
     m_closeTabAction(new QAction(QIcon::fromTheme("view-close"), tr("Close &tab"), this)),
     m_searchAction(new QAction(QIcon::fromTheme("edit-find"), tr("&Search all articles"), this)),
     m_settingsAction(new QAction(QIcon::fromTheme("document-properties"), tr("&Preferences"), this)),
@@ -113,7 +116,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_articleContainer(new QWidget(this)),
     m_tabsLayout(new QVBoxLayout(m_tabsContainer)),
     m_articleLayout(new QVBoxLayout(m_articleContainer)),
-    m_downloadsTab(0)
+    m_transfersTab(0)
 {
     setWindowTitle("cuteNews");
     setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -133,14 +136,17 @@ MainWindow::MainWindow(QWidget *parent) :
         
     m_subscriptionsMenu->addAction(m_updateAllSubscriptionsAction);
     m_subscriptionsMenu->addAction(m_cancelSubscriptionUpdatesAction);
+    m_subscriptionsMenu->addAction(m_offlineModeAction);
     m_subscriptionsMenu->addAction(m_markAllSubscriptionsReadAction);
     m_subscriptionsMenu->addAction(m_newSubscriptionAction);
     m_subscriptionsMenu->addMenu(m_newSubscriptionMenu);
     m_subscriptionsMenu->addAction(m_importSubscriptionsAction);
     m_subscriptionsMenu->addAction(m_quitAction);
     
-    foreach (QString name, SubscriptionPlugins::pluginNames()) {
-        m_newSubscriptionMenu->addAction(name)->setData(Subscription::Plugin);
+    const FeedPluginList plugins = PluginManager::instance()->plugins();
+    
+    for (int i = 0; i < plugins.size(); i++) {
+        m_newSubscriptionMenu->addAction(plugins.at(i).config->displayName())->setData(plugins.at(i).config->id());
     }
     
     m_subscriptionMenu->addAction(m_updateSubscriptionAction);
@@ -176,7 +182,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_enclosureContextMenu->addAction(m_openEnclosureExternallyAction);
     m_enclosureContextMenu->addAction(m_downloadEnclosureAction);
     
-    m_viewMenu->addAction(m_downloadsAction);
+    m_viewMenu->addAction(m_transfersAction);
     m_viewMenu->addAction(m_closeTabAction);
     
     m_toolsMenu->addAction(m_searchAction);
@@ -195,10 +201,12 @@ MainWindow::MainWindow(QWidget *parent) :
     m_toolBar->addAction(m_nextUnreadArticleAction);
     m_toolBar->addAction(m_updateAllSubscriptionsAction);
     m_toolBar->addAction(m_cancelSubscriptionUpdatesAction);
+    m_toolBar->addAction(m_offlineModeAction);
     m_toolBar->addAction(m_searchAction);
     
     m_updateAllSubscriptionsAction->setShortcut(QKeySequence(tr("Ctrl+U")));
     m_cancelSubscriptionUpdatesAction->setShortcut(QKeySequence(tr("Ctrl+Shift+U")));
+    m_offlineModeAction->setCheckable(true);
     m_importSubscriptionsAction->setShortcut(QKeySequence(tr("Ctrl+O")));
     m_quitAction->setShortcut(QKeySequence(tr("Ctrl+Q")));
     
@@ -211,7 +219,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_toggleArticleReadAction->setShortcut(QKeySequence(tr("Ctrl+M")));
     m_toggleArticleFavouriteAction->setShortcut(QKeySequence(tr("Ctrl+T")));
     
-    m_downloadsAction->setShortcut(QKeySequence(tr("Ctrl+D")));
+    m_transfersAction->setShortcut(QKeySequence(tr("Ctrl+D")));
     m_closeTabAction->setShortcut(QKeySequence(tr("Ctrl+W")));
     m_closeTabAction->setEnabled(false);
     
@@ -313,6 +321,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(Subscriptions::instance(), SIGNAL(statusChanged(Subscriptions::Status)),
             this, SLOT(onSubscriptionsStatusChanged(Subscriptions::Status)));
     connect(Subscriptions::instance(), SIGNAL(statusTextChanged(QString)), statusBar(), SLOT(showMessage(QString)));
+    connect(Settings::instance(), SIGNAL(offlineModeEnabledChanged(bool)),
+            this, SLOT(onOfflineModeEnabledChanged(bool)));
     
     connect(m_subscriptionsModel, SIGNAL(countChanged(int)), this, SLOT(onSubscriptionsCountChanged(int)));
     connect(m_articlesModel, SIGNAL(countChanged(int)), this, SLOT(onArticlesCountChanged(int)));
@@ -321,7 +331,8 @@ MainWindow::MainWindow(QWidget *parent) :
     
     connect(m_updateAllSubscriptionsAction, SIGNAL(triggered()), Subscriptions::instance(), SLOT(updateAll()));
     connect(m_cancelSubscriptionUpdatesAction, SIGNAL(triggered()), Subscriptions::instance(), SLOT(cancel()));
-    connect(m_markAllSubscriptionsReadAction, SIGNAL(triggered()), this, SLOT(markAllSubscriptionsRead()));
+    connect(m_offlineModeAction, SIGNAL(triggered(bool)), Settings::instance(), SLOT(setOfflineModeEnabled(bool)));
+    connect(m_markAllSubscriptionsReadAction, SIGNAL(triggered()), m_connection, SLOT(markAllArticlesRead()));
     connect(m_newSubscriptionAction, SIGNAL(triggered()), this, SLOT(newSubscriptionRequested()));
     connect(m_importSubscriptionsAction, SIGNAL(triggered()), this, SLOT(importSubscriptions()));
     connect(m_quitAction, SIGNAL(triggered()), this, SLOT(close()));
@@ -348,7 +359,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_openEnclosureExternallyAction, SIGNAL(triggered()), this, SLOT(openCurrentEnclosureExternally()));
     connect(m_downloadEnclosureAction, SIGNAL(triggered()), this, SLOT(downloadCurrentEnclosure()));
     
-    connect(m_downloadsAction, SIGNAL(triggered()), this, SLOT(showDownloadsTab()));
+    connect(m_transfersAction, SIGNAL(triggered()), this, SLOT(showTransfersTab()));
     connect(m_closeTabAction, SIGNAL(triggered()), this, SLOT(closeCurrentTab()));
     
     connect(m_searchAction, SIGNAL(triggered()), this, SLOT(showSearchDialog()));
@@ -378,6 +389,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_infoLabel, SIGNAL(linkActivated(QString)), this, SLOT(openUrlExternally(QString)));
     
     onSubscriptionsStatusChanged(Subscriptions::instance()->status());
+    onOfflineModeEnabledChanged(Settings::offlineModeEnabled());
     
     m_subscriptionsModel->load();
 
@@ -385,6 +397,11 @@ MainWindow::MainWindow(QWidget *parent) :
     restoreState(Settings::mainWindowState());
     m_horizontalSplitter->restoreState(Settings::mainWindowHorizontalSplitterState());
     m_verticalSplitter->restoreState(Settings::mainWindowVerticalSplitterState());
+}
+
+MainWindow::~MainWindow() {
+    delete m_connection;
+    m_connection = 0;
 }
 
 void MainWindow::closeEvent(QCloseEvent *e) {
@@ -395,19 +412,9 @@ void MainWindow::closeEvent(QCloseEvent *e) {
     QMainWindow::closeEvent(e);
 }
 
-void MainWindow::markAllSubscriptionsRead() {
-    for (int i = 2; i < m_subscriptionsModel->rowCount(); i++) {
-        const int id = m_subscriptionsModel->data(i, "id").toInt();
-        
-        if (id > 0) {
-            Database::markSubscriptionRead(id, true);
-        }
-    }
-}
-
 void MainWindow::newSubscriptionRequested(QAction *action) {
-    if ((action) && (action->data().toInt() == Subscription::Plugin)) {
-        PluginDialog(action->text(), this).exec();
+    if ((action) && (!action->data().isNull())) {
+        PluginDialog(action->data().toString(), this).exec();
     }
     else{
         SubscriptionDialog(this).exec();
@@ -424,41 +431,27 @@ void MainWindow::importSubscriptions() {
 }
 
 void MainWindow::updateCurrentSubscription() {
-    const int id = m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toInt();
-    
-    if (id > 0) {
-        Subscriptions::instance()->update(id);
-    }
+    Subscriptions::instance()->update(m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toString());
 }
 
 void MainWindow::markCurrentSubscriptionRead() {
-    const int id = m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toInt();
-    
-    if (id > 0) {
-        Database::markSubscriptionRead(id, true);
-    }
+    m_connection->markSubscriptionRead(m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toString(),
+                                       true);
 }
 
 void MainWindow::deleteCurrentSubscription() {
-    const int id = m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toInt();
-    
-    if (id > 0) {
-        Database::deleteSubscription(id);
-    }
+    m_connection->deleteSubscription(m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toString());
 }
 
 void MainWindow::showCurrentSubscriptionProperties() {
-    const int id = m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toInt();
+    const QString id = m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toString();
+    const int sourceType = m_subscriptionsView->currentIndex().data(SubscriptionModel::SourceTypeRole).toInt();
     
-    if (id > 0) {
-        const int sourceType = m_subscriptionsView->currentIndex().data(SubscriptionModel::SourceTypeRole).toInt();
-        
-        if (sourceType == Subscription::Plugin) {
-            PluginDialog(id, this).exec();
-        }
-        else {
-            SubscriptionDialog(id, this).exec();
-        }
+    if (sourceType == Subscription::Plugin) {
+        PluginDialog(QString(), id, this).exec();
+    }
+    else {
+        SubscriptionDialog(id, this).exec();
     }
 }
 
@@ -508,27 +501,17 @@ void MainWindow::previousArticle() {
 }
 
 void MainWindow::toggleCurrentArticleRead() {
-    const int id = m_articlesView->currentIndex().data(ArticleModel::IdRole).toInt();
-    
-    if (id > 0) {
-        Database::markArticleRead(id, !m_articlesView->currentIndex().data(ArticleModel::ReadRole).toBool());
-    }
+    m_connection->markArticleRead(m_articlesView->currentIndex().data(ArticleModel::IdRole).toString(),
+                                  !m_articlesView->currentIndex().data(ArticleModel::ReadRole).toBool());
 }
 
 void MainWindow::toggleCurrentArticleFavourite() {
-    const int id = m_articlesView->currentIndex().data(ArticleModel::IdRole).toInt();
-    
-    if (id > 0) {
-        Database::markArticleFavourite(id, !m_articlesView->currentIndex().data(ArticleModel::FavouriteRole).toBool());
-    }
+    m_connection->markArticleFavourite(m_articlesView->currentIndex().data(ArticleModel::IdRole).toString(),
+                                      !m_articlesView->currentIndex().data(ArticleModel::FavouriteRole).toBool());
 }
 
 void MainWindow::deleteCurrentArticle() {
-    const int id = m_articlesView->currentIndex().data(ArticleModel::IdRole).toInt();
-    
-    if (id > 0) {
-        Database::deleteArticle(id);
-    }
+    m_connection->deleteArticle(m_articlesView->currentIndex().data(ArticleModel::IdRole).toString());
 }
 
 void MainWindow::copyCurrentArticleUrl() {
@@ -573,8 +556,8 @@ void MainWindow::openCurrentEnclosureExternally() {
 
 void MainWindow::downloadCurrentEnclosure() {
     if (QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
-        Transfers::instance()->addDownloadTransfer(item->text(), m_subscriptionsView->currentIndex()
-                                                   .data(SubscriptionModel::IdRole).toInt());
+        Transfers::instance()->addEnclosureDownload(item->text(), m_subscriptionsView->currentIndex()
+                                                    .data(SubscriptionModel::IdRole).toString());
     }
 }
 
@@ -590,7 +573,7 @@ void MainWindow::setCurrentSubscription(const QModelIndex &index) {
     m_browser->setHtml(index.data(SubscriptionModel::DescriptionRole).toString());
     m_enclosuresLabel->hide();
     m_enclosuresView->hide();
-    m_articlesModel->load(index.data(SubscriptionModel::IdRole).toInt());
+    m_articlesModel->load(index.data(SubscriptionModel::IdRole).toString());
 }
 
 void MainWindow::setCurrentArticle(const QModelIndex &index) {
@@ -606,7 +589,7 @@ void MainWindow::setCurrentArticle(const QModelIndex &index) {
     m_infoLabel->setText(tr("<b>Author:</b> %1<br><b>Categories:</b> %2")
                            .arg(author.isEmpty() ? tr("Unknown") : author)
                            .arg(categories.isEmpty() ? tr("None") : categories.join(", ")));
-    m_browser->setHtml(index.data(ArticleModel::BodyRole).toString());
+    m_browser->setHtml(index.data(ArticleModel::BodyRole).toString(), QUrl("file://"));
     m_enclosuresModel->clear();
     
     const QVariantList enclosures = index.data(ArticleModel::EnclosuresRole).toList();
@@ -639,7 +622,7 @@ void MainWindow::setCurrentArticle(const QModelIndex &index) {
     }
     
     if (!isRead) {
-        Database::markArticleRead(index.data(ArticleModel::IdRole).toInt(), true);
+        m_connection->markArticleRead(index.data(ArticleModel::IdRole).toString(), true);
     }
 }
 
@@ -678,6 +661,7 @@ void MainWindow::openUrlExternally(const QString &url) {
 
 void MainWindow::openUrlInTab(const QString &url) {
     Browser *browser = new Browser(url, m_stack);
+    browser->setAttribute(Qt::WA_DeleteOnClose, true);
     connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(browser, SIGNAL(openUrlInTab(QString)), this, SLOT(openUrlInTab(QString)));
     connect(browser, SIGNAL(titleChanged(QString)), this, SLOT(updateTabText(QString)));
@@ -697,7 +681,7 @@ void MainWindow::closeTab(int index) {
         if (QWidget *widget = m_stack->widget(index)) {
             m_stack->removeWidget(widget);
             m_tabs->removeTab(index);
-            widget->deleteLater();
+            widget->close();
             
             if (m_tabs->count() == 1) {
                 m_tabs->hide();
@@ -710,18 +694,19 @@ void MainWindow::closeCurrentTab() {
     closeTab(m_tabs->currentIndex());
 }
 
-void MainWindow::showDownloadsTab() {
-    if (m_downloadsTab) {
-        const int index = m_stack->indexOf(m_downloadsTab);
+void MainWindow::showTransfersTab() {
+    if (m_transfersTab) {
+        const int index = m_stack->indexOf(m_transfersTab);
         m_stack->setCurrentIndex(index);
         m_tabs->setCurrentIndex(index);
     }
     else {
-        m_downloadsTab = new DownloadsView(m_stack);
-        m_stack->addWidget(m_downloadsTab);
-        m_stack->setCurrentWidget(m_downloadsTab);
+        m_transfersTab = new TransfersView(m_stack);
+        m_transfersTab->setAttribute(Qt::WA_DeleteOnClose, true);
+        m_stack->addWidget(m_transfersTab);
+        m_stack->setCurrentWidget(m_transfersTab);
         m_tabs->addTab(tr("Downloads"));
-        m_tabs->setCurrentIndex(m_stack->indexOf(m_downloadsTab));
+        m_tabs->setCurrentIndex(m_stack->indexOf(m_transfersTab));
         m_tabs->show();
     }
 }
@@ -775,4 +760,18 @@ void MainWindow::onArticlesCountChanged(int count) {
 void MainWindow::onCurrentTabChanged(int index) {
     m_stack->setCurrentIndex(index);
     m_closeTabAction->setEnabled(index > 0);
+}
+
+void MainWindow::onConnectionFinished(DBConnection* connection) {
+    if (connection->status() == DBConnection::Error) {
+        QMessageBox::critical(this, tr("Database error"), connection->errorString());
+    }
+
+    connection->clear();
+}
+
+void MainWindow::onOfflineModeEnabledChanged(bool enabled) {
+    m_offlineModeAction->setChecked(enabled);
+    m_offlineModeAction->setIcon(enabled ? QIcon::fromTheme("network-offline")
+                                         : QIcon::fromTheme("network-transmit-receive"));
 }

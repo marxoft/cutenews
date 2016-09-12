@@ -15,14 +15,16 @@
  */
 
 #include "cutenews.h"
-#include "database.h"
+#include "dbconnection.h"
+#include "logger.h"
 #include "mainwindow.h"
+#include "settings.h"
 #include "transfers.h"
 #include <QCoreApplication>
-#include <QDBusConnection>
+#include <QDateTime>
 #include <QThread>
-#ifdef CUTENEWS_DEBUG
-#include <QDebug>
+#ifdef DBUS_INTERFACE
+#include <QDBusConnection>
 #endif
 
 CuteNews* CuteNews::self = 0;
@@ -30,9 +32,11 @@ CuteNews* CuteNews::self = 0;
 CuteNews::CuteNews() :
     QObject()
 {
+#ifdef DBUS_INTERFACE
     QDBusConnection connection = QDBusConnection::sessionBus();
     connection.registerService("org.marxoft.cutenews");
     connection.registerObject("/org/marxoft/cutenews", this, QDBusConnection::ExportScriptableSlots);
+#endif
 }
 
 CuteNews::~CuteNews() {
@@ -44,32 +48,41 @@ CuteNews* CuteNews::instance() {
 }
 
 bool CuteNews::quit() {
-    QThread *dbThread = Database::instance()->thread();
+    QThread *dbThread = DBConnection::asynchronousThread();
 
     if ((dbThread) && (dbThread != QThread::currentThread())) {
         if (dbThread->isRunning()) {
-#ifdef CUTENEWS_DEBUG
-            qDebug() << "Database thread still running. Calling QThread::quit()";
-#endif
+            Logger::log("CuteNews::quit(). Shutting down the database thread",
+                        Logger::LowVerbosity);
             connect(dbThread, SIGNAL(finished()), this, SLOT(quit()), Qt::UniqueConnection);
             dbThread->quit();
             return false;
         }
     }
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "Database thread finished. Quitting the application";
-#endif
+    
+    const int expiryDays = Settings::readArticleExpiry();
+    
+    if (expiryDays > -1) {
+        uint expiryDate = QDateTime::currentDateTime().toTime_t();
+
+        if (expiryDays > 0) {
+            expiryDate -= expiryDays * 86400;
+        }
+        
+        Logger::log("CuteNews::quit(). Deleting read articles older than "
+                    + QDateTime::fromTime_t(expiryDate).toString(Qt::ISODate));
+        DBConnection(false).deleteExpiredArticles(expiryDate);
+    }
+    
     Transfers::instance()->save();
+    Logger::log("CuteNews::quit(). Quitting the application", Logger::LowVerbosity);
     QCoreApplication::quit();
     return true;
 }
 
-bool CuteNews::showArticle(int articleId) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "CuteNews::showArticle" << articleId;
-#endif
-    if ((articleId) && (showWindow())) {
-        emit articleRequested(articleId);
+bool CuteNews::showArticle(const QString &id) {
+    if ((!id.isEmpty()) && (showWindow())) {
+        emit articleRequested(id);
         return true;
     }
     
@@ -77,9 +90,6 @@ bool CuteNews::showArticle(int articleId) {
 }
 
 bool CuteNews::showWindow() {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "CuteNews::showWindow";
-#endif
     if (m_window.isNull()) {
         m_window = new MainWindow;
     }

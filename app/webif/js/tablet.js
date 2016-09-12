@@ -288,7 +288,7 @@ function insertArticle(index, article) {
     var body = document.createElement("div");
     body.setAttribute("class", "ArticleBody");
     body.innerHTML = "<a target=\"_blank\" href=\"" + article.url + "\">" + article.title
-    + "</a><br><br><b>Author:</b> " + article.author + "<br><b>Date:</b> " + formatDateTime(new Date(article.date))
+    + "</a><br><br><b>Author:</b> " + article.author + "<br><b>Date:</b> " + formatDateTime(new Date(article.date * 1000))
     + "<br><b>Categories:</b> " + article.categories.join(", ") + "<br><br>" + article.body + "<br><br>";
     row.appendChild(body);
     

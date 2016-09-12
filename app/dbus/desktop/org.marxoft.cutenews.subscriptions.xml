@@ -3,7 +3,10 @@
 <node name="/org/marxoft/cutenews/subscriptions">
     <interface name="org.marxoft.cutenews.subscriptions">
     <method name="update">
-        <arg name="id" type="i" direction="in" />
+        <arg name="id" type="s" direction="in" />
+    </method>
+    <method name="update">
+        <arg name="ids" type="as" direction="in" />
     </method>
     <method name="updateAll">
         <arg name="ok" type="b" direction="out" />

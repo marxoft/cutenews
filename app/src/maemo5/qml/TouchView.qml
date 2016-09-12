@@ -24,7 +24,7 @@ Item {
     function showArticle(articleId) {
         windowStack.clear();
         windowStack.push(Qt.resolvedUrl("ArticleWindow.qml"));
-        var article = Qt.createQmlObject("import cuteNews 1.0; Article {}", windowStack.currentWindow);
+        var article = Qt.createQmlObject("import cuteNews 1.0; Article { autoUpdate: true; }", windowStack.currentWindow);
         article.load(articleId);
         windowStack.currentWindow.article = article;
     }
@@ -59,7 +59,7 @@ Item {
             top: parent.top
             topMargin: platformStyle.paddingMedium
         }
-        text: subscriptions.status == Subscriptions.Active ? qsTr("Cancel update") : qsTr("Update all")
+        text: subscriptions.status == Subscriptions.Active ? qsTr("Cancel updates") : qsTr("Update all")
         iconName: subscriptions.status == Subscriptions.Active ? "general_stop" : "general_refresh"
         activeFocusOnPress: false
         onClicked: subscriptions.status == Subscriptions.Active ? subscriptions.cancel() : subscriptions.updateAll()
@@ -138,7 +138,7 @@ Item {
         
         MenuItem {
             text: qsTr("Unsubscribe")
-            onTriggered: database.deleteSubscription(subscriptionModel.data(subscriptionView.currentIndex, "id"))
+            onTriggered: popupLoader.open(unsubscribeDialog, root)
         }
     }
     
@@ -159,18 +159,20 @@ Item {
             model: SubscriptionSourceTypeModel {}
             textRole: "name"
             onSelected: {
-                var sourceType = model.data(currentIndex, "value");
+                var value = model.data(currentIndex, "value");
                 
-                switch (sourceType) {
-                case Subscription.Plugin: {
-                    var dialog = popupLoader.load(pluginDialog, root);
-                    dialog.pluginName = model.data(currentIndex, "name");
+                switch (value) {
+                case Subscription.Url:
+                case Subscription.LocalFile:
+                case Subscription.Command: {
+                    var dialog = popupLoader.load(subscriptionDialog, root);
+                    dialog.sourceType = value;
                     dialog.open();
                     break;
                 }
                 default: {
-                    var dialog = popupLoader.load(subscriptionDialog, root);
-                    dialog.sourceType = sourceType;
+                    var dialog = popupLoader.load(pluginDialog, root);
+                    dialog.pluginId = value;
                     dialog.open();
                     break;
                 }
@@ -189,6 +191,15 @@ Item {
         id: pluginDialog
         
         PluginDialog {}
+    }
+    
+    Component {
+        id: unsubscribeDialog
+        
+        MessageBox {
+            text: qsTr("Unsubscribe from") + " '" + subscriptionModel.data(subscriptionView.currentIndex, "title") + "'?"
+            onAccepted: database.deleteSubscription(subscriptionModel.data(subscriptionView.currentIndex, "id"))
+        }
     }
     
     Component.onCompleted: {

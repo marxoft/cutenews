@@ -17,20 +17,10 @@
 #ifndef OPMLPARSER_H
 #define OPMLPARSER_H
 
-#include <QObject>
 #include <QXmlStreamReader>
 
-class OpmlParser : public QObject
+class OpmlParser
 {
-    Q_OBJECT
-    
-    Q_PROPERTY(QString description READ description NOTIFY ready)
-    Q_PROPERTY(FeedType feedType READ feedType NOTIFY ready)
-    Q_PROPERTY(QString errorString READ errorString NOTIFY error)
-    Q_PROPERTY(QString htmlUrl READ htmlUrl NOTIFY ready)
-    Q_PROPERTY(QString text READ text NOTIFY ready)
-    Q_PROPERTY(QString title READ title NOTIFY ready)
-    Q_PROPERTY(QString xmlUrl READ xmlUrl NOTIFY ready)
     
 public:
     enum FeedType {
@@ -38,10 +28,11 @@ public:
         Atom
     };
     
-    explicit OpmlParser(QObject *parent = 0);
-    explicit OpmlParser(const QByteArray &content, QObject *parent = 0);
-    explicit OpmlParser(const QString &content, QObject *parent = 0);
-    explicit OpmlParser(QIODevice *device, QObject *parent = 0);
+    explicit OpmlParser();
+    explicit OpmlParser(const QByteArray &content);
+    explicit OpmlParser(const QString &content);
+    explicit OpmlParser(QIODevice *device);
+    virtual ~OpmlParser();
         
     QString description() const;
         
@@ -57,11 +48,10 @@ public:
     
     QString xmlUrl() const;
     
-    Q_INVOKABLE bool setContent(const QByteArray &content);
-    Q_INVOKABLE bool setContent(const QString &content);
+    bool setContent(const QByteArray &content);
+    bool setContent(const QString &content);
     bool setContent(QIODevice *device);
     
-public Q_SLOTS:
     void clear();
     
     bool readHead();
@@ -82,11 +72,6 @@ private:
     
     void setXmlUrl(const QString &u);
 
-Q_SIGNALS:
-    void error();
-    void ready();
-
-private:
     QXmlStreamReader m_reader;
         
     QString m_description;

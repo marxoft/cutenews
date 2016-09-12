@@ -56,7 +56,7 @@ Dialog {
         Label {
             width: parent.width
             wrapMode: Text.WordWrap
-            text: qsTr("A user-friendly news and podcast aggregator.")
+            text: qsTr("A user-friendly news and podcast aggregator that can be extended via plugins.")
                   + "<br><br>&copy; Stuart Howarth 2016"
         }
     }

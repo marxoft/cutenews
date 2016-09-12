@@ -15,27 +15,25 @@
  */
 
 #include "articleserver.h"
-#include "database.h"
+#include "dbconnection.h"
 #include "json.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
 #include "utils.h"
-#include <QDateTime>
-#include <QSqlError>
 
-static QVariantMap articleQueryToMap(const QSqlQuery &query) {
+static QVariantMap articleQueryToMap(const DBConnection *connection) {
     QVariantMap article;
-    article["id"] = Database::articleId(query);
-    article["author"] = Database::articleAuthor(query);
-    article["body"] = Database::articleBody(query);
-    article["categories"] = Database::articleCategories(query);
-    article["date"] = Database::articleDate(query);
-    article["enclosures"] = Database::articleEnclosures(query);
-    article["favourite"] = Database::articleIsFavourite(query);
-    article["read"] = Database::articleIsRead(query);
-    article["subscriptionId"] = Database::articleSubscriptionId(query);
-    article["title"] = Database::articleTitle(query);
-    article["url"] = Database::articleUrl(query);
+    article["id"] = connection->value(0);
+    article["author"] = connection->value(1);
+    article["body"] = connection->value(2);
+    article["categories"] = connection->value(3).toString().split(", ", QString::SkipEmptyParts);
+    article["date"] = connection->value(4);
+    article["enclosures"] = QtJson::Json::parse(connection->value(5).toString());
+    article["favourite"] = connection->value(6).toBool();
+    article["read"] = connection->value(7).toBool();
+    article["subscriptionId"] = connection->value(8);
+    article["title"] = connection->value(9);
+    article["url"] = connection->value(10);
     return article;
 }
 
@@ -60,130 +58,120 @@ bool ArticleServer::handleRequest(QHttpRequest *request, QHttpResponse *response
     
     if (parts.size() == 1) {
         if (request->method() == QHttpRequest::HTTP_GET) {
-            const int requestId = Utils::createId();
             const QString queryString = Utils::urlQueryToSqlQuery(request->url());
-            m_requests.insert(requestId, response);
+            m_responses.enqueue(response);
             
             if (queryString.isEmpty()) {
-                Database::fetchArticles(requestId);
+                DBConnection::connection(this, SLOT(onArticlesFetched(DBConnection*)))->fetchArticles();
             }
             else {
-                Database::fetchArticles(queryString, requestId);
+                DBConnection::connection(this, SLOT(onArticlesFetched(DBConnection*)))->fetchArticles(queryString);
             }
             
-            connect(Database::instance(), SIGNAL(articlesFetched(QSqlQuery, int)),
-                    this, SLOT(onArticlesFetched(QSqlQuery, int)), Qt::UniqueConnection);
             return true;
         }
                
         writeResponse(response, QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
         return true;
     }
-    
-    const int articleId = parts.at(1).toInt();
-    
-    if (articleId == -1) {
-        return false;
-    }
-    
-    if (request->method() == QHttpRequest::HTTP_GET) {
-        const int requestId = Utils::createId();
-        m_requests.insert(requestId, response);
-            Database::fetchArticle(articleId, requestId);
-        connect(Database::instance(), SIGNAL(articleFetched(QSqlQuery, int)),
-                this, SLOT(onArticleFetched(QSqlQuery, int)), Qt::UniqueConnection);
-        return true;
-    }
 
-    if (request->method() == QHttpRequest::HTTP_PUT) {
-        const QVariantMap properties = QtJson::Json::parse(request->body()).toMap();
-
-        if ((!properties.contains("read")) && (!properties.contains("favourite"))) {
-            writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
-        }
-        else {
-            if (properties.contains("read")) {
-                Database::markArticleRead(articleId, properties.value("read").toBool());
+    if (parts.size() == 2) {
+        if (request->method() == QHttpRequest::HTTP_GET) {
+            if (parts.at(1) == "read") {
+                const QString id = Utils::urlQueryItemValue(request->url(), "id");
+                m_responses.enqueue(response);
+                DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->markArticleRead(id, true, true);
+            }
+            else if (parts.at(1) == "unread") {
+                const QString id = Utils::urlQueryItemValue(request->url(), "id");
+                m_responses.enqueue(response);
+                DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->markArticleRead(id, false, true);
+            }
+            else if (parts.at(1) == "favourite") {
+                const QString id = Utils::urlQueryItemValue(request->url(), "id");
+                m_responses.enqueue(response);
+                DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->markArticleFavourite(id, true, true);
+            }
+            else if (parts.at(1) == "unfavourite") {
+                const QString id = Utils::urlQueryItemValue(request->url(), "id");
+                m_responses.enqueue(response);
+                DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->markArticleFavourite(id, false, true);
+            }
+            else {
+                m_responses.enqueue(response);
+                DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->fetchArticle(parts.at(1));
             }
 
-            if (properties.contains("favourite")) {
-                Database::markArticleFavourite(articleId, properties.value("favourite").toBool());
-            }
-
-            writeResponse(response, QHttpResponse::STATUS_OK);
+            return true;
         }
-        
-        return true;
-    }
 
-    if (request->method() == QHttpRequest::HTTP_DELETE) {
-        Database::deleteArticle(articleId);
-        writeResponse(response, QHttpResponse::STATUS_OK);
-        return true;
+        if (request->method() == QHttpRequest::HTTP_DELETE) {
+            m_responses.enqueue(response);
+            DBConnection::connection(this, SLOT(onConnectionFinished(DBConnection*)))->deleteArticle(parts.at(1));
+            return true;
+        }
     }
     
     writeResponse(response, QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
     return true;
 }
 
-void ArticleServer::onArticleFetched(const QSqlQuery &query, int requestId) {
-    if (!m_requests.contains(requestId)) {
+void ArticleServer::onArticleFetched(DBConnection *connection) {
+    if (m_responses.isEmpty()) {
+        connection->deleteLater();
         return;
     }
     
-    QHttpResponse *response = m_requests.value(requestId);
+    QHttpResponse *response = m_responses.dequeue();
     
-    if (!response) {
-        return;
-    }
-    
-    const QSqlError error = query.lastError();
-    
-    if (error.isValid()) {
-        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+    if (connection->status() == DBConnection::Ready) {
+        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articleQueryToMap(connection)));
     }
     else {
-        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articleQueryToMap(query)));
+        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
     }
     
-    m_requests.remove(requestId);
-    
-    if (m_requests.isEmpty()) {
-        disconnect(Database::instance(), SIGNAL(articleFetched(QSqlQuery, int)),
-                   this, SLOT(onArticleFetched(QSqlQuery, int)));
-    }
+    connection->deleteLater();
 }
 
-void ArticleServer::onArticlesFetched(QSqlQuery query, int requestId) {
-    if (!m_requests.contains(requestId)) {
+void ArticleServer::onArticlesFetched(DBConnection *connection) {
+    if (m_responses.isEmpty()) {
+        connection->deleteLater();
         return;
     }
     
-    QHttpResponse *response = m_requests.value(requestId);
+    QHttpResponse *response = m_responses.dequeue();
     
-    if (!response) {
-        return;
-    }
-    
-    const QSqlError error = query.lastError();
-    
-    if (error.isValid()) {
-        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
-    }
-    else {
+    if (connection->status() == DBConnection::Ready) {
         QVariantList articles;
         
-        while (query.next()) {
-            articles << articleQueryToMap(query);
+        while (connection->nextRecord()) {
+            articles << articleQueryToMap(connection);
         }
         
         writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articles));
     }
-    
-    m_requests.remove(requestId);
-    
-    if (m_requests.isEmpty()) {
-        disconnect(Database::instance(), SIGNAL(articlesFetched(QSqlQuery, int)),
-                   this, SLOT(onArticlesFetched(QSqlQuery, int)));
+    else {
+        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
     }
+    
+    connection->deleteLater();
+}
+
+void ArticleServer::onConnectionFinished(DBConnection *connection) {
+    if (m_responses.isEmpty()) {
+        connection->deleteLater();
+        return;
+    }
+    
+    QHttpResponse *response = m_responses.dequeue();
+    
+    if (connection->status() == DBConnection::Ready) {
+        writeResponse(response, QHttpResponse::STATUS_OK);
+    }
+    else {
+        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+    }
+    
+    connection->deleteLater();
 }

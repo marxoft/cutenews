@@ -21,7 +21,7 @@ import cuteNews 1.0
 Window {
     id: root
     
-    property int subscriptionId
+    property string subscriptionId
     
     title: qsTr("Articles")
     showProgressIndicator: (articleModel.status == ArticleModel.Active)

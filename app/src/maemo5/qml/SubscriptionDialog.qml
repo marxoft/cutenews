@@ -21,18 +21,19 @@ import cuteNews 1.0
 Dialog {
     id: root
     
-    property int subscriptionId: -1
+    property string subscriptionId
     property int sourceType: Subscription.Url
     
     title: qsTr("Subscription properties")
     height: flow.height + platformStyle.paddingMedium
-  
+    
     Flow {
         id: flow
-    
+        
         anchors {
             left: parent.left
-            right: parent.right
+            right: button.left
+            rightMargin: platformStyle.paddingMedium
             bottom: parent.bottom
         }
         spacing: platformStyle.paddingMedium
@@ -41,14 +42,14 @@ Dialog {
             width: parent.width
             text: qsTr("Source")
         }
-            
+        
         TextField {
             id: sourceField
             
             width: parent.width - sourceButton.width - parent.spacing
             onAccepted: if (text) root.accept();
         }
-    
+        
         Button {
             id: sourceButton
             
@@ -57,21 +58,45 @@ Dialog {
             onClicked: popupLoader.open(fileDialog, root);
         }
         
+        Label {
+            width: parent.width
+            text: qsTr("Update interval (0 to disable)")
+        }
+        
+        SpinBox {
+            id: updateIntervalSpinBox
+            
+            width: parent.width - updateIntervalSelector.width - parent.spacing
+        }
+        
+        ComboBox {
+            id: updateIntervalSelector
+            
+            model: UpdateIntervalTypeModel {
+                id: updateIntervalModel
+            }
+            textRole: "name"
+        }
+        
         CheckBox {
             id: enclosuresCheckBox
             
-            width: parent.width - acceptButton.width - parent.spacing
+            width: parent.width
             text: qsTr("Download enclosures automatically")
         }
+    }
+    
+    Button {
+        id: button
         
-        Button {
-            id: acceptButton
-            
-            style: DialogButtonStyle {}
-            text: qsTr("Done")
-            enabled: sourceField.text != ""
-            onClicked: root.accept()
+        anchors {
+            right: parent.right
+            bottom: parent.bottom
         }
+        style: DialogButtonStyle {}
+        text: qsTr("Done")
+        enabled: sourceField.text != ""
+        onClicked: root.accept()
     }
 
     Subscription {
@@ -82,6 +107,18 @@ Dialog {
                 sourceField.text = source;
                 root.sourceType = sourceType;
                 enclosuresCheckBox.checked = downloadEnclosures;
+                
+                if (updateInterval > 0) {
+                    for (var i = updateIntervalModel.count - 1; i >= 0; i--) {
+                        var value = updateIntervalModel.data(i, "value");
+                        
+                        if ((value > 0) && (updateInterval % value == 0)) {
+                            updateIntervalSpinBox.value = updateInterval / value;
+                            updateIntervalSelector.currentIndex = i;
+                            break;
+                        }
+                    }
+                }                
             }
         }
     }
@@ -102,18 +139,24 @@ Dialog {
         if (status == DialogStatus.Open) {
             sourceField.forceActiveFocus();
             
-            if (subscriptionId > 0) {
+            if (subscriptionId) {
                 subscription.load(subscriptionId);
             }
         }
     }
     onAccepted: {
+        var interval = updateIntervalSpinBox.value;
+        
+        if (interval > 0) {
+            interval *= updateIntervalModel.data(updateIntervalSelector.currentIndex, "value");
+        }
+        
         if (subscriptionId > 0) {
             database.updateSubscription(subscriptionId, {source: sourceField.text,
-                                        downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0});
+                downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0, updateInterval: interval});
         }
         else {
-            subscriptions.create(sourceField.text, sourceType, enclosuresCheckBox.checked);
+            subscriptions.create(sourceField.text, sourceType, enclosuresCheckBox.checked, interval);
         }
     }
 }

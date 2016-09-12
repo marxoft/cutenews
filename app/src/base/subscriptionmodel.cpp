@@ -15,23 +15,21 @@
  */
 
 #include "subscriptionmodel.h"
-#include "database.h"
+#include "dbconnection.h"
+#include "dbnotify.h"
 #include "definitions.h"
+#include "json.h"
 #include "subscription.h"
-#include <QSqlError>
 #ifdef WIDGETS_UI
 #include <QFont>
 #include <QIcon>
 #endif
-
-static const int REQUEST_ID = 1000;
 
 SubscriptionModel::SubscriptionModel(QObject *parent) :
     QAbstractListModel(parent),
     m_status(Idle)
 {
     m_roles[IdRole] = "id";
-    m_roles[CacheSizeRole] = "cacheSize";
     m_roles[DescriptionRole] = "description";
     m_roles[DownloadEnclosuresRole] = "downloadEnclosures";
     m_roles[IconPathRole] = "iconPath";
@@ -46,8 +44,9 @@ SubscriptionModel::SubscriptionModel(QObject *parent) :
 #if QT_VERSION <= 0x050000
     setRoleNames(m_roles);
 #endif
-    connect(Database::instance(), SIGNAL(subscriptionsAdded(int)), this, SLOT(onSubscriptionsAdded(int)));
-    connect(Database::instance(), SIGNAL(subscriptionDeleted(int)), this, SLOT(onSubscriptionDeleted(int)));
+    connect(DBNotify::instance(), SIGNAL(subscriptionsAdded(QStringList)),
+            this, SLOT(onSubscriptionsAdded(QStringList)));
+    connect(DBNotify::instance(), SIGNAL(subscriptionDeleted(QString)), this, SLOT(onSubscriptionDeleted(QString)));
 }
 
 QString SubscriptionModel::errorString() const {
@@ -86,7 +85,7 @@ int SubscriptionModel::columnCount(const QModelIndex &) const {
 #endif
 
 QVariant SubscriptionModel::data(const QModelIndex &index, int role) const {
-    if (Subscription *subscription = get(index.row())) {
+    if (const Subscription *subscription = get(index.row())) {
 #ifdef WIDGETS_UI
         switch (index.column()) {
         case 0:
@@ -208,16 +207,14 @@ void SubscriptionModel::clear() {
 void SubscriptionModel::load() {
     clear();
     beginInsertRows(QModelIndex(), 0, 1);
-    m_list << new Subscription(ALL_ARTICLES_SUBSCRIPTION_ID, 0, tr("All articles"), false, QString(), QDateTime(),
-                               QString(), Subscription::None, tr("All articles"), 0, QUrl(), 0, this);
-    m_list << new Subscription(FAVOURITES_SUBSCRIPTION_ID, 0, tr("Favourites"), false, QString(), QDateTime(),
-                               QString(), Subscription::None, tr("Favourites"), 0, QUrl(), 0, this);
+    m_list << new Subscription(ALL_ARTICLES_SUBSCRIPTION_ID, tr("All articles"), false, QString(), QDateTime(),
+                               QString(), Subscription::None, tr("All articles"), 0, QString(), 0, this);
+    m_list << new Subscription(FAVOURITES_SUBSCRIPTION_ID, tr("Favourites"), false, QString(), QDateTime(),
+                               QString(), Subscription::None, tr("Favourites"), 0, QString(), 0, this);
     endInsertRows();
     emit countChanged(rowCount());
     setStatus(Active);
-    connect(Database::instance(), SIGNAL(subscriptionsFetched(QSqlQuery, int)),
-            this, SLOT(onSubscriptionsFetched(QSqlQuery, int)));
-    Database::fetchSubscriptions(REQUEST_ID);
+    DBConnection::connection(this, SLOT(onSubscriptionsFetched(DBConnection*)))->fetchSubscriptions();
 }
 
 void SubscriptionModel::onSubscriptionChanged(Subscription *subscription) {
@@ -233,16 +230,14 @@ void SubscriptionModel::onSubscriptionChanged(Subscription *subscription) {
     }
 }
 
-void SubscriptionModel::onSubscriptionsAdded(int count) {
+void SubscriptionModel::onSubscriptionsAdded(const QStringList &ids) {
     if (status() == Ready) {
         setStatus(Active);
-        connect(Database::instance(), SIGNAL(subscriptionsFetched(QSqlQuery, int)),
-                this, SLOT(onSubscriptionsFetched(QSqlQuery, int)));
-        Database::fetchSubscriptions(QString("ORDER BY id DESC LIMIT %1").arg(count), REQUEST_ID);
+        DBConnection::connection(this, SLOT(onSubscriptionsFetched(DBConnection*)))->fetchSubscriptions(ids);
     }
 }
 
-void SubscriptionModel::onSubscriptionDeleted(int id) {
+void SubscriptionModel::onSubscriptionDeleted(const QString &id) {
     for (int i = 0; i < m_list.size(); i++) {
         if (m_list.at(i)->id() == id) {
             beginRemoveRows(QModelIndex(), i, i);
@@ -254,26 +249,35 @@ void SubscriptionModel::onSubscriptionDeleted(int id) {
     }
 }
 
-void SubscriptionModel::onSubscriptionsFetched(QSqlQuery query, int requestId) {
-    if (requestId == REQUEST_ID) {
-        disconnect(Database::instance(), SIGNAL(subscriptionsFetched(QSqlQuery, int)),
-                   this, SLOT(onSubscriptionsFetched(QSqlQuery, int)));
-        
-        if (query.lastError().isValid()) {
-            setErrorString(query.lastError().text());
-            setStatus(Error);
-            return;
-        }
-        
-        while (query.next()) {
+void SubscriptionModel::onSubscriptionsFetched(DBConnection *connection) {
+    if (connection->status() == DBConnection::Ready) {
+        while (connection->nextRecord()) {
             beginInsertRows(QModelIndex(), rowCount(), rowCount());
-            Subscription *subscription = new Subscription(query, this);
+            Subscription *subscription = new Subscription(connection->value(0).toString(),
+                                                          connection->value(1).toString(),
+                                                          connection->value(2).toBool(),
+                                                          connection->value(3).toString(),
+                                                          QDateTime::fromTime_t(connection->value(4).toInt()),
+                                                          QtJson::Json::parse(connection->value(5).toString()),
+                                                          Subscription::SourceType(connection->value(6).toInt()),
+                                                          connection->value(7).toString(),
+                                                          connection->value(8).toInt(),
+                                                          connection->value(9).toString(),
+                                                          connection->value(10).toInt(), this);
+            subscription->setAutoUpdate(true);
             connect(subscription, SIGNAL(dataChanged(Subscription*)), this, SLOT(onSubscriptionChanged(Subscription*)));
             m_list << subscription;
             endInsertRows();
         }
         
         emit countChanged(rowCount());
+        setErrorString(QString());
         setStatus(Ready);
     }
+    else {
+        setErrorString(connection->errorString());
+        setStatus(Error);
+    }
+    
+    connection->deleteLater();
 }

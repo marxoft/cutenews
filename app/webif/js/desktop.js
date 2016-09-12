@@ -336,7 +336,7 @@ function insertArticle(index, article) {
     
     var col = document.createElement("div");
     col.setAttribute("class", "ArticleDateColumn");
-    col.innerHTML = formatDateTime(new Date(article.date));
+    col.innerHTML = formatDateTime(new Date(article.date * 1000));
     row.appendChild(col);
     
     col = document.createElement("div");

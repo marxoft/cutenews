@@ -17,36 +17,45 @@
 #include "cutenews.h"
 #include "article.h"
 #include "articlemodel.h"
-#include "database.h"
+#include "cachingnetworkaccessmanagerfactory.h"
+#include "categorymodel.h"
+#include "categorynamemodel.h"
+#include "concurrenttransfersmodel.h"
+#include "dbconnection.h"
 #include "definitions.h"
+#include "logger.h"
+#include "loggerverbositymodel.h"
 #include "networkproxytypemodel.h"
+#include "pluginmanager.h"
 #include "settings.h"
 #include "subscription.h"
 #include "subscriptionmodel.h"
-#include "subscriptionplugins.h"
 #include "subscriptions.h"
 #include "subscriptionsourcetypemodel.h"
 #include "transfermodel.h"
+#include "transferprioritymodel.h"
 #include "transfers.h"
+#include "updateintervaltypemodel.h"
 #include "urlopenermodel.h"
 #include "userinterfacemodel.h"
 #include "utils.h"
 #include "viewmodemodel.h"
-#include <QSqlQuery>
+#include <QCoreApplication>
 #include <QDBusConnection>
 #include <QDeclarativeEngine>
 #include <QDeclarativeComponent>
 #include <QDeclarativeContext>
 #include <qdeclarative.h>
-#include <QDebug>
+#include <QThread>
 
-static const QString WIDGET_FILENAME("/opt/cutenews/qml/Widget.qml");
-static const QString WINDOW_FILENAME("/opt/cutenews/qml/MainWindow.qml");
+const QString CuteNews::WIDGET_FILENAME("/opt/cutenews/qml/Widget.qml");
+const QString CuteNews::WINDOW_FILENAME("/opt/cutenews/qml/MainWindow.qml");
 
 CuteNews* CuteNews::self = 0;
 
 CuteNews::CuteNews() :
     QObject(),
+    m_connection(0),
     m_engine(0)
 {
     QDBusConnection connection = QDBusConnection::sessionBus();
@@ -56,17 +65,55 @@ CuteNews::CuteNews() :
 
 CuteNews::~CuteNews() {
     self = 0;
+    
+    if (m_connection) {
+        delete m_connection;
+        m_connection = 0;
+    }
 }
 
 CuteNews* CuteNews::instance() {
     return self ? self : self = new CuteNews;
 }
 
-bool CuteNews::showArticle(int articleId) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "CuteNews::showArticle" << articleId;
-#endif
-    if ((articleId) && (showWindow())) {
+bool CuteNews::quit() {
+    if (m_connection) {
+        m_connection->close();
+    }
+    
+    QThread *dbThread = DBConnection::asynchronousThread();
+
+    if ((dbThread) && (dbThread != QThread::currentThread())) {
+        if (dbThread->isRunning()) {
+            Logger::log("CuteNews::quit(). Shutting down the database thread", Logger::LowVerbosity);
+            connect(dbThread, SIGNAL(finished()), this, SLOT(quit()), Qt::UniqueConnection);
+            dbThread->quit();
+            return false;
+        }
+    }
+        
+    const int expiryDays = Settings::readArticleExpiry();
+    
+    if (expiryDays > -1) {
+        uint expiryDate = QDateTime::currentDateTime().toTime_t();
+
+        if (expiryDays > 0) {
+            expiryDate -= expiryDays * 86400;
+        }
+        
+        Logger::log("CuteNews::quit(). Deleting read articles older than "
+                    + QDateTime::fromTime_t(expiryDate).toString(Qt::ISODate));
+        DBConnection(false).deleteExpiredArticles(expiryDate);
+    }
+    
+    Transfers::instance()->save();
+    Logger::log("CuteNews::quit(). Quitting the application", Logger::LowVerbosity);
+    QCoreApplication::quit();
+    return true;
+}
+
+bool CuteNews::showArticle(const QString &articleId) {
+    if ((!articleId.isEmpty()) && (showWindow())) {
         emit articleRequested(articleId);
         return true;
     }
@@ -75,9 +122,6 @@ bool CuteNews::showArticle(int articleId) {
 }
 
 bool CuteNews::showWidget() {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "CuteNews::showWidget";
-#endif
     if (m_widget.isNull()) {
         if (QObject *obj = createQmlObject(WIDGET_FILENAME)) {
             m_widget = obj;
@@ -89,9 +133,6 @@ bool CuteNews::showWidget() {
 }
 
 bool CuteNews::showWindow() {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "CuteNews::showWindow";
-#endif
     if (m_window.isNull()) {
         m_window = createQmlObject(WINDOW_FILENAME);
     }
@@ -109,35 +150,50 @@ void CuteNews::initEngine() {
         return;
     }
     
-    qRegisterMetaType<QSqlQuery>("QSqlQuery");
     qRegisterMetaType< QList<QVariantList> >("QList<QVariantList>");
     qmlRegisterType<Article>("cuteNews", 1, 0, "Article");
     qmlRegisterType<ArticleModel>("cuteNews", 1, 0, "ArticleModel");
+    qmlRegisterType<CategoryModel>("cuteNews", 1, 0, "CategoryModel");
+    qmlRegisterType<CategoryNameModel>("cuteNews", 1, 0, "CategoryNameModel");
+    qmlRegisterType<ConcurrentTransfersModel>("cuteNews", 1, 0, "ConcurrentTransfersModel");
+    qmlRegisterType<DBConnection>("cuteNews", 1, 0, "DBConnection");
+    qmlRegisterType<LoggerVerbosityModel>("cuteNews", 1, 0, "LoggerVerbosityModel");
     qmlRegisterType<NetworkProxyTypeModel>("cuteNews", 1, 0, "NetworkProxyTypeModel");
     qmlRegisterType<SelectionModel>("cuteNews", 1, 0, "SelectionModel");
     qmlRegisterType<Subscription>("cuteNews", 1, 0, "Subscription");
     qmlRegisterType<SubscriptionModel>("cuteNews", 1, 0, "SubscriptionModel");
     qmlRegisterType<SubscriptionSourceTypeModel>("cuteNews", 1, 0, "SubscriptionSourceTypeModel");
-    qmlRegisterType<Transfer>("cuteNews", 1, 0, "Transfer");
     qmlRegisterType<TransferModel>("cuteNews", 1, 0, "TransferModel");
+    qmlRegisterType<TransferPriorityModel>("cuteNews", 1, 0, "TransferPriorityModel");
+    qmlRegisterType<UpdateIntervalTypeModel>("cuteNews", 1, 0, "UpdateIntervalTypeModel");
     qmlRegisterType<UserInterfaceModel>("cuteNews", 1, 0, "UserInterfaceModel");
     qmlRegisterType<ViewModeModel>("cuteNews", 1, 0, "ViewModeModel");
+    
+    qmlRegisterUncreatableType<FeedPluginConfig>("cuteNews", 1, 0, "FeedPluginConfig", "");
     qmlRegisterUncreatableType<Subscriptions>("cuteNews", 1, 0, "Subscriptions", "");
+    qmlRegisterUncreatableType<Transfer>("cuteNews", 1, 0, "Transfer", "");
     
     m_engine = new QDeclarativeEngine(this);
+    m_engine->setNetworkAccessManagerFactory(new CachingNetworkAccessManagerFactory);
+    
+    Logger *logger = new Logger(this);
     
     QDeclarativeContext *context = m_engine->rootContext();
     context->setContextProperty("cutenews", this);
-    context->setContextProperty("database", Database::instance());
-    context->setContextProperty("downloads", Transfers::instance());
-    context->setContextProperty("plugins", new SubscriptionPlugins(this));
+    context->setContextProperty("database", m_connection ? m_connection : m_connection = new DBConnection(true));
+    context->setContextProperty("logger", logger);
+    context->setContextProperty("plugins", PluginManager::instance());
     context->setContextProperty("settings", Settings::instance());
     context->setContextProperty("subscriptions", Subscriptions::instance());
+    context->setContextProperty("transfers", Transfers::instance());
     context->setContextProperty("urlopener", new UrlOpenerModel(this));
     context->setContextProperty("utils", new Utils(this));
     context->setContextProperty("ALL_ARTICLES_SUBSCRIPTION_ID", ALL_ARTICLES_SUBSCRIPTION_ID);
     context->setContextProperty("FAVOURITES_SUBSCRIPTION_ID", FAVOURITES_SUBSCRIPTION_ID);
     context->setContextProperty("VERSION_NUMBER", VERSION_NUMBER);
+    
+    connect(Settings::instance(), SIGNAL(loggerFileNameChanged(QString)), logger, SLOT(setFileName(QString)));
+    connect(Settings::instance(), SIGNAL(loggerVerbosityChanged(int)), logger, SLOT(setVerbosity(int)));
 }
 
 QObject* CuteNews::createQmlObject(const QString &fileName) {
@@ -152,7 +208,7 @@ QObject* CuteNews::createQmlObject(const QString &fileName) {
 
     if (component->isError()) {
         foreach (QDeclarativeError error, component->errors()) {
-            qDebug() << error.toString();
+            Logger::log("CuteNews::createQmlObject(). Error: " + error.toString());
         }        
     }
     

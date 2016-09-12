@@ -1,0 +1,73 @@
+cutenews (1.0.0) unstable; urgency=low
+
+  * New plugin API adding support for Qt/C++ and JavaScript plugins.
+  * New database schema resulting in loss of existing feeds.
+  * Add disk cache for article data.
+  * Add user-definable expiry of read articles.
+  * Add per-feed update scheduling.
+  * Add custom command and category features to downloads.
+  * Add logging with user-definable verbosity.
+  * Bug fixes.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Fri, 09 Sep 2016 20:03:14 +0100
+
+cutenews (0.6.0) unstable; urgency=low
+
+  * Add support for Hildon Event Feed (install cutenewsevents package to enable and configure).
+  * Bug fix: Author sometimes not displayed when viewing an article.
+  * Bug fix: Unread articles sometimes set to a negative value.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sat, 13 Feb 2016 16:04:34 +0100
+
+cutenews (0.5.0) unstable; urgency=low
+
+  * Add optional automatic scrolling in the homescreen widget.
+  * Prevent desktop receiving touch events when displaying homescreen settings dialog.
+  * Focus subscription view on startup.
+  * Position article view at beginning when switching between articles.
+  * Other minor UI tweaks.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sun, 07 Feb 2016 22:53:19 +0100
+
+cutenews (0.4.0) unstable; urgency=low
+
+  * Add org.marxoft.cutenews.subscriptions DBus service providing update and updateAll methods.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Thu, 27 Aug 2015 00:17:35 +0100
+
+cutenews (0.3.0) unstable; urgency=low
+
+  * Add support for subscription plugins.
+  * Fix locale issues with article publication dates.
+  * Improve feed parsing.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Wed, 26 Aug 2015 11:52:53 +0100
+
+cutenews (0.2.2) unstable; urgency=low
+
+  * Add homescreen widget.
+  * Add OPML import.
+  * URL opener fixes.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Wed, 19 Aug 2015 01:28:31 +0100
+
+cutenews (0.1.1) unstable; urgency=low
+
+  * Implement lazy loading of articles.
+  * URL opener fixes.
+  * UI tweaks.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sun, 02 Aug 2015 03:03:24 +0100
+
+cutenews (0.1.0) unstable; urgency=low
+
+  * Add OSSO user interface.
+  * Add search feature.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Thu, 30 Jul 2015 15:05:41 +0100
+
+cutenews (0.0.1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sun, 26 Jul 2015 17:05:36 +0100

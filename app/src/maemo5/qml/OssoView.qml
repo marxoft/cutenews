@@ -25,7 +25,7 @@ Item {
         subscriptionView.currentIndex = 0;
         appWindow.windowTitle = "cuteNews";
         subscriptionView.forceActiveFocus();
-        articleModel.search("WHERE id = " + articleId);
+        articleModel.search("WHERE id = '" + articleId + "'");
     }
     
     anchors.fill: parent
@@ -224,7 +224,7 @@ Item {
         id: enclosureMenu
         
         property url enclosureUrl
-        property int subscriptionId
+        property string subscriptionId
         
         MenuItem {
             text: qsTr("Open externally")
@@ -235,7 +235,7 @@ Item {
         MenuItem {
             text: qsTr("Download")
             onTriggered: {
-                downloads.addDownloadTransfer(enclosureMenu.enclosureUrl, enclosureMenu.subscriptionId);
+                transfers.addEnclosureDownload(enclosureMenu.enclosureUrl, enclosureMenu.subscriptionId);
                 informationBox.information(qsTr("Download added"));
             }
         }
@@ -290,15 +290,12 @@ Item {
         }
         
         ToolButton {
-            id: deleteButton
+            id: unsubscribeButton
             
             iconName: "general_delete"
             activeFocusOnPress: false
             enabled: subscriptionView.currentIndex > 1
-            onClicked: {
-                database.deleteSubscription(subscriptionModel.data(subscriptionView.currentIndex, "id"));
-                appWindow.title = "cuteNews";
-            }
+            onClicked: popupLoader.open(unsubscribeDialog, root)
         }
         
         ToolButton {
@@ -355,18 +352,20 @@ Item {
             model: SubscriptionSourceTypeModel {}
             textRole: "name"
             onSelected: {
-                var sourceType = model.data(currentIndex, "value");
+                var value = model.data(currentIndex, "value");
                 
-                switch (sourceType) {
-                case Subscription.Plugin: {
-                    var dialog = popupLoader.load(pluginDialog, root);
-                    dialog.pluginName = model.data(currentIndex, "name");
+                switch (value) {
+                case Subscription.Url:
+                case Subscription.LocalFile:
+                case Subscription.Command: {
+                    var dialog = popupLoader.load(subscriptionDialog, root);
+                    dialog.sourceType = value;
                     dialog.open();
                     break;
                 }
                 default: {
-                    var dialog = popupLoader.load(subscriptionDialog, root);
-                    dialog.sourceType = sourceType;
+                    var dialog = popupLoader.load(pluginDialog, root);
+                    dialog.pluginId = value;
                     dialog.open();
                     break;
                 }
@@ -385,6 +384,18 @@ Item {
         id: pluginDialog
         
         PluginDialog {}
+    }
+    
+    Component {
+        id: unsubscribeDialog
+        
+        MessageBox {
+            text: qsTr("Unsubscribe from") + " '" + subscriptionModel.data(subscriptionView.currentIndex, "title") + "'?"
+            onAccepted: {
+                database.deleteSubscription(subscriptionModel.data(subscriptionView.currentIndex, "id"));
+                appWindow.title = "cuteNews";
+            }
+        }
     }
     
     Component.onCompleted: {

@@ -16,13 +16,11 @@
 
 #include "urlopenermodel.h"
 #include "definitions.h"
+#include "logger.h"
 #include <QRegExp>
 #include <QSettings>
 #include <QStringList>
 #include <QProcess>
-#ifdef CUTENEWS_DEBUG
-#include <QDebug>
-#endif
 
 class Opener : public QVariantMap
 {
@@ -47,25 +45,19 @@ bool UrlOpenerModel::open(const QString &url) {
         const QVariantMap opener = data(i, "value").toMap();
         
         if (QRegExp(opener.value("regExp").toString()).indexIn(url) == 0) {
-            const QString command = opener.value("command").toString().replace("%URL%", url);
-#ifdef CUTENEWS_DEBUG
-            qDebug() << "UrlOpener::open: Opening" << url << "with command" << command;
-#endif
-            QProcess *process = new QProcess(this);
-            connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), process, SLOT(deleteLater()));
-            process->start(command);
-            return true;
+            const QString command = opener.value("command").toString().replace("%u", url);
+            Logger::log(QString("UrlOpener::open(). URL: %1, Command: %2").arg(url).arg(command), Logger::LowVerbosity);
+            return QProcess::startDetached(command);
         }
     }
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "UrlOpener::open: No opener found for" << url;
-#endif
+    
+    Logger::log("UrlOpener::open(). No opener found for URL: " + url, Logger::LowVerbosity);
     return false;
 }
 
 void UrlOpenerModel::load() {
     clear();
-    QSettings settings(STORAGE_PATH + "urlopeners", QSettings::NativeFormat);
+    QSettings settings(APP_CONFIG_PATH + "urlopeners", QSettings::IniFormat);
 
     foreach (const QString &group, settings.childGroups()) {
         settings.beginGroup(group);
@@ -74,21 +66,19 @@ void UrlOpenerModel::load() {
 
         if ((!regExp.isEmpty()) && (!command.isEmpty())) {
             append(group, Opener(group, regExp, command));
-#ifdef CUTENEWS_DEBUG
-            qDebug() << "UrlOpenerModel::load: Opener added" << group << regExp << command;
-#endif
+            Logger::log(QString("UrlOpenerModel::load(). Opener added. Name: %1, RegExp: %2, Command: %3")
+                               .arg(group).arg(regExp).arg(command), Logger::LowVerbosity);
         }
-#ifdef CUTENEWS_DEBUG
         else {
-            qDebug() << "UrlOpenerModel::load: Cannot add opener" << group << regExp << command;
+            Logger::log(QString("UrlOpenerModel::load(). Cannot add opener. Name: %1, RegExp: %2, Command: %3")
+                               .arg(group).arg(regExp).arg(command));
         }
-#endif
         settings.endGroup();
     }
 }
 
 void UrlOpenerModel::save() {
-    QSettings settings(STORAGE_PATH + "urlopeners", QSettings::NativeFormat);
+    QSettings settings(APP_CONFIG_PATH + "urlopeners", QSettings::IniFormat);
     settings.clear();
     
     for (int i = 0; i < rowCount(); i++) {

@@ -17,7 +17,6 @@
 #ifndef DEFINITIONS_H
 #define DEFINITIONS_H
 
-#include <QRegExp>
 #include <QStringList>
 #if QT_VERSION >= 0x050000
 #include <QStandardPaths>
@@ -25,31 +24,53 @@
 #include <QDesktopServices>
 #endif
 
-static const int ALL_ARTICLES_SUBSCRIPTION_ID = -1;
-static const int FAVOURITES_SUBSCRIPTION_ID = 0;
+// Home
+#if QT_VERSION >= 0x050000
+static const QString HOME_PATH(QStandardPaths::writableLocation(QStandardPaths::HomeLocation));
+#else
+static const QString HOME_PATH(QDesktopServices::storageLocation(QDesktopServices::HomeLocation));
+#endif
 
-static const int MAX_CONCURRENT_TRANSFERS = 4;
-static const int MAX_REDIRECTS = 8;
+// Plugins
+static const QStringList PLUGIN_PATHS = QStringList() << QString("/usr/share/cutenews/plugins/")
+                                                      << QString(HOME_PATH + "/cutenews/plugins/");
 
+static const QString LIB_PREFIX("lib");
+static const QString LIB_SUFFIX(".so");
+
+// Icons
+static const QString DEFAULT_ICON("/usr/share/cutenews/icons/cutenews.png");
 static const int ICON_SIZE = 16;
 
-static const QRegExp ILLEGAL_FILENAME_CHARS_RE("[\"\\/@&~=:?#!|<>*^]");
+// Cache
+static const QString CACHE_PREFIX;
+static const QString CACHE_PATH(HOME_PATH + "/cutenews/cache/");
 
-static const QString VERSION_NUMBER("0.7.0");
+// Database
+static const QString DATABASE_PATH(HOME_PATH + "/cutenews/");
+static const QString DATABASE_NAME(DATABASE_PATH + "cutenews.db");
 
-static const QString WEB_INTERFACE_PATH("/opt/cutenews/webif/");
+// Config
+static const QString APP_CONFIG_PATH(HOME_PATH + "/.config/cutenews/");
+static const QString PLUGIN_CONFIG_PATH(APP_CONFIG_PATH + "plugins/");
 
-#if QT_VERSION >= 0x050000
-static const QString DATABASE_PATH(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/cuteNews/");
-static const QString DOWNLOAD_PATH(QStandardPaths::writableLocation(QStandardPaths::DownloadLocation) + "/cuteNews/");
-static const QString ICON_PATH(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/cuteNews/icons/");
-static const QString STORAGE_PATH(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + "/cuteNews/");
-#else
-static const QString DATABASE_PATH(QDesktopServices::storageLocation(QDesktopServices::HomeLocation) + "/.config/cuteNews/");
-static const QString DOWNLOAD_PATH(QDesktopServices::storageLocation(QDesktopServices::HomeLocation) + "/cuteNews/");
-static const QString ICON_PATH(QDesktopServices::storageLocation(QDesktopServices::HomeLocation) + "/.config/cuteNews/icons/");
-static const QString STORAGE_PATH(QDesktopServices::storageLocation(QDesktopServices::HomeLocation) + "/.config/cuteNews/");
-#endif
-static const QStringList PLUGIN_PATHS = QStringList() << "/opt/cutenews/plugins/" << STORAGE_PATH + "plugins/";
+// Downloads
+static const QString DOWNLOAD_PATH(HOME_PATH + "/Downloads/cutenews/");
+
+// Network
+static const int DOWNLOAD_BUFFER_SIZE = 64000;
+static const int MAX_CONCURRENT_TRANSFERS = 4;
+static const int MAX_REDIRECTS = 8;
+static const QByteArray USER_AGENT("Wget/1.13.4 (linux-gnu)");
+
+// Subscriptions
+static const QString ALL_ARTICLES_SUBSCRIPTION_ID("all_articles");
+static const QString FAVOURITES_SUBSCRIPTION_ID("favourite_articles");
+
+// Web interface
+static const QString WEB_INTERFACE_PATH("/usr/share/cutenews/webif/");
+
+// Version
+static const QString VERSION_NUMBER("1.0.0");
 
 #endif // DEFINITIONS_H

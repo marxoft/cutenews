@@ -8,7 +8,7 @@ Homepage: https://github.com/marxoft/cutenews
 
 Package: cutenewsevents
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 0.6.0), hildonevents (>= 0.5.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.0.0), hildonevents (>= 0.5.0)
 Description: Event feed settings UI for cuteNews
 XB-Maemo-Display-Name: cuteNews Events
 XB-Maemo-Icon-26:

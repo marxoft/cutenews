@@ -1,0 +1,126 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "YouTube videos",
+    "handlesEnclosures": true,
+    "settings": [
+        {
+            "type": "text",
+            "key": "query",
+            "label": "Query"
+        },
+
+        {
+            "type": "list",
+            "key": "type",
+            "label": "Type",
+            "value": "search",
+            "options": [
+                {
+                    "label": "Search",
+                    "value": "search"
+                },
+
+                {
+                    "label": "Channel",
+                    "value": "channel"
+                }
+            ]
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        },
+
+        {
+            "type": "list",
+            "key": "safeSearch",
+            "label": "Safe search",
+            "value": "none",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                },
+
+                {
+                    "label": "Moderate",
+                    "value": "moderate",
+                },
+
+                {
+                    "label": "Strict",
+                    "value": "strict"
+                }
+            ]
+        },
+
+        {
+            "type": "list",
+            "key": "videoFormat",
+            "label": "Video format",
+            "value": "37",
+            "options": [
+                {
+                    "label": "1080P MP4",
+                    "value": "37"
+                },
+
+                {
+                    "label": "1080P WebM",
+                    "value": "46"
+                },
+
+                {
+                    "label": "720P MP4",
+                    "value": "22"
+                },
+
+                {
+                    "label": "720P WebM",
+                    "value": "45"
+                },
+
+                {
+                    "label": "480P WebM",
+                    "value": "44"
+                },
+
+                {
+                    "label": "480P FLV",
+                    "value": "35"
+                },
+
+                {
+                    "label": "360P MP4",
+                    "value": "18"
+                }
+
+                {
+                    "label": "360P WebM",
+                    "value": "43"
+                },
+
+                {
+                    "label": "360P FLV",
+                    "value": "34"
+                },
+
+                {
+                    "label": "240P",
+                    "value": "36"
+                },
+
+                {
+                    "label": "144P",
+                    "value": "17"
+                }
+            ]
+        }
+    ]
+}

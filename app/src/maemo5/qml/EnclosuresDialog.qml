@@ -63,7 +63,7 @@ Dialog {
         MenuItem {
             text: qsTr("Download")
             onTriggered: {
-                downloads.addDownloadTransfer(article.enclosures[view.currentIndex].url, article.subscriptionId);
+                transfers.addEnclosureDownload(article.enclosures[view.currentIndex].url, article.subscriptionId);
                 informationBox.information(qsTr("Download added"));
                 root.accept();
             }

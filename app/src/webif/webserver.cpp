@@ -22,11 +22,9 @@
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
 #include "qhttpserver.h"
-#include "settings.h"
 #include "settingsserver.h"
 #include "subscriptionserver.h"
 #include "transferserver.h"
-#include <QFile>
 
 WebServer* WebServer::self = 0;
 
@@ -35,23 +33,11 @@ WebServer::WebServer() :
     m_server(0),
     m_articleServer(0),
     m_subscriptionServer(0),
-    m_port(Settings::webInterfacePort()),
-    m_username(Settings::webInterfaceUsername()),
-    m_password(Settings::webInterfacePassword()),
-    m_authenticationEnabled(Settings::webInterfaceAuthenticationEnabled()),
+    m_fileServer(0),
+    m_port(8080),
+    m_authenticationEnabled(false),
     m_status(Idle)
 {
-    m_auth = QByteArray(username().toUtf8() + ":" + password().toUtf8()).toBase64();
-    connect(Settings::instance(), SIGNAL(webInterfaceAuthenticationEnabledChanged(bool)),
-            this, SLOT(setAuthenticationEnabled(bool)));
-    connect(Settings::instance(), SIGNAL(webInterfaceUsernameChanged(QString)), this, SLOT(setUsername(QString)));
-    connect(Settings::instance(), SIGNAL(webInterfacePasswordChanged(QString)), this, SLOT(setPassword(QString)));
-    connect(Settings::instance(), SIGNAL(webInterfacePortChanged(int)), this, SLOT(setPort(int)));
-    connect(Settings::instance(), SIGNAL(webInterfaceEnabledChanged(bool)), this, SLOT(setRunning(bool)));
-    
-    if (Settings::webInterfaceEnabled()) {
-        start();
-    }
 }
 
 WebServer::~WebServer() {
@@ -173,7 +159,11 @@ void WebServer::init() {
     
     if (!m_subscriptionServer) {
         m_subscriptionServer = new SubscriptionServer(this);
-    }    
+    }
+
+    if (!m_fileServer) {
+        m_fileServer = new FileServer(this);
+    }
 }
 
 void WebServer::onNewRequest(QHttpRequest *request, QHttpResponse *response) {
@@ -243,7 +233,7 @@ void WebServer::handleRequest(QHttpRequest *request, QHttpResponse *response) {
             return;
         }
     }
-    else if (FileServer::handleRequest(request, response)) {
+    else if (m_fileServer->handleRequest(request, response)) {
         return;
     }
     

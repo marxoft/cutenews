@@ -30,17 +30,22 @@ class TransferModel : public QAbstractListModel
 public:
     enum Roles {
         BytesTransferredRole = Qt::UserRole + 1,
+        CategoryRole,
+        CustomCommandRole,
+        CustomCommandOverrideEnabledRole,
         DownloadPathRole,
         ErrorStringRole,
         FileNameRole,
         IdRole,
+        NameRole,
         PriorityRole,
         PriorityStringRole,
         ProgressRole,
-        ResourceIdRole,
+        ProgressStringRole,
         SizeRole,
         StatusRole,
         StatusStringRole,
+        SubscriptionIdRole,
         TransferTypeRole,
         UrlRole
     };
@@ -80,7 +85,8 @@ private Q_SLOTS:
     void onTransferAdded(Transfer *transfer);
 #ifdef WIDGETS_UI
     void onTransferDataChanged(Transfer *transfer, int column);
-    void onTransferFileNameChanged();
+    void onTransferNameChanged();
+    void onTransferCategoryChanged();
     void onTransferPriorityChanged();
     void onTransferProgressChanged();
     void onTransferSizeChanged();

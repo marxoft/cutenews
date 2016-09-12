@@ -22,7 +22,7 @@ Dialog {
     id: root
     
     title: qsTr("Settings")
-    height: Math.min(360, column.height + platformStyle.paddingMedium)
+    height: 360
     
     Flickable {
         id: flickable
@@ -47,6 +47,49 @@ Dialog {
             }
             spacing: platformStyle.paddingMedium
             
+            Label {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                color: platformStyle.secondaryTextColor
+                text: qsTr("Subscriptions")
+            }
+            
+            CheckBox {
+                width: parent.width
+                text: qsTr("Update on startup")
+                checked: settings.updateSubscriptionsOnStartup
+                onCheckedChanged: settings.updateSubscriptionsOnStartup = checked
+            }
+            
+            CheckBox {
+                width: parent.width
+                text: qsTr("Work offline")
+                checked: settings.offlineModeEnabled
+                onCheckedChanged: settings.offlineModeEnabled = checked
+            }
+            
+            Label {
+                width: parent.width
+                text: qsTr("Delete read articles (-1 to disable)")
+            }
+            
+            SpinBox {
+                width: parent.width
+                prefix: value == -1 ? "" : qsTr("after") + " "
+                suffix: " " + (value == -1 ? qsTr("disabled") : qsTr("day(s)"))
+                minimum: -1
+                maximum: 90
+                value: settings.readArticleExpiry
+                onValueChanged: settings.readArticleExpiry = value
+            }            
+            
+            Label {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                color: platformStyle.secondaryTextColor
+                text: qsTr("Appearance")
+            }
+            
             ListSelectorButton {
                 width: parent.width
                 text: qsTr("User interface")
@@ -62,6 +105,13 @@ Dialog {
                 value: settings.viewMode
                 onSelected: settings.viewMode = value
             }
+            
+            Label {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                color: platformStyle.secondaryTextColor
+                text: qsTr("Downloads")
+            }
         
             ValueButton {
                 width: parent.width
@@ -69,12 +119,33 @@ Dialog {
                 valueText: settings.downloadPath
                 onClicked: popupLoader.open(fileDialog, root)
             }
+            
+            ListSelectorButton {
+                width: parent.width
+                text: qsTr("Maximum concurrent downloads")
+                model: ConcurrentTransfersModel {}
+                value: settings.maximumConcurrentTransfers
+                onSelected: settings.maximumConcurrentTransfers = value
+            }
         
             CheckBox {
                 width: parent.width
                 text: qsTr("Start downloads automatically")
                 checked: settings.startTransfersAutomatically
                 onClicked: settings.startTransfersAutomatically = checked
+            }
+            
+            Button {
+                width: parent.width
+                text: qsTr("Categories")
+                onClicked: popupLoader.open(categoriesDialog, root)
+            }
+            
+            Label {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                color: platformStyle.secondaryTextColor
+                text: qsTr("Other")
             }
         
             Button {
@@ -87,6 +158,20 @@ Dialog {
                 width: parent.width
                 text: qsTr("Url openers")
                 onClicked: popupLoader.open(urlOpenersDialog, root)
+            }
+            
+            ListSelectorButton {
+                width: parent.width
+                text: qsTr("Logging verbosity")
+                model: LoggerVerbosityModel {}
+                value: settings.loggerVerbosity
+                onSelected: settings.loggerVerbosity = value
+            }
+            
+            Button {
+                width: parent.width
+                text: qsTr("View log")
+                onClicked: popupLoader.open(logDialog, root)
             }
         }
     }
@@ -118,6 +203,12 @@ Dialog {
     }
     
     Component {
+        id: categoriesDialog
+        
+        CategoriesDialog {}
+    }
+    
+    Component {
         id: proxyDialog
         
         NetworkProxyDialog {}
@@ -127,5 +218,11 @@ Dialog {
         id: urlOpenersDialog
         
         UrlOpenersDialog {}
-    }    
+    }
+    
+    Component {
+        id: logDialog
+        
+        LogDialog {}
+    }
 }

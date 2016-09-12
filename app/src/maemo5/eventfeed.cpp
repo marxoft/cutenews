@@ -15,54 +15,32 @@
  */
 
 #include "eventfeed.h"
-#include "database.h"
-#include "utils.h"
+#include "dbconnection.h"
+#include "dbnotify.h"
+#include "logger.h"
+#include "settings.h"
 #include <QDateTime>
 #include <QDBusConnection>
 #include <QDBusMessage>
-#include <QDBusPendingCallWatcher>
 #include <QDBusPendingReply>
 #include <QFile>
 #include <QRegExp>
-#include <QSettings>
-#ifdef CUTENEWS_DEBUG
-#include <QDebug>
-#endif
 
-static const QString EVENT_FEED_SERVICE("org.hildon.eventfeed");
-static const QString EVENT_FEED_PATH("/org/hildon/eventfeed");
-static const QString EVENT_FEED_INTERFACE("org.hildon.eventfeed");
+const QString EventFeed::EVENT_FEED_SERVICE("org.hildon.eventfeed");
+const QString EventFeed::EVENT_FEED_PATH("/org/hildon/eventfeed");
+const QString EventFeed::EVENT_FEED_INTERFACE("org.hildon.eventfeed");
 
-static const QString EVENT_ACTION("dbus-send --print-reply --type=method_call --dest=org.marxoft.cutenews \
-/org/marxoft/cutenews org.marxoft.cutenews.showArticle int32:%1");
-
-static const int REQUEST_ID = Utils::createId();
+const QString EventFeed::EVENT_ACTION("dbus-send --print-reply --type=method_call --dest=org.marxoft.cutenews \
+/org/marxoft/cutenews org.marxoft.cutenews.showArticle string:%1");
 
 EventFeed* EventFeed::self = 0;
-
-static bool publishArticlesEnabled() {
-    return QSettings("cuteNews", "EventFeed").value("publishArticles", false).toBool();
-}
-
-static QDBusPendingCall addItemToEventFeed(const QVariantMap &item) {
-    QDBusMessage message = QDBusMessage::createMethodCall(EVENT_FEED_SERVICE, EVENT_FEED_PATH,
-                                                          EVENT_FEED_INTERFACE, "addItem");
-    message.setArguments(QVariantList() << item);
-    return QDBusConnection::sessionBus().asyncCall(message);
-}
-
-static QDBusPendingCall removeItemsFromEventFeed(int subscriptionId) {
-    QDBusMessage message = QDBusMessage::createMethodCall(EVENT_FEED_SERVICE, EVENT_FEED_PATH,
-                                                          EVENT_FEED_INTERFACE, "removeItemsBySourceName");
-    message.setArguments(QVariantList() << QString("cutenews_%1").arg(subscriptionId));
-    return QDBusConnection::sessionBus().asyncCall(message);
-}
 
 EventFeed::EventFeed() :
     QObject()
 {
-    connect(Database::instance(), SIGNAL(articlesAdded(int, int)), this, SLOT(onArticlesAdded(int, int)));
-    connect(Database::instance(), SIGNAL(subscriptionDeleted(int)), this, SLOT(onSubscriptionDeleted(int)));
+    connect(DBNotify::instance(), SIGNAL(articlesAdded(QStringList, QString)),
+            this, SLOT(onArticlesAdded(QStringList, QString)));
+    connect(DBNotify::instance(), SIGNAL(subscriptionDeleted(QString)), this, SLOT(onSubscriptionDeleted(QString)));
 }
 
 EventFeed::~EventFeed() {
@@ -73,27 +51,22 @@ EventFeed* EventFeed::instance() {
     return self ? self : self = new EventFeed;
 }
 
-void EventFeed::postArticlesToFeed(QSqlQuery query, int requestId) {
-    if (requestId == REQUEST_ID) {
-#ifdef CUTENEWS_DEBUG
-        qDebug() << "EventFeed::postArticlesToFeed. Posting articles";
-#endif
-        disconnect(Database::instance(), SIGNAL(queryReady(QSqlQuery, int)),
-                   this, SLOT(postArticlesToFeed(QSqlQuery, int)));
-        
+void EventFeed::postArticlesToFeed(DBConnection *connection) {
+    if (connection->status() == DBConnection::Ready) {
+        Logger::log("EventFeed::postArticlesToFeed(). Posting articles", Logger::MediumVerbosity);
         const bool ready = m_items.isEmpty();
         
-        while (query.next()) {
+        while (connection->nextRecord()) {
             QVariantMap item;
-            item["action"] = EVENT_ACTION.arg(query.value(0).toInt());
-            item["body"] = query.value(1).toString().remove(QRegExp("<[^>]*>"));
-            item["footer"] = query.value(6);
+            item["action"] = EVENT_ACTION.arg(connection->value(0).toString());
+            item["body"] = connection->value(1).toString().remove(QRegExp("<[^>]*>"));
+            item["footer"] = connection->value(6);
             item["icon"] = QString("cutenews");
-            item["sourceDisplayName"] = query.value(6);
-            item["sourceName"] = QString("cutenews_%1").arg(query.value(2).toInt());
-            item["timestamp"] = query.value(3).toDateTime().toString(Qt::ISODate);
-            item["title"] = query.value(4);
-            item["url"] = query.value(5);
+            item["sourceDisplayName"] = connection->value(6);
+            item["sourceName"] = QString("cutenews_%1").arg(connection->value(2).toString());
+            item["timestamp"] = QDateTime::fromTime_t(connection->value(3).toInt()).toString(Qt::ISODate);
+            item["title"] = connection->value(4);
+            item["url"] = connection->value(5);
             m_items << item;
         }
         
@@ -101,15 +74,15 @@ void EventFeed::postArticlesToFeed(QSqlQuery query, int requestId) {
             postNextArticle();
         }
     }
+    
+    connection->deleteLater();
 }
 
 void EventFeed::postNextArticle() {
     if (m_items.isEmpty()) {
         return;
     }
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "EventFeed::postNextArticle";
-#endif
+    
     QDBusPendingCall call = addItemToEventFeed(m_items.takeFirst());
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(call, this);
     connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
@@ -121,9 +94,7 @@ void EventFeed::onArticlePosted(QDBusPendingCallWatcher *watcher) {
     
     if (!reply.isError()) {
         const qlonglong id = reply.argumentAt<0>();
-#ifdef CUTENEWS_DEBUG
-        qDebug() << "EventFeed::onArticlePosted. Item id is" << id; 
-#endif
+        
         if (id == -1) {
             m_items.clear();
         }
@@ -131,31 +102,39 @@ void EventFeed::onArticlePosted(QDBusPendingCallWatcher *watcher) {
             postNextArticle();
         }
     }
-#ifdef CUTENEWS_DEBUG
     else {
-        qDebug() << "EventFeed:onArticlePosted. Error:" << reply.error().message();
+        Logger::log("EventFeed:onArticlePosted(). Error: " + reply.error().message());
     }
-#endif
+    
     watcher->deleteLater();
 }
 
-void EventFeed::onArticlesAdded(int count, int subscriptionId) {
-    if (publishArticlesEnabled()) {
-#ifdef CUTENEWS_DEBUG
-        qDebug() << "EventFeed::onArticlesAdded. Fetching articles";
-#endif
-        connect(Database::instance(), SIGNAL(queryReady(QSqlQuery, int)),
-                this, SLOT(postArticlesToFeed(QSqlQuery, int)));
-                                       
-        Database::execQuery(QString("SELECT articles.id, articles.body, articles.subscriptionId, articles.date, \
+void EventFeed::onArticlesAdded(const QStringList &articleIds, const QString &subscriptionId) {
+    if (Settings::eventFeedEnabled()) {
+        DBConnection *conn = DBConnection::connection(this, SLOT(postArticlesToFeed(DBConnection*)));
+        conn->exec(QString("SELECT articles.id, articles.body, articles.subscriptionId, articles.date, \
         articles.title, articles.url, subscriptions.title FROM articles LEFT JOIN subscriptions ON \
-        articles.subscriptionId = subscriptions.id WHERE articles.subscriptionId = %1 \
-        ORDER BY articles.id DESC LIMIT %2").arg(subscriptionId).arg(count), REQUEST_ID);
+        articles.subscriptionId = subscriptions.id WHERE articles.id = '%1' AND articles.subscriptionId = '%2'")
+        .arg(articleIds.join("' OR articles.id = '")).arg(subscriptionId));
     }
 }
 
-void EventFeed::onSubscriptionDeleted(int subscriptionId) {
-    if (publishArticlesEnabled()) {
-        removeItemsFromEventFeed(subscriptionId);
+void EventFeed::onSubscriptionDeleted(const QString &id) {
+    if (Settings::eventFeedEnabled()) {
+        removeItemsFromEventFeed(id);
     }
+}
+
+QDBusPendingCall EventFeed::addItemToEventFeed(const QVariantMap &item) {
+    QDBusMessage message = QDBusMessage::createMethodCall(EVENT_FEED_SERVICE, EVENT_FEED_PATH,
+                                                          EVENT_FEED_INTERFACE, "addItem");
+    message.setArguments(QVariantList() << item);
+    return QDBusConnection::sessionBus().asyncCall(message);
+}
+
+QDBusPendingCall EventFeed::removeItemsFromEventFeed(const QString &subscriptionId) {
+    QDBusMessage message = QDBusMessage::createMethodCall(EVENT_FEED_SERVICE, EVENT_FEED_PATH,
+                                                          EVENT_FEED_INTERFACE, "removeItemsBySourceName");
+    message.setArguments(QVariantList() << QString("cutenews_%1").arg(subscriptionId));
+    return QDBusConnection::sessionBus().asyncCall(message);
 }

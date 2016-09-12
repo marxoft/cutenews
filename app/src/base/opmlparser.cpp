@@ -15,41 +15,37 @@
  */
 
 #include "opmlparser.h"
-#ifdef CUTENEWS_DEBUG
-#include <QDebug>
-#endif
 
-OpmlParser::OpmlParser(QObject *parent) :
-    QObject(parent)
+OpmlParser::OpmlParser() :
+    m_feedType(RSS)
 {
 }
 
-OpmlParser::OpmlParser(const QByteArray &content, QObject *parent) :
-    QObject(parent)
+OpmlParser::OpmlParser(const QByteArray &content) :
+    m_feedType(RSS)
 {
     setContent(content);
 }
 
-OpmlParser::OpmlParser(const QString &content, QObject *parent) :
-    QObject(parent)
+OpmlParser::OpmlParser(const QString &content) :
+    m_feedType(RSS)
 {
     setContent(content);
 }
 
-OpmlParser::OpmlParser(QIODevice *device, QObject *parent) :
-    QObject(parent)
+OpmlParser::OpmlParser(QIODevice *device) :
+    m_feedType(RSS)
 {
     setContent(device);
 }
+
+OpmlParser::~OpmlParser() {}
 
 QString OpmlParser::description() const {
     return m_description;
 }
 
 void OpmlParser::setDescription(const QString &d) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "OpmlParser::setDescription" << d;
-#endif
     m_description = d;
 }
 
@@ -58,9 +54,6 @@ QString OpmlParser::errorString() const {
 }
 
 void OpmlParser::setErrorString(const QString &e) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "OpmlParser::setErrorString" << e;
-#endif
     m_errorString = e;
 }
 
@@ -69,9 +62,6 @@ OpmlParser::FeedType OpmlParser::feedType() const {
 }
 
 void OpmlParser::setFeedType(OpmlParser::FeedType t) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "OpmlParser::setFeedType" << t;
-#endif
     m_feedType = t;
 }
 
@@ -80,9 +70,6 @@ QString OpmlParser::htmlUrl() const {
 }
 
 void OpmlParser::setHtmlUrl(const QString &u) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "OpmlParser::setHtmlUrl" << u;
-#endif
     m_htmlUrl = u;
 }
 
@@ -91,9 +78,6 @@ QString OpmlParser::text() const {
 }
 
 void OpmlParser::setText(const QString &t) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "OpmlParser::setText" << t;
-#endif
     m_text = t;
 }
 
@@ -102,9 +86,6 @@ QString OpmlParser::title() const {
 }
 
 void OpmlParser::setTitle(const QString &t) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "OpmlParser::setTitle" << t;
-#endif
     m_title = t;
 }
 
@@ -113,9 +94,6 @@ QString OpmlParser::xmlUrl() const {
 }
 
 void OpmlParser::setXmlUrl(const QString &u) {
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "OpmlParser::setXmlUrl" << u;
-#endif
     m_xmlUrl = u;
 }
 
@@ -124,8 +102,7 @@ bool OpmlParser::setContent(const QByteArray &content) {
     m_reader.addData(content);
     
     if (m_reader.hasError()) {
-        setErrorString(tr("Unable to parse XML"));
-        emit error();
+        setErrorString(QString("Unable to parse XML"));
         return false;
     }
     
@@ -137,8 +114,7 @@ bool OpmlParser::setContent(const QString &content) {
     m_reader.addData(content);
     
     if (m_reader.hasError()) {
-        setErrorString(tr("Unable to parse XML"));
-        emit error();
+        setErrorString(QString("Unable to parse XML"));
         return false;
     }
     
@@ -147,8 +123,7 @@ bool OpmlParser::setContent(const QString &content) {
 
 bool OpmlParser::setContent(QIODevice *device) {    
     if ((!device) || ((!device->isOpen()) && (!device->open(QIODevice::ReadOnly)))) {
-        setErrorString(tr("Unable to open IO device"));
-        emit error();
+        setErrorString(QString("Unable to open IO device"));
         return false;
     }
     
@@ -156,8 +131,7 @@ bool OpmlParser::setContent(QIODevice *device) {
     m_reader.setDevice(device);
     
     if (m_reader.hasError()) {
-        setErrorString(tr("Unable to parse XML"));
-        emit error();
+        setErrorString(QString("Unable to parse XML"));
         return false;
     }
     
@@ -179,26 +153,22 @@ bool OpmlParser::readHead() {
     
     while ((!m_reader.atEnd()) && (!m_reader.hasError())) {
         const QStringRef name = m_reader.name();
-#ifdef CUTENEWS_DEBUG
-        qDebug() << "OpmlParser::readHead:" << name;
-#endif
+        
         if (name == "title") {
             setTitle(m_reader.readElementText());
         }
         else if (name == "body") {
-            emit ready();
             return true;
         }
         
         m_reader.readNextStartElement();
     }
-    
-    return false;
-    
+        
     if ((m_reader.hasError()) && (!m_reader.atEnd())) {
-        setErrorString(tr("Error parsing tag %1").arg(m_reader.name().toString()));
-        emit error();
+        setErrorString(QString("Error parsing tag %1").arg(m_reader.name().toString()));
     }
+
+    return false;
 }
 
 bool OpmlParser::readNextSubscription() {
@@ -206,9 +176,7 @@ bool OpmlParser::readNextSubscription() {
     m_reader.readNextStartElement();
     
     const QStringRef name = m_reader.name();
-#ifdef CUTENEWS_DEBUG
-    qDebug() << "OpmlParser::readNextSubscription:" << name;
-#endif
+    
     if (name == "outline") {
         const QXmlStreamAttributes attributes = m_reader.attributes();
         setDescription(attributes.value("description").toString());
@@ -219,13 +187,11 @@ bool OpmlParser::readNextSubscription() {
         setXmlUrl(attributes.hasAttribute("xmlUrl") ? attributes.value("xmlUrl").toString()
                                                     : attributes.value("url").toString());
         m_reader.readNextStartElement();
-        emit ready();
         return true;
     }
     
     if ((m_reader.hasError()) && (!m_reader.atEnd())) {
-        setErrorString(tr("Error parsing tag %1").arg(name.toString()));
-        emit error();
+        setErrorString(QString("Error parsing tag %1").arg(name.toString()));
     }
     
     return false;

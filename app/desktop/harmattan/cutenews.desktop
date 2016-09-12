@@ -1,8 +1,0 @@
-[Desktop Entry]
-Encoding=UTF-8
-Version=1.0
-Type=Application
-Name=cuteNews
-Exec=/path/not/used
-Icon=/usr/share/icons/hicolor/80x80/apps/cutenews.png
-X-Maemo-Service=org.marxoft.cutenews

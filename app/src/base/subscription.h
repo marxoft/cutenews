@@ -19,20 +19,19 @@
 
 #include <QObject>
 #include <QDateTime>
-#include <QUrl>
+#include <QStringList>
 #include <QVariant>
 
-class QSqlQuery;
+class DBConnection;
 
 class Subscription : public QObject
 {
     Q_OBJECT
-    
-    Q_PROPERTY(int id READ id NOTIFY idChanged)
-    Q_PROPERTY(int cacheSize READ cacheSize NOTIFY cacheSizeChanged)
+
+    Q_PROPERTY(QString id READ id NOTIFY idChanged)
     Q_PROPERTY(QString description READ description NOTIFY descriptionChanged)
     Q_PROPERTY(bool downloadEnclosures READ downloadEnclosures NOTIFY downloadEnclosuresChanged)
-    Q_PROPERTY(QString errorString READ errorString NOTIFY statusChanged)
+    Q_PROPERTY(QString errorString READ errorString NOTIFY finished)
     Q_PROPERTY(QString iconPath READ iconPath NOTIFY iconPathChanged)
     Q_PROPERTY(QDateTime lastUpdated READ lastUpdated NOTIFY lastUpdatedChanged)
     Q_PROPERTY(bool read READ isRead NOTIFY unreadArticlesChanged)
@@ -41,8 +40,9 @@ class Subscription : public QObject
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString title READ title NOTIFY titleChanged)
     Q_PROPERTY(int updateInterval READ updateInterval NOTIFY updateIntervalChanged)
-    Q_PROPERTY(QUrl url READ url NOTIFY urlChanged)
+    Q_PROPERTY(QString url READ url NOTIFY urlChanged)
     Q_PROPERTY(int unreadArticles READ unreadArticles NOTIFY unreadArticlesChanged)
+    Q_PROPERTY(bool autoUpdate READ autoUpdate WRITE setAutoUpdate NOTIFY autoUpdateChanged)
     
     Q_ENUMS(SourceType Status)
 
@@ -63,16 +63,13 @@ public:
     };
     
     explicit Subscription(QObject *parent = 0);
-    explicit Subscription(const QSqlQuery &query, QObject *parent = 0);
-    explicit Subscription(int id, int cacheSize, const QString &description, bool downloadEnclosures,
+    explicit Subscription(const QString &id, const QString &description, bool downloadEnclosures,
                           const QString &iconPath, const QDateTime &lastUpdated, const QVariant &source,
-                          SourceType sourceType, const QString &title, int updateInterval, const QUrl &url,
+                          SourceType sourceType, const QString &title, int updateInterval, const QString &url,
                           int unreadArticles, QObject *parent = 0);
     
-    int id() const;
-    
-    int cacheSize() const;
-    
+    QString id() const;
+        
     QString description() const;
     
     bool downloadEnclosures() const;
@@ -94,26 +91,47 @@ public:
         
     int updateInterval() const;
     
-    QUrl url() const;
+    QString url() const;
     
     int unreadArticles() const;
 
+    bool autoUpdate() const;
+    void setAutoUpdate(bool enabled);
+
 public Q_SLOTS:
-    void load(int id);
+    void load(const QString &id);
 
 private Q_SLOTS:
-    void onArticlesAdded(int count, int subscriptionId);
-    void onArticleDeleted(int articleId, int subscriptionId);
-    void onArticleRead(int articleId, int subscriptionId, bool isRead);
-    void onSubscriptionFetched(const QSqlQuery &query, int requestId);
-    void onSubscriptionRead(int subscriptionId, bool isRead);
-    void onSubscriptionUpdated(int subscriptionId);
+    void onArticlesAdded(const QStringList &articleIds, const QString &subscriptionId);
+    void onArticlesDeleted(const QStringList &articleIds, const QString &subscriptionId);
+    void onArticleRead(const QString &articleId, const QString &subscriptionId, bool isRead);
+    void onAllArticlesRead();
+    void onSubscriptionFetched(DBConnection *connection);
+    void onSubscriptionRead(const QString &subscriptionId, bool isRead);
+    void onSubscriptionUpdated(const QString &subscriptionId);
+
+Q_SIGNALS:
+    void idChanged();
+    void cacheSizeChanged();
+    void descriptionChanged();
+    void dataChanged(Subscription *subscription);
+    void downloadEnclosuresChanged();
+    void finished(Subscription *subscription);
+    void iconPathChanged();
+    void lastUpdatedChanged();
+    void readChanged();
+    void sourceChanged();
+    void sourceTypeChanged();
+    void statusChanged();
+    void titleChanged();
+    void updateIntervalChanged();
+    void urlChanged();
+    void unreadArticlesChanged();
+    void autoUpdateChanged();
 
 private:
-    void setId(int i);
-    
-    void setCacheSize(int s);
-    
+    void setId(const QString &i);
+        
     void setDescription(const QString &d);
     
     void setDownloadEnclosures(bool d);
@@ -133,32 +151,12 @@ private:
         
     void setUpdateInterval(int i);
     
-    void setUrl(const QUrl &u);
+    void setUrl(const QString &u);
     
     void setUnreadArticles(int u);
-
-Q_SIGNALS:
-    void idChanged();
-    void cacheSizeChanged();
-    void descriptionChanged();
-    void dataChanged(Subscription *subscription);
-    void downloadEnclosuresChanged();
-    void iconPathChanged();
-    void lastUpdatedChanged();
-    void readChanged();
-    void sourceChanged();
-    void sourceTypeChanged();
-    void statusChanged();
-    void titleChanged();
-    void updateIntervalChanged();
-    void urlChanged();
-    void unreadArticlesChanged();
-
-private:
-    int m_id;
     
-    int m_cacheSize;
-       
+    QString m_id;
+           
     QString m_description;
     
     bool m_downloadEnclosures;
@@ -179,9 +177,11 @@ private:
         
     int m_updateInterval;
     
-    QUrl m_url;
+    QString m_url;
     
     int m_unreadArticles;
+
+    bool m_autoUpdate;
 };
 
 #endif // SUBSCRIPTION_H

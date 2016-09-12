@@ -2,6 +2,9 @@
 
 <node name="/org/marxoft/cutenews">
     <interface name="org.marxoft.cutenews">
+    <method name="quit">
+        <arg name="ok" type="b" direction="out" />
+    </method>
     <method name="showArticle">
         <arg name="id" type="i" direction="in" />
         <arg name="ok" type="b" direction="out" />

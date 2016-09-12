@@ -28,16 +28,20 @@ class Utils : public QObject
 public:
     explicit Utils(QObject *parent = 0);
     
-    Q_INVOKABLE static int createId();
+    Q_INVOKABLE static QString createId();
         
     Q_INVOKABLE static QString formatBytes(qint64 bytes);
     
     Q_INVOKABLE static QString formatLargeNumber(qint64 num);
     
     Q_INVOKABLE static QString formatMSecs(qint64 ms);
-    Q_INVOKABLE static QString formatSecs(qint64 s);  
+    Q_INVOKABLE static QString formatSecs(qint64 s);
+    
+    Q_INVOKABLE static QString getSanitizedFileName(const QString &fileName);
 
-    Q_INVOKABLE static bool isLocalFile(const QUrl &url);    
+    Q_INVOKABLE static bool isLocalFile(const QUrl &url);
+
+    Q_INVOKABLE static bool removeDirectory(const QString &directory);
     
     Q_INVOKABLE static QString toRichText(QString s);  
     
