@@ -50,7 +50,7 @@ class EnclosureDownload : public Transfer
                NOTIFY customCommandOverrideEnabledChanged)
     Q_PROPERTY(QString downloadPath READ downloadPath WRITE setDownloadPath NOTIFY downloadPathChanged)
     Q_PROPERTY(QString fileName READ fileName WRITE setFileName NOTIFY fileNameChanged)
-    Q_PROPERTY(QString subscriptionId READ subscriptionId WRITE setSubscriptionId)
+    Q_PROPERTY(QString subscriptionId READ subscriptionId WRITE setSubscriptionId NOTIFY subscriptionIdChanged)
 
 public:
     explicit EnclosureDownload(QObject *parent = 0);
