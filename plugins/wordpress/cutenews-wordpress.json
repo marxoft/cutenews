@@ -1,0 +1,28 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "WordPress",
+    "settings": [
+        {
+            "type": "text",
+            "key": "url",
+            "label": "URL"
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        },
+        
+        {
+            "type": "boolean",
+            "key": "fetchFullArticles",
+            "label": "Fetch full articles",
+            "value": false
+        }
+    ]
+}
