@@ -207,7 +207,7 @@ QObject* CuteNews::createQmlObject(const QString &fileName) {
     }
 
     if (component->isError()) {
-        foreach (QDeclarativeError error, component->errors()) {
+        foreach (const QDeclarativeError &error, component->errors()) {
             Logger::log("CuteNews::createQmlObject(). Error: " + error.toString());
         }        
     }
