@@ -1,0 +1,40 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "phpBB",
+    "settings": [
+        {
+            "type": "text",
+            "key": "url",
+            "label": "Thread URL"
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        },
+
+        {
+            "type": "text",
+            "key": "username",
+            "label": "Username"
+        },
+        
+        {
+            "type": "password",
+            "key": "password",
+            "label": "Password"
+        },
+        
+        {
+            "type": "boolean",
+            "key": "performLogin",
+            "label": "Perform login",
+            "value": false
+        }
+    ]
+}
