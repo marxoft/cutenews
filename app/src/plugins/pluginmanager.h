@@ -41,7 +41,6 @@ class PluginManager : public QObject
     Q_OBJECT
 
 public:
-    explicit PluginManager(QObject *parent = 0);
     ~PluginManager();
 
     static PluginManager* instance();
@@ -61,6 +60,8 @@ Q_SIGNALS:
     void loaded(int count);
 
 private:
+    PluginManager();
+    
     FeedPluginConfig* getConfigByFilePath(const QString &filePath) const;
 
     static PluginManager *self;

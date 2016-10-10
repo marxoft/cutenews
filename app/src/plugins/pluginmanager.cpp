@@ -30,8 +30,8 @@ static bool displayNameLessThan(const FeedPluginPair &pair, const FeedPluginPair
 
 PluginManager* PluginManager::self = 0;
 
-PluginManager::PluginManager(QObject *parent) :
-    QObject(parent),
+PluginManager::PluginManager() :
+    QObject(),
     m_lastLoaded(QDateTime::fromTime_t(0))
 {
 }
@@ -56,7 +56,7 @@ FeedPluginConfig* PluginManager::getConfig(const QString &id) const {
         }
     }
     
-    Logger::log("PluginManager::getConfigForFeed(). No Plugin found for id" + id, Logger::HighVerbosity);
+    Logger::log("PluginManager::getConfig(). No Plugin found for id" + id, Logger::HighVerbosity);
     return 0;
 }
 
