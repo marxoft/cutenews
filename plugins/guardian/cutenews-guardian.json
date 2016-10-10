@@ -1,0 +1,93 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "The Guardian",
+    "settings": [
+        {
+            "type": "list",
+            "key": "section",
+            "label": "Section",
+            "value": "",
+            "options": [
+                {
+                    "label": "All",
+                    "value": ""
+                },
+
+                {
+                    "label": "Business",
+                    "value": "business"
+                },
+
+                {
+                    "label": "Culture",
+                    "value": "culture"
+                },
+
+                {
+                    "label": "Environment",
+                    "value": "environment"
+                },
+
+                {
+                    "label": "Fashion",
+                    "value": "fashion"
+                },
+
+                {
+                    "label": "Football",
+                    "value": "football"
+                },
+
+                {
+                    "label": "Lifestyle",
+                    "value": "lifeandstyle"
+                },
+
+                {
+                    "label": "Opinion",
+                    "value": "commentisfree"
+                },
+
+                {
+                    "label": "Politics",
+                    "value": "politics"
+                },
+
+                {
+                    "label": "Sport",
+                    "value": "sport"
+                },
+
+                {
+                    "label": "Technology",
+                    "value": "technology"
+                },
+
+                {
+                    "label": "Travel",
+                    "value": "travel"
+                },
+
+                {
+                    "label": "UK news",
+                    "value": "uk-news"
+                },
+
+                {
+                    "label": "World news",
+                    "value": "world"
+                }
+            ]
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        }
+    ]
+}
