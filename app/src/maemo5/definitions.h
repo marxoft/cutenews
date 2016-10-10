@@ -40,7 +40,7 @@ static const QString LIB_SUFFIX(".so");
 
 // Icons
 static const QString DEFAULT_ICON("/opt/cutenews/icons/cutenews.png");
-static const int ICON_SIZE = 16;
+static const int ICON_SIZE = 48;
 
 // Cache
 static const QString CACHE_PREFIX("http://localhost");
