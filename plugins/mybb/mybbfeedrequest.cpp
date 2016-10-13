@@ -451,7 +451,7 @@ void MybbFeedRequest::writeItemBody(const QHtmlElement &element) {
 }
 
 void MybbFeedRequest::writeItemDate(const QHtmlElement &element) {
-    QString dateString = element.nthElementByTagName(3, "span", QHtmlAttributeMatch("class", "smalltext")).text().trimmed();
+    QString dateString = element.nthElementByTagName(-1, "span", QHtmlAttributeMatch("class", "smalltext")).text().trimmed();
     
     if (dateString.isEmpty()) {
         m_writer.writeTextElement("dc:date", QDateTime::currentDateTime().toString(Qt::ISODate));
