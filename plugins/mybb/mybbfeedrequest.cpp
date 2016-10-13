@@ -432,16 +432,9 @@ void MybbFeedRequest::writeEndItem() {
 }
 
 void MybbFeedRequest::writeItemAuthor(const QHtmlElement &element) {
-    const QHtmlElement anchor = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "largetext"))
-                                       .firstElementByTagName("a");
-
-    QString author = anchor.text();
-
-    if (author.isEmpty()) {
-        author = anchor.firstChildElement().text();
-    }
-    
-    m_writer.writeTextElement("dc:creator", author);
+    m_writer.writeTextElement("dc:creator",
+                              element.firstElementByTagName("span", QHtmlAttributeMatch("class", "largetext"))
+                              .firstElementByTagName("a").text(true));
 }
 
 void MybbFeedRequest::writeItemBody(const QHtmlElement &element) {
