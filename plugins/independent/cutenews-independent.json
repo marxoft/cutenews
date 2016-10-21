@@ -1,0 +1,238 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "The Independent",
+    "settings": [
+        {
+            "type": "list",
+            "key": "section",
+            "label": "Section",
+            "value": "",
+            "options": [
+                {
+                    "label": "Culture - All",
+                    "value": "arts-entertainment"
+                },
+
+                {
+                    "label": "Culture - Books",
+                    "value": "arts-entertainment/books"
+                },
+
+                {
+                    "label": "Culture - Comedy",
+                    "value": "arts-entertainment/comedy"
+                },
+
+                {
+                    "label": "Culture - Films",
+                    "value": "arts-entertainment/films"
+                },
+
+                {
+                    "label": "Culture - Music",
+                    "value": "arts-entertainment/music"
+                },
+
+                {
+                    "label": "Culture - Theatre & dance",
+                    "value": "arts-entertainment/theatre-dance"
+                },
+
+                {
+                    "label": "Culture - TV",
+                    "value": "arts-entertainment/tv"
+                },
+
+                {
+                    "label": "Lifestyle - All",
+                    "value": "life-style"
+                },
+
+                {
+                    "label": "Lifestyle - Fashion",
+                    "value": "life-style/fashion"
+                },
+
+                {
+                    "label": "Lifestyle - Food & drink",
+                    "value": "life-style/food-and-drink"
+                },
+
+                {
+                    "label": "Lifestyle - Health & families",
+                    "value": "life-style/health-and-families"
+                },
+
+                {
+                    "label": "Lifestyle - Love & sex",
+                    "value": "life-style/love-sex"
+                },
+
+                {
+                    "label": "Lifestyle - Motoring",
+                    "value": "life-style/motoring"
+                },
+
+                {
+                    "label": "Money - All",
+                    "value": "money"
+                },
+
+                {
+                    "label": "Money - Deals",
+                    "value": "money/moneydeals"
+                },
+
+                {
+                    "label": "Money - Loans",
+                    "value": "money/loans-credit"
+                },
+
+                {
+                    "label": "Money - Pensions",
+                    "value": "money/pensions"
+                },
+
+                {
+                    "label": "Money - Savings",
+                    "value": "money/spend-save"
+                },
+
+                {
+                    "label": "News - All",
+                    "value": ""
+                },
+
+                {
+                    "label": "News - Business",
+                    "value": "news/business"
+                },
+
+                {
+                    "label": "News - Media",
+                    "value": "news/media"
+                },
+
+                {
+                    "label": "News - Obituaries",
+                    "value": "news/obituaries"
+                },
+
+                {
+                    "label": "News - People",
+                    "value": "news/people"
+                },
+
+                {
+                    "label": "News - Politics",
+                    "value": "news/uk/politics"
+                },
+
+                {
+                    "label": "News - Science",
+                    "value": "news/science"
+                },
+
+                {
+                    "label": "News - UK",
+                    "value": "news/uk"
+                },
+
+                {
+                    "label": "News - US",
+                    "value": "news/world/americas"
+                },
+
+                {
+                    "label": "News - World",
+                    "value": "news/world"
+                },
+
+                {
+                    "label": "Sport - All",
+                    "value": "sport"
+                },
+
+                {
+                    "label": "Sport - Cricket",
+                    "value": "sport/cricket"
+                },
+
+                {
+                    "label": "Sport - Football",
+                    "value": "sport/football"
+                },
+
+                {
+                    "label": "Sport - Motor racing",
+                    "value": "sport/motor-racing"
+                },
+
+                {
+                    "label": "Sport - Tennis",
+                    "value": "sport/tennis"
+                },
+
+                {
+                    "label": "Sport - US",
+                    "value": "sport/us-sport"
+                },
+
+                {
+                    "label": "Technology - All",
+                    "value": "life-style/gadgets-and-tech"
+                },
+
+                {
+                    "label": "Technology - Culture",
+                    "value": "life-style/gadgets-and-tech/features"
+                },
+
+                {
+                    "label": "Technology - Gaming",
+                    "value": "life-style/gadgets-and-tech/gaming"
+                },
+
+                {
+                    "label": "Technology - News",
+                    "value": "life-style/gadgets-and-tech/news"
+                },
+
+                {
+                    "label": "Voices - All",
+                    "value": "voices"
+                },
+
+                {
+                    "label": "Voices - Campaigns",
+                    "value": "voices/campaigns"
+                },
+
+                {
+                    "label": "Voices - Comment",
+                    "value": "voices/comment"
+                },
+
+                {
+                    "label": "Voices - Editorials",
+                    "value": "voices/editorials"
+                },
+
+                {
+                    "label": "Voices - Letters",
+                    "value": "voices/letters"
+                }
+            ]
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        }
+    ]
+}
