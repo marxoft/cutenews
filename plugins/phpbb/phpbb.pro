@@ -13,39 +13,7 @@ HEADERS += \
 SOURCES += \
     phpbbfeedrequest.cpp
 
-symbian {
-    TARGET.UID3 = 0xE2B14A2C
-    TARGET.CAPABILITY += NetworkServices ReadUserData WriteUserData
-    TARGET.EPOCALLOWDLLDATA = 1
-    TARGET.EPOCHEAPSIZE = 0x20000 0x8000000
-    TARGET.EPOCSTACKSIZE = 0x14000
-
-    INCLUDEPATH += ../src
-    HEADERS += \
-        ../src/enclosurerequest.h \
-        ../src/feedplugin.h \
-        ../src/feedrequest.h
-    
-    vendorinfo += "%{\"Stuart Howarth\"}" ":\"Stuart Howarth\""
-    phpbb_deployment.pkg_prerules += vendorinfo
-
-    config.sources = "$$TARGET".json
-    config.path = !:/cutenews/plugins
-
-    lib.sources = "$$TARGET".dll
-    lib.path = !:/sys/bin
-
-    stub.sources = "$$TARGET".qtplugin
-    stub.path = !:/cutenews/plugins
-
-    DEPLOYMENT.display_name = cuteNews phpBB
-    DEPLOYMENT += \
-        phpbb_deployment \
-        config \
-        lib \
-        stub
-
-} else:maemo5 {
+maemo5 {
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser
