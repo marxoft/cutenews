@@ -1,0 +1,113 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "The New York Times",
+    "settings": [
+        {
+            "type": "list",
+            "key": "section",
+            "label": "Section",
+            "value": "HomePage",
+            "options": [
+                {
+                    "label": "Arts",
+                    "value": "Arts"
+                },
+                
+                {
+                    "label": "Business",
+                    "value": "Business"
+                },
+
+                {
+                    "label": "Food",
+                    "value": "Food"
+                },
+
+                {
+                    "label": "Health",
+                    "value": "Health"
+                },
+
+                {
+                    "label": "Home page",
+                    "value": "HomePage"
+                },
+
+                {
+                    "label": "Magazine",
+                    "value": "Magazine"
+                },
+
+                {
+                    "label": "N.Y.",
+                    "value": "NYRegion"
+                },                
+
+                {
+                    "label": "Opinion",
+                    "value": "Opinion"
+                },
+
+                {
+                    "label": "Politics",
+                    "value": "Politics"
+                },
+
+                {
+                    "label": "Real Estate",
+                    "value": "RealEstate"
+                },
+
+                {
+                    "label": "Science",
+                    "value": "Science"
+                },
+
+                {
+                    "label": "Sports",
+                    "value": "Sports"
+                },
+
+                {
+                    "label": "Style",
+                    "value": "Style"
+                },
+
+                {
+                    "label": "T Magazine",
+                    "value": "TMagazine"
+                },
+
+                {
+                    "label": "Technology",
+                    "value": "Technology"
+                },
+
+                {
+                    "label": "Travel",
+                    "value": "Travel"
+                },
+
+                {
+                    "label": "U.S.",
+                    "value": "National"
+                },
+
+                {
+                    "label": "World",
+                    "value": "World"
+                }
+            ]
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        }
+    ]
+}
