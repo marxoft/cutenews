@@ -41,7 +41,7 @@ Dialog {
             onClicked: {
                 var dialog = popups.load(categoryDialog, root);
                 dialog.name = name;
-                dialog.path = path;
+                dialog.path = value;
                 dialog.open();
             }
             onPressAndHold: popups.open(contextMenu, root)
@@ -77,7 +77,7 @@ Dialog {
                 onTriggered: {
                     var dialog = popups.load(categoryDialog, root);
                     dialog.name = categoryModel.data(view.currentIndex, "name");
-                    dialog.path = categoryModel.data(view.currentIndex, "path");
+                    dialog.path = categoryModel.data(view.currentIndex, "value");
                     dialog.open();
                 }
             }
