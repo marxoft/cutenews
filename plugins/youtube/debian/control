@@ -8,9 +8,9 @@ Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-youtube
 Architecture: armel
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 0.3.0), qyoutube (>= 0.1.3)
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.0.0), qyoutube (>= 0.1.3)
 Description: A content plugin for cuteNews providing YouTube videos as an RSS feed
-XB-Maemo-Display-Name: cuteNews-YouTube
+XB-Maemo-Display-Name: cuteNews - YouTube
 XB-Maemo-Icon-26:
  iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABmJLR0QAJwAnACn1EoBiAAAACXBI
  WXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3wcaEAIUlvJ6PgAAABl0RVh0Q29tbWVudABDcmVhdGVk
