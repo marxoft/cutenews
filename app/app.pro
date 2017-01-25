@@ -132,7 +132,6 @@ maemo5 {
         src/maemo5/qml/LogDialog.qml \
         src/maemo5/qml/MainWindow.qml \
         src/maemo5/qml/NetworkProxyDialog.qml \
-        src/maemo5/qml/OssoView.qml \
         src/maemo5/qml/PluginDialog.qml \
         src/maemo5/qml/PopupLoader.qml \
         src/maemo5/qml/SearchDialog.qml \
@@ -140,7 +139,6 @@ maemo5 {
         src/maemo5/qml/SubscriptionDelegate.qml \
         src/maemo5/qml/SubscriptionDialog.qml \
         src/maemo5/qml/TimeSelectorButton.qml \
-        src/maemo5/qml/TouchView.qml \
         src/maemo5/qml/TransferDelegate.qml \
         src/maemo5/qml/TransferPropertiesDialog.qml \
         src/maemo5/qml/TransfersWindow.qml \
