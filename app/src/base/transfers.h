@@ -37,7 +37,9 @@ public:
     int active() const;
     int count() const;
     
-    Q_INVOKABLE void addEnclosureDownload(const QString &url, const QString &subscriptionId);
+    Q_INVOKABLE void addEnclosureDownload(const QString &url, const QString &subscriptionId,
+                                          const QString &category = QString(),
+                                          int priority = Transfer::NormalPriority);
     
     Q_INVOKABLE Transfer* get(int i) const;
     Q_INVOKABLE Transfer* get(const QString &id) const;
@@ -70,8 +72,8 @@ private Q_SLOTS:
     void onTransferStatusChanged();
     
 Q_SIGNALS:
-    void activeChanged(int a);
-    void countChanged(int c);
+    void activeChanged(int active);
+    void countChanged(int count);
     void transferAdded(Transfer *transfer);
     
 private:

@@ -18,7 +18,6 @@
 #include <QDir>
 #include <QFile>
 #include <QRegExp>
-#include <QDateTime>
 #include <QUuid>
 #if QT_VERSION >= 0x050000
 #include <QUrlQuery>
@@ -32,6 +31,22 @@ Utils::Utils(QObject *parent) :
 QString Utils::createId() {
     const QString uuid = QUuid::createUuid().toString();
     return uuid.mid(1, uuid.size() - 2);
+}
+
+QDateTime Utils::dateTimeFromMSecs(qint64 msecs) {
+    return QDateTime::fromMSecsSinceEpoch(msecs);
+}
+
+QDateTime Utils::dateTimeFromSecs(uint secs) {
+    return QDateTime::fromTime_t(secs);
+}
+
+qint64 Utils::dateTimeToMSecs(const QDateTime &dt) {
+    return dt.toMSecsSinceEpoch();
+}
+
+uint Utils::dateTimeToSecs(const QDateTime &dt) {
+    return dt.toTime_t();
 }
 
 QString Utils::formatBytes(qint64 bytes) {

@@ -249,7 +249,7 @@ void Subscriptions::next() {
     if (m_queue.isEmpty()) {
         setStatusText(tr("Finished"));
         setStatus(Finished);
-        emit activeSubscriptionChanged(activeSubscription());
+        emit activeSubscriptionChanged(QString());
         return;
     }
     
@@ -286,8 +286,13 @@ void Subscriptions::update() {
             process()->start(sourceString);
         }
         else {
-            if (sourceString.startsWith("/")) {
-                sourceString.prepend("file://");
+            if (subscription()->sourceType() == Subscription::LocalFile) {
+                if (sourceString.startsWith("/")) {
+                    sourceString.prepend("file://");
+                }
+                else if (!sourceString.startsWith("file:/")) {
+                    sourceString.prepend("file:///");
+                }
             }
             
             Logger::log(QString("Subscription::update(). Updating feed '%1' using URL '%2'")
@@ -327,7 +332,7 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     const QString channelUrl = parser.url();
     const QString channelIconUrl = parser.iconUrl();
 
-    if (!parser.readNextArticle()) {
+    if ((!parser.readNextArticle()) || (!parser.date().isValid())) {
         setStatusText(tr("Error parsing XML for %1").arg(subscription()->title()));
         setStatus(Error);
         next();
@@ -442,7 +447,7 @@ Download* Subscriptions::feedDownloader() {
     if (!m_feedDownloader) {
         m_feedDownloader = new Download(this);
         m_feedDownloader->setId(Utils::createId());
-        connect(m_feedDownloader, SIGNAL(finished()), this, SLOT(onFeedDownloadFinished()));
+        connect(m_feedDownloader, SIGNAL(finished(Transfer*)), this, SLOT(onFeedDownloadFinished()));
     }
     
     return m_feedDownloader;
@@ -452,7 +457,7 @@ Download* Subscriptions::iconDownloader() {
     if (!m_iconDownloader) {
         m_iconDownloader = new Download(this);
         m_iconDownloader->setId(Utils::createId());
-        connect(m_iconDownloader, SIGNAL(finished()), this, SLOT(onIconDownloadFinished()));
+        connect(m_iconDownloader, SIGNAL(finished(Transfer*)), this, SLOT(onIconDownloadFinished()));
     }
     
     return m_iconDownloader;
@@ -545,6 +550,7 @@ void Subscriptions::onIconDownloadFinished() {
     case Download::Canceled:
         setStatusText(tr("Canceled"));
         setStatus(Canceled);
+        emit activeSubscriptionChanged(QString());
         return;
     case Download::Failed:
         break;
@@ -563,6 +569,7 @@ void Subscriptions::onFeedRequestFinished(FeedRequest *request) {
     case FeedRequest::Canceled:
         setStatusText(tr("Canceled"));
         setStatus(Canceled);
+        emit activeSubscriptionChanged(QString());
         return;
     case FeedRequest::Error:
         setStatusText(tr("Error retrieving feed for %1: %2").arg(subscription()->title())

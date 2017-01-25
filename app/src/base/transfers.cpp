@@ -52,15 +52,18 @@ int Transfers::count() const {
     return m_transfers.size();
 }
 
-void Transfers::addEnclosureDownload(const QString &url, const QString &subscriptionId) {
+void Transfers::addEnclosureDownload(const QString &url, const QString &subscriptionId, const QString &category,
+                                     int priority) {
     Logger::log(QString("Transfers::addEnclosureDownload(). URL: %1, Subscription ID: %2").arg(url).arg(subscriptionId),
                 Logger::LowVerbosity);
     EnclosureDownload *transfer = new EnclosureDownload(this);
     transfer->setNetworkAccessManager(m_nam);
+    transfer->setCategory(category);
     transfer->setId(Utils::createId());
     transfer->setDownloadPath(Settings::downloadPath() + ".incomplete/" + transfer->id());
     transfer->setFileName(url.mid(url.lastIndexOf("/") + 1));
     transfer->setName(transfer->fileName());
+    transfer->setPriority(Transfer::Priority(priority));
     transfer->setSubscriptionId(subscriptionId);
     transfer->setUrl(url);
     connect(transfer, SIGNAL(statusChanged()), this, SLOT(onTransferStatusChanged()));
@@ -143,18 +146,18 @@ void Transfers::save() {
     for (int i = 0; i < m_transfers.size(); i++) {
         const Transfer *transfer = m_transfers.at(i);
         settings.setArrayIndex(i);
-        settings.setValue("category", transfer->property("category"));
-        settings.setValue("customCommand", transfer->property("customCommand"));
-        settings.setValue("customCommandOverrideEnabled", transfer->property("customCommandOverrideEnabled"));
-        settings.setValue("downloadPath", transfer->property("downloadPath"));
-        settings.setValue("fileName", transfer->property("fileName"));
-        settings.setValue("id", transfer->property("id"));
-        settings.setValue("name", transfer->property("name"));
-        settings.setValue("priority", transfer->property("priority"));
-        settings.setValue("size", transfer->property("size"));
-        settings.setValue("subscriptionId", transfer->property("subscriptionId"));
-        settings.setValue("transferType", transfer->property("transferType"));
-        settings.setValue("url", transfer->property("url"));
+        settings.setValue("category", transfer->data(Transfer::CategoryRole));
+        settings.setValue("customCommand", transfer->data(Transfer::CustomCommandRole));
+        settings.setValue("customCommandOverrideEnabled", transfer->data(Transfer::CustomCommandOverrideEnabledRole));
+        settings.setValue("downloadPath", transfer->data(Transfer::DownloadPathRole));
+        settings.setValue("fileName", transfer->data(Transfer::FileNameRole));
+        settings.setValue("id", transfer->data(Transfer::IdRole));
+        settings.setValue("name", transfer->data(Transfer::NameRole));
+        settings.setValue("priority", transfer->data(Transfer::PriorityRole));
+        settings.setValue("size", transfer->data(Transfer::SizeRole));
+        settings.setValue("subscriptionId", transfer->data(Transfer::SubscriptionIdRole));
+        settings.setValue("transferType", transfer->data(Transfer::TransferTypeRole));
+        settings.setValue("url", transfer->data(Transfer::UrlRole));
     }
     
     settings.endArray();
@@ -179,17 +182,18 @@ void Transfers::load() {
             break;
         }
         
-        transfer->setProperty("category", settings.value("category"));
-        transfer->setProperty("customCommand", settings.value("customCommand"));
-        transfer->setProperty("customCommandOverrideEnabled", transfer->property("customCommandOverrideEnabled"));
-        transfer->setProperty("downloadPath", settings.value("downloadPath"));
-        transfer->setProperty("fileName", settings.value("fileName"));
-        transfer->setProperty("id", settings.value("id"));
-        transfer->setProperty("name", settings.value("name"));
-        transfer->setProperty("priority", settings.value("priority"));
-        transfer->setProperty("size", settings.value("size"));
-        transfer->setProperty("subscriptionId", settings.value("subscriptionId"));
-        transfer->setProperty("url", settings.value("url"));
+        transfer->setData(Transfer::CategoryRole, settings.value("category"));
+        transfer->setData(Transfer::CustomCommandRole, settings.value("customCommand"));
+        transfer->setData(Transfer::CustomCommandOverrideEnabledRole,
+                          transfer->property("customCommandOverrideEnabled"));
+        transfer->setData(Transfer::DownloadPathRole, settings.value("downloadPath"));
+        transfer->setData(Transfer::FileNameRole, settings.value("fileName"));
+        transfer->setData(Transfer::IdRole, settings.value("id"));
+        transfer->setData(Transfer::NameRole, settings.value("name"));
+        transfer->setData(Transfer::PriorityRole, settings.value("priority"));
+        transfer->setData(Transfer::SizeRole, settings.value("size"));
+        transfer->setData(Transfer::SubscriptionIdRole, settings.value("subscriptionId"));
+        transfer->setData(Transfer::UrlRole, settings.value("url"));
         connect(transfer, SIGNAL(statusChanged()), this, SLOT(onTransferStatusChanged()));
     
         m_transfers << transfer;
@@ -207,7 +211,7 @@ void Transfers::load() {
 void Transfers::getNextTransfers() {
     const int max = Settings::maximumConcurrentTransfers();
     
-    for (int priority = Transfer::HighPriority; priority <= Transfer::LowPriority; priority++) {
+    for (int priority = Transfer::HighestPriority; priority <= Transfer::LowestPriority; priority++) {
         foreach (Transfer *transfer, m_transfers) {
             if ((transfer->priority() == priority) && (transfer->status() == Transfer::Queued)) {
                 if (active() < max) {
@@ -280,7 +284,7 @@ void Transfers::setMaximumConcurrentTransfers(int maximum) {
         startNextTransfers();
     }
     else if (act > maximum) {
-        for (int priority = Transfer::LowPriority; priority >= Transfer::HighPriority; priority--) {
+        for (int priority = Transfer::LowestPriority; priority >= Transfer::HighestPriority; priority--) {
             for (int i = m_active.size() - 1; i >= 0; i--) {
                 if (m_active.at(i)->priority() == priority) {
                     m_active.at(i)->pause();

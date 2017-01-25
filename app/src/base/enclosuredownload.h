@@ -19,6 +19,7 @@
 
 #include "transfer.h"
 #include <QFile>
+#include <QTime>
 
 class DBConnection;
 class EnclosureRequest;
@@ -54,6 +55,9 @@ class EnclosureDownload : public Transfer
 
 public:
     explicit EnclosureDownload(QObject *parent = 0);
+
+    Q_INVOKABLE virtual QVariant data(int role) const;
+    Q_INVOKABLE virtual bool setData(int role, const QVariant &value);
             
     QString category() const;
     void setCategory(const QString &c);
@@ -131,6 +135,8 @@ private:
     CommandList m_commands;
     
     bool m_metadataSet;
+
+    QTime m_speedTime;
 };
     
 #endif // ENCLOSUREDOWNLOAD_H

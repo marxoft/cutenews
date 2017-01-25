@@ -29,29 +29,13 @@ class ArticleModel : public QAbstractListModel
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY statusChanged)
     Q_PROPERTY(int limit READ limit WRITE setLimit NOTIFY limitChanged)
+    Q_PROPERTY(QString query READ query NOTIFY queryChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(QString subscriptionId READ subscriptionId NOTIFY subscriptionIdChanged)
     
     Q_ENUMS(Status)
     
 public:
-    enum Roles {
-        IdRole = Qt::UserRole + 1,
-        AuthorRole,
-        BodyRole,
-        CategoriesRole,
-        DateRole,
-        EnclosuresRole,
-        FavouriteRole,
-        HasEnclosuresRole,
-        ReadRole,
-        SubscriptionIdRole,
-        TitleRole,
-        UrlRole
-#ifdef WIDGETS_UI
-        ,SortRole
-#endif
-    };
-    
     enum Status {
         Idle = 0,
         Active,
@@ -66,28 +50,36 @@ public:
     int limit() const;
     void setLimit(int l);
     
+    QString query() const;
+    
     Status status() const;
+    
+    QString subscriptionId() const;
     
 #if QT_VERSION >= 0x050000
     QHash<int, QByteArray> roleNames() const;
 #endif
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
-#ifdef WIDGETS_UI
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
     
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-#endif
+    
     bool canFetchMore(const QModelIndex &parent = QModelIndex()) const;
     void fetchMore(const QModelIndex &parent = QModelIndex());    
     
     QVariant data(const QModelIndex &index, int role) const;
     Q_INVOKABLE QVariant data(int row, const QByteArray &role) const;
+    bool setData(const QModelIndex &index, const QVariant &value, int role);
+    Q_INVOKABLE bool setData(int row, const QVariant &value, const QByteArray &role);
     
     QMap<int, QVariant> itemData(const QModelIndex &index) const;
     Q_INVOKABLE QVariantMap itemData(int row) const;
+    bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles);
+    Q_INVOKABLE bool setItemData(int row, const QVariantMap &roles);
     
     Q_INVOKABLE Article* get(int row) const;
+    Q_INVOKABLE bool remove(int row);
     
     QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits = 1,
                           Qt::MatchFlags flags = Qt::MatchFlags(Qt::MatchExactly | Qt::MatchWrap)) const;
@@ -101,7 +93,7 @@ public Q_SLOTS:
     void reload();    
 
 private Q_SLOTS:
-    void onArticleChanged(Article *article);
+    void onArticleChanged(Article *article, int role);
     void onArticlesAdded(const QStringList &articleIds, const QString &subscriptionId);
     void onArticlesDeleted(const QStringList &articleIds, const QString &subscriptionId);
     void onArticleFavourited(const QString &articleId, bool isFavourite);
@@ -111,7 +103,9 @@ private Q_SLOTS:
 Q_SIGNALS:
     void countChanged(int count);
     void limitChanged(int limit);
+    void queryChanged(const QString &query);
     void statusChanged(ArticleModel::Status status);
+    void subscriptionIdChanged(const QString &id);
     
 private:
     void setErrorString(const QString &e);

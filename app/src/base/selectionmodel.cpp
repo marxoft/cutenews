@@ -18,7 +18,7 @@
 
 SelectionModel::SelectionModel(QObject *parent) :
     QAbstractListModel(parent),
-    m_alignment(Qt::AlignCenter)
+    m_alignment(Qt::AlignLeft | Qt::AlignVCenter)
 {
     m_roles[NameRole] = "name";
     m_roles[ValueRole] = "value";
@@ -37,6 +37,10 @@ int SelectionModel::rowCount(const QModelIndex &) const {
     return m_items.size();
 }
 
+int SelectionModel::columnCount(const QModelIndex &) const {
+    return 2;
+}
+
 Qt::Alignment SelectionModel::textAlignment() const {
     return m_alignment;
 }
@@ -47,7 +51,7 @@ void SelectionModel::setTextAlignment(Qt::Alignment align) {
         emit textAlignmentChanged();
         
         if (!m_items.isEmpty()) {
-            emit dataChanged(index(0), index(m_items.size() - 1));
+            emit dataChanged(index(0), index(m_items.size() - 1, 1));
         }
     }
 }
@@ -58,6 +62,17 @@ QVariant SelectionModel::data(const QModelIndex &index, int role) const {
     }
     
     switch (role) {
+    case Qt::DisplayRole:
+        switch (index.column()) {
+        case 0:
+            return m_items.at(index.row()).first;
+        case 1:
+            return m_items.at(index.row()).second;
+        default:
+            break;
+        }
+
+        return QVariant();
     case Qt::TextAlignmentRole:
         return QVariant(textAlignment());
     case NameRole:
@@ -93,7 +108,15 @@ bool SelectionModel::setData(const QModelIndex &index, const QVariant &value, in
         return false;
     }
     
-    emit dataChanged(index, index);
+    switch (index.column()) {
+    case 0:
+        emit dataChanged(index, index.sibling(index.row(), 1));
+        break;
+    default:
+        emit dataChanged(index.sibling(index.row(), 0), index);
+        break;
+    }
+    
     return true;
 }
 

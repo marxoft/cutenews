@@ -68,42 +68,10 @@ Dialog {
                 onCheckedChanged: settings.offlineModeEnabled = checked
             }
             
-            Label {
+            Button {
                 width: parent.width
-                text: qsTr("Delete read articles (-1 to disable)")
-            }
-            
-            SpinBox {
-                width: parent.width
-                prefix: value == -1 ? "" : qsTr("after") + " "
-                suffix: " " + (value == -1 ? qsTr("disabled") : qsTr("day(s)"))
-                minimum: -1
-                maximum: 90
-                value: settings.readArticleExpiry
-                onValueChanged: settings.readArticleExpiry = value
-            }            
-            
-            Label {
-                width: parent.width
-                horizontalAlignment: Text.AlignHCenter
-                color: platformStyle.secondaryTextColor
-                text: qsTr("Appearance")
-            }
-            
-            ListSelectorButton {
-                width: parent.width
-                text: qsTr("User interface")
-                model: UserInterfaceModel {}
-                value: settings.userInterface
-                onSelected: settings.userInterface = value
-            }
-            
-            ListSelectorButton {
-                width: parent.width
-                text: qsTr("Article view mode")
-                model: ViewModeModel {}
-                value: settings.viewMode
-                onSelected: settings.viewMode = value
+                text: qsTr("Delete read articles")
+                onClicked: popups.open(deleteDialog, root)
             }
             
             Label {
@@ -117,7 +85,7 @@ Dialog {
                 width: parent.width
                 text: qsTr("Download path")
                 valueText: settings.downloadPath
-                onClicked: popupLoader.open(fileDialog, root)
+                onClicked: popups.open(fileDialog, root)
             }
             
             ListSelectorButton {
@@ -138,7 +106,7 @@ Dialog {
             Button {
                 width: parent.width
                 text: qsTr("Categories")
-                onClicked: popupLoader.open(categoriesDialog, root)
+                onClicked: popups.open(categoriesDialog, root)
             }
             
             Label {
@@ -151,13 +119,13 @@ Dialog {
             Button {
                 width: parent.width
                 text: qsTr("Network proxy")
-                onClicked: popupLoader.open(proxyDialog, root)
+                onClicked: popups.open(proxyDialog, root)
             }
         
             Button {
                 width: parent.width
                 text: qsTr("Url openers")
-                onClicked: popupLoader.open(urlOpenersDialog, root)
+                onClicked: popups.open(urlOpenersDialog, root)
             }
             
             ListSelectorButton {
@@ -171,7 +139,7 @@ Dialog {
             Button {
                 width: parent.width
                 text: qsTr("View log")
-                onClicked: popupLoader.open(logDialog, root)
+                onClicked: popups.open(logDialog, root)
             }
         }
     }
@@ -188,8 +156,10 @@ Dialog {
         onClicked: root.accept()
     }
     
-    PopupLoader {
-        id: popupLoader
+    Component {
+        id: deleteDialog
+        
+        DeleteDialog {}
     }
     
     Component {

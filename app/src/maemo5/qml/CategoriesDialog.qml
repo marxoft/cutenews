@@ -39,12 +39,12 @@ Dialog {
         }
         delegate: CategoryDelegate {
             onClicked: {
-                var dialog = popupLoader.load(categoryDialog, root);
+                var dialog = popups.load(categoryDialog, root);
                 dialog.name = name;
                 dialog.path = path;
                 dialog.open();
             }
-            onPressAndHold: contextMenu.open()
+            onPressAndHold: popups.open(contextMenu, root)
         }
     }
     
@@ -54,26 +54,7 @@ Dialog {
         color: platformStyle.disabledTextColor
         text: qsTr("No categories")
         visible: categoryModel.count == 0
-    }
-    
-    Menu {
-        id: contextMenu
-        
-        MenuItem {
-            text: qsTr("Edit")
-            onTriggered: {
-                var dialog = popupLoader.load(categoryDialog, root);
-                dialog.name = categoryModel.data(view.currentIndex, "name");
-                dialog.path = categoryModel.data(view.currentIndex, "path");
-                dialog.open();
-            }
-        }
-        
-        MenuItem {
-            text: qsTr("Remove")
-            onTriggered: categoryModel.removeCategory(view.currentIndex)
-        }
-    }
+    }    
     
     Button {
         id: button
@@ -84,18 +65,41 @@ Dialog {
         }
         style: DialogButtonStyle {}
         text: qsTr("New")
-        onClicked: popupLoader.open(categoryDialog, root)
+        onClicked: popups.open(categoryDialog, root)
     }
     
-    PopupLoader {
-        id: popupLoader
+    Component {
+        id: contextMenu
+        
+        Menu {        
+            MenuItem {
+                text: qsTr("Edit")
+                onTriggered: {
+                    var dialog = popups.load(categoryDialog, root);
+                    dialog.name = categoryModel.data(view.currentIndex, "name");
+                    dialog.path = categoryModel.data(view.currentIndex, "path");
+                    dialog.open();
+                }
+            }
+            
+            MenuItem {
+                text: qsTr("Remove")
+                onTriggered: {
+                    categoryModel.remove(view.currentIndex);
+                    categoryModel.save();
+                }
+            }
+        }
     }
     
     Component {
         id: categoryDialog
         
         CategoryDialog {
-            onAccepted: categoryModel.addCategory(name, path)
+            onAccepted: {
+                categoryModel.append(name, path);
+                categoryModel.save();
+            }
         }
     }
 }

@@ -42,6 +42,50 @@ EnclosureDownload::EnclosureDownload(QObject *parent) :
 {
 }
 
+QVariant EnclosureDownload::data(int role) const {
+    switch (role) {
+    case CategoryRole:
+        return category();
+    case CustomCommandRole:
+        return customCommand();
+    case CustomCommandOverrideEnabledRole:
+        return customCommandOverrideEnabled();
+    case DownloadPathRole:
+        return downloadPath();
+    case FileNameRole:
+        return fileName();
+    case SubscriptionIdRole:
+        return subscriptionId();
+    default:
+        return Transfer::data(role);
+    }
+}
+
+bool EnclosureDownload::setData(int role, const QVariant &value) {
+    switch (role) {
+    case CategoryRole:
+        setCategory(value.toString());
+        return true;
+    case CustomCommandRole:
+        setCustomCommand(value.toString());
+        return true;
+    case CustomCommandOverrideEnabledRole:
+        setCustomCommandOverrideEnabled(value.toBool());
+        return true;
+    case DownloadPathRole:
+        setDownloadPath(value.toString());
+        return true;
+    case FileNameRole:
+        setFileName(value.toString());
+        return true;
+    case SubscriptionIdRole:
+        setSubscriptionId(value.toString());
+        return true;
+    default:
+        return Transfer::setData(role, value);
+    }
+}
+
 QString EnclosureDownload::category() const {
     return m_category;
 }
@@ -50,6 +94,7 @@ void EnclosureDownload::setCategory(const QString &c) {
     if (c != category()) {
         m_category = c;
         emit categoryChanged();
+        emit dataChanged(this, CategoryRole);
     }
 }
 
@@ -61,6 +106,7 @@ void EnclosureDownload::setCustomCommand(const QString &c) {
     if (c != customCommand()) {
         m_customCommand = c;
         emit customCommandChanged();
+        emit dataChanged(this, CustomCommandRole);
     }
 }
 
@@ -72,6 +118,7 @@ void EnclosureDownload::setCustomCommandOverrideEnabled(bool enabled) {
     if (enabled != customCommandOverrideEnabled()) {
         m_customCommandOverrideEnabled = enabled;
         emit customCommandOverrideEnabledChanged();
+        emit dataChanged(this, CustomCommandOverrideEnabledRole);
     }
 }
 
@@ -83,6 +130,7 @@ void EnclosureDownload::setDownloadPath(const QString &path) {
     if (path != downloadPath()) {
         m_downloadPath = path.endsWith("/") ? path : path + "/";
         emit downloadPathChanged();
+        emit dataChanged(this, DownloadPathRole);
         
         if (!fileName().isEmpty()) {
             m_file.setFileName(downloadPath() + fileName());
@@ -103,6 +151,7 @@ void EnclosureDownload::setFileName(const QString &name) {
     if (name != fileName()) {
         m_fileName = Utils::getSanitizedFileName(name);
         emit fileNameChanged();
+        emit dataChanged(this, FileNameRole);
         
         if (!downloadPath().isEmpty()) {
             m_file.setFileName(downloadPath() + fileName());
@@ -123,6 +172,7 @@ void EnclosureDownload::setSubscriptionId(const QString &i) {
     if (i != subscriptionId()) {
         m_subscriptionId = i;
         emit subscriptionIdChanged();
+        emit dataChanged(this, SubscriptionIdRole);
     }
 }
 
@@ -155,7 +205,7 @@ void EnclosureDownload::start() {
     }
     
     setStatus(Connecting);
-    DBConnection::connection(this,SLOT(onSubscriptionFetched(DBConnection*)))->exec(QString("SELECT sourceType, source FROM subscriptions WHERE id = '%1'").arg(subscriptionId()));
+    DBConnection::connection(this, SLOT(onSubscriptionFetched(DBConnection*)))->exec(QString("SELECT sourceType, source FROM subscriptions WHERE id = '%1'").arg(subscriptionId()));
 }
 
 void EnclosureDownload::pause() {
@@ -226,8 +276,10 @@ void EnclosureDownload::startDownload(QNetworkRequest &request, const QByteArray
         request.setRawHeader("Range", "bytes=" + QByteArray::number(bytesTransferred()) + "-");
     }
     
+    setSpeed(0);
     setStatus(Downloading);
     m_redirects = 0;
+    m_speedTime.start();
 
     if (!data.isEmpty()) {
         QBuffer *buffer = new QBuffer;
@@ -260,14 +312,15 @@ void EnclosureDownload::followRedirect(const QString &u) {
         return;
     }
     
-    m_redirects++;
+    ++m_redirects;
     QNetworkRequest request(u);
     request.setRawHeader("User-Agent", USER_AGENT);
     
     if (bytesTransferred() > 0) {
         request.setRawHeader("Range", "bytes=" + QByteArray::number(bytesTransferred()) + "-");
     }
-    
+
+    m_speedTime.start();
     m_reply = networkAccessManager()->get(request);
     connect(m_reply, SIGNAL(metaDataChanged()), this, SLOT(onReplyMetaDataChanged()));
     connect(m_reply, SIGNAL(readyRead()), this, SLOT(onReplyReadyRead()));
@@ -444,13 +497,15 @@ void EnclosureDownload::onReplyReadyRead() {
     }
     
     setBytesTransferred(bytesTransferred() + bytes);
+    setSpeed(int(bytes) * 1000 / qMax(1, m_speedTime.restart()));
     
     if (size() > 0) {
-        setProgress(bytesTransferred() * 100 / size());
+        setProgress(int(bytesTransferred() * 100 / size()));
     }
 }
 
 void EnclosureDownload::onReplyFinished() {
+    setSpeed(0);
     const QString redirect = QString::fromUtf8(m_reply->rawHeader("Location"));
 
     if (!redirect.isEmpty()) {

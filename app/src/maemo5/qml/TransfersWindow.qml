@@ -43,8 +43,8 @@ Window {
             id: transferModel
         }
         delegate: TransferDelegate {
-            onClicked: popupLoader.open(propertiesDialog, root)
-            onPressAndHold: contextMenu.popup()
+            onClicked: popups.open(contextMenu, root)
+            onPressAndHold: popups.open(contextMenu, root)
         }
     }
     
@@ -56,31 +56,53 @@ Window {
         visible: transfers.count == 0
     }
     
-    Menu {
+    Component {
         id: contextMenu
         
-        MenuItem {
-            text: transferModel.data(view.currentIndex, "status") == Transfer.Downloading ? qsTr("Pause")
-                                                                                          : qsTr("Start")
-            onTriggered: transferModel.data(view.currentIndex, "status") == Transfer.Downloading
-                         ? transfers.get(view.currentIndex).pause() : transfers.get(view.currentIndex).queue()
+        Menu {            
+            MenuItem {
+                text: transferModel.data(view.currentIndex, "status") == Transfer.Downloading ? qsTr("Pause")
+                : qsTr("Start")
+                onTriggered: transferModel.data(view.currentIndex, "status") == Transfer.Downloading
+                ? transfers.get(view.currentIndex).pause() : transfers.get(view.currentIndex).queue()
+            }
+            
+            MenuItem {
+                text: qsTr("Category")
+                onTriggered: popups.open(categoryDialog, root)
+            }
+            
+            MenuItem {
+                text: qsTr("Priority")
+                onTriggered: popups.open(priorityDialog, root)
+            }
+            
+            MenuItem {
+                text: qsTr("Remove")
+                onTriggered: transfers.get(view.currentIndex).cancel()
+            }
         }
-        
-        MenuItem {
-            text: qsTr("Remove")
-            onTriggered: transfers.get(view.currentIndex).cancel()
-        }
-    }
-    
-    PopupLoader {
-        id: popupLoader
     }
     
     Component {
-        id: propertiesDialog
+        id: categoryDialog
         
-        TransferPropertiesDialog {
-            transfer: transfers.get(view.currentIndex);
+        ListPickSelector {
+            title: qsTr("Category")
+            model: CategoryNameModel {}
+            textRole: "name"
+            onSelected: transferModel.setData(view.currentIndex, text, "category")
+        }
+    }
+    
+    Component {
+        id: priorityDialog
+        
+        ListPickSelector {
+            title: qsTr("Priority")
+            model: TransferPriorityModel {}
+            textRole: "name"
+            onSelected: transferModel.setData(view.currentIndex, model.data(currentIndex, "value"), "priority")
         }
     }
 }

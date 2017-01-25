@@ -16,27 +16,120 @@
 
 import QtQuick 1.0
 import org.hildon.components 1.0
+import org.hildon.utils 1.0
 import cuteNews 1.0
 
 Window {
     id: root
     
-    property string subscriptionId
+    function load(subscriptionId) {
+        articleModel.load(subscriptionId);
+    }
+    
+    function search(query) {
+        articleModel.search(query);
+    }
     
     title: qsTr("Articles")
     showProgressIndicator: (articleModel.status == ArticleModel.Active)
-                           || (subscriptions.status == Subscriptions.Active)
+                           || (subscriptions.activeSubscription == articleModel.subscriptionId)
     menuBar: MenuBar {
         MenuItem {
-            text: qsTr("Update")
-            onTriggered: subscriptions.update(root.subscriptionId)
+            action: updateAction
         }
         
         MenuItem {
-            text: qsTr("Mark all as read")
-            enabled: articleModel.count > 0
-            onTriggered: database.markSubscriptionRead(root.subscriptionId, true)
+            action: readAllAction
         }
+    }
+    
+    Action {
+        id: updateAction
+        
+        text: qsTr("Update")
+        autoRepeat: false
+        shortcut: qsTr("Ctrl+U")
+        enabled: (articleModel.subscriptionId != ALL_ARTICLES_SUBSCRIPTION_ID)
+        && (articleModel.subscriptionId != FAVOURITES_SUBSCRIPTION_ID)
+        onTriggered: subscriptions.update(articleModel.subscriptionId);
+    }
+    
+    Action {
+        id: readAllAction
+        
+        text: qsTr("Mark as read")
+        autoRepeat: false
+        shortcut: qsTr("Ctrl+R")
+        enabled: (articleModel.subscriptionId != ALL_ARTICLES_SUBSCRIPTION_ID)
+        && (articleModel.subscriptionId != FAVOURITES_SUBSCRIPTION_ID)
+        onTriggered: database.markSubscriptionRead(articleModel.subscriptionId, true);
+    }
+    
+    Action {
+        id: openAction
+        
+        text: qsTr("Open externally")
+        autoRepeat: false
+        shortcut: qsTr("o")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: {
+            var url = articleModel.data(articleView.currentIndex, "url");
+            
+            if (!urlopener.open(url)) {
+                Qt.openUrlExternally(url);
+            }
+        }
+    }
+    
+    Action {
+        id: copyAction
+        
+        text: qsTr("Copy URL")
+        autoRepeat: false
+        shortcut: qsTr("c")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: clipboard.text = articleModel.data(articleView.currentIndex, "url")
+    }
+    
+    Action {
+        id: readAction
+        
+        autoRepeat: false
+        shortcut: qsTr("r")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: articleModel.setData(articleView.currentIndex,
+        !articleModel.data(articleView.currentIndex, "read"), "read")
+    }
+    
+    Action {
+        id: favouriteAction
+        
+        autoRepeat: false
+        shortcut: qsTr("f")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: articleModel.setData(articleView.currentIndex,
+        !articleModel.data(articleView.currentIndex, "favourite"), "favourite")
+    }
+    
+    Action {
+        id: enclosuresAction
+        
+        text: qsTr("Enclosures")
+        autoRepeat: false
+        shortcut: qsTr("e")
+        enabled: (articleView.currentIndex >= 0)
+        && (articleModel.data(articleView.currentIndex, "hasEnclosures") === true)
+        onTriggered: popups.open(enclosuresDialog, root)
+    }
+    
+    Action {
+        id: deleteAction
+        
+        text: qsTr("Delete")
+        autoRepeat: false
+        shortcut: qsTr("d")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: popups.open(deleteDialog, root)
     }
     
     ListView {
@@ -48,14 +141,10 @@ Window {
             id: articleModel
             
             limit: 20
-            onStatusChanged: if (status == ArticleModel.Error) informationBox.information(errorString);
         }
         delegate: ArticleDelegate {
-            onClicked: {
-                windowStack.push(Qt.resolvedUrl("ArticleWindow.qml"));
-                windowStack.currentWindow.article = articleModel.get(index);
-            }
-            onPressAndHold: contextMenu.popup()
+            onClicked: windowStack.push(articleWindow)
+            onPressAndHold: popups.open(contextMenu, root)
         }
     }
     
@@ -64,40 +153,74 @@ Window {
         font.pointSize: platformStyle.fontSizeLarge
         color: platformStyle.disabledTextColor
         text: qsTr("No articles")
-        visible: (articleModel.status == ArticleModel.Ready) && (articleModel.count == 0)
+        visible: (articleModel.status != ArticleModel.Active) && (articleModel.count == 0)
     }
     
-    Menu {
+    Component {
         id: contextMenu
         
-        MenuItem {
-            text: qsTr("Open externally")
-            onTriggered: {
-                var url = articleModel.data(articleView.currentIndex, "url");
-                
-                if (!urlopener.open(url)) {
-                    Qt.openUrlExternally(url);
-                }
+        Menu {
+            MenuItem {
+                action: openAction
             }
-        }
-        
-        MenuItem {
-            text: articleModel.data(articleView.currentIndex, "read") ? qsTr("Mark as unread") : qsTr("Mark as read")
-            onTriggered: database.markArticleRead(articleModel.data(articleView.currentIndex, "id"),
-                                                  !articleModel.data(articleView.currentIndex, "read"))
-        }
-        
-        MenuItem {
-            text: articleModel.data(articleView.currentIndex, "favourite") ? qsTr("Unfavourite") : qsTr("Favourite")
-            onTriggered: database.markArticleFavourite(articleModel.data(articleView.currentIndex, "id"),
-                                                       !articleModel.data(articleView.currentIndex, "favourite"))
-        }
-        
-        MenuItem {
-            text: qsTr("Delete")
-            onTriggered: database.deleteArticle(articleModel.data(articleView.currentIndex, "id"))
+            
+            MenuItem {
+                action: copyAction
+            }
+            
+            MenuItem {
+                text: articleModel.data(articleView.currentIndex, "read") ? qsTr("Mark as unread")
+                : qsTr("Mark as read")
+                action: readAction
+            }
+            
+            MenuItem {
+                text: articleModel.data(articleView.currentIndex, "favourite") ? qsTr("Unfavourite") : qsTr("Favourite")
+                action: favouriteAction
+            }
+            
+            MenuItem {
+                action: enclosuresAction
+            }
+            
+            MenuItem {
+                action: deleteAction
+            }
         }
     }
     
-    onSubscriptionIdChanged: articleModel.load(subscriptionId)
+    Component {
+        id: articleWindow
+        
+        ArticleWindow {
+            article: articleModel.get(articleView.currentIndex)
+            onNext: articleView.incrementCurrentIndex()
+            onNextUnread: {
+                var index = articleModel.match(Math.min(articleView.currentIndex + 1, articleView.count - 1),
+                "read", false);
+                
+                if (index != -1) {
+                    articleView.currentIndex = index;
+                }
+            }
+            onPrevious: articleView.decrementCurrentIndex()
+        }
+    }
+    
+    Component {
+        id: enclosuresDialog
+        
+        EnclosuresDialog {
+            article: articleModel.itemData(articleView.currentIndex)
+        }
+    }
+    
+    Component {
+        id: deleteDialog
+        
+        MessageBox {
+            text: qsTr("Do you want to delete") + " '" + articleModel.data(articleView.currentIndex, "title") + "'?"
+            onAccepted: articleModel.remove(articleView.currentIndex)
+        }
+    }
 }

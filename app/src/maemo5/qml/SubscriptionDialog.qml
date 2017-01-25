@@ -151,8 +151,8 @@ Dialog {
             interval *= updateIntervalModel.data(updateIntervalSelector.currentIndex, "value");
         }
         
-        if (subscriptionId > 0) {
-            database.updateSubscription(subscriptionId, {source: sourceField.text,
+        if (subscriptionId) {
+            subscription.update(subscriptionId, {source: sourceField.text,
                 downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0, updateInterval: interval});
         }
         else {

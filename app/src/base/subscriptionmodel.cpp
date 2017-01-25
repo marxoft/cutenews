@@ -20,27 +20,27 @@
 #include "definitions.h"
 #include "json.h"
 #include "subscription.h"
-#ifdef WIDGETS_UI
 #include <QFont>
 #include <QIcon>
-#endif
 
 SubscriptionModel::SubscriptionModel(QObject *parent) :
     QAbstractListModel(parent),
     m_status(Idle)
 {
-    m_roles[IdRole] = "id";
-    m_roles[DescriptionRole] = "description";
-    m_roles[DownloadEnclosuresRole] = "downloadEnclosures";
-    m_roles[IconPathRole] = "iconPath";
-    m_roles[LastUpdatedRole] = "lastUpdated";
-    m_roles[ReadRole] = "read";
-    m_roles[SourceRole] = "source";
-    m_roles[SourceTypeRole] = "sourceType";
-    m_roles[TitleRole] = "title";
-    m_roles[UnreadArticlesRole] = "unreadArticles";
-    m_roles[UpdateIntervalRole] = "updateInterval";
-    m_roles[UrlRole] = "url";
+    m_roles[Subscription::AutoUpdateRole] = "autoUpdate";
+    m_roles[Subscription::DescriptionRole] = "description";
+    m_roles[Subscription::DownloadEnclosuresRole] = "downloadEnclosures";
+    m_roles[Subscription::IconPathRole] = "iconPath";
+    m_roles[Subscription::IdRole] = "id";
+    m_roles[Subscription::LastUpdatedRole] = "lastUpdated";
+    m_roles[Subscription::LastUpdatedStringRole] = "lastUpdatedString";
+    m_roles[Subscription::ReadRole] = "read";
+    m_roles[Subscription::SourceRole] = "source";
+    m_roles[Subscription::SourceTypeRole] = "sourceType";
+    m_roles[Subscription::TitleRole] = "title";
+    m_roles[Subscription::UnreadArticlesRole] = "unreadArticles";
+    m_roles[Subscription::UpdateIntervalRole] = "updateInterval";
+    m_roles[Subscription::UrlRole] = "url";
 #if QT_VERSION <= 0x050000
     setRoleNames(m_roles);
 #endif
@@ -78,15 +78,12 @@ int SubscriptionModel::rowCount(const QModelIndex &) const {
     return m_list.size();
 }
 
-#ifdef WIDGETS_UI
 int SubscriptionModel::columnCount(const QModelIndex &) const {
     return 2;
 }
-#endif
 
 QVariant SubscriptionModel::data(const QModelIndex &index, int role) const {
     if (const Subscription *subscription = get(index.row())) {
-#ifdef WIDGETS_UI
         switch (index.column()) {
         case 0:
             switch (role) {
@@ -131,31 +128,36 @@ QVariant SubscriptionModel::data(const QModelIndex &index, int role) const {
             break;
         default:
             break;
-        }                
-#endif
-        return subscription->property(m_roles.value(role));
+        }
+        
+        return subscription->data(role);
     }
     
     return QVariant();
 }
 
 QVariant SubscriptionModel::data(int row, const QByteArray &role) const {
-    if (const Subscription *subscription = get(row)) {
-        return subscription->property(role);
+    return data(index(row), m_roles.key(role));
+}
+
+bool SubscriptionModel::setData(const QModelIndex &index, const QVariant &value, int role) {
+    if (Subscription *subscription = get(index.row())) {
+        return subscription->setData(role, value);
     }
-    
-    return QVariant();
+
+    return false;
+}
+
+bool SubscriptionModel::setData(int row, const QVariant &value, const QByteArray &role) {
+    return setData(index(row), value, m_roles.key(role));
 }
 
 QMap<int, QVariant> SubscriptionModel::itemData(const QModelIndex &index) const {
     QMap<int, QVariant> map;
         
     if (const Subscription *subscription = get(index.row())) {
-        QHashIterator<int, QByteArray> iterator(m_roles);
-        
-        while (iterator.hasNext()) {
-            iterator.next();
-            map[iterator.key()] = subscription->property(iterator.value());
+        for (int i = Subscription::AutoUpdateRole; i <= Subscription::UrlRole; i++) {
+            map[i] = subscription->data(i);
         }
     }
     
@@ -166,12 +168,40 @@ QVariantMap SubscriptionModel::itemData(int row) const {
     QVariantMap map;
         
     if (const Subscription *subscription = get(row)) {
-        foreach (const QByteArray &role, m_roles.values()) {
-            map[role] = subscription->property(role);
+        for (int i = Subscription::AutoUpdateRole; i <= Subscription::UrlRole; i++) {
+            map[m_roles.value(i)] = subscription->data(i);
         }
     }
     
     return map;
+}
+
+bool SubscriptionModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) {
+    QMapIterator<int, QVariant> iterator(roles);
+
+    while (iterator.hasNext()) {
+        iterator.next();
+
+        if (!setData(index, iterator.value(), iterator.key())) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool SubscriptionModel::setItemData(int row, const QVariantMap &roles) {
+    QMapIterator<QString, QVariant> iterator(roles);
+
+    while (iterator.hasNext()) {
+        iterator.next();
+
+        if (!setData(row, iterator.value(), iterator.key().toUtf8())) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 Subscription* SubscriptionModel::get(int row) const {
@@ -180,6 +210,15 @@ Subscription* SubscriptionModel::get(int row) const {
     }
     
     return 0;
+}
+
+bool SubscriptionModel::remove(int row) {
+    if (Subscription *subscription = get(row)) {
+        subscription->remove();
+        return true;
+    }
+
+    return false;
 }
 
 QModelIndexList SubscriptionModel::match(const QModelIndex &start, int role, const QVariant &value, int hits,
@@ -194,14 +233,14 @@ int SubscriptionModel::match(int start, const QByteArray &role, const QVariant &
 
 void SubscriptionModel::clear() {
     if (!m_list.isEmpty()) {
-        setStatus(Active);
         beginResetModel();
         qDeleteAll(m_list);
         m_list.clear();
         endResetModel();
         emit countChanged(0);
-        setStatus(Idle);
     }
+
+    setStatus(Idle);
 }
 
 void SubscriptionModel::load() {
@@ -217,17 +256,14 @@ void SubscriptionModel::load() {
     DBConnection::connection(this, SLOT(onSubscriptionsFetched(DBConnection*)))->fetchSubscriptions();
 }
 
-void SubscriptionModel::onSubscriptionChanged(Subscription *subscription) {
-    const int i = m_list.indexOf(subscription);
+void SubscriptionModel::onSubscriptionChanged(Subscription *subscription, int) {
+    const int row = m_list.indexOf(subscription);
     
-    if (i >= 0) {
-#ifdef WIDGETS_UI
-        emit dataChanged(index(i, 0), index(i, 1));
-#else
-        const QModelIndex idx = index(i);
-        emit dataChanged(idx, idx);
-#endif
+    if (row == -1) {
+        return;
     }
+    
+    emit dataChanged(index(row, 0), index(row, 1));
 }
 
 void SubscriptionModel::onSubscriptionsAdded(const QStringList &ids) {
@@ -265,7 +301,8 @@ void SubscriptionModel::onSubscriptionsFetched(DBConnection *connection) {
                                                           connection->value(9).toString(),
                                                           connection->value(10).toInt(), this);
             subscription->setAutoUpdate(true);
-            connect(subscription, SIGNAL(dataChanged(Subscription*)), this, SLOT(onSubscriptionChanged(Subscription*)));
+            connect(subscription, SIGNAL(dataChanged(Subscription*, int)),
+                    this, SLOT(onSubscriptionChanged(Subscription*, int)));
             m_list << subscription;
             endInsertRows();
         }

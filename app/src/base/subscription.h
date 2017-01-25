@@ -34,6 +34,7 @@ class Subscription : public QObject
     Q_PROPERTY(QString errorString READ errorString NOTIFY finished)
     Q_PROPERTY(QString iconPath READ iconPath NOTIFY iconPathChanged)
     Q_PROPERTY(QDateTime lastUpdated READ lastUpdated NOTIFY lastUpdatedChanged)
+    Q_PROPERTY(QString lastUpdatedString READ lastUpdatedString NOTIFY lastUpdatedChanged)
     Q_PROPERTY(bool read READ isRead NOTIFY unreadArticlesChanged)
     Q_PROPERTY(QVariant source READ source NOTIFY sourceChanged)
     Q_PROPERTY(SourceType sourceType READ sourceType NOTIFY sourceTypeChanged)
@@ -44,9 +45,28 @@ class Subscription : public QObject
     Q_PROPERTY(int unreadArticles READ unreadArticles NOTIFY unreadArticlesChanged)
     Q_PROPERTY(bool autoUpdate READ autoUpdate WRITE setAutoUpdate NOTIFY autoUpdateChanged)
     
-    Q_ENUMS(SourceType Status)
+    Q_ENUMS(DataRole SourceType Status)
 
 public:
+    enum DataRole {
+        AutoUpdateRole = Qt::UserRole + 1,
+        DescriptionRole,
+        DownloadEnclosuresRole,
+        ErrorStringRole,
+        IconPathRole,
+        IdRole,
+        LastUpdatedRole,
+        LastUpdatedStringRole,
+        ReadRole,
+        SourceRole,
+        SourceTypeRole,
+        StatusRole,
+        TitleRole,
+        UnreadArticlesRole,
+        UpdateIntervalRole,
+        UrlRole
+    };
+    
     enum SourceType {
         Url = 0,
         LocalFile,
@@ -67,6 +87,9 @@ public:
                           const QString &iconPath, const QDateTime &lastUpdated, const QVariant &source,
                           SourceType sourceType, const QString &title, int updateInterval, const QString &url,
                           int unreadArticles, QObject *parent = 0);
+
+    Q_INVOKABLE QVariant data(int role) const;
+    Q_INVOKABLE bool setData(int role, const QVariant &value);
     
     QString id() const;
         
@@ -79,6 +102,7 @@ public:
     QString iconPath() const;
     
     QDateTime lastUpdated() const;
+    QString lastUpdatedString() const;
     
     bool isRead() const;
     
@@ -100,21 +124,24 @@ public:
 
 public Q_SLOTS:
     void load(const QString &id);
+    void markRead(bool read = true);
+    void remove();
+    void update(const QVariantMap &properties);
 
 private Q_SLOTS:
     void onArticlesAdded(const QStringList &articleIds, const QString &subscriptionId);
     void onArticlesDeleted(const QStringList &articleIds, const QString &subscriptionId);
     void onArticleRead(const QString &articleId, const QString &subscriptionId, bool isRead);
-    void onAllArticlesRead();
     void onSubscriptionFetched(DBConnection *connection);
     void onSubscriptionRead(const QString &subscriptionId, bool isRead);
+    void onAllSubscriptionsRead();
     void onSubscriptionUpdated(const QString &subscriptionId);
 
 Q_SIGNALS:
     void idChanged();
     void cacheSizeChanged();
     void descriptionChanged();
-    void dataChanged(Subscription *subscription);
+    void dataChanged(Subscription *subscription, int role);
     void downloadEnclosuresChanged();
     void finished(Subscription *subscription);
     void iconPathChanged();

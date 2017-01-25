@@ -20,10 +20,8 @@
 #include "dbnotify.h"
 #include "definitions.h"
 #include "json.h"
-#ifdef WIDGETS_UI
 #include <QFont>
 #include <QIcon>
-#endif
 
 ArticleModel::ArticleModel(QObject *parent) :
     QAbstractListModel(parent),
@@ -34,18 +32,19 @@ ArticleModel::ArticleModel(QObject *parent) :
     m_status(Idle),
     m_subscriptionId(ALL_ARTICLES_SUBSCRIPTION_ID)
 {
-    m_roles[IdRole] = "id";
-    m_roles[AuthorRole] = "author";
-    m_roles[BodyRole] = "body";
-    m_roles[CategoriesRole] = "categories";
-    m_roles[DateRole] = "date";
-    m_roles[EnclosuresRole] = "enclosures";
-    m_roles[FavouriteRole] = "favourite";
-    m_roles[HasEnclosuresRole] = "hasEnclosures";
-    m_roles[ReadRole] = "read";
-    m_roles[SubscriptionIdRole] = "subscriptionId";
-    m_roles[TitleRole] = "title";
-    m_roles[UrlRole] = "url";
+    m_roles[Article::AuthorRole] = "author";
+    m_roles[Article::BodyRole] = "body";
+    m_roles[Article::CategoriesRole] = "categories";
+    m_roles[Article::DateRole] = "date";
+    m_roles[Article::DateStringRole] = "dateString";
+    m_roles[Article::EnclosuresRole] = "enclosures";
+    m_roles[Article::FavouriteRole] = "favourite";
+    m_roles[Article::HasEnclosuresRole] = "hasEnclosures";
+    m_roles[Article::IdRole] = "id";
+    m_roles[Article::ReadRole] = "read";
+    m_roles[Article::SubscriptionIdRole] = "subscriptionId";
+    m_roles[Article::TitleRole] = "title";
+    m_roles[Article::UrlRole] = "url";
 #if QT_VERSION <= 0x050000
     setRoleNames(m_roles);
 #endif
@@ -77,6 +76,10 @@ void ArticleModel::setLimit(int l) {
     }
 }
 
+QString ArticleModel::query() const {
+    return m_query;
+}
+
 ArticleModel::Status ArticleModel::status() const {
     return m_status;
 }
@@ -86,6 +89,10 @@ void ArticleModel::setStatus(ArticleModel::Status s) {
         m_status = s;
         emit statusChanged(s);
     }
+}
+
+QString ArticleModel::subscriptionId() const {
+    return m_subscriptionId;
 }
 
 #if QT_VERSION >= 0x050000
@@ -98,7 +105,6 @@ int ArticleModel::rowCount(const QModelIndex &) const {
     return m_list.size();
 }
 
-#ifdef WIDGETS_UI
 int ArticleModel::columnCount(const QModelIndex &) const {
     return 3;
 }
@@ -117,7 +123,6 @@ QVariant ArticleModel::headerData(int section, Qt::Orientation orientation, int 
     
     return QVariant();
 }
-#endif
 
 bool ArticleModel::canFetchMore(const QModelIndex &) const {
     return (m_moreResults) && (status() == Ready) && (limit() > 0);
@@ -144,7 +149,6 @@ void ArticleModel::fetchMore(const QModelIndex &) {
 
 QVariant ArticleModel::data(const QModelIndex &index, int role) const {
     if (const Article *article = get(index.row())) {
-#ifdef WIDGETS_UI
         switch (index.column()) {
         case 0:
             switch (role) {
@@ -162,7 +166,7 @@ QVariant ArticleModel::data(const QModelIndex &index, int role) const {
         case 1:
             switch (role) {
             case Qt::DisplayRole:
-                return article->date().toString("dd/MM/yyyy HH:mm");
+                return article->dateString();
             case Qt::FontRole:
                 if (!article->isRead()) {
                     QFont font;
@@ -171,15 +175,12 @@ QVariant ArticleModel::data(const QModelIndex &index, int role) const {
                 }
                 
                 return QFont();
-            case SortRole:
-                return article->date();
             default:
                 break;
             }
         case 2:
             switch (role) {
             case Qt::DisplayRole:
-            case SortRole:
                 return article->title();
             case Qt::FontRole:
                 if (!article->isRead()) {
@@ -195,30 +196,35 @@ QVariant ArticleModel::data(const QModelIndex &index, int role) const {
         default:
             break;
         }
-#endif
-        return article->property(m_roles.value(role));
+        
+        return article->data(role);
     }
     
     return QVariant();
 }
 
 QVariant ArticleModel::data(int row, const QByteArray &role) const {
-    if (const Article *article = get(row)) {
-        return article->property(role);
+    return data(index(row), m_roles.key(role));
+}
+
+bool ArticleModel::setData(const QModelIndex &index, const QVariant &value, int role) {
+    if (Article *article = get(index.row())) {
+        return article->setData(role, value);
     }
-    
-    return QVariant();
+
+    return false;
+}
+
+bool ArticleModel::setData(int row, const QVariant &value, const QByteArray &role) {
+    return setData(index(row), value, m_roles.key(role));
 }
 
 QMap<int, QVariant> ArticleModel::itemData(const QModelIndex &index) const {
     QMap<int, QVariant> map;
         
     if (const Article *article = get(index.row())) {
-        QHashIterator<int, QByteArray> iterator(m_roles);
-        
-        while (iterator.hasNext()) {
-            iterator.next();
-            map[iterator.key()] = article->property(iterator.value());
+        for (int i = Article::AuthorRole; i <= Article::UrlRole; i++) {
+            map[i] = article->data(i);
         }
     }
     
@@ -229,12 +235,40 @@ QVariantMap ArticleModel::itemData(int row) const {
     QVariantMap map;
         
     if (const Article *article = get(row)) {
-        foreach (const QByteArray &role, m_roles.values()) {
-            map[role] = article->property(role);
+        for (int i = Article::AuthorRole; i <= Article::UrlRole; i++) {
+            map[m_roles.value(i)] = article->data(i);
         }
     }
     
     return map;
+}
+
+bool ArticleModel::setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles) {
+    QMapIterator<int, QVariant> iterator(roles);
+
+    while (iterator.hasNext()) {
+        iterator.next();
+
+        if (!setData(index, iterator.value(), iterator.key())) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool ArticleModel::setItemData(int row, const QVariantMap &roles) {
+    QMapIterator<QString, QVariant> iterator(roles);
+
+    while (iterator.hasNext()) {
+        iterator.next();
+
+        if (!setData(row, iterator.value(), iterator.key().toUtf8())) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 Article* ArticleModel::get(int row) const {
@@ -243,6 +277,15 @@ Article* ArticleModel::get(int row) const {
     }
     
     return 0;
+}
+
+bool ArticleModel::remove(int row) {
+    if (Article *article = get(row)) {
+        article->remove();
+        return true;
+    }
+
+    return false;
 }
 
 QModelIndexList ArticleModel::match(const QModelIndex &start, int role, const QVariant &value, int hits,
@@ -257,7 +300,6 @@ int ArticleModel::match(int start, const QByteArray &role, const QVariant &value
 
 void ArticleModel::clear() {
     if (!m_list.isEmpty()) {
-        setStatus(Active);
         beginResetModel();
         qDeleteAll(m_list);
         m_list.clear();
@@ -265,8 +307,9 @@ void ArticleModel::clear() {
         emit countChanged(0);
         m_offset = 0;
         m_moreResults = false;
-        setStatus(Idle);
     }
+
+    setStatus(Idle);
 }
 
 void ArticleModel::load(const QString &subscriptionId) {
@@ -276,6 +319,8 @@ void ArticleModel::load(const QString &subscriptionId) {
     
     m_subscriptionId = subscriptionId;
     m_query = QString();
+    emit queryChanged(m_query);
+    emit subscriptionIdChanged(m_subscriptionId);
     clear();
     
     if (subscriptionId == ALL_ARTICLES_SUBSCRIPTION_ID) {
@@ -294,10 +339,18 @@ void ArticleModel::search(const QString &query) {
         return;
     }
     
-    m_query = query;
+    if (query.startsWith("WHERE ")) {
+        m_query = query;
+    }
+    else {
+        m_query = QString("WHERE author LIKE '%%1%' OR title LIKE '%%1%' OR body LIKE '%%1%'").arg(query);
+    }
+    
     m_subscriptionId = QString();
+    emit queryChanged(m_query);
+    emit subscriptionIdChanged(m_subscriptionId);
     clear();
-    fetchArticles(query);
+    fetchArticles(m_query);
 }
 
 void ArticleModel::reload() {
@@ -317,17 +370,31 @@ void ArticleModel::fetchArticles(const QString &query) {
                             .arg(m_offset).arg(limit()) : QString()));
 }
 
-void ArticleModel::onArticleChanged(Article *article) {
-    const int i = m_list.indexOf(article);
-    
-    if (i >= 0) {
-#ifdef WIDGETS_UI
-        emit dataChanged(index(i, 0), index(i, 2));
-#else
-        const QModelIndex idx = index(i);
-        emit dataChanged(idx, idx);
-#endif
+void ArticleModel::onArticleChanged(Article *article, int role) {
+    const int row = m_list.indexOf(article);
+
+    if (row == -1) {
+        return;
     }
+
+    int column = 0;
+    
+    switch (role) {
+    case Article::ReadRole:
+        emit dataChanged(index(row, column), index(row, 2));
+        return;
+    case Article::DateRole:
+        column = 1;
+        break;
+    case Article::TitleRole:
+        column = 2;
+        break;
+    default:
+        break;
+    }
+
+    const QModelIndex idx = index(row, column);
+    emit dataChanged(idx, idx);
 }
 
 void ArticleModel::onArticlesAdded(const QStringList &articleIds, const QString &subscriptionId) {
@@ -397,7 +464,7 @@ void ArticleModel::onArticlesFetched(DBConnection *connection) {
                                                connection->value(8).toString(), connection->value(9).toString(),
                                                connection->value(10).toString(), this);
                 article->setAutoUpdate(true);
-                connect(article, SIGNAL(dataChanged(Article*)), this, SLOT(onArticleChanged(Article*)));
+                connect(article, SIGNAL(dataChanged(Article*, int)), this, SLOT(onArticleChanged(Article*, int)));
                 m_list.prepend(article);
                 endInsertRows();
             }
@@ -414,7 +481,7 @@ void ArticleModel::onArticlesFetched(DBConnection *connection) {
                                                connection->value(8).toString(), connection->value(9).toString(),
                                                connection->value(10).toString(), this);
                 article->setAutoUpdate(true);
-                connect(article, SIGNAL(dataChanged(Article*)), this, SLOT(onArticleChanged(Article*)));
+                connect(article, SIGNAL(dataChanged(Article*, int)), this, SLOT(onArticleChanged(Article*, int)));
                 m_list << article;
                 endInsertRows();
             }

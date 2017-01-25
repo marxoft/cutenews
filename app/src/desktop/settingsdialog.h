@@ -19,14 +19,12 @@
 
 #include <QDialog>
 
-class NetworkProxyTypeModel;
-class QCheckBox;
-class QComboBox;
+class CategorySettingsTab;
+class GeneralSettingsTab;
+class InterfaceSettingsTab;
+class NetworkSettingsTab;
+class UrlOpenerSettingsTab;
 class QDialogButtonBox;
-class QGroupBox;
-class QLineEdit;
-class QPushButton;
-class QSpinBox;
 class QStackedWidget;
 class QTabBar;
 class QVBoxLayout;
@@ -34,61 +32,36 @@ class QVBoxLayout;
 class SettingsDialog : public QDialog
 {
     Q_OBJECT
-    
+
 public:
     explicit SettingsDialog(QWidget *parent = 0);
 
 public Q_SLOTS:
     virtual void accept();
-    
-private:
-    void showGeneralTab();
-    void showNetworkTab();
-    void showInterfacesTab();
-    
+
 private Q_SLOTS:
     void setCurrentTab(int index);
     
-    void setNetworkProxyType(int index);
-    
-    void showFileDialog();
-        
-private:
-    NetworkProxyTypeModel *m_proxyTypeModel;
-    
-    QCheckBox *m_downloadsCheckBox;
-    QCheckBox *m_webInterfaceAuthenticationCheckBox;
-    
-    QComboBox *m_proxyTypeSelector;
-    
-    QDialogButtonBox *m_buttonBox;
-    
-    QGroupBox *m_proxyGroupBox;
-    QGroupBox *m_webInterfaceGroupBox;
-    
-    QLineEdit *m_downloadPathEdit;
-    QLineEdit *m_proxyHostEdit;
-    QLineEdit *m_proxyUsernameEdit;
-    QLineEdit *m_proxyPasswordEdit;
-    QLineEdit *m_webInterfaceUsernameEdit;
-    QLineEdit *m_webInterfacePasswordEdit;
-    
-    QPushButton *m_downloadPathButton;
+    void showGeneralTab();
+    void showNetworkTab();
+    void showInterfaceTab();
+    void showCategoryTab();
+    void showUrlOpenerTab();
 
-    QSpinBox *m_expirySpinBox;
-    QSpinBox *m_downloadsSpinBox;
-    QSpinBox *m_proxyPortSpinBox;
-    QSpinBox *m_webInterfacePortSpinBox;
+private:
+    GeneralSettingsTab *m_generalTab;
+    NetworkSettingsTab *m_networkTab;
+    InterfaceSettingsTab *m_interfaceTab;
+    CategorySettingsTab *m_categoryTab;
+    UrlOpenerSettingsTab *m_openerTab;
+    
+    QTabBar *m_tabBar;
     
     QStackedWidget *m_stack;
     
-    QTabBar *m_tabs;
-    
-    QWidget *m_generalTab;
-    QWidget *m_networkTab;
-    QWidget *m_interfacesTab;
+    QDialogButtonBox *m_buttonBox;
     
     QVBoxLayout *m_layout;
 };
-    
+
 #endif // SETTINGSDIALOG_H

@@ -18,17 +18,23 @@
 #define UTILS_H
 
 #include <QObject>
+#include <QDateTime>
 #include <QUrl>
 #include <QVariantMap>
 
 class Utils : public QObject
 {
     Q_OBJECT
-    
+        
 public:
     explicit Utils(QObject *parent = 0);
-    
+        
     Q_INVOKABLE static QString createId();
+    
+    Q_INVOKABLE static QDateTime dateTimeFromMSecs(qint64 msecs);
+    Q_INVOKABLE static QDateTime dateTimeFromSecs(uint secs);
+    Q_INVOKABLE static qint64 dateTimeToMSecs(const QDateTime &dt);
+    Q_INVOKABLE static uint dateTimeToSecs(const QDateTime &dt);
         
     Q_INVOKABLE static QString formatBytes(qint64 bytes);
     

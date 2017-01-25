@@ -19,6 +19,7 @@
 
 #include <QObject>
 #include <QPointer>
+#include <QVariant>
 
 class QNetworkAccessManager;
 
@@ -35,18 +36,48 @@ class Transfer : public QObject
     Q_PROPERTY(int progress READ progress NOTIFY progressChanged)
     Q_PROPERTY(QString progressString READ progressString NOTIFY progressChanged)
     Q_PROPERTY(qint64 size READ size WRITE setSize NOTIFY sizeChanged)
+    Q_PROPERTY(QString sizeString READ sizeString NOTIFY sizeChanged)
+    Q_PROPERTY(int speed READ speed NOTIFY speedChanged)
+    Q_PROPERTY(QString speedString READ speedString NOTIFY speedChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString statusString READ statusString NOTIFY statusChanged)
     Q_PROPERTY(TransferType transferType READ transferType CONSTANT)
     Q_PROPERTY(QString url READ url WRITE setUrl NOTIFY urlChanged)
     
-    Q_ENUMS(Priority Status TransferType)
+    Q_ENUMS(DataRole Priority Status TransferType)
     
 public:
+    enum DataRole {
+        BytesTransferredRole = Qt::UserRole + 1,
+        CategoryRole,
+        CustomCommandRole,
+        CustomCommandOverrideEnabledRole,
+        DownloadPathRole,
+        ErrorStringRole,
+        FileNameRole,
+        IdRole,
+        NameRole,
+        PriorityRole,
+        PriorityStringRole,
+        ProgressRole,
+        ProgressStringRole,
+        SizeRole,
+        SizeStringRole,
+        SpeedRole,
+        SpeedStringRole,
+        StatusRole,
+        StatusStringRole,
+        SubscriptionIdRole,
+        TransferTypeRole,
+        UrlRole
+    };
+    
     enum Priority {
-        HighPriority = 0,
+        HighestPriority = 0,
+        HighPriority,
         NormalPriority,
-        LowPriority
+        LowPriority,
+        LowestPriority
     };
     
     enum Status {
@@ -69,6 +100,9 @@ public:
     };
     
     explicit Transfer(TransferType transferType, QObject *parent = 0);
+
+    Q_INVOKABLE virtual QVariant data(int role) const;
+    Q_INVOKABLE virtual bool setData(int role, const QVariant &value);
     
     void setNetworkAccessManager(QNetworkAccessManager *manager);
     
@@ -91,6 +125,10 @@ public:
         
     qint64 size() const;
     void setSize(qint64 s);
+    QString sizeString() const;
+
+    int speed() const;
+    QString speedString() const;
     
     Status status() const;
     QString statusString() const;
@@ -109,12 +147,14 @@ public Q_SLOTS:
     
 Q_SIGNALS:
     void bytesTransferredChanged();
-    void finished();
+    void dataChanged(Transfer *transfer, int role);
+    void finished(Transfer *transfer);
     void idChanged();
     void nameChanged();
     void priorityChanged();
     void progressChanged();
     void sizeChanged();
+    void speedChanged();
     void statusChanged();
     void urlChanged();
 
@@ -124,6 +164,8 @@ protected:
     void setErrorString(const QString &es);
     
     void setProgress(int p);
+
+    void setSpeed(int s);
     
     void setStatus(Status s);
     
@@ -146,6 +188,8 @@ private:
         
     qint64 m_size;
     qint64 m_bytesTransferred;
+
+    int m_speed;
         
     Status m_status;
     

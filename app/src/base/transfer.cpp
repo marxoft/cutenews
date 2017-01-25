@@ -27,9 +27,71 @@ Transfer::Transfer(Transfer::TransferType transferType, QObject *parent) :
     m_progress(0),
     m_size(0),
     m_bytesTransferred(0),
+    m_speed(0),
     m_status(Paused),
     m_transferType(transferType)
 {
+}
+
+QVariant Transfer::data(int role) const {
+    switch (role) {
+    case BytesTransferredRole:
+        return bytesTransferred();
+    case ErrorStringRole:
+        return errorString();
+    case IdRole:
+        return id();
+    case NameRole:
+        return name();
+    case PriorityRole:
+        return priority();
+    case PriorityStringRole:
+        return priorityString();
+    case ProgressRole:
+        return progress();
+    case ProgressStringRole:
+        return progressString();
+    case SizeRole:
+        return size();
+    case SizeStringRole:
+        return sizeString();
+    case SpeedRole:
+        return speed();
+    case SpeedStringRole:
+        return speedString();
+    case StatusRole:
+        return status();
+    case StatusStringRole:
+        return statusString();
+    case TransferTypeRole:
+        return transferType();
+    case UrlRole:
+        return url();
+    default:
+        return QVariant();
+    }
+}
+
+bool Transfer::setData(int role, const QVariant &value) {
+    switch (role) {
+    case IdRole:
+        setId(value.toString());
+        return true;
+    case NameRole:
+        setName(value.toString());
+        return true;
+    case PriorityRole:
+        setPriority(Priority(value.toInt()));
+        return true;
+    case SizeRole:
+        setSize(value.toLongLong());
+        return true;
+    case UrlRole:
+        setUrl(value.toString());
+        return true;
+    default:
+        return false;
+    }
 }
 
 QNetworkAccessManager* Transfer::networkAccessManager() {
@@ -58,6 +120,7 @@ void Transfer::setBytesTransferred(qint64 b) {
     if (b != bytesTransferred()) {
         m_bytesTransferred = b;
         emit bytesTransferredChanged();
+        emit dataChanged(this, BytesTransferredRole);
     }
 }
 
@@ -77,6 +140,7 @@ void Transfer::setId(const QString &i) {
     if (i != id()) {
         m_id = i;
         emit idChanged();
+        emit dataChanged(this, IdRole);
     }
 }
 
@@ -88,6 +152,7 @@ void Transfer::setName(const QString &n) {
     if (n != name()) {
         m_name = n;
         emit nameChanged();
+        emit dataChanged(this, NameRole);
     }
 }
 
@@ -99,17 +164,22 @@ void Transfer::setPriority(Priority p) {
     if (p != priority()) {
         m_priority = p;
         emit priorityChanged();
+        emit dataChanged(this, PriorityRole);
     }
 }
 
 QString Transfer::priorityString() const {
     switch (priority()) {
+    case HighestPriority:
+        return tr("Highest");
     case HighPriority:
         return tr("High");
     case NormalPriority:
         return tr("Normal");
     case LowPriority:
         return tr("Low");
+    case LowestPriority:
+        return tr("Lowest");
     default:
         return QString();
     }
@@ -123,6 +193,7 @@ void Transfer::setProgress(int p) {
     if (p != progress()) {
         m_progress = p;
         emit progressChanged();
+        emit dataChanged(this, ProgressRole);
     }
 }
 
@@ -146,6 +217,32 @@ void Transfer::setSize(qint64 s) {
     }
 }
 
+QString Transfer::sizeString() const {
+    return Utils::formatBytes(size());
+}
+
+int Transfer::speed() const {
+    switch (status()) {
+    case Downloading:
+    case Uploading:
+        return m_speed;
+    default:
+        return 0;
+    }
+}
+
+void Transfer::setSpeed(int s) {
+    if (s != speed()) {
+        m_speed = s;
+        emit speedChanged();
+        emit dataChanged(this, SpeedRole);
+    }
+}
+
+QString Transfer::speedString() const {
+    return Utils::formatBytes(speed()) + "/s";
+}
+
 Transfer::Status Transfer::status() const {
     return m_status;
 }
@@ -156,13 +253,14 @@ void Transfer::setStatus(Status s) {
         Logger::log(QString("Transfer::setStatus(). ID: %1, Status: %2").arg(id()).arg(statusString()),
                     Logger::LowVerbosity);
         emit statusChanged();
+        emit dataChanged(this, StatusRole);
         
         switch (s) {
         case Paused:
         case Canceled:
         case Failed:
         case Completed:
-            emit finished();
+            emit finished(this);
             break;
         default:
             break;
@@ -207,5 +305,6 @@ void Transfer::setUrl(const QString &u) {
     if (u != url()) {
         m_url = u;
         emit urlChanged();
+        emit dataChanged(this, UrlRole);
     }
 }

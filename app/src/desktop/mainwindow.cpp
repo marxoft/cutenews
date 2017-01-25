@@ -16,12 +16,14 @@
 
 #include "mainwindow.h"
 #include "aboutdialog.h"
+#include "article.h"
 #include "articlemodel.h"
 #include "browser.h"
 #include "dbconnection.h"
+#include "dbnotify.h"
+#include "definitions.h"
 #include "plugindialog.h"
 #include "pluginmanager.h"
-#include "searchdialog.h"
 #include "settings.h"
 #include "settingsdialog.h"
 #include "subscription.h"
@@ -34,14 +36,19 @@
 #include <QAction>
 #include <QApplication>
 #include <QClipboard>
+#include <QDateTimeEdit>
 #include <QDesktopServices>
+#include <QDialogButtonBox>
 #include <QFileDialog>
+#include <QFormLayout>
 #include <QHeaderView>
 #include <QIcon>
+#include <QInputDialog>
 #include <QLabel>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QProgressDialog>
 #include <QPushButton>
 #include <QSortFilterProxyModel>
 #include <QSplitter>
@@ -55,12 +62,10 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    m_connection(DBConnection::connection(this, SLOT(onConnectionFinished(DBConnection*)))),
     m_subscriptionsModel(new SubscriptionModel(this)),
     m_articlesModel(new ArticleModel(this)),
     m_articlesProxyModel(new QSortFilterProxyModel(this)),
     m_enclosuresModel(new QStandardItemModel(this)),
-    m_urlOpenerModel(new UrlOpenerModel(this)),
     m_subscriptionsMenu(new QMenu(tr("&Subscriptions"), this)),
     m_newSubscriptionMenu(new QMenu(tr("New source"), this)),
     m_subscriptionMenu(new QMenu(tr("&Subscription"), this)),
@@ -100,6 +105,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_transfersAction(new QAction(QIcon::fromTheme("folder-download"), tr("Show &downloads"), this)),
     m_closeTabAction(new QAction(QIcon::fromTheme("view-close"), tr("Close &tab"), this)),
     m_searchAction(new QAction(QIcon::fromTheme("edit-find"), tr("&Search all articles"), this)),
+    m_deleteAction(new QAction(QIcon::fromTheme("edit-delete"), tr("&Delete read articles"), this)),
     m_settingsAction(new QAction(QIcon::fromTheme("document-properties"), tr("&Preferences"), this)),
     m_aboutAction(new QAction(QIcon::fromTheme("help-contents"), tr("&About"), this)),
     m_horizontalSplitter(new QSplitter(Qt::Horizontal, this)),
@@ -132,7 +138,7 @@ MainWindow::MainWindow(QWidget *parent) :
     
     m_articlesProxyModel->setSourceModel(m_articlesModel);
     m_articlesProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
-    m_articlesProxyModel->setSortRole(ArticleModel::SortRole);
+    m_articlesProxyModel->setSortRole(Article::DateRole);
         
     m_subscriptionsMenu->addAction(m_updateAllSubscriptionsAction);
     m_subscriptionsMenu->addAction(m_cancelSubscriptionUpdatesAction);
@@ -186,6 +192,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_viewMenu->addAction(m_closeTabAction);
     
     m_toolsMenu->addAction(m_searchAction);
+    m_toolsMenu->addAction(m_deleteAction);
     m_toolsMenu->addAction(m_settingsAction);
 
     m_helpMenu->addAction(m_aboutAction);
@@ -205,16 +212,24 @@ MainWindow::MainWindow(QWidget *parent) :
     m_toolBar->addAction(m_searchAction);
     
     m_updateAllSubscriptionsAction->setShortcut(QKeySequence(tr("Ctrl+U")));
+    m_updateAllSubscriptionsAction->setToolTip(tr("Update all subscriptions"));
     m_cancelSubscriptionUpdatesAction->setShortcut(QKeySequence(tr("Ctrl+Shift+U")));
+    m_cancelSubscriptionUpdatesAction->setToolTip(tr("Cancel all subscription updates"));
     m_offlineModeAction->setCheckable(true);
+    m_offlineModeAction->setToolTip(tr("Toggle offline mode"));
+    m_newSubscriptionAction->setToolTip(tr("Add a new subscription"));
     m_importSubscriptionsAction->setShortcut(QKeySequence(tr("Ctrl+O")));
     m_quitAction->setShortcut(QKeySequence(tr("Ctrl+Q")));
     
     m_markSubscriptionReadAction->setShortcut(QKeySequence(tr("Ctrl+R")));
+    m_markSubscriptionReadAction->setToolTip(tr("Mark all articles in the current subscription as read"));
     
     m_nextUnreadArticleAction->setShortcut(QKeySequence(tr("Ctrl+N")));
+    m_nextUnreadArticleAction->setToolTip(tr("Go to the next unread article"));
+    m_nextArticleAction->setToolTip(tr("Go to the next article in the current subscription"));
     m_nextArticleAction->setPriority(QAction::LowPriority);
     m_previousArticleAction->setShortcut(QKeySequence(tr("Ctrl+Shift+N")));
+    m_previousArticleAction->setToolTip(tr("Go to the previous article in the current subscription"));
     m_previousArticleAction->setPriority(QAction::LowPriority);
     m_toggleArticleReadAction->setShortcut(QKeySequence(tr("Ctrl+M")));
     m_toggleArticleFavouriteAction->setShortcut(QKeySequence(tr("Ctrl+T")));
@@ -279,11 +294,10 @@ MainWindow::MainWindow(QWidget *parent) :
     m_articlesView->header()->resizeSection(0, 24);
 #if QT_VERSION >= 0x050000
     m_articlesView->header()->setSectionResizeMode(0, QHeaderView::Fixed);
-    m_articlesView->header()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
 #else
     m_articlesView->header()->setResizeMode(0, QHeaderView::Fixed);
-    m_articlesView->header()->setResizeMode(1, QHeaderView::ResizeToContents);
 #endif
+    m_articlesView->header()->restoreState(Settings::articlesHeaderViewState());
     
     m_enclosuresView->setModel(m_enclosuresModel);
     m_enclosuresView->setSelectionBehavior(QTreeView::SelectRows);
@@ -321,6 +335,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(Subscriptions::instance(), SIGNAL(statusChanged(Subscriptions::Status)),
             this, SLOT(onSubscriptionsStatusChanged(Subscriptions::Status)));
     connect(Subscriptions::instance(), SIGNAL(statusTextChanged(QString)), statusBar(), SLOT(showMessage(QString)));
+    connect(DBNotify::instance(), SIGNAL(error(QString)), this, SLOT(onDatabaseError(QString)));
+    connect(DBNotify::instance(), SIGNAL(readArticlesDeleted(int)), this, SLOT(onReadArticlesDeleted(int)));
     connect(Settings::instance(), SIGNAL(offlineModeEnabledChanged(bool)),
             this, SLOT(onOfflineModeEnabledChanged(bool)));
     
@@ -332,7 +348,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_updateAllSubscriptionsAction, SIGNAL(triggered()), Subscriptions::instance(), SLOT(updateAll()));
     connect(m_cancelSubscriptionUpdatesAction, SIGNAL(triggered()), Subscriptions::instance(), SLOT(cancel()));
     connect(m_offlineModeAction, SIGNAL(triggered(bool)), Settings::instance(), SLOT(setOfflineModeEnabled(bool)));
-    connect(m_markAllSubscriptionsReadAction, SIGNAL(triggered()), m_connection, SLOT(markAllArticlesRead()));
+    connect(m_markAllSubscriptionsReadAction, SIGNAL(triggered()), this, SLOT(markAllSubscriptionsRead()));
     connect(m_newSubscriptionAction, SIGNAL(triggered()), this, SLOT(newSubscriptionRequested()));
     connect(m_importSubscriptionsAction, SIGNAL(triggered()), this, SLOT(importSubscriptions()));
     connect(m_quitAction, SIGNAL(triggered()), this, SLOT(close()));
@@ -363,6 +379,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_closeTabAction, SIGNAL(triggered()), this, SLOT(closeCurrentTab()));
     
     connect(m_searchAction, SIGNAL(triggered()), this, SLOT(showSearchDialog()));
+    connect(m_deleteAction, SIGNAL(triggered()), this, SLOT(showDeleteDialog()));
     connect(m_settingsAction, SIGNAL(triggered()), this, SLOT(showSettingsDialog()));
 
     connect(m_aboutAction, SIGNAL(triggered()), this, SLOT(showAboutDialog()));
@@ -399,16 +416,12 @@ MainWindow::MainWindow(QWidget *parent) :
     m_verticalSplitter->restoreState(Settings::mainWindowVerticalSplitterState());
 }
 
-MainWindow::~MainWindow() {
-    delete m_connection;
-    m_connection = 0;
-}
-
 void MainWindow::closeEvent(QCloseEvent *e) {
     Settings::setMainWindowGeometry(saveGeometry());
     Settings::setMainWindowState(saveState());
     Settings::setMainWindowHorizontalSplitterState(m_horizontalSplitter->saveState());
     Settings::setMainWindowVerticalSplitterState(m_verticalSplitter->saveState());
+    Settings::setArticlesHeaderViewState(m_articlesView->header()->saveState());
     QMainWindow::closeEvent(e);
 }
 
@@ -430,22 +443,31 @@ void MainWindow::importSubscriptions() {
     }
 }
 
+void MainWindow::markAllSubscriptionsRead() {
+    DBConnection *connection = DBConnection::connection();
+    connect(connection, SIGNAL(finished(DBConnection*)), connection, SLOT(deleteLater()));
+    connection->markAllSubscriptionsRead();
+}
+
 void MainWindow::updateCurrentSubscription() {
-    Subscriptions::instance()->update(m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toString());
+    Subscriptions::instance()->update(m_subscriptionsView->currentIndex().data(Subscription::IdRole).toString());
 }
 
 void MainWindow::markCurrentSubscriptionRead() {
-    m_connection->markSubscriptionRead(m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toString(),
-                                       true);
+    m_subscriptionsModel->setData(m_subscriptionsView->currentIndex(), true, Subscription::ReadRole);
 }
 
 void MainWindow::deleteCurrentSubscription() {
-    m_connection->deleteSubscription(m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toString());
+    if (QMessageBox::question(this, tr("Unsubscribe?"), tr("Do you want to unsubscribe from '%1'?")
+                              .arg(m_subscriptionsView->currentIndex().data(Subscription::TitleRole).toString()))
+        == QMessageBox::Yes) {
+        m_subscriptionsModel->remove(m_subscriptionsView->currentIndex().row());
+    }
 }
 
 void MainWindow::showCurrentSubscriptionProperties() {
-    const QString id = m_subscriptionsView->currentIndex().data(SubscriptionModel::IdRole).toString();
-    const int sourceType = m_subscriptionsView->currentIndex().data(SubscriptionModel::SourceTypeRole).toInt();
+    const QString id = m_subscriptionsView->currentIndex().data(Subscription::IdRole).toString();
+    const int sourceType = m_subscriptionsView->currentIndex().data(Subscription::SourceTypeRole).toInt();
     
     if (sourceType == Subscription::Plugin) {
         PluginDialog(QString(), id, this).exec();
@@ -456,7 +478,7 @@ void MainWindow::showCurrentSubscriptionProperties() {
 }
 
 void MainWindow::nextUnreadArticle() {
-    if (m_articlesModel->status() == ArticleModel::Active) {
+    if (m_articlesModel->status() != ArticleModel::Ready) {
         return;
     }
     
@@ -466,14 +488,14 @@ void MainWindow::nextUnreadArticle() {
     m_articlesView->currentIndex().isValid() ? m_articlesView->currentIndex()
                                              : m_articlesProxyModel->index(0, 0, QModelIndex());
     
-    QModelIndexList list = m_articlesProxyModel->match(index, ArticleModel::ReadRole, false, 1);
+    QModelIndexList list = m_articlesProxyModel->match(index, Article::ReadRole, false, 1);
     
     if (!list.isEmpty()) {
         setCurrentArticle(list.first());
         return;
     }
     
-    list = m_subscriptionsModel->match(m_subscriptionsView->currentIndex(), SubscriptionModel::ReadRole, false, 1);
+    list = m_subscriptionsModel->match(m_subscriptionsView->currentIndex(), Subscription::ReadRole, false, 1);
     
     if (!list.isEmpty()) {
         connect(m_articlesModel, SIGNAL(statusChanged(ArticleModel::Status)), this, SLOT(nextUnreadArticle()));
@@ -501,63 +523,63 @@ void MainWindow::previousArticle() {
 }
 
 void MainWindow::toggleCurrentArticleRead() {
-    m_connection->markArticleRead(m_articlesView->currentIndex().data(ArticleModel::IdRole).toString(),
-                                  !m_articlesView->currentIndex().data(ArticleModel::ReadRole).toBool());
+    const QModelIndex index = m_articlesProxyModel->mapToSource(m_articlesView->currentIndex());
+    m_articlesModel->setData(index, !index.data(Article::ReadRole).toBool(), Article::ReadRole);
 }
 
 void MainWindow::toggleCurrentArticleFavourite() {
-    m_connection->markArticleFavourite(m_articlesView->currentIndex().data(ArticleModel::IdRole).toString(),
-                                      !m_articlesView->currentIndex().data(ArticleModel::FavouriteRole).toBool());
+    const QModelIndex index = m_articlesProxyModel->mapToSource(m_articlesView->currentIndex());
+    m_articlesModel->setData(index, !index.data(Article::FavouriteRole).toBool(), Article::FavouriteRole);
 }
 
 void MainWindow::deleteCurrentArticle() {
-    m_connection->deleteArticle(m_articlesView->currentIndex().data(ArticleModel::IdRole).toString());
+    m_articlesModel->remove(m_articlesProxyModel->mapToSource(m_articlesView->currentIndex()).row());
 }
 
 void MainWindow::copyCurrentArticleUrl() {
-    QApplication::clipboard()->setText(m_articlesView->currentIndex().data(ArticleModel::UrlRole).toString());
+    QApplication::clipboard()->setText(m_articlesView->currentIndex().data(Article::UrlRole).toString());
 }
 
 void MainWindow::openCurrentArticleInTab() {
-    openUrlInTab(m_articlesView->currentIndex().data(ArticleModel::UrlRole).toString());
+    openUrlInTab(m_articlesView->currentIndex().data(Article::UrlRole).toString());
 }
 
 void MainWindow::openCurrentArticleInBrowser() {
-    m_browser->setUrl(m_articlesView->currentIndex().data(ArticleModel::UrlRole).toString());
+    m_browser->setUrl(m_articlesView->currentIndex().data(Article::UrlRole).toString());
 }
 
 void MainWindow::openCurrentArticleExternally() {
-    openUrlExternally(m_articlesView->currentIndex().data(ArticleModel::UrlRole).toString());
+    openUrlExternally(m_articlesView->currentIndex().data(Article::UrlRole).toString());
 }
 
 void MainWindow::copyCurrentEnclosureUrl() {
-    if (QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
+    if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
         QApplication::clipboard()->setText(item->text());
     }
 }
 
 void MainWindow::openCurrentEnclosureInTab() {
-    if (QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
+    if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
         openUrlInTab(item->text());
     }
 }
 
 void MainWindow::openCurrentEnclosureInBrowser() {
-    if (QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
+    if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
         m_browser->setUrl(item->text());
     }
 }
 
 void MainWindow::openCurrentEnclosureExternally() {
-    if (QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
+    if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
         openUrlExternally(item->text());
     }
 }
 
 void MainWindow::downloadCurrentEnclosure() {
-    if (QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
-        Transfers::instance()->addEnclosureDownload(item->text(), m_subscriptionsView->currentIndex()
-                                                    .data(SubscriptionModel::IdRole).toString());
+    if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
+        Transfers::instance()->addEnclosureDownload(item->text(), m_articlesView->currentIndex()
+                                                    .data(Article::SubscriptionIdRole).toString());
     }
 }
 
@@ -567,13 +589,28 @@ void MainWindow::setCurrentSubscription(const QModelIndex &index) {
     }
     
     m_infoLabel->setText(tr("<b>Feed:</b> <a href='%1'>%2</a><br><b>Source:</b> <a href='%3'>%3</a>")
-                           .arg(index.data(SubscriptionModel::UrlRole).toString())
-                           .arg(index.data(SubscriptionModel::TitleRole).toString())
-                           .arg(index.data(SubscriptionModel::SourceRole).toString()));
-    m_browser->setHtml(index.data(SubscriptionModel::DescriptionRole).toString());
+                           .arg(index.data(Subscription::UrlRole).toString())
+                           .arg(index.data(Subscription::TitleRole).toString())
+                           .arg(index.data(Subscription::SourceRole).toString()));
+    m_browser->setHtml(index.data(Subscription::DescriptionRole).toString());
     m_enclosuresLabel->hide();
     m_enclosuresView->hide();
-    m_articlesModel->load(index.data(SubscriptionModel::IdRole).toString());
+    
+    const QString id = index.data(Subscription::IdRole).toString();
+    m_articlesModel->load(id);
+    
+    if ((id == ALL_ARTICLES_SUBSCRIPTION_ID) || (id == FAVOURITES_SUBSCRIPTION_ID)) {
+        m_updateSubscriptionAction->setEnabled(false);
+        m_markSubscriptionReadAction->setEnabled(false);
+        m_deleteSubscriptionAction->setEnabled(false);
+        m_subscriptionPropertiesAction->setEnabled(false);
+    }
+    else {
+        m_updateSubscriptionAction->setEnabled(true);
+        m_markSubscriptionReadAction->setEnabled(true);
+        m_deleteSubscriptionAction->setEnabled(true);
+        m_subscriptionPropertiesAction->setEnabled(true);
+    }
 }
 
 void MainWindow::setCurrentArticle(const QModelIndex &index) {
@@ -582,17 +619,17 @@ void MainWindow::setCurrentArticle(const QModelIndex &index) {
         return;
     }
     
-    const QString author = index.data(ArticleModel::AuthorRole).toString();
-    const QStringList categories = index.data(ArticleModel::CategoriesRole).toStringList();
-    const bool isRead = index.data(ArticleModel::ReadRole).toBool();
+    const QString author = index.data(Article::AuthorRole).toString();
+    const QStringList categories = index.data(Article::CategoriesRole).toStringList();
+    const bool isRead = index.data(Article::ReadRole).toBool();
     
     m_infoLabel->setText(tr("<b>Author:</b> %1<br><b>Categories:</b> %2")
                            .arg(author.isEmpty() ? tr("Unknown") : author)
                            .arg(categories.isEmpty() ? tr("None") : categories.join(", ")));
-    m_browser->setHtml(index.data(ArticleModel::BodyRole).toString(), QUrl("file://"));
+    m_browser->setHtml(index.data(Article::BodyRole).toString(), QUrl("file://"));
     m_enclosuresModel->clear();
     
-    const QVariantList enclosures = index.data(ArticleModel::EnclosuresRole).toList();
+    const QVariantList enclosures = index.data(Article::EnclosuresRole).toList();
     
     if (enclosures.isEmpty()) {
         m_enclosuresLabel->hide();
@@ -622,13 +659,23 @@ void MainWindow::setCurrentArticle(const QModelIndex &index) {
     }
     
     if (!isRead) {
-        m_connection->markArticleRead(index.data(ArticleModel::IdRole).toString(), true);
+        m_articlesModel->setData(m_articlesProxyModel->mapToSource(index), true, Article::ReadRole);
     }
 }
 
 void MainWindow::searchArticles(const QString &query) {
     m_subscriptionsView->setCurrentIndex(m_subscriptionsModel->index(0));
     m_articlesModel->search(query);
+}
+
+void MainWindow::deleteReadArticles(int expiryDate) {
+    QProgressDialog dialog(tr("Deleting read articles"), QString(), 0, 100, this);
+    DBConnection *connection = DBConnection::connection();
+    connect(connection, SIGNAL(progressChanged(int)), &dialog, SLOT(setValue(int)));
+    connect(connection, SIGNAL(finished(DBConnection*)), &dialog, SLOT(close()));
+    connect(connection, SIGNAL(finished(DBConnection*)), connection, SLOT(deleteLater()));
+    connection->deleteReadArticles(expiryDate);
+    dialog.exec();
 }
 
 void MainWindow::showSubscriptionContextMenu(const QPoint &pos) {
@@ -650,11 +697,7 @@ void MainWindow::showEnclosureContextMenu(const QPoint &pos) {
 }
 
 void MainWindow::openUrlExternally(const QString &url) {
-    if (m_urlOpenerModel->rowCount() == 0) {
-        m_urlOpenerModel->load();
-    }
-        
-    if (!m_urlOpenerModel->open(url)) {
+    if (!UrlOpenerModel::instance()->open(url)) {
         QDesktopServices::openUrl(url);
     }
 }
@@ -712,15 +755,35 @@ void MainWindow::showTransfersTab() {
 }
 
 void MainWindow::showSearchDialog() {
-    SearchDialog dialog(this);
+    QString query = QInputDialog::getText(this, tr("Search all articles"), tr("Query"));
     
-    if (dialog.exec() == QDialog::Accepted) {
-        searchArticles(dialog.query());
-    }   
+    if (!query.isEmpty()) {
+        searchArticles(query);
+    }  
 }
 
 void MainWindow::showSettingsDialog() {
     SettingsDialog(this).exec();
+}
+
+void MainWindow::showDeleteDialog() {
+    const QDateTime current = QDateTime::currentDateTime();
+    const int secs = current.toTime_t() - Settings::readArticleExpiry();
+    QDialog dialog(this);
+    dialog.setWindowTitle(tr("Delete read articles"));
+    QDateTimeEdit edit(QDateTime::fromTime_t(secs), &dialog);
+    edit.setMaximumDateTime(current);
+    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &dialog);
+    QFormLayout form(&dialog);
+    form.addRow(tr("&Delete articles read before:"), &edit);
+    form.addWidget(&buttonBox);
+    connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
+    connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+    
+    if (dialog.exec() == QDialog::Accepted) {
+        Settings::setReadArticleExpiry(edit.dateTime().secsTo(current));
+        deleteReadArticles(edit.dateTime().toTime_t());
+    }
 }
 
 void MainWindow::showAboutDialog() {
@@ -745,7 +808,9 @@ void MainWindow::onSubscriptionsStatusChanged(Subscriptions::Status status) {
 
 void MainWindow::onArticlesCountChanged(int count) {
     const bool enable = (count > 0);
-    m_markSubscriptionReadAction->setEnabled(enable);
+    const QString id = m_subscriptionsView->currentIndex().data(Subscription::IdRole).toString();
+    m_markSubscriptionReadAction->setEnabled((enable) && (id != ALL_ARTICLES_SUBSCRIPTION_ID)
+                                             && (id != FAVOURITES_SUBSCRIPTION_ID));
     m_nextArticleAction->setEnabled(enable);
     m_previousArticleAction->setEnabled(enable);
     m_toggleArticleReadAction->setEnabled(enable);
@@ -754,7 +819,11 @@ void MainWindow::onArticlesCountChanged(int count) {
     m_copyArticleUrlAction->setEnabled(enable);
     m_openArticleInTabAction->setEnabled(enable);
     m_openArticleInBrowserAction->setEnabled(enable);
-    m_openArticleExternallyAction->setEnabled(enable);    
+    m_openArticleExternallyAction->setEnabled(enable);
+}
+
+void MainWindow::onReadArticlesDeleted(int count) {
+    QMessageBox::information(this, tr("Delete read articles"), tr("%1 read articles deleted").arg(count));
 }
 
 void MainWindow::onCurrentTabChanged(int index) {
@@ -762,12 +831,8 @@ void MainWindow::onCurrentTabChanged(int index) {
     m_closeTabAction->setEnabled(index > 0);
 }
 
-void MainWindow::onConnectionFinished(DBConnection* connection) {
-    if (connection->status() == DBConnection::Error) {
-        QMessageBox::critical(this, tr("Database error"), connection->errorString());
-    }
-
-    connection->clear();
+void MainWindow::onDatabaseError(const QString &errorString) {
+    QMessageBox::critical(this, tr("Database error"), errorString);
 }
 
 void MainWindow::onOfflineModeEnabledChanged(bool enabled) {

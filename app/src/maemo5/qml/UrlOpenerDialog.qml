@@ -20,7 +20,6 @@ import org.hildon.components 1.0
 Dialog {
     id: root
 
-    property alias name: nameField.text
     property alias regExp: regexpField.text
     property alias command: commandField.text
 
@@ -37,17 +36,6 @@ Dialog {
             bottom: parent.bottom
         }
         spacing: platformStyle.paddingMedium
-
-        Label {
-            width: parent.width
-            text: qsTr("Name")
-        }
-
-        TextField {
-            id: nameField
-            
-            width: parent.width
-        }
 
         Label {
             width: parent.width
@@ -81,9 +69,9 @@ Dialog {
         }
         style: DialogButtonStyle {}
         text: qsTr("Done")
-        enabled: (nameField.text != "") && (regexpField.text != "") && (commandField.text != "")
+        enabled: (regexpField.text != "") && (commandField.text != "")
         onClicked: root.accept()
     }
 
-    onStatusChanged: if (status == DialogStatus.Open) nameField.forceActiveFocus();
+    onStatusChanged: if (status == DialogStatus.Open) regexpField.forceActiveFocus();
 }

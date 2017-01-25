@@ -45,7 +45,7 @@ ListItem {
         elide: Text.ElideRight
         font.pointSize: platformStyle.fontSizeSmall
         color: status == Transfer.Failed ? platformStyle.attentionColor : platformStyle.secondaryTextColor
-        text: statusString + (status == Transfer.Downloading ? ": " + progressString : "")
+        text: statusString + (status == Transfer.Downloading ? ": " + progressString + " - " + speedString : "")
     }
     
     ProgressBar {
@@ -62,4 +62,3 @@ ListItem {
         text: progress + "%"
     }
 }
-        

@@ -29,7 +29,7 @@ class SelectionModel : public QAbstractListModel
     
 public:
     enum Roles {
-        NameRole = Qt::DisplayRole,
+        NameRole = Qt::UserRole + 1,
         ValueRole = Qt::UserRole
     };
     
@@ -39,7 +39,8 @@ public:
     QHash<int, QByteArray> roleNames() const;
 #endif
     
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    virtual int columnCount(const QModelIndex &parent = QModelIndex()) const;
     
     Qt::Alignment textAlignment() const;
     void setTextAlignment(Qt::Alignment align);

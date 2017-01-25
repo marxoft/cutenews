@@ -20,44 +20,76 @@ import org.hildon.components 1.0
 ListItem {
     id: root
     
-    Image {
-        id: favouriteImage
+    Loader {
+        id: unreadLoader
+        
+        anchors {
+            left: parent.left
+            top: parent.top
+            bottom: parent.bottom
+            margins: platformStyle.paddingMedium
+        }
+        width: platformStyle.paddingMedium
+        sourceComponent: !read ? unreadIndicator : undefined
+    }
+    
+    Loader {
+        id: favouriteLoader
         
         anchors {
             right: parent.right
             rightMargin: platformStyle.paddingMedium
             verticalCenter: parent.verticalCenter
         }
-        
-        source: "image://icon/imageviewer_favourite"
-        smooth: true
-        visible: favourite
+        sourceComponent: favourite ? favouriteIndicator : undefined
     }
     
     Label {
+        id: titleLabel
+        
         anchors {
-            left: parent.left
-            right: favourite ? favouriteImage.left : parent.right
+            left: unreadLoader.right
+            right: favourite ? favouriteLoader.left : parent.right
             top: parent.top
             margins: platformStyle.paddingMedium
         }
         elide: Text.ElideRight
-        color: read ? platformStyle.defaultTextColor : platformStyle.activeTextColor
         text: title
     }
     
     Label {
+        id: dateLabel
+        
         anchors {
-            left: parent.left
-            right: favourite ? favouriteImage.left : parent.right
+            left: titleLabel.left
+            right: titleLabel.right
             bottom: parent.bottom
-            margins: platformStyle.paddingMedium
+            bottomMargin: platformStyle.paddingMedium
         }
         verticalAlignment: Text.AlignBottom
         elide: Text.ElideRight
         font.pointSize: platformStyle.fontSizeSmall
-        color: read ? platformStyle.secondaryTextColor : platformStyle.activeTextColor
-        text: Qt.formatDateTime(date, "dd/MM/yyyy HH:mm")
+        color: platformStyle.secondaryTextColor
+        text: dateString
+    }
+    
+    Component {
+        id: unreadIndicator
+        
+        Rectangle {
+            anchors.fill: parent
+            color: (root.pressed) || ((root.ListView.isCurrentItem)
+            && (root.ListView.view.navigationMode == NavigationMode.KeyNavigation))
+            ? platformStyle.defaultTextColor : platformStyle.activeTextColor
+        }
+    }
+    
+    Component {
+        id: favouriteIndicator
+        
+        Image {
+            source: "image://icon/imageviewer_favourite"
+            smooth: true
+        }
     }
 }
-        

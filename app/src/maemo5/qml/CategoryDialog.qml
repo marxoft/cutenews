@@ -53,7 +53,7 @@ Dialog {
             width: parent.width
             text: qsTr("Download path")
             valueText: qsTr("None chosen")
-            onClicked: popupLoader.open(fileDialog, root)
+            onClicked: popups.open(fileDialog, root)
         }
     }
     
@@ -67,10 +67,6 @@ Dialog {
         style: DialogButtonStyle {}
         text: qsTr("Done")
         enabled: nameField.text != ""
-    }
-    
-    PopupLoader {
-        id: popupLoader
     }
     
     Component {

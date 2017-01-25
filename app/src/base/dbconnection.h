@@ -30,6 +30,7 @@ class DBConnection : public QObject
 
     Q_PROPERTY(bool asynchronous READ isAsynchronous CONSTANT)
     Q_PROPERTY(QString errorString READ errorString NOTIFY finished)
+    Q_PROPERTY(int progress READ progress NOTIFY progressChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     
     Q_ENUMS(Status)
@@ -49,6 +50,8 @@ public:
     
     QString errorString() const;
     
+    int progress() const;
+    
     Status status() const;
     
     Q_INVOKABLE static DBConnection* connection();
@@ -66,6 +69,7 @@ public Q_SLOTS:
     void deleteSubscription(const QString &id);
     void updateSubscription(const QString &id, const QVariantMap &properties, bool fetchResult = false);
     void markSubscriptionRead(const QString &id, bool isRead = true, bool fetchResult = false);
+    void markAllSubscriptionsRead();
     
     void fetchSubscription(const QString &id);
     void fetchSubscriptions();
@@ -75,11 +79,10 @@ public Q_SLOTS:
     void addArticle(const QVariantList &properties, const QString &subscriptionId);
     void addArticles(const QList<QVariantList> &articles, const QString &subscriptionId);
     void deleteArticle(const QString &id);
-    void deleteExpiredArticles(int expiryDate);
+    void deleteReadArticles(int expiryDate);
     void updateArticle(const QString &id, const QVariantMap &properties, bool fetchResult = false);
     void markArticleFavourite(const QString &id, bool isFavourite = true, bool fetchResult = false);
     void markArticleRead(const QString &id, bool isRead = true, bool fetchResult = false);
-    void markAllArticlesRead();
     
     void fetchArticle(const QString &id);
     void fetchArticles();
@@ -102,6 +105,7 @@ private Q_SLOTS:
     void _p_deleteSubscription(const QString &id);
     void _p_updateSubscription(const QString &id, const QVariantMap &properties, bool fetchResult);
     void _p_markSubscriptionRead(const QString &id, bool isRead, bool fetchResult);
+    void _p_markAllSubscriptionsRead();
     
     void _p_fetchSubscription(const QString &id);
     void _p_fetchSubscriptions();
@@ -111,11 +115,10 @@ private Q_SLOTS:
     void _p_addArticle(const QVariantList &properties, const QString &subscriptionId);
     void _p_addArticles(const QList<QVariantList> &articles, const QString &subscriptionId);
     void _p_deleteArticle(const QString &id);
-    void _p_deleteExpiredArticles(int expiryDate);
+    void _p_deleteReadArticles(int expiryDate);
     void _p_updateArticle(const QString &id, const QVariantMap &properties, bool fetchResult);
     void _p_markArticleFavourite(const QString &id, bool isFavourite, bool fetchResult);
     void _p_markArticleRead(const QString &id, bool isRead, bool fetchResult);
-    void _p_markAllArticlesRead();
     
     void _p_fetchArticle(const QString &id);
     void _p_fetchArticles();
@@ -126,12 +129,15 @@ private Q_SLOTS:
 
 Q_SIGNALS:
     void finished(DBConnection *conn);
+    void progressChanged(int p);
     void statusChanged(DBConnection::Status s);
 
 private:    
     void setErrorString(const QString &e);
     
     void setStatus(Status s);
+    
+    void setProgress(int p);
     
     QSqlDatabase database();
     
@@ -140,6 +146,8 @@ private:
     bool m_asynchronous;
     
     QString m_errorString;
+    
+    int m_progress;
     
     Status m_status;
     

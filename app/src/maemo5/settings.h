@@ -64,8 +64,6 @@ class Settings : public QObject
                NOTIFY startTransfersAutomaticallyChanged)
     Q_PROPERTY(bool updateSubscriptionsOnStartup READ updateSubscriptionsOnStartup WRITE setUpdateSubscriptionsOnStartup
                NOTIFY updateSubscriptionsOnStartupChanged)
-    Q_PROPERTY(QString userInterface READ userInterface WRITE setUserInterface NOTIFY userInterfaceChanged)
-    Q_PROPERTY(QString viewMode READ viewMode WRITE setViewMode NOTIFY viewModeChanged)
     
 public:
     ~Settings();
@@ -110,10 +108,7 @@ public:
     static bool startTransfersAutomatically();
     
     static bool updateSubscriptionsOnStartup();
-    
-    static QString userInterface();
-    static QString viewMode();
-    
+        
     Q_INVOKABLE static QVariant value(const QString &key, const QVariant &defaultValue = QVariant());
 
 public Q_SLOTS:
@@ -154,9 +149,6 @@ public Q_SLOTS:
     
     static void setUpdateSubscriptionsOnStartup(bool enabled);
     
-    static void setUserInterface(const QString &ui);
-    static void setViewMode(const QString &mode);
-
     static void setValue(const QString &key, const QVariant &value);
 
 Q_SIGNALS:
@@ -177,8 +169,6 @@ Q_SIGNALS:
     void readArticleExpiryChanged(int expiry);
     void startTransfersAutomaticallyChanged(bool enabled);
     void updateSubscriptionsOnStartupChanged(bool enabled);
-    void userInterfaceChanged(const QString &ui);
-    void viewModeChanged(const QString &mode);
 
 private:
     Settings();

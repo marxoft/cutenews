@@ -18,10 +18,8 @@
 #include "dbconnection.h"
 #include "logger.h"
 #include "mainwindow.h"
-#include "settings.h"
 #include "transfers.h"
 #include <QCoreApplication>
-#include <QDateTime>
 #include <QThread>
 #ifdef DBUS_INTERFACE
 #include <QDBusConnection>
@@ -58,20 +56,6 @@ bool CuteNews::quit() {
             dbThread->quit();
             return false;
         }
-    }
-    
-    const int expiryDays = Settings::readArticleExpiry();
-    
-    if (expiryDays > -1) {
-        uint expiryDate = QDateTime::currentDateTime().toTime_t();
-
-        if (expiryDays > 0) {
-            expiryDate -= expiryDays * 86400;
-        }
-        
-        Logger::log("CuteNews::quit(). Deleting read articles older than "
-                    + QDateTime::fromTime_t(expiryDate).toString(Qt::ISODate));
-        DBConnection(false).deleteExpiredArticles(expiryDate);
     }
     
     Transfers::instance()->save();

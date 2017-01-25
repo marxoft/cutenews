@@ -38,103 +38,80 @@ Dialog {
             bottom: parent.bottom
         }
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
-        contentHeight: container.height
+        contentHeight: flow.height + platformStyle.paddingMedium * 5
         
-        Item {
-            id: container
+        Flow {
+            id: flow
             
             anchors {
                 left: parent.left
                 right: parent.right
                 top: parent.top
             }
-            height: column.height + flow.height + platformStyle.paddingMedium * 6
+            spacing: platformStyle.paddingMedium
             
-            Column {
-                id: column
-            
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    bottom: flow.top
-                    bottomMargin: platformStyle.paddingMedium
-                }
-                spacing: platformStyle.paddingMedium
+            Repeater {
+                id: repeater
                 
-                Repeater {
-                    id: repeater
-                
-                    Loader {
-                        function initSourceComponent() {
-                            switch (modelData.type) {
-                            case "boolean":
-                                sourceComponent = checkBox;
-                                break;
-                            case "group":
-                                sourceComponent = group;
-                                break;
-                            case "integer":
-                                sourceComponent = integerField;
-                                break;
-                            case "list":
-                                sourceComponent = valueSelector;
-                                break;
-                            case "password":
-                                sourceComponent = passwordField;
-                                break;
-                            case "text":
-                                sourceComponent = textField;
-                                break;
-                            default:
-                                break;
-                            }
-                            
-                            if (item) {
-                                item.init(modelData);
-                            }
+                Loader {
+                    function initSourceComponent() {
+                        switch (modelData.type) {
+                        case "boolean":
+                            sourceComponent = checkBox;
+                            break;
+                        case "group":
+                            sourceComponent = group;
+                            break;
+                        case "integer":
+                            sourceComponent = integerField;
+                            break;
+                        case "list":
+                            sourceComponent = valueSelector;
+                            break;
+                        case "password":
+                            sourceComponent = passwordField;
+                            break;
+                        case "text":
+                            sourceComponent = textField;
+                            break;
+                        default:
+                            break;
                         }
                         
-                        Component.onCompleted: initSourceComponent()
+                        if (item) {
+                            item.init(modelData);
+                        }
                     }
+                    
+                    Component.onCompleted: initSourceComponent()
                 }
             }
             
-            Flow {
-                id: flow
+            Label {
+                width: parent.width
+                text: qsTr("Update interval (0 to disable)")
+            }
+            
+            SpinBox {
+                id: updateIntervalSpinBox
                 
-                anchors {
-                    left: parent.left
-                    right: parent.right
-                    bottom: parent.bottom
-                }
-                spacing: platformStyle.paddingMedium
+                width: parent.width - updateIntervalSelector.width - parent.spacing
+            }
+            
+            ComboBox {
+                id: updateIntervalSelector
                 
-                Label {
-                    width: parent.width
-                    text: qsTr("Update interval (0 to disable)")
+                model: UpdateIntervalTypeModel {
+                    id: updateIntervalModel
                 }
+                textRole: "name"
+            }
+            
+            CheckBox {
+                id: enclosuresCheckBox
                 
-                SpinBox {
-                    id: updateIntervalSpinBox
-                    
-                    width: parent.width - updateIntervalSelector.width - parent.spacing
-                }
-                
-                ComboBox {
-                    id: updateIntervalSelector
-                    
-                    model: UpdateIntervalTypeModel {
-                        id: updateIntervalModel
-                    }
-                    textRole: "name"
-                }
-                
-                CheckBox {
-                    id: enclosuresCheckBox
-                    
-                    width: parent.width
-                    text: qsTr("Download enclosures automatically")
-                }
+                width: parent.width
+                text: qsTr("Download enclosures automatically")
             }
         }
     }
@@ -163,8 +140,7 @@ Dialog {
                 checked = internal.getValue(key, modelData.value) === true;
             }
 
-            width: column.width
-            visible: !inputContext.visible
+            width: flow.width
             onCheckedChanged: internal.setValue(key, checked)
         }
     }
@@ -179,7 +155,7 @@ Dialog {
                 repeater.model = modelData.settings;
             }
 
-            width: column.width
+            width: flow.width
             spacing: platformStyle.paddingLarge
             
             Label {
@@ -251,7 +227,7 @@ Dialog {
                 field.value = internal.getValue(field.key, modelData.value) || 0;
             }
 
-            width: column.width
+            width: flow.width
             spacing: platformStyle.paddingMedium
             
             Label {
@@ -282,7 +258,7 @@ Dialog {
                 field.text = internal.getValue(field.key, modelData.value) || "";
             }
 
-            width: column.width
+            width: flow.width
             spacing: platformStyle.paddingMedium
             
             Label {
@@ -314,7 +290,7 @@ Dialog {
                 field.text = internal.getValue(field.key, modelData.value) || "";
             }
 
-            width: column.width
+            width: flow.width
             spacing: platformStyle.paddingMedium
             
             Label {
@@ -353,7 +329,7 @@ Dialog {
                 value = internal.getValue(key, modelData.value) || model.data(0, "value");
             }
 
-            width: column.width
+            width: flow.width
             model: SelectionModel {}
             onSelected: internal.setValue(key, value)
         }
@@ -432,12 +408,11 @@ Dialog {
         }
         
         if (subscriptionId) {
-            database.updateSubscription(subscriptionId, {source: internal.stringifySource(),
-                downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0, updateInterval: interval});
+            subscription.update({source: internal.stringifySource(),
+            downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0, updateInterval: interval});
         }
         else {
             subscriptions.create(internal.stringifySource(), Subscription.Plugin, enclosuresCheckBox.checked, interval);
         }        
     }
 }
-    

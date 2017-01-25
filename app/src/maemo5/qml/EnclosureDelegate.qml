@@ -45,4 +45,3 @@ ListItem {
         text: utils.formatBytes(modelData.length) + " (" + modelData.type + ")"
     }
 }
-        

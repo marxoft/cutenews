@@ -43,6 +43,9 @@ public:
         ProgressRole,
         ProgressStringRole,
         SizeRole,
+        SizeStringRole,
+        SpeedRole,
+        SpeedStringRole,
         StatusRole,
         StatusStringRole,
         SubscriptionIdRole,
@@ -57,11 +60,10 @@ public:
 #endif
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
-#ifdef WIDGETS_UI
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
     
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
-#endif
+    
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     QMap<int, QVariant> itemData(const QModelIndex &index) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
@@ -83,20 +85,10 @@ private:
 private Q_SLOTS:
     void onCountChanged(int count);
     void onTransferAdded(Transfer *transfer);
-#ifdef WIDGETS_UI
-    void onTransferDataChanged(Transfer *transfer, int column);
-    void onTransferNameChanged();
-    void onTransferCategoryChanged();
-    void onTransferPriorityChanged();
-    void onTransferProgressChanged();
-    void onTransferSizeChanged();
-    void onTransferStatusChanged();
-#else
-    void onTransferDataChanged();
-#endif
+    void onTransferDataChanged(Transfer *transfer, int role);
     
 Q_SIGNALS:
-    void countChanged(int c);
+    void countChanged(int count);
     
 private:
     QHash<int, QByteArray> m_roles;

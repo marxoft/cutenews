@@ -42,6 +42,6 @@ ListItem {
         elide: Text.ElideRight
         font.pointSize: platformStyle.fontSizeSmall
         color: platformStyle.secondaryTextColor
-        text: path
+        text: value
     }
 }

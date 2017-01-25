@@ -16,6 +16,7 @@
 
 import QtQuick 1.0
 import org.hildon.components 1.0
+import org.hildon.utils 1.0
 import cuteNews 1.0
 
 Window {
@@ -23,33 +24,118 @@ Window {
     
     property Article article
     
-    showProgressIndicator: subscriptions.status == Subscriptions.Active
-    title: article ? article.title : qsTr("Article")
+    signal next
+    signal nextUnread
+    signal previous
+    
+    showProgressIndicator: (article != null) && (article.status == Article.Active)
+    title: qsTr("Article")
     menuBar: MenuBar {
         MenuItem {
-            text: qsTr("Open externally")
-            onTriggered: if (!urlopener.open(article.url)) Qt.openUrlExternally(article.url);
+            action: openAction
         }
         
         MenuItem {
-            text: (article) && (article.read) ? qsTr("Mark as unread") : qsTr("Mark as read")
-            onTriggered: database.markArticleRead(article.id, !article.read)
+            action: copyAction
         }
         
         MenuItem {
-            text: (article) && (article.favourite) ? qsTr("Unfavourite") : qsTr("Favourite")
-            onTriggered: database.markArticleFavourite(article.id, !article.favourite)
+            text: (article != null) && (article.read) ? qsTr("Mark as unread") : qsTr("Mark as read")
+            action: readAction
         }
         
         MenuItem {
-            text: qsTr("Enclosures") + (article ? " (" + article.enclosures.length + ")" : "")
-            enabled: (article != null) && (article.enclosures.length > 0)
-            onTriggered: popupLoader.open(enclosuresDialog, root)
+            text: (article != null) && (article.favourite) ? qsTr("Unfavourite") : qsTr("Favourite")
+            action: favouriteAction
+        }
+        
+        MenuItem {
+            action: enclosuresAction
+        }
+        
+        MenuItem {
+            action: deleteAction
         }
     }
     
-    TextAreaStyle {
-        id: textAreaStyle
+    Action {
+        id: openAction
+        
+        text: qsTr("Open externally")
+        autoRepeat: false
+        shortcut: qsTr("o")
+        onTriggered: if (!urlopener.open(article.url)) Qt.openUrlExternally(article.url);
+    }
+    
+    Action {
+        id: copyAction
+        
+        text: qsTr("Copy URL")
+        autoRepeat: false
+        shortcut: qsTr("c")
+        onTriggered: clipboard.text = article.url
+    }
+    
+    Action {
+        id: readAction
+        
+        autoRepeat: false
+        shortcut: qsTr("r")
+        onTriggered: article.markRead(!article.read)
+    }
+    
+    Action {
+        id: favouriteAction
+        
+        autoRepeat: false
+        shortcut: qsTr("f")
+        onTriggered: article.markFavourite(!article.favourite)
+    }
+    
+    Action {
+        id: enclosuresAction
+        
+        text: qsTr("Enclosures")
+        autoRepeat: false
+        shortcut: qsTr("e")
+        enabled: (article != null) && (article.hasEnclosures)
+        onTriggered: popups.open(enclosuresDialog, root)
+    }
+    
+    Action {
+        id: deleteAction
+        
+        text: qsTr("Delete")
+        autoRepeat: false
+        shortcut: qsTr("d")
+        onTriggered: popups.open(deleteDialog, root)
+    }
+    
+    Action {
+        id: nextAction
+        
+        text: qsTr("Next article")
+        autoRepeat: false
+        shortcut: qsTr("Right")
+        onTriggered: root.next()
+    }
+    
+    Action {
+        id: nextUnreadAction
+        
+        text: qsTr("Next unread article")
+        autoRepeat: false
+        shortcut: qsTr("Shift+Right")
+        onTriggered: root.nextUnread()
+    }
+    
+    Action {
+        id: previousAction
+        
+        text: qsTr("Previous article")
+        autoRepeat: false
+        shortcut: qsTr("Left")
+        onTriggered: root.previous()
     }
     
     Flickable {
@@ -58,65 +144,88 @@ Window {
         anchors.fill: parent
         focus: true
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
-        contentHeight: background.height
+        contentHeight: column.height + platformStyle.paddingMedium * 2
         
-        BorderImage {
-            id: background
+        Column {
+            id: column
             
             anchors {
                 left: parent.left
                 right: parent.right
                 top: parent.top
+                margins: platformStyle.paddingMedium
             }
-            height: Math.max(flickable.height, label.height + textAreaStyle.paddingTop + textAreaStyle.paddingBottom)
-            border {
-                left: textAreaStyle.backgroundCornerMargin
-                right: textAreaStyle.backgroundCornerMargin
-                top: textAreaStyle.backgroundCornerMargin
-                bottom: textAreaStyle.backgroundCornerMargin
-            }
-            source: flickable.activeFocus ? textAreaStyle.backgroundSelected : textAreaStyle.background
-            smooth: true
-
+            spacing: platformStyle.paddingMedium
+            
             Label {
-                id: label
+                id: authorLabel
                 
-                anchors {
-                    left: parent.left
-                    leftMargin: textAreaStyle.paddingLeft
-                    right: parent.right
-                    rightMargin: textAreaStyle.paddingRight
-                    top: parent.top
-                    topMargin: textAreaStyle.paddingTop
-                }
+                width: parent.width
+                elide: Text.ElideRight
+            }
+            
+            Label {
+                id: dateLabel
+                
+                width: parent.width
+                elide: Text.ElideRight
+            }
+            
+            Label {
+                id: categoriesLabel
+                
+                width: parent.width
+                wrapMode: Text.Wrap
+            }
+            
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: platformStyle.secondaryTextColor
+            }
+            
+            Label {
+                id: bodyLabel
+                
+                width: parent.width
                 wrapMode: Text.Wrap
                 textFormat: Text.RichText
-                color: textAreaStyle.textColor
-                text: article == null ? "" : qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown"))
-                + "<br>" + qsTr("Date") + ": " + Qt.formatDateTime(article.date, "dd/MM/yyyy HH:mm") + "<br>"
-                + qsTr("Categories") + ": " + article.categories.join(", ") + "<br><br>" + article.body
-                
-                onLinkActivated: if (!urlopener.open(link)) Qt.openUrlExternally(link);
-            }
-        }
-        
-        Keys.onLeftPressed: {
-            if (event.modifiers == Qt.NoModifier) {
-                articleView.decrementCurrentIndex();
-                article = articleModel.get(articleView.currentIndex);
-            }
-        }
-        
-        Keys.onRightPressed: {
-            if (event.modifiers == Qt.NoModifier) {
-                articleView.incrementCurrentIndex();
-                article = articleModel.get(articleView.currentIndex);
+                onLinkActivated: {
+                    var m = popups.load(urlMenu, root)
+                    m.url = link;
+                    m.popup();
+                }
             }
         }
     }
     
-    PopupLoader {
-        id: popupLoader
+    Component {
+        id: urlMenu
+        
+        Menu {
+            id: menu
+            
+            property string url
+            
+            MenuItem {
+                text: qsTr("Open externally")
+                onTriggered: if (!urlopener.open(menu.url)) Qt.openUrlExternally(menu.url);
+            }
+            
+            MenuItem {
+                text: qsTr("Copy URL")
+                onTriggered: clipboard.text = menu.url
+            }
+        }
+    }
+    
+    Component {
+        id: deleteDialog
+        
+        MessageBox {
+            text: qsTr("Do you want to delete") + " '" + article.title + "'?"
+            onAccepted: article.remove()
+        }
     }
     
     Component {
@@ -127,27 +236,19 @@ Window {
         }
     }
     
-    StateGroup {
-        states: State {
-            name: "LightOnDark"
-            when: settings.viewMode == "dark"
-        
-            PropertyChanges {
-                target: textAreaStyle
-                background: ""
-                backgroundSelected: ""
-                backgroundDisabled: ""
-                textColor: platformStyle.defaultTextColor
+    onArticleChanged: {
+        if (article) {
+            flickable.contentY = 0;
+            title = article.title ? article.title : qsTr("Article");
+            authorLabel.text = qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown"));
+            dateLabel.text = qsTr("Date") + ": " + (article.dateString ? article.dateString : qsTr("Unknown"));
+            categoriesLabel.text = qsTr("Categories") + ": "
+            + (article.categories.length > 0 ? article.categories.join(", ") : qsTr("None"));
+            bodyLabel.text = article.body;
+            
+            if (!article.read) {
+                article.markRead(true);
             }
         }
     }
-    
-    onArticleChanged: {
-        flickable.contentY = 0;
-        
-        if ((article) && (!article.read)) {
-            database.markArticleRead(article.id, true);
-        }
-    }
 }
-    

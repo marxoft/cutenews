@@ -18,53 +18,23 @@
 #ifndef CATEGORYMODEL_H
 #define CATEGORYMODEL_H
 
-#include "settings.h"
-#include <QAbstractTableModel>
+#include "selectionmodel.h"
 
-class CategoryModel : public QAbstractTableModel
+class CategoryModel : public SelectionModel
 {
     Q_OBJECT
 
-    Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
-
 public:
-    enum Roles {
-        NameRole = Qt::UserRole,
-        PathRole
-    };
-
-public:
-    explicit CategoryModel(QObject *parent = 0);
-    
-#if QT_VERSION >= 0x050000
-    QHash<int, QByteArray> roleNames() const;
-#endif
-
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    int columnCount(const QModelIndex &parent = QModelIndex()) const;
+    CategoryModel(QObject *parent = 0);
     
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     
-    QVariant data(const QModelIndex &index, int role) const;
-    QMap<int, QVariant> itemData(const QModelIndex &index) const;
-    
-    Q_INVOKABLE QVariant data(int row, const QByteArray &role) const;
-    Q_INVOKABLE QVariantMap itemData(int row) const;
-
-    Q_INVOKABLE void addCategory(const QString &name, const QString &path);
-    Q_INVOKABLE void removeCategory(const QString &name);
-    Q_INVOKABLE void removeCategory(int row);
+    Q_INVOKABLE void append(const QString &name, const QVariant &path);
+    Q_INVOKABLE void insert(int row, const QString &name, const QVariant &path);
 
 public Q_SLOTS:
-    void clear();
-    void reload();
-
-Q_SIGNALS:
-    void countChanged(int count);
-
-private:
-    QList<Category> m_list;
-    QHash<int, QByteArray> m_roleNames;
+    void load();
+    void save();
 };
 
 #endif // CATEGORYMODEL_H

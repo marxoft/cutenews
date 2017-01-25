@@ -9,6 +9,7 @@ INCLUDEPATH += \
 
 HEADERS += \
     src/base/article.h \
+    src/base/articlecache.h \
     src/base/articlemodel.h \
     src/base/cachingnetworkaccessmanager.h \
     src/base/categorymodel.h \
@@ -21,7 +22,6 @@ HEADERS += \
     src/base/enclosuredownload.h \
     src/base/feedparser.h \
     src/base/json.h \
-    src/base/logger.h \
     src/base/loggerverbositymodel.h \
     src/base/networkproxytypemodel.h \
     src/base/opmlparser.h \
@@ -48,11 +48,13 @@ HEADERS += \
     src/plugins/javascriptfeedplugin.h \
     src/plugins/javascriptfeedrequest.h \
     src/plugins/javascriptfeedrequestglobalobject.h \
+    src/plugins/pluginconfigmodel.h \
     src/plugins/pluginmanager.h \
     src/plugins/xmlhttprequest.h
 
 SOURCES += \
     src/base/article.cpp \
+    src/base/articlecache.cpp \
     src/base/articlemodel.cpp \
     src/base/cachingnetworkaccessmanager.cpp \
     src/base/categorymodel.cpp \
@@ -62,7 +64,6 @@ SOURCES += \
     src/base/enclosuredownload.cpp \
     src/base/feedparser.cpp \
     src/base/json.cpp \
-    src/base/logger.cpp \
     src/base/opmlparser.cpp \
     src/base/selectionmodel.cpp \
     src/base/subscription.cpp \
@@ -82,6 +83,7 @@ SOURCES += \
     src/plugins/javascriptfeedplugin.cpp \
     src/plugins/javascriptfeedrequest.cpp \
     src/plugins/javascriptfeedrequestglobalobject.cpp \
+    src/plugins/pluginconfigmodel.cpp \
     src/plugins/pluginmanager.cpp \
     src/plugins/xmlhttprequest.cpp
 
@@ -99,6 +101,7 @@ maemo5 {
         src/maemo5/cutenews.h \
         src/maemo5/definitions.h \
         src/maemo5/eventfeed.h \
+        src/maemo5/logger.h \
         src/maemo5/settings.h \
         src/maemo5/subscriptionsourcetypemodel.h \
         src/maemo5/userinterfacemodel.h \
@@ -107,18 +110,21 @@ maemo5 {
     SOURCES += \
         src/maemo5/cutenews.cpp \
         src/maemo5/eventfeed.cpp \
+        src/maemo5/logger.cpp \
         src/maemo5/main.cpp \
         src/maemo5/settings.cpp
     
     qml.files += \
         src/maemo5/qml/AboutDialog.qml \
-        src/maemo5/qml/AllArticlesWindow.qml \
         src/maemo5/qml/ArticleDelegate.qml \
         src/maemo5/qml/ArticlesWindow.qml \
         src/maemo5/qml/ArticleWindow.qml \
         src/maemo5/qml/CategoriesDialog.qml \
         src/maemo5/qml/CategoryDelegate.qml \
         src/maemo5/qml/CategoryDialog.qml \
+        src/maemo5/qml/DateSelectorButton.qml \
+        src/maemo5/qml/DeleteDialog.qml \
+        src/maemo5/qml/DownloadDialog.qml \
         src/maemo5/qml/EnclosureDelegate.qml \
         src/maemo5/qml/EnclosuresDialog.qml \
         src/maemo5/qml/FavouritesWindow.qml \
@@ -130,10 +136,10 @@ maemo5 {
         src/maemo5/qml/PluginDialog.qml \
         src/maemo5/qml/PopupLoader.qml \
         src/maemo5/qml/SearchDialog.qml \
-        src/maemo5/qml/SearchWindow.qml \
         src/maemo5/qml/SettingsDialog.qml \
         src/maemo5/qml/SubscriptionDelegate.qml \
         src/maemo5/qml/SubscriptionDialog.qml \
+        src/maemo5/qml/TimeSelectorButton.qml \
         src/maemo5/qml/TouchView.qml \
         src/maemo5/qml/TransferDelegate.qml \
         src/maemo5/qml/TransferPropertiesDialog.qml \
@@ -181,12 +187,143 @@ maemo5 {
         icon \
         scripts \
         dbus_service \
-        dbus_interface
+        dbus_interface \
+        target
+
+} else:symbian {
+    DEFINES += NO_SQLITE_FOREIGN_KEYS
+    
+    TARGET.UID3 = 0xC77EA21C
+    TARGET.CAPABILITY += NetworkServices ReadUserData WriteUserData
+    TARGET.EPOCHEAPSIZE = 0x20000 0x8000000
+    TARGET.EPOCSTACKSIZE = 0x14000
+    
+    VERSION = 1.0.0
+    ICON = desktop/symbian/cutenews.svg
+    
+    MMP_RULES += "DEBUGGABLE_UDEBONLY"
+    
+    QT += declarative
+    CONFIG += qtcomponents
+    
+    INCLUDEPATH += src/symbian
+    
+    HEADERS += \
+        src/symbian/cachingnetworkaccessmanagerfactory.h \
+        src/symbian/clipboard.h \
+        src/symbian/cutenews.h \
+        src/symbian/definitions.h \
+        src/symbian/logger.h \
+        src/symbian/maskeditem.h \
+        src/symbian/maskeffect.h \
+        src/symbian/screenorientationmodel.h \
+        src/symbian/settings.h \
+        src/symbian/subscriptionsourcetypemodel.h
+    
+    SOURCES += \
+        src/symbian/clipboard.cpp \
+        src/symbian/cutenews.cpp \
+        src/symbian/logger.cpp \
+        src/symbian/main.cpp \
+        src/symbian/maskeditem.cpp \
+        src/symbian/maskeffect.cpp \
+        src/symbian/settings.cpp
+    
+    qml.sources = \
+        src/symbian/qml/AboutPage.qml \
+        src/symbian/qml/AboutPluginPage.qml \
+        src/symbian/qml/AboutPluginsPage.qml \
+        src/symbian/qml/AppWindow.qml \
+        src/symbian/qml/ArticleDelegate.qml \
+        src/symbian/qml/ArticlePage.qml \
+        src/symbian/qml/ArticlesPage.qml \
+        src/symbian/qml/BackToolButton.qml \
+        src/symbian/qml/CategorySettingsPage.qml \
+        src/symbian/qml/DateSelector.qml \
+        src/symbian/qml/DeletePage.qml \
+        src/symbian/qml/DownloadPage.qml \
+        src/symbian/qml/DualTextDelegate.qml \
+        src/symbian/qml/EditCategoryPage.qml \
+        src/symbian/qml/EditPage.qml \
+        src/symbian/qml/EnclosureDelegate.qml \
+        src/symbian/qml/FileBrowserPage.qml \
+        src/symbian/qml/GeneralSettingsPage.qml \
+        src/symbian/qml/HeaderLabel.qml \
+        src/symbian/qml/IconImage.qml \
+        src/symbian/qml/ImportPage.qml \
+        src/symbian/qml/KeyNavFlickable.qml \
+        src/symbian/qml/LocalFileSubscriptionPage.qml \
+        src/symbian/qml/LoggingSettingsPage.qml \
+        src/symbian/qml/LogPage.qml \
+        src/symbian/qml/main.qml \
+        src/symbian/qml/MainPage.qml \
+        src/symbian/qml/MyButton.qml \
+        src/symbian/qml/MyContextMenu.qml \
+        src/symbian/qml/MyDialog.qml \
+        src/symbian/qml/MyFlickable.qml \
+        src/symbian/qml/MyInfoBanner.qml \
+        src/symbian/qml/MyListItem.qml \
+        src/symbian/qml/MyListItemText.qml \
+        src/symbian/qml/MyListView.qml \
+        src/symbian/qml/MyMenu.qml \
+        src/symbian/qml/MyPage.qml \
+        src/symbian/qml/MyQueryDialog.qml \
+        src/symbian/qml/MySearchBox.qml \
+        src/symbian/qml/MySelectionDialog.qml \
+        src/symbian/qml/MyStatusBar.qml \
+        src/symbian/qml/MySwitch.qml \
+        src/symbian/qml/MyTextField.qml \
+        src/symbian/qml/MyToolButton.qml \
+        src/symbian/qml/NetworkSettingsPage.qml \
+        src/symbian/qml/PluginSubscriptionPage.qml \
+        src/symbian/qml/PopupLoader.qml \
+        src/symbian/qml/SettingsPage.qml \
+        src/symbian/qml/SubscriptionDelegate.qml \
+        src/symbian/qml/TextDelegate.qml \
+        src/symbian/qml/TextInputPage.qml \
+        src/symbian/qml/TimeSelector.qml \
+        src/symbian/qml/TransferDelegate.qml \
+        src/symbian/qml/TransferSettingsPage.qml \
+        src/symbian/qml/TransfersPage.qml \
+        src/symbian/qml/UrlSubscriptionPage.qml \
+        src/symbian/qml/ValueDialog.qml \
+        src/symbian/qml/ValueListItem.qml \
+        src/symbian/qml/ValueSelector.qml
+    
+    qml.path = !:/Private/c77ea21c/qml
+    
+    images.sources = \
+        src/symbian/qml/images/close.svg \
+        src/symbian/qml/images/cutenews.png \
+        src/symbian/qml/images/document.svg \
+        src/symbian/qml/images/download.svg \
+        src/symbian/qml/images/favourite.svg \
+        src/symbian/qml/images/folder.svg \
+        src/symbian/qml/images/frame.png \
+        src/symbian/qml/images/mask.png \
+        src/symbian/qml/images/ok.svg \
+        src/symbian/qml/images/read.svg \
+        src/symbian/qml/images/up.png \
+        src/symbian/qml/images/upload.svg 
+    
+    images.path = !:/Private/c77ea21c/qml/images
+    
+    vendorinfo += "%{\"Stuart Howarth\"}" ":\"Stuart Howarth\""
+    qtcomponentsdep = "; Default dependency to Qt Quick Components for Symbian library" \
+        "(0x200346DE), 1, 1, 0, {\"Qt Quick components for Symbian\"}"
+
+    cutenews_deployment.pkg_prerules += vendorinfo qtcomponentsdep
+    
+    DEPLOYMENT.display_name = cuteNews
+    
+    DEPLOYMENT += \
+        cutenews_deployment \
+        qml \
+        images
 
 } else:unix {
     DEFINES += \
         USE_FAVICONS \
-        WIDGETS_UI \
         DBUS_INTERFACE \
         WEB_INTERFACE
     
@@ -202,31 +339,43 @@ maemo5 {
     HEADERS += \
         src/desktop/aboutdialog.h \
         src/desktop/browser.h \
+        src/desktop/categorysettingstab.h \
         src/desktop/customcommanddialog.h \
         src/desktop/cutenews.h \
         src/desktop/definitions.h \
+        src/desktop/generalsettingstab.h \
+        src/desktop/interfacesettingstab.h \
+        src/desktop/logger.h \
         src/desktop/mainwindow.h \
+        src/desktop/networksettingstab.h \
         src/desktop/plugindialog.h \
-        src/desktop/searchdialog.h \
         src/desktop/settings.h \
         src/desktop/settingsdialog.h \
+        src/desktop/settingstab.h \
         src/desktop/subscriptiondialog.h \
         src/desktop/subscriptionsourcetypemodel.h \
-        src/desktop/transfersview.h
+        src/desktop/transfersview.h \
+        src/desktop/urlopenersettingstab.h
     
     SOURCES += \
         src/desktop/aboutdialog.cpp \
         src/desktop/browser.cpp \
+        src/desktop/categorysettingstab.cpp \
         src/desktop/customcommanddialog.cpp \
         src/desktop/cutenews.cpp \
+        src/desktop/generalsettingstab.cpp \
+        src/desktop/interfacesettingstab.cpp \
+        src/desktop/logger.cpp \
         src/desktop/main.cpp \
         src/desktop/mainwindow.cpp \
+        src/desktop/networksettingstab.cpp \
         src/desktop/plugindialog.cpp \
-        src/desktop/searchdialog.cpp \
         src/desktop/settings.cpp \
         src/desktop/settingsdialog.cpp \
+        src/desktop/settingstab.cpp \
         src/desktop/subscriptiondialog.cpp \
-        src/desktop/transfersview.cpp
+        src/desktop/transfersview.cpp \
+        src/desktop/urlopenersettingstab.cpp
     
     desktop.files = desktop/desktop/cutenews.desktop
     desktop.path = /usr/share/applications
@@ -268,7 +417,8 @@ maemo5 {
         icon16 \
         dbus_service \
         dbus_interface \
-        web_interface
+        web_interface \
+        target
 }
 
 contains(DEFINES, DBUS_INTERFACE) {
@@ -310,5 +460,3 @@ contains(DEFINES, WEB_INTERFACE) {
         src/webif/transferserver.cpp \
         src/webif/webserver.cpp
 }
-
-INSTALLS += target

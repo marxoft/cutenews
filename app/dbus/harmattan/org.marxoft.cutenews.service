@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=org.marxoft.cutenews
-Exec=/usr/bin/invoker --type=d /opt/cutenews/bin/cutenews --window

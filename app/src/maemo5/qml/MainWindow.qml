@@ -26,8 +26,11 @@ ApplicationWindow {
     showProgressIndicator: subscriptions.status == Subscriptions.Active
     menuBar: MenuBar {
         MenuItem {
-            text: qsTr("Import from OPML")
-            onTriggered: popupLoader.open(importDialog, appWindow)
+            action: readAllAction
+        }
+        
+        MenuItem {
+            action: importAction
         }
         
         MenuItem {
@@ -36,35 +39,162 @@ ApplicationWindow {
         }
         
         MenuItem {
-            text: qsTr("Search")
-            enabled: settings.userInterface == "touch"
-            onTriggered: popupLoader.open(searchDialog, appWindow)
+            action: searchAction
         }
         
         MenuItem {
             text: qsTr("Settings")
-            onTriggered: popupLoader.open(settingsDialog, appWindow)
+            onTriggered: popups.open(settingsDialog, appWindow)
         }
         
         MenuItem {
             text: qsTr("About")
-            onTriggered: popupLoader.open(aboutDialog, appWindow)
+            onTriggered: popups.open(aboutDialog, appWindow)
         }
     }
     
-    Loader {
-        id: loader
+    Action {
+        id: readAllAction
         
-        function loadUi() {
-            if (settings.userInterface == "osso") {
-                source = Qt.resolvedUrl("OssoView.qml");
-            }
-            else {
-                source = Qt.resolvedUrl("TouchView.qml");
+        text: qsTr("Mark all as read")
+        autoRepeat: false
+        shortcut: qsTr("Ctrl+R")
+        onTriggered: database.markAllSubscriptionsRead()
+    }
+    
+    Action {
+        id: importAction
+        
+        text: qsTr("Import from OPML")
+        autoRepeat: false
+        shortcut: qsTr("Ctrl+O")
+        onTriggered: popups.open(importDialog, appWindow)
+    }
+    
+    Action {
+        id: searchAction
+        
+        text: qsTr("Search")
+        autoRepeat: false
+        shortcut: qsTr("Ctrl+F")
+        onTriggered: popups.open(searchDialog, appWindow)
+    }
+    
+    Action {
+        id: updateAction
+        
+        text: qsTr("Update")
+        autoRepeat: false
+        shortcut: qsTr("u")
+        enabled: subscriptionView.currentIndex > 1
+        onTriggered: subscriptions.update(subscriptionModel.data(subscriptionView.currentIndex, "id"))
+    }
+    
+    Action {
+        id: readAction
+        
+        text: qsTr("Mark as read")
+        autoRepeat: false
+        shortcut: qsTr("r")
+        enabled: subscriptionView.currentIndex > 1
+        onTriggered: subscriptionModel.setData(subscriptionView.currentIndex, true, "read")
+    }
+    
+    Action {
+        id: propertiesAction
+        
+        text: qsTr("Properties")
+        autoRepeat: false
+        shortcut: qsTr("p")
+        enabled: subscriptionView.currentIndex > 1
+        onTriggered: {
+            var subscription = subscriptionModel.itemData(subscriptionView.currentIndex);
+            
+            switch (subscription.sourceType) {
+                case Subscription.Plugin: {
+                    var dialog = popups.load(pluginDialog, appWindow);
+                    dialog.subscriptionId = subscription.id;
+                    dialog.open();
+                    break;
+                }
+                default: {
+                    var dialog = popups.load(subscriptionDialog, appWindow);
+                    dialog.subscriptionId = subscription.id;
+                    dialog.sourceType = subscription.sourceType;
+                    dialog.open();
+                    break;
+                }
             }
         }
+    }
+    
+    Action {
+        id: unsubscribeAction
         
-        anchors.fill: parent
+        text: qsTr("Unsubscribe")
+        autoRepeat: false
+        shortcut: qsTr("d")
+        enabled: subscriptionView.currentIndex > 1
+        onTriggered: popups.open(unsubscribeDialog, appWindow)
+    }
+    
+    Button {
+        id: subscriptionButton
+        
+        anchors {
+            left: parent.left
+            leftMargin: platformStyle.paddingMedium
+            right: parent.horizontalCenter
+            rightMargin: platformStyle.paddingMedium / 2
+            top: parent.top
+            topMargin: platformStyle.paddingMedium
+        }
+        activeFocusOnPress: false
+        autoRepeat: false
+        text: qsTr("New subscription")
+        iconName: "general_add"
+        shortcut: qsTr("Ctrl+N")
+        onClicked: popups.open(subscriptionTypeDialog, appWindow)
+    }
+    
+    Button {
+        id: updateButton
+        
+        anchors {
+            left: parent.horizontalCenter
+            leftMargin: platformStyle.paddingMedium / 2
+            right: parent.right
+            rightMargin: platformStyle.paddingMedium
+            top: parent.top
+            topMargin: platformStyle.paddingMedium
+        }
+        activeFocusOnPress: false
+        autoRepeat: false
+        text: subscriptions.status == Subscriptions.Active ? qsTr("Cancel updates") : qsTr("Update all")
+        iconName: subscriptions.status == Subscriptions.Active ? "general_stop" : "general_refresh"
+        shortcut: qsTr("Ctrl+U")
+        onClicked: subscriptions.status == Subscriptions.Active ? subscriptions.cancel() : subscriptions.updateAll()
+    }
+    
+    ListView {
+        id: subscriptionView
+        
+        anchors {
+            left: parent.left
+            right: parent.right
+            top: subscriptionButton.bottom
+            topMargin: platformStyle.paddingMedium
+            bottom: parent.bottom
+        }
+        clip: true
+        horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
+        model: SubscriptionModel {
+            id: subscriptionModel
+        }
+        delegate: SubscriptionDelegate {
+            onClicked: windowStack.push(Qt.resolvedUrl("ArticlesWindow.qml"), {title: title}).load(id)
+            onPressAndHold: if (index > 1) popups.open(contextMenu, appWindow);
+        }
     }
     
     InformationBox {
@@ -93,7 +223,39 @@ ApplicationWindow {
     }
     
     PopupLoader {
-        id: popupLoader
+        id: popups
+    }
+    
+    Component {
+        id: contextMenu
+        
+        Menu {
+            MenuItem {
+                action: updateAction
+            }
+            
+            MenuItem {
+                action: readAction
+            }
+            
+            MenuItem {
+                action: propertiesAction
+            }
+            
+            MenuItem {
+                action: unsubscribeAction
+            }
+        }
+    }
+    
+    Component {
+        id: unsubscribeDialog
+        
+        MessageBox {
+            text: qsTr("Unsubscribe from") + " '" + subscriptionModel.data(subscriptionView.currentIndex, "title")
+            + "'?"
+            onAccepted: subscriptionModel.remove(subscriptionView.currentIndex)
+        }
     }
     
     Component {
@@ -104,17 +266,13 @@ ApplicationWindow {
             onAccepted: subscriptions.importFromOpml(filePath)
         }
     }
-        
+    
     Component {
         id: searchDialog
         
-        SearchDialog {
-            onAccepted: windowStack.push(Qt.resolvedUrl("SearchWindow.qml"), {title: qsTr("Search") + " - " + query,
-                                         query: query.substring(0, 6) == "WHERE " ? query
-                                         : "WHERE title LIKE '%" + query + "%'"})
-        }
+        SearchDialog {}
     }
-    
+        
     Component {
         id: settingsDialog
         
@@ -127,23 +285,79 @@ ApplicationWindow {
         AboutDialog {}
     }
     
-    Connections {
-        target: database
-        onFinished: {
-            if (database.status == DBConnection.Error) {
-                informationBox.information(database.errorString);
+    Component {
+        id: subscriptionTypeDialog
+        
+        ListPickSelector {
+            title: qsTr("Subscription type")
+            model: SubscriptionSourceTypeModel {}
+            textRole: "name"
+            onSelected: {
+                var value = model.data(currentIndex, "value");
+                
+                switch (value) {
+                case Subscription.Url:
+                case Subscription.LocalFile:
+                case Subscription.Command: {
+                    var dialog = popups.load(subscriptionDialog, appWindow);
+                    dialog.sourceType = value;
+                    dialog.open();
+                    break;
+                }
+                default: {
+                    var dialog = popups.load(pluginDialog, appWindow);
+                    dialog.pluginId = value;
+                    dialog.open();
+                    break;
+                }
+                }
             }
         }
     }
     
-    Connections {
-        target: settings
-        onUserInterfaceChanged: loader.loadUi()
+    Component {
+        id: subscriptionDialog
+        
+        SubscriptionDialog {}
     }
     
-    Component.onCompleted: {
-        loader.loadUi();
-        urlopener.load();
+    Component {
+        id: pluginDialog
+        
+        PluginDialog {}
     }
+    
+    Component {
+        id: articleComponent
+        
+        Article {
+            id: article
+            
+            autoUpdate: true
+            onFinished: parent.article = article
+        }
+    }
+    
+    Connections {
+        target: cutenews
+        onArticleRequested: {
+            windowStack.clear();
+            windowStack.push(Qt.resolvedUrl("ArticleWindow.qml"));
+            var article = articleComponent.createObject(windowStack.currentWindow);
+            article.load(articleId);
+        }
+    }
+    
+    Connections {
+        target: notifier
+        onError: informationBox.information(errorString)
+        onReadArticlesDeleted: informationBox.information(count + " " + qsTr("read articles deleted"));
+    }
+    
+    Connections {
+        target: transfers
+        onTransferAdded: informationBox.information(qsTr("Enclosure added to downloads"))
+    }
+    
+    Component.onCompleted: subscriptionModel.load()
 }
-                

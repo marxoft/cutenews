@@ -28,9 +28,11 @@ public:
     explicit TransferPriorityModel(QObject *parent = 0) :
         SelectionModel(parent)
     {
+        append(tr("Highest"), Transfer::HighestPriority);
         append(tr("High"), Transfer::HighPriority);
         append(tr("Normal"), Transfer::NormalPriority);
         append(tr("Low"), Transfer::LowPriority);
+        append(tr("Lowest"), Transfer::LowestPriority);
     }
 };
 

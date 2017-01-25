@@ -34,13 +34,16 @@ Q_SIGNALS:
     void subscriptionDeleted(const QString &id);
     void subscriptionUpdated(const QString &id);
     void subscriptionRead(const QString &id, bool isRead);
+    void allSubscriptionsRead();
     
     void articlesAdded(const QStringList &articleIds, const QString &subscriptionId);
     void articlesDeleted(const QStringList &articleIds, const QString &subscriptionId);
     void articleUpdated(const QString &id);
     void articleFavourited(const QString &id, bool isFavourite);
     void articleRead(const QString &articleId, const QString &subscriptionId, bool isRead);
-    void allArticlesRead();
+    void readArticlesDeleted(int count);
+
+    void error(const QString &errorString);
 
 private:
     DBNotify();

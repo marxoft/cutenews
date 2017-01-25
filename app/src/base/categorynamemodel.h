@@ -42,6 +42,6 @@ public Q_SLOTS:
         foreach (const QString &category, Settings::categoryNames()) {
             append(category, category);
         }
-    };
+    }
 };
 #endif // CATEGORYMODEL_H

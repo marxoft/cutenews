@@ -23,18 +23,20 @@ ListItem {
     Image {
         id: icon
         
-        width: 48
-        height: 48
         anchors {
             left: parent.left
-            leftMargin: platformStyle.paddingMedium
-            verticalCenter: parent.verticalCenter
+            top: parent.top
+            bottom: parent.bottom
+            margins: platformStyle.paddingMedium
         }
+        width: height
         source: iconPath ? iconPath : "image://icon/general_rss"
         smooth: true
     }
     
     Label {
+        id: titleLabel
+        
         anchors {
             left: icon.right
             right: parent.right
@@ -43,27 +45,53 @@ ListItem {
             margins: platformStyle.paddingMedium
         }
         elide: Text.ElideRight
-        color: (subscriptions.activeSubscription == id) || (!read) ? platformStyle.activeTextColor
-                                                                   : platformStyle.defaultTextColor
         text: title
     }
     
-    Label {
+    Loader {
+        id: dateLoader
+        
         anchors {
-            left: icon.right
-            right: parent.right
+            left: titleLabel.left
+            right: titleLabel.right
             bottom: parent.bottom
-            margins: platformStyle.paddingMedium
+            bottomMargin: platformStyle.paddingMedium
         }
-        verticalAlignment: Text.AlignBottom
-        elide: Text.ElideRight
-        font.pointSize: platformStyle.fontSizeSmall
-        color: (subscriptions.activeSubscription == id) || (!read) ? platformStyle.activeTextColor
-                                                                   : platformStyle.secondaryTextColor
-        text: subscriptions.activeSubscription == id ? qsTr("Updating...")
-              : Qt.formatDateTime(lastUpdated, "dd/MM/yyyy HH:mm")
-                + (read ? "" : " - " + unreadArticles + " " + qsTr("unread"))
-        visible: index > 1
+        sourceComponent: index > 1 ? dateLabel : undefined
+    }
+    
+    Loader {
+        id: unreadLoader
+        
+        anchors {
+            right: parent.right
+            rightMargin: platformStyle.paddingMedium
+            verticalCenter: parent.verticalCenter
+        }
+        sourceComponent: !read ? unreadLabel : undefined
+    }
+    
+    Component {
+        id: dateLabel
+        
+        Label {
+            width: parent.width
+            verticalAlignment: Text.AlignBottom
+            elide: Text.ElideRight
+            font.pointSize: platformStyle.fontSizeSmall
+            color: platformStyle.secondaryTextColor
+            text: subscriptions.activeSubscription == id ? qsTr("Updating...") : lastUpdatedString
+        }
+    }
+    
+    Component {
+        id: unreadLabel
+        
+        Label {
+            text: unreadArticles
+            color: (root.pressed) || ((root.ListView.isCurrentItem)
+            && (root.ListView.view.navigationMode == NavigationMode.KeyNavigation))
+            ? platformStyle.defaultTextColor : platformStyle.activeTextColor
+        }
     }
 }
-        

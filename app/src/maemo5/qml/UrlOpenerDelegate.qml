@@ -24,11 +24,24 @@ ListItem {
         anchors {
             left: parent.left
             right: parent.right
-            verticalCenter: parent.verticalCenter
+            top: parent.top
             margins: platformStyle.paddingMedium
         }
         elide: Text.ElideRight
-        horizontalAlignment: Text.AlignHCenter
         text: name
+    }
+    
+    Label {
+        anchors {
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+            margins: platformStyle.paddingMedium
+        }
+        verticalAlignment: Text.AlignBottom
+        elide: Text.ElideRight
+        font.pointSize: platformStyle.fontSizeSmall
+        color: platformStyle.secondaryTextColor
+        text: value
     }
 }

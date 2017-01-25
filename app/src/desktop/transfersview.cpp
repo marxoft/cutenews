@@ -38,7 +38,7 @@ TransfersView::TransfersView(QWidget *parent) :
     m_categoryMenu(new QMenu(tr("&Category"), this)),
     m_priorityMenu(new QMenu(tr("&Priority"), this)),
     m_propertiesMenu(new QMenu(tr("&Properties"), this)),
-    m_concurrentMenu(new QMenu(tr("Maximum &concurrent transfers"), this)),
+    m_concurrentMenu(new QMenu(tr("Maximum &concurrent downloads"), this)),
     m_categoryGroup(new QActionGroup(this)),
     m_priorityGroup(new QActionGroup(this)),
     m_concurrentGroup(new QActionGroup(this)),
@@ -63,7 +63,8 @@ TransfersView::TransfersView(QWidget *parent) :
     
     setCategoryMenuActions();
     
-    const QStringList priorities = QStringList() << tr("High") << tr("Normal") << tr("Low");
+    const QStringList priorities = QStringList() << tr("Highest") << tr("High") << tr("Normal") << tr("Low")
+                                                 << tr("Lowest");
     
     for (int i = 0; i < priorities.size(); i++) {
         QAction *action = m_priorityMenu->addAction(priorities.at(i), this, SLOT(setTransferPriority()));
@@ -175,7 +176,7 @@ void TransfersView::setTransferCategory() {
 }
 
 void TransfersView::setTransferCategory(const QModelIndex &index, const QString &category) {
-    m_model->setData(index, category, TransferModel::CategoryRole);
+    m_model->setData(index, category, Transfer::CategoryRole);
 }
 
 void TransfersView::setTransferCustomCommand() {
@@ -183,8 +184,8 @@ void TransfersView::setTransferCustomCommand() {
     
     if (index.isValid()) {
         CustomCommandDialog dialog(this);
-        dialog.setCommand(index.data(TransferModel::CustomCommandRole).toString());
-        dialog.setOverrideEnabled(index.data(TransferModel::CustomCommandOverrideEnabledRole).toBool());
+        dialog.setCommand(index.data(Transfer::CustomCommandRole).toString());
+        dialog.setOverrideEnabled(index.data(Transfer::CustomCommandOverrideEnabledRole).toBool());
         
         if (dialog.exec() == QDialog::Accepted) {
             setTransferCustomCommand(index, dialog.command(), dialog.overrideEnabled());
@@ -193,8 +194,8 @@ void TransfersView::setTransferCustomCommand() {
 }
 
 void TransfersView::setTransferCustomCommand(const QModelIndex &index, const QString &command, bool overrideEnabled) {
-    m_model->setData(index, command, TransferModel::CustomCommandRole);
-    m_model->setData(index, overrideEnabled, TransferModel::CustomCommandOverrideEnabledRole);
+    m_model->setData(index, command, Transfer::CustomCommandRole);
+    m_model->setData(index, overrideEnabled, Transfer::CustomCommandOverrideEnabledRole);
 }
 
 void TransfersView::setTransferPriority() {
@@ -206,7 +207,7 @@ void TransfersView::setTransferPriority() {
 }
 
 void TransfersView::setTransferPriority(const QModelIndex &index, int priority) {
-    m_model->setData(index, priority, TransferModel::PriorityRole);
+    m_model->setData(index, priority, Transfer::PriorityRole);
 }
 
 void TransfersView::setCategoryMenuActions() {
@@ -226,7 +227,7 @@ void TransfersView::setActiveCategoryMenuAction() {
         return;
     }
     
-    const QVariant category = m_view->currentIndex().data(TransferModel::CategoryRole).toString();
+    const QVariant category = m_view->currentIndex().data(Transfer::CategoryRole).toString();
     
     foreach (QAction *action, m_categoryGroup->actions()) {
         if (action->data() == category) {
@@ -241,7 +242,7 @@ void TransfersView::setActivePriorityMenuAction() {
         return;
     }
     
-    const QVariant priority = m_view->currentIndex().data(TransferModel::PriorityRole);
+    const QVariant priority = m_view->currentIndex().data(Transfer::PriorityRole);
     
     foreach (QAction *action, m_priorityGroup->actions()) {
         if (action->data() == priority) {
@@ -286,14 +287,14 @@ TransferDelegate::TransferDelegate(QObject *parent) :
 }
 
 void TransferDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const {
-    if (index.column() == 3) {
+    if (index.column() == 2) {
         QStyleOptionProgressBar progressBar;
         progressBar.rect = option.rect;
         progressBar.minimum = 0;
         progressBar.maximum = 100;
-        progressBar.progress = index.data(TransferModel::ProgressRole).toInt();
+        progressBar.progress = index.data(Transfer::ProgressRole).toInt();
         progressBar.textVisible = true;
-        progressBar.text = index.data(TransferModel::ProgressStringRole).toString();
+        progressBar.text = index.data(Transfer::ProgressStringRole).toString();
         QApplication::style()->drawControl(QStyle::CE_ProgressBar, &progressBar, painter);
     }
     else {

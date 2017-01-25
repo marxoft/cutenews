@@ -48,6 +48,59 @@ Article::Article(const QString &id, const QString &author, const QString &body, 
 {
 }
 
+QVariant Article::data(int role) const {
+    switch (role) {
+    case AuthorRole:
+        return author();
+    case AutoUpdateRole:
+        return autoUpdate();
+    case BodyRole:
+        return body();
+    case CategoriesRole:
+        return categories();
+    case DateRole:
+        return date();
+    case DateStringRole:
+        return dateString();
+    case EnclosuresRole:
+        return enclosures();
+    case FavouriteRole:
+        return isFavourite();
+    case HasEnclosuresRole:
+        return hasEnclosures();
+    case IdRole:
+        return id();
+    case ReadRole:
+        return isRead();
+    case StatusRole:
+        return status();
+    case SubscriptionIdRole:
+        return subscriptionId();
+    case TitleRole:
+        return title();
+    case UrlRole:
+        return url();
+    default:
+        return QVariant();
+    }
+}
+
+bool Article::setData(int role, const QVariant &value) {
+    switch (role) {
+    case AutoUpdateRole:
+        setAutoUpdate(value.toBool());
+        return true;
+    case FavouriteRole:
+        markFavourite(value.toBool());
+        return true;
+    case ReadRole:
+        markRead(value.toBool());
+        return true;
+    default:
+        return false;
+    }
+}
+
 QString Article::id() const {
     return m_id;
 }
@@ -56,7 +109,7 @@ void Article::setId(const QString &i) {
     if (i != id()) {
         m_id = i;
         emit idChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, IdRole);
     }
 }
 
@@ -68,7 +121,7 @@ void Article::setAuthor(const QString &a) {
     if (a != author()) {
         m_author = a;
         emit authorChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, AuthorRole);
     }
 }
 
@@ -80,7 +133,7 @@ void Article::setBody(const QString &b) {
     if (b != body()) {
         m_body = b;
         emit bodyChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, BodyRole);
     }
 }
 
@@ -91,7 +144,7 @@ QStringList Article::categories() const {
 void Article::setCategories(const QStringList &c) {
     m_categories = c;
     emit categoriesChanged();
-    emit dataChanged(this);
+    emit dataChanged(this, CategoriesRole);
 }
 
 QDateTime Article::date() const {
@@ -102,8 +155,12 @@ void Article::setDate(const QDateTime &d) {
     if (d != date()) {
         m_date = d;
         emit dateChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, DateRole);
     }
+}
+
+QString Article::dateString() const {
+    return date().toString("dd MMM yyyy HH:mm");
 }
 
 QVariantList Article::enclosures() const {
@@ -113,7 +170,7 @@ QVariantList Article::enclosures() const {
 void Article::setEnclosures(const QVariantList &e) {
     m_enclosures = e;
     emit enclosuresChanged();
-    emit dataChanged(this);
+    emit dataChanged(this, EnclosuresRole);
 }
 
 QString Article::errorString() const {
@@ -136,7 +193,7 @@ void Article::setFavourite(bool f) {
     if (f != isFavourite()) {
         m_favourite = f;
         emit favouriteChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, FavouriteRole);
     }
 }
 
@@ -148,7 +205,7 @@ void Article::setRead(bool r) {
     if (r != isRead()) {
         m_read = r;
         emit readChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, ReadRole);
     }
 }
 
@@ -160,6 +217,7 @@ void Article::setStatus(Article::Status s) {
     if (s != status()) {
         m_status = s;
         emit statusChanged();
+        emit dataChanged(this, StatusRole);
     }
 }
 
@@ -171,7 +229,7 @@ void Article::setSubscriptionId(const QString &i) {
     if (i != subscriptionId()) {
         m_subscriptionId = i;
         emit subscriptionIdChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, SubscriptionIdRole);
     }
 }
 
@@ -183,7 +241,7 @@ void Article::setTitle(const QString &t) {
     if (t != title()) {
         m_title = t;
         emit titleChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, TitleRole);
     }
 }
 
@@ -195,7 +253,7 @@ void Article::setUrl(const QString &u) {
     if (u != url()) {
         m_url = u;
         emit urlChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, UrlRole);
     }
 }
 
@@ -207,15 +265,16 @@ void Article::setAutoUpdate(bool enabled) {
     if (enabled != autoUpdate()) {
         m_autoUpdate = enabled;
         emit autoUpdateChanged();
+        emit dataChanged(this, AutoUpdateRole);
 
         if (enabled) {
             connect(DBNotify::instance(), SIGNAL(articleFavourited(QString, bool)),
                     this, SLOT(onArticleFavourited(QString, bool)));
             connect(DBNotify::instance(), SIGNAL(articleRead(QString, QString, bool)),
                     this, SLOT(onArticleRead(QString, QString, bool)));
-            connect(DBNotify::instance(), SIGNAL(allArticlesRead()), this, SLOT(onAllArticlesRead()));
             connect(DBNotify::instance(), SIGNAL(subscriptionRead(QString, bool)),
                     this, SLOT(onSubscriptionRead(QString, bool)));
+            connect(DBNotify::instance(), SIGNAL(allSubscriptionsRead()), this, SLOT(onAllSubscriptionsRead()));
         }
         else {
             disconnect(DBNotify::instance(), 0, this, 0);
@@ -227,6 +286,28 @@ void Article::load(const QString &id) {
     setId(id);
     setStatus(Active);
     DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->fetchArticle(id);
+}
+
+void Article::markFavourite(bool favourite) {
+    if (favourite != isFavourite()) {
+        DBConnection *connection = DBConnection::connection();
+        connect(connection, SIGNAL(finished(DBConnection*)), connection, SLOT(deleteLater()));
+        connection->markArticleFavourite(id(), favourite);
+    }
+}
+
+void Article::markRead(bool read) {
+    if (read != isRead()) {
+        DBConnection *connection = DBConnection::connection();
+        connect(connection, SIGNAL(finished(DBConnection*)), connection, SLOT(deleteLater()));
+        connection->markArticleRead(id(), read);
+    }
+}
+
+void Article::remove() {
+    DBConnection *connection = DBConnection::connection();
+    connect(connection, SIGNAL(finished(DBConnection*)), connection, SLOT(deleteLater()));
+    connection->deleteArticle(id());
 }
 
 void Article::onArticleFetched(DBConnection *connection) {
@@ -265,12 +346,12 @@ void Article::onArticleRead(const QString &articleId, const QString &, bool isRe
     }
 }
 
-void Article::onAllArticlesRead() {
-    setRead(true);
-}
-
 void Article::onSubscriptionRead(const QString &subscriptionId, bool isRead) {
     if (subscriptionId == this->subscriptionId()) {
         setRead(isRead);
     }
+}
+
+void Article::onAllSubscriptionsRead() {
+    setRead(true);
 }

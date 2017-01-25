@@ -102,9 +102,11 @@ void Download::startDownload(const QString &u) {
     Logger::log("Download::startDownload(). URL: " + u, Logger::LowVerbosity);
     QNetworkRequest request(u);
     request.setRawHeader("User-Agent", USER_AGENT);
+    setSpeed(0);
     setStatus(Downloading);
     m_redirects = 0;
     m_response.clear();
+    m_speedTime.start();
     m_reply = networkAccessManager()->get(request);
     connect(m_reply, SIGNAL(metaDataChanged()), this, SLOT(onReplyMetaDataChanged()));
     connect(m_reply, SIGNAL(readyRead()), this, SLOT(onReplyReadyRead()));
@@ -115,8 +117,9 @@ void Download::followRedirect(const QString &u) {
     Logger::log("Download::followRedirect(). URL: " + u, Logger::LowVerbosity);
     QNetworkRequest request(u);
     request.setRawHeader("User-Agent", USER_AGENT);
-    m_redirects++;
+    ++m_redirects;
     m_response.clear();
+    m_speedTime.start();
     m_reply = networkAccessManager()->get(request);
     connect(m_reply, SIGNAL(metaDataChanged()), this, SLOT(onReplyMetaDataChanged()));
     connect(m_reply, SIGNAL(readyRead()), this, SLOT(onReplyReadyRead()));
@@ -155,13 +158,15 @@ void Download::onReplyReadyRead() {
 
     m_response.append(m_reply->read(bytes));
     setBytesTransferred(bytesTransferred() + bytes);
+    setSpeed(int(bytes) * 1000 / qMax(1, m_speedTime.restart()));
     
     if (size() > 0) {
-        setProgress(bytesTransferred() * 100 / size());
+        setProgress(int(bytesTransferred() * 100 / size()));
     }
 }
 
 void Download::onReplyFinished() {
+    setSpeed(0);
     const QString redirect = QString::fromUtf8(m_reply->rawHeader("Location"));
 
     if (!redirect.isEmpty()) {

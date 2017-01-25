@@ -43,6 +43,27 @@ int PluginConfigModel::rowCount(const QModelIndex &) const {
     return m_items.size();
 }
 
+int PluginConfigModel::columnCount(const QModelIndex &) const {
+    return 3;
+}
+
+QVariant PluginConfigModel::headerData(int section, Qt::Orientation orientation, int role) const {
+    if ((orientation != Qt::Horizontal) || (role != Qt::DisplayRole)) {
+        return QVariant();
+    }
+    
+    switch (section) {
+    case 0:
+        return tr("Name");
+    case 1:
+        return tr("Type");
+    case 2:
+        return tr("Version");
+    default:
+        return QVariant();
+    }
+}
+
 QVariant PluginConfigModel::data(const QModelIndex &index, int role) const {
     if (!index.isValid()) {
         return QVariant();
@@ -55,12 +76,21 @@ QVariant PluginConfigModel::data(const QModelIndex &index, int role) const {
     }
     
     switch (role) {
-    case DisplayNameRole:
-        return config->displayName();
+    case Qt::DisplayRole:
+        switch (index.column()) {
+        case 0:
+            return config->displayName();
+        case 1:
+            return config->pluginType();
+        case 2:
+            return config->version();
+        default:
+            break;
+        }
+        
+        return QVariant();
     case FilePathRole:
         return config->filePath();
-    case HandlesEnclosuresRole:
-        return config->handlesEnclosures();
     case IdRole:
         return config->id();
     case PluginFilePathRole:

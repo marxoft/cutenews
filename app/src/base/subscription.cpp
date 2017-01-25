@@ -51,6 +51,56 @@ Subscription::Subscription(const QString &id, const QString &description, bool d
 {
 }
 
+QVariant Subscription::data(int role) const {
+    switch (role) {
+    case AutoUpdateRole:
+        return autoUpdate();
+    case DescriptionRole:
+        return description();
+    case DownloadEnclosuresRole:
+        return downloadEnclosures();
+    case IconPathRole:
+        return iconPath();
+    case IdRole:
+        return id();
+    case LastUpdatedRole:
+        return lastUpdated();
+    case LastUpdatedStringRole:
+        return lastUpdatedString();
+    case ReadRole:
+        return isRead();
+    case SourceRole:
+        return source();
+    case SourceTypeRole:
+        return sourceType();
+    case StatusRole:
+        return status();
+    case TitleRole:
+        return title();
+    case UnreadArticlesRole:
+        return unreadArticles();
+    case UpdateIntervalRole:
+        return updateInterval();
+    case UrlRole:
+        return url();
+    default:
+        return QVariant();
+    }
+}
+
+bool Subscription::setData(int role, const QVariant &value) {
+    switch (role) {
+    case AutoUpdateRole:
+        setAutoUpdate(value.toBool());
+        return true;
+    case ReadRole:
+        markRead(value.toBool());
+        return true;
+    default:
+        return false;
+    }
+}
+
 QString Subscription::id() const {
     return m_id;
 }
@@ -59,7 +109,7 @@ void Subscription::setId(const QString &i) {
     if (i != id()) {
         m_id = i;
         emit idChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, IdRole);
     }
 }
 
@@ -71,7 +121,7 @@ void Subscription::setDescription(const QString &d) {
     if (d != description()) {
         m_description = d;
         emit descriptionChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, DescriptionRole);
     }
 }
 
@@ -83,7 +133,7 @@ void Subscription::setDownloadEnclosures(bool d) {
     if (d != downloadEnclosures()) {
         m_downloadEnclosures = d;
         emit downloadEnclosuresChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, DownloadEnclosuresRole);
     }
 }
 
@@ -103,7 +153,7 @@ void Subscription::setIconPath(const QString &p) {
     if (p != iconPath()) {
         m_iconPath = p;
         emit iconPathChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, IconPathRole);
     }
 }
 
@@ -115,8 +165,12 @@ void Subscription::setLastUpdated(const QDateTime &d) {
     if (d != lastUpdated()) {
         m_lastUpdated = d;
         emit lastUpdatedChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, LastUpdatedRole);
     }
+}
+
+QString Subscription::lastUpdatedString() const {
+    return lastUpdated().toString("dd MMM yyyy HH:mm");
 }
 
 bool Subscription::isRead() const {
@@ -131,7 +185,7 @@ void Subscription::setSource(const QVariant &s) {
     if (s != source()) {
         m_source = s;
         emit sourceChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, SourceRole);
     }
 }
 
@@ -143,7 +197,7 @@ void Subscription::setSourceType(Subscription::SourceType t) {
     if (t != sourceType()) {
         m_sourceType = t;
         emit sourceTypeChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, SourceTypeRole);
     }
 }
 
@@ -166,7 +220,7 @@ void Subscription::setTitle(const QString &t) {
     if (t != title()) {
         m_title = t;
         emit titleChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, TitleRole);
     }
 }
 
@@ -178,7 +232,7 @@ void Subscription::setUpdateInterval(int i) {
     if (i != updateInterval()) {
         m_updateInterval = i;
         emit updateIntervalChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, UpdateIntervalRole);
     }
 }
 
@@ -190,7 +244,7 @@ void Subscription::setUrl(const QString &u) {
     if (u != url()) {
         m_url = u;
         emit urlChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, UrlRole);
     }
 }
 
@@ -202,7 +256,7 @@ void Subscription::setUnreadArticles(int u) {
     if ((u != unreadArticles()) && (u >= 0)) {
         m_unreadArticles = u;
         emit unreadArticlesChanged();
-        emit dataChanged(this);
+        emit dataChanged(this, UnreadArticlesRole);
     }
 }
 
@@ -214,6 +268,7 @@ void Subscription::setAutoUpdate(bool enabled) {
     if (enabled != autoUpdate()) {
         m_autoUpdate = enabled;
         emit autoUpdateChanged();
+        emit dataChanged(this, AutoUpdateRole);
 
         if (enabled) {
             connect(DBNotify::instance(), SIGNAL(articlesAdded(QStringList, QString)),
@@ -222,9 +277,9 @@ void Subscription::setAutoUpdate(bool enabled) {
                     this, SLOT(onArticlesDeleted(QStringList, QString)));
             connect(DBNotify::instance(), SIGNAL(articleRead(QString, QString, bool)),
                     this, SLOT(onArticleRead(QString, QString, bool)));
-            connect(DBNotify::instance(), SIGNAL(allArticlesRead()), this, SLOT(onAllArticlesRead()));
             connect(DBNotify::instance(), SIGNAL(subscriptionRead(QString, bool)),
                     this, SLOT(onSubscriptionRead(QString, bool)));
+            connect(DBNotify::instance(), SIGNAL(allSubscriptionsRead()), this, SLOT(onAllSubscriptionsRead()));
             connect(DBNotify::instance(), SIGNAL(subscriptionUpdated(QString)),
                     this, SLOT(onSubscriptionUpdated(QString)));
         }
@@ -238,6 +293,26 @@ void Subscription::load(const QString &id) {
     setId(id);
     setStatus(Active);
     DBConnection::connection(this, SLOT(onSubscriptionFetched(DBConnection*)))->fetchSubscription(id);
+}
+
+void Subscription::markRead(bool read) {
+    if (read != isRead()) {
+        DBConnection *connection = DBConnection::connection();
+        connect(connection, SIGNAL(finished(DBConnection*)), connection, SLOT(deleteLater()));
+        connection->markSubscriptionRead(id(), read);
+    }
+}
+
+void Subscription::remove() {
+    DBConnection *connection = DBConnection::connection();
+    connect(connection, SIGNAL(finished(DBConnection*)), connection, SLOT(deleteLater()));
+    connection->deleteSubscription(id());
+}
+
+void Subscription::update(const QVariantMap &properties) {
+    DBConnection *connection = DBConnection::connection();
+    connect(connection, SIGNAL(finished(DBConnection*)), connection, SLOT(deleteLater()));
+    connection->updateSubscription(id(), properties);
 }
 
 void Subscription::onArticlesAdded(const QStringList &articleIds, const QString &subscriptionId) {
@@ -257,10 +332,6 @@ void Subscription::onArticleRead(const QString &, const QString &subscriptionId,
     if (subscriptionId == id()) {
         setUnreadArticles(isRead ? unreadArticles() - 1 : unreadArticles() + 1);
     }
-}
-
-void Subscription::onAllArticlesRead() {
-    setUnreadArticles(0);
 }
 
 void Subscription::onSubscriptionFetched(DBConnection *connection) {
@@ -298,6 +369,10 @@ void Subscription::onSubscriptionRead(const QString &subscriptionId, bool isRead
             DBConnection::connection(this, SLOT(onSubscriptionFetched(DBConnection*)))->fetchSubscription(subscriptionId);
         }
     }
+}
+
+void Subscription::onAllSubscriptionsRead() {
+    setUnreadArticles(0);
 }
 
 void Subscription::onSubscriptionUpdated(const QString &subscriptionId) {

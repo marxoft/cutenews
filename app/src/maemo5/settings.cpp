@@ -35,7 +35,7 @@ Settings* Settings::instance() {
 }
 
 QStringList Settings::categoryNames() {
-    QSettings settings;
+    QSettings settings(APP_CONFIG_PATH + "settings", QSettings::IniFormat);
     settings.beginGroup("Categories");
     QStringList names = settings.childKeys();
     names.prepend(tr("Default"));
@@ -46,10 +46,10 @@ QStringList Settings::categoryNames() {
 
 QList<Category> Settings::categories() {
     QList<Category> list;
-    QSettings settings;
+    QSettings settings(APP_CONFIG_PATH + "settings", QSettings::IniFormat);
     settings.beginGroup("Categories");
     
-    foreach (QString key, settings.childKeys()) {
+    foreach (const QString &key, settings.childKeys()) {
         Category category;
         category.name = key;
         category.path = settings.value(key).toString();
@@ -62,11 +62,11 @@ QList<Category> Settings::categories() {
 }
 
 void Settings::setCategories(const QList<Category> &c) {
-    QSettings settings;
+    QSettings settings(APP_CONFIG_PATH + "settings", QSettings::IniFormat);
     settings.remove("Categories");
     settings.beginGroup("Categories");
     
-    foreach (Category category, c) {
+    foreach (const Category &category, c) {
         settings.setValue(category.name, category.path);
     }
     
@@ -88,7 +88,7 @@ void Settings::addCategory(const QString &name, const QString &path) {
 }
 
 void Settings::removeCategory(const QString &name) {
-    QSettings settings;
+    QSettings settings(APP_CONFIG_PATH + "settings", QSettings::IniFormat);
     settings.beginGroup("Categories");
     
     if (settings.contains(name)) {
@@ -421,34 +421,6 @@ void Settings::setUpdateSubscriptionsOnStartup(bool enabled) {
         
         if (self) {
             emit self->updateSubscriptionsOnStartupChanged(enabled);
-        }
-    }
-}
-
-QString Settings::userInterface() {
-    return value("Appearance/userInterface", QString("touch")).toString();
-}
-
-void Settings::setUserInterface(const QString &ui) {
-    if (ui != userInterface()) {
-        setValue("Appearance/userInterface", ui);
-        
-        if (self) {
-            emit self->userInterfaceChanged(ui);
-        }
-    }
-}
-
-QString Settings::viewMode() {
-    return value("Appearance/viewMode", QString("light")).toString();
-}
-
-void Settings::setViewMode(const QString &mode) {
-    if (mode != viewMode()) {
-        setValue("Appearance/viewMode", mode);
-        
-        if (self) {
-            emit self->viewModeChanged(mode);
         }
     }
 }

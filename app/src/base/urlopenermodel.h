@@ -24,13 +24,25 @@ class UrlOpenerModel : public SelectionModel
     Q_OBJECT
     
 public:
-    explicit UrlOpenerModel(QObject *parent = 0);
+    ~UrlOpenerModel();
+
+    static UrlOpenerModel* instance();
+    
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+
+    Q_INVOKABLE void append(const QString &regExp, const QVariant &command);
+    Q_INVOKABLE void insert(int row, const QString &regExp, const QVariant &command);
         
 public Q_SLOTS:    
     bool open(const QString &url);
     
     void load();
     void save();
+
+private:
+    UrlOpenerModel();
+
+    static UrlOpenerModel *self;
 };
 
 #endif // URLOPENERMODEL_H

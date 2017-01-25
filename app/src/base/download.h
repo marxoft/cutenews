@@ -18,6 +18,7 @@
 #define DOWNLOAD_H
 
 #include "transfer.h"
+#include <QTime>
 
 class QNetworkReply;
 
@@ -46,14 +47,16 @@ private:
     void followRedirect(const QString &u);
     
     QNetworkReply *m_reply;
-        
+    
     bool m_canceled;
     
     int m_redirects;
-        
+    
     bool m_metadataSet;
     
     QByteArray m_response;
+
+    QTime m_speedTime;
 };
     
 #endif // DOWNLOAD_H

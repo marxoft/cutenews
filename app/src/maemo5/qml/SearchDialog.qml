@@ -52,4 +52,6 @@ Dialog {
     }
     
     onStatusChanged: if (status == DialogStatus.Open) searchField.forceActiveFocus();
+    onAccepted: windowStack.push(Qt.resolvedUrl("ArticlesWindow.qml"), {title: qsTr("Search") + " - " + query})
+    .search(query)
 }

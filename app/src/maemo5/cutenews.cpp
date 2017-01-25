@@ -22,6 +22,7 @@
 #include "categorynamemodel.h"
 #include "concurrenttransfersmodel.h"
 #include "dbconnection.h"
+#include "dbnotify.h"
 #include "definitions.h"
 #include "logger.h"
 #include "loggerverbositymodel.h"
@@ -91,20 +92,6 @@ bool CuteNews::quit() {
             return false;
         }
     }
-        
-    const int expiryDays = Settings::readArticleExpiry();
-    
-    if (expiryDays > -1) {
-        uint expiryDate = QDateTime::currentDateTime().toTime_t();
-
-        if (expiryDays > 0) {
-            expiryDate -= expiryDays * 86400;
-        }
-        
-        Logger::log("CuteNews::quit(). Deleting read articles older than "
-                    + QDateTime::fromTime_t(expiryDate).toString(Qt::ISODate));
-        DBConnection(false).deleteExpiredArticles(expiryDate);
-    }
     
     Transfers::instance()->save();
     Logger::log("CuteNews::quit(). Quitting the application", Logger::LowVerbosity);
@@ -151,12 +138,12 @@ void CuteNews::initEngine() {
     }
     
     qRegisterMetaType< QList<QVariantList> >("QList<QVariantList>");
+    qRegisterMetaType<DBConnection::Status>("DBConnection::Status");
     qmlRegisterType<Article>("cuteNews", 1, 0, "Article");
     qmlRegisterType<ArticleModel>("cuteNews", 1, 0, "ArticleModel");
     qmlRegisterType<CategoryModel>("cuteNews", 1, 0, "CategoryModel");
     qmlRegisterType<CategoryNameModel>("cuteNews", 1, 0, "CategoryNameModel");
     qmlRegisterType<ConcurrentTransfersModel>("cuteNews", 1, 0, "ConcurrentTransfersModel");
-    qmlRegisterType<DBConnection>("cuteNews", 1, 0, "DBConnection");
     qmlRegisterType<LoggerVerbosityModel>("cuteNews", 1, 0, "LoggerVerbosityModel");
     qmlRegisterType<NetworkProxyTypeModel>("cuteNews", 1, 0, "NetworkProxyTypeModel");
     qmlRegisterType<SelectionModel>("cuteNews", 1, 0, "SelectionModel");
@@ -169,6 +156,7 @@ void CuteNews::initEngine() {
     qmlRegisterType<UserInterfaceModel>("cuteNews", 1, 0, "UserInterfaceModel");
     qmlRegisterType<ViewModeModel>("cuteNews", 1, 0, "ViewModeModel");
     
+    qmlRegisterUncreatableType<DBConnection>("cuteNews", 1, 0, "DBConnection", "");
     qmlRegisterUncreatableType<FeedPluginConfig>("cuteNews", 1, 0, "FeedPluginConfig", "");
     qmlRegisterUncreatableType<Subscriptions>("cuteNews", 1, 0, "Subscriptions", "");
     qmlRegisterUncreatableType<Transfer>("cuteNews", 1, 0, "Transfer", "");
@@ -182,16 +170,18 @@ void CuteNews::initEngine() {
     context->setContextProperty("cutenews", this);
     context->setContextProperty("database", m_connection ? m_connection : m_connection = new DBConnection(true));
     context->setContextProperty("logger", logger);
+    context->setContextProperty("notifier", DBNotify::instance());
     context->setContextProperty("plugins", PluginManager::instance());
     context->setContextProperty("settings", Settings::instance());
     context->setContextProperty("subscriptions", Subscriptions::instance());
     context->setContextProperty("transfers", Transfers::instance());
-    context->setContextProperty("urlopener", new UrlOpenerModel(this));
+    context->setContextProperty("urlopener", UrlOpenerModel::instance());
     context->setContextProperty("utils", new Utils(this));
     context->setContextProperty("ALL_ARTICLES_SUBSCRIPTION_ID", ALL_ARTICLES_SUBSCRIPTION_ID);
     context->setContextProperty("FAVOURITES_SUBSCRIPTION_ID", FAVOURITES_SUBSCRIPTION_ID);
     context->setContextProperty("VERSION_NUMBER", VERSION_NUMBER);
     
+    connect(m_engine, SIGNAL(warnings(QList<QDeclarativeError>)), logger, SLOT(log(QList<QDeclarativeError>)));
     connect(Settings::instance(), SIGNAL(loggerFileNameChanged(QString)), logger, SLOT(setFileName(QString)));
     connect(Settings::instance(), SIGNAL(loggerVerbosityChanged(int)), logger, SLOT(setVerbosity(int)));
 }
@@ -205,11 +195,9 @@ QObject* CuteNews::createQmlObject(const QString &fileName) {
         context->setParent(obj);
         return obj;
     }
-
+    
     if (component->isError()) {
-        foreach (const QDeclarativeError &error, component->errors()) {
-            Logger::log("CuteNews::createQmlObject(). Error: " + error.toString());
-        }        
+        Logger::log(component->errors());
     }
     
     delete component;

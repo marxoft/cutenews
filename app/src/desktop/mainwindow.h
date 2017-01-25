@@ -24,10 +24,8 @@
 class Article;
 class ArticleModel;
 class Browser;
-class DBConnection;
 class SubscriptionModel;
 class TransfersView;
-class UrlOpenerModel;
 class QLabel;
 class QMenu;
 class QModelIndex;
@@ -46,7 +44,6 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
 
 protected:
     virtual void closeEvent(QCloseEvent *e);
@@ -54,6 +51,7 @@ protected:
 private Q_SLOTS:
     void newSubscriptionRequested(QAction *action = 0);
     void importSubscriptions();
+    void markAllSubscriptionsRead();
     
     void updateCurrentSubscription();
     void markCurrentSubscriptionRead();
@@ -81,6 +79,7 @@ private Q_SLOTS:
     void setCurrentArticle(const QModelIndex &index);
     
     void searchArticles(const QString &query);
+    void deleteReadArticles(int expiryDate);
     
     void showSubscriptionContextMenu(const QPoint &pos);
     void showArticleContextMenu(const QPoint &pos);
@@ -96,26 +95,26 @@ private Q_SLOTS:
     void showTransfersTab();
 
     void showSearchDialog();
+    void showDeleteDialog();
     void showSettingsDialog();
     void showAboutDialog();
     
     void onSubscriptionsCountChanged(int count);
     void onSubscriptionsStatusChanged(Subscriptions::Status status);
     void onArticlesCountChanged(int count);
+    void onReadArticlesDeleted(int count);
     
     void onCurrentTabChanged(int index);
-    
-    void onConnectionFinished(DBConnection *connection);
+
+    void onDatabaseError(const QString &errorString);
     
     void onOfflineModeEnabledChanged(bool enabled);
 
 private:    
-    DBConnection *m_connection;
     SubscriptionModel *m_subscriptionsModel;
     ArticleModel *m_articlesModel;
     QSortFilterProxyModel *m_articlesProxyModel;
     QStandardItemModel *m_enclosuresModel;
-    UrlOpenerModel *m_urlOpenerModel;
     
     QMenu *m_subscriptionsMenu;
     QMenu *m_newSubscriptionMenu;
@@ -163,6 +162,7 @@ private:
     QAction *m_closeTabAction;
     
     QAction *m_searchAction;
+    QAction *m_deleteAction;
     QAction *m_settingsAction;
 
     QAction *m_aboutAction;

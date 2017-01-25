@@ -33,21 +33,6 @@ class SubscriptionModel : public QAbstractListModel
     Q_ENUMS(Status)
     
 public:
-    enum Roles {
-        IdRole = Qt::UserRole + 1,
-        DescriptionRole,
-        DownloadEnclosuresRole,
-        IconPathRole,
-        LastUpdatedRole,
-        ReadRole,
-        SourceRole,
-        SourceTypeRole,
-        TitleRole,
-        UnreadArticlesRole,
-        UpdateIntervalRole,
-        UrlRole
-    };
-    
     enum Status {
         Idle = 0,
         Active,
@@ -66,16 +51,20 @@ public:
 #endif
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
-#ifdef WIDGETS_UI
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
-#endif
+    
     QVariant data(const QModelIndex &index, int role) const;
     Q_INVOKABLE QVariant data(int row, const QByteArray &role) const;
+    bool setData(const QModelIndex &index, const QVariant &value, int role);
+    Q_INVOKABLE bool setData(int row, const QVariant &value, const QByteArray &role);
     
     QMap<int, QVariant> itemData(const QModelIndex &index) const;
     Q_INVOKABLE QVariantMap itemData(int row) const;
+    bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles);
+    Q_INVOKABLE bool setItemData(int row, const QVariantMap &roles);
     
     Q_INVOKABLE Subscription* get(int row) const;
+    Q_INVOKABLE bool remove(int row);
     
     QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits = 1,
                           Qt::MatchFlags flags = Qt::MatchFlags(Qt::MatchExactly | Qt::MatchWrap)) const;
@@ -87,7 +76,7 @@ public Q_SLOTS:
     void load();
 
 private Q_SLOTS:
-    void onSubscriptionChanged(Subscription *subscription);
+    void onSubscriptionChanged(Subscription *subscription, int role);
     void onSubscriptionsAdded(const QStringList &ids);
     void onSubscriptionDeleted(const QString &id);
     void onSubscriptionsFetched(DBConnection *connection);

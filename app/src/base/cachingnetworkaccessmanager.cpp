@@ -15,6 +15,7 @@
  */
 
 #include "cachingnetworkaccessmanager.h"
+#include "articlecache.h"
 #include "definitions.h"
 #include "logger.h"
 #include "settings.h"
@@ -31,26 +32,26 @@ QNetworkReply* CachingNetworkAccessManager::createRequest(QNetworkAccessManager:
     if (op != QNetworkAccessManager::GetOperation) {
         return QNetworkAccessManager::createRequest(op, req, outgoingData);
     }
-    
-    const QString path = req.url().path();
+        
+    const QString path = (CACHE_PREFIX.isEmpty() ? req.url().path() : req.url().toString().section(CACHE_PREFIX, 1));
     
     if (!path.startsWith(CACHE_PATH)) {
         return QNetworkAccessManager::createRequest(op, req, outgoingData);
     }
 
-    QNetworkDiskCache *dc = qobject_cast<QNetworkDiskCache*>(cache());
+    ArticleCache *ac = qobject_cast<ArticleCache*>(cache());
 
-    if (!dc) {
-        dc = new QNetworkDiskCache(this);
-        setCache(dc);
+    if (!ac) {
+        ac = new ArticleCache(this);
+        setCache(ac);
     }
 
     const QString cacheDir = path.left(path.lastIndexOf("/"));
 
-    if (dc->cacheDirectory() != cacheDir) {
-        dc->setCacheDirectory(cacheDir);
+    if (ac->cacheDirectory() != cacheDir) {
+        ac->setCacheDirectory(cacheDir);
     }
-
+    
     const QByteArray url = QByteArray::fromBase64(path.mid(path.lastIndexOf("/") + 1).toUtf8());
     Logger::log("CachingNetworkAccessManager::createRequest(). Retrieving cached URL: " + url, Logger::HighVerbosity);
     QNetworkRequest request(req);

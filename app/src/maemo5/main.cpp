@@ -25,6 +25,7 @@
 #include "settings.h"
 #include "subscriptions.h"
 #include "transfers.h"
+#include "urlopenermodel.h"
 #include <QThread>
 #include <QApplication>
 #include <QSsl>
@@ -61,6 +62,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     QScopedPointer<Settings> settings(Settings::instance());
     QScopedPointer<Subscriptions> subscriptions(Subscriptions::instance());
     QScopedPointer<Transfers> transfers(Transfers::instance());
+    QScopedPointer<UrlOpenerModel> opener(UrlOpenerModel::instance());
     
     QThread thread;
     thread.start();
@@ -70,6 +72,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     subscriptions.data()->setOfflineModeEnabled(Settings::offlineModeEnabled());
     plugins.data()->load();
     transfers.data()->load();
+    opener.data()->load();
         
     if (args.contains("--window")) {
         cutenews.data()->showWindow();

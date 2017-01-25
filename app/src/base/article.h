@@ -33,6 +33,7 @@ class Article : public QObject
     Q_PROPERTY(QString body READ body NOTIFY bodyChanged)
     Q_PROPERTY(QStringList categories READ categories NOTIFY categoriesChanged)
     Q_PROPERTY(QDateTime date READ date NOTIFY dateChanged)
+    Q_PROPERTY(QString dateString READ dateString NOTIFY dateChanged)
     Q_PROPERTY(QVariantList enclosures READ enclosures NOTIFY enclosuresChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY finished)
     Q_PROPERTY(bool hasEnclosures READ hasEnclosures NOTIFY enclosuresChanged)
@@ -44,9 +45,28 @@ class Article : public QObject
     Q_PROPERTY(QString url READ url NOTIFY urlChanged)
     Q_PROPERTY(bool autoUpdate READ autoUpdate WRITE setAutoUpdate NOTIFY autoUpdateChanged)
     
-    Q_ENUMS(Status)
+    Q_ENUMS(DataRole Status)
 
 public:
+    enum DataRole {
+        AuthorRole = Qt::UserRole + 1,
+        AutoUpdateRole,
+        BodyRole,
+        CategoriesRole,
+        DateRole,
+        DateStringRole,
+        EnclosuresRole,
+        ErrorStringRole,
+        FavouriteRole,
+        HasEnclosuresRole,
+        IdRole,
+        ReadRole,
+        StatusRole,
+        SubscriptionIdRole,
+        TitleRole,
+        UrlRole
+    };
+    
     enum Status {
         Idle = 0,
         Active,
@@ -58,6 +78,9 @@ public:
     explicit Article(const QString &id, const QString &author, const QString &body, const QStringList &categories,
                      const QDateTime &date, const QVariantList &enclosures, bool isFavourite, bool isRead,
                      const QString &subscriptionId, const QString &title, const QString &url, QObject *parent = 0);
+
+    Q_INVOKABLE QVariant data(int role) const;
+    Q_INVOKABLE bool setData(int role, const QVariant &value);
     
     QString id() const;
     
@@ -68,6 +91,7 @@ public:
     QStringList categories() const;
     
     QDateTime date() const;
+    QString dateString() const;
     
     QVariantList enclosures() const;
     
@@ -92,20 +116,23 @@ public:
 
 public Q_SLOTS:
     void load(const QString &id);
+    void markFavourite(bool favourite = true);
+    void markRead(bool read = true);
+    void remove();
 
 private Q_SLOTS:
     void onArticleFetched(DBConnection *connection);
     void onArticleFavourited(const QString &articleId, bool isFavourite);
     void onArticleRead(const QString &articleId, const QString &subscriptionId, bool isRead);
-    void onAllArticlesRead();
     void onSubscriptionRead(const QString &subscriptionId, bool isRead);
+    void onAllSubscriptionsRead();
 
 Q_SIGNALS:
     void idChanged();
     void authorChanged();
     void bodyChanged();
     void categoriesChanged();
-    void dataChanged(Article *article);
+    void dataChanged(Article *article, int role);
     void dateChanged();
     void enclosuresChanged();
     void favouriteChanged();

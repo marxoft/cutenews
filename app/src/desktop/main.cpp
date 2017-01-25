@@ -24,6 +24,7 @@
 #include "settings.h"
 #include "subscriptions.h"
 #include "transfers.h"
+#include "urlopenermodel.h"
 #include "webserver.h"
 #include <QApplication>
 #include <QIcon>
@@ -71,6 +72,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     QScopedPointer<Settings> settings(Settings::instance());
     QScopedPointer<Subscriptions> subscriptions(Subscriptions::instance());
     QScopedPointer<Transfers> transfers(Transfers::instance());
+    QScopedPointer<UrlOpenerModel> opener(UrlOpenerModel::instance());
     QScopedPointer<WebServer> server(WebServer::instance());
         
     QThread thread;
@@ -85,6 +87,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     server.data()->setAuthenticationEnabled(Settings::webInterfaceAuthenticationEnabled());
     plugins.data()->load();
     transfers.data()->load();
+    opener.data()->load();
     
     if ((Settings::updateSubscriptionsOnStartup()) && (!Settings::offlineModeEnabled())) {
         subscriptions.data()->updateAll();

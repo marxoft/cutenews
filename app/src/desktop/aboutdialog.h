@@ -19,8 +19,10 @@
 
 #include <QDialog>
 
+class PluginConfigModel;
 class QDialogButtonBox;
 class QLabel;
+class QTreeView;
 class QVBoxLayout;
 
 class AboutDialog : public QDialog
@@ -31,10 +33,14 @@ public:
     explicit AboutDialog(QWidget *parent = 0);
 
 private:
-    QDialogButtonBox *m_buttonBox;
+    PluginConfigModel *m_model;
     
     QLabel *m_iconLabel;
     QLabel *m_textLabel;
+
+    QTreeView *m_view;
+    
+    QDialogButtonBox *m_buttonBox;
 
     QVBoxLayout *m_layout;
 };

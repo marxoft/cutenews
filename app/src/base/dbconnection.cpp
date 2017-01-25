@@ -33,6 +33,7 @@ const QString DBConnection::ARTICLE_FIELDS("articles.id, articles.author, articl
 DBConnection::DBConnection(bool asynchronous) :
     QObject(),
     m_asynchronous(asynchronous),
+    m_progress(0),
     m_status(Idle)
 {
     if ((asynchronous) && (asyncThread)) {
@@ -54,6 +55,22 @@ QString DBConnection::errorString() const {
 
 void DBConnection::setErrorString(const QString &e) {
     m_errorString = e;
+
+    if (!e.isEmpty()) {
+        Logger::log("DBConnection::error(). " + e);
+        emit DBNotify::instance()->error(e);
+    }
+}
+
+int DBConnection::progress() const {
+    return m_progress;
+}
+
+void DBConnection::setProgress(int p) {
+    if (p != progress()) {
+        m_progress = p;
+        emit progressChanged(p);
+    }
 }
 
 DBConnection::Status DBConnection::status() const {
@@ -65,8 +82,13 @@ void DBConnection::setStatus(DBConnection::Status s) {
         m_status = s;
         emit statusChanged(s);
         
-        if (s == Error) {
-            Logger::log("DBConnection::setStatus(). " + errorString());
+        switch (s) {
+        case Active:
+            setProgress(0);
+            break;
+        default:
+            setProgress(100);
+            break;
         }
     }
 }
@@ -141,6 +163,16 @@ void DBConnection::markSubscriptionRead(const QString &id, bool isRead, bool fet
                               Q_ARG(bool, fetchResult));
 }
 
+void DBConnection::markAllSubscriptionsRead() {
+    if (status() == Active) {
+        return;
+    }
+    
+    setStatus(Active);
+    const Qt::ConnectionType connType = isAsynchronous() ? Qt::QueuedConnection : Qt::DirectConnection;
+    QMetaObject::invokeMethod(this, "_p_markAllSubscriptionsRead", connType);
+}
+
 void DBConnection::fetchSubscription(const QString &id) {
     if (status() == Active) {
         return;
@@ -213,14 +245,14 @@ void DBConnection::deleteArticle(const QString &id) {
     QMetaObject::invokeMethod(this, "_p_deleteArticle", connType, Q_ARG(QString, id));
 }
 
-void DBConnection::deleteExpiredArticles(int expiryDate) {
+void DBConnection::deleteReadArticles(int expiryDate) {
     if (status() == Active) {
         return;
     }
     
     setStatus(Active);
     const Qt::ConnectionType connType = isAsynchronous() ? Qt::QueuedConnection : Qt::DirectConnection;
-    QMetaObject::invokeMethod(this, "_p_deleteExpiredArticles", connType, Q_ARG(int, expiryDate));
+    QMetaObject::invokeMethod(this, "_p_deleteReadArticles", connType, Q_ARG(int, expiryDate));
 }
 
 void DBConnection::updateArticle(const QString &id, const QVariantMap &properties, bool fetchResult) {
@@ -254,16 +286,6 @@ void DBConnection::markArticleRead(const QString &id, bool isRead, bool fetchRes
     const Qt::ConnectionType connType = isAsynchronous() ? Qt::QueuedConnection : Qt::DirectConnection;
     QMetaObject::invokeMethod(this, "_p_markArticleRead", connType, Q_ARG(QString, id), Q_ARG(bool, isRead),
                               Q_ARG(bool, fetchResult));
-}
-
-void DBConnection::markAllArticlesRead() {
-    if (status() == Active) {
-        return;
-    }
-    
-    setStatus(Active);
-    const Qt::ConnectionType connType = isAsynchronous() ? Qt::QueuedConnection : Qt::DirectConnection;
-    QMetaObject::invokeMethod(this, "_p_markAllArticlesRead", connType);
 }
 
 void DBConnection::fetchArticle(const QString &id) {
@@ -404,6 +426,7 @@ void DBConnection::_p_addSubscriptions(const QList<QVariantList> &subscriptions)
 }
 
 void DBConnection::_p_deleteSubscription(const QString &id) {
+    Logger::log("DBConnection::_p_deleteSubscription(). ID: " + id, Logger::MediumVerbosity);
     m_query = QSqlQuery(database());
 #ifdef NO_SQLITE_FOREIGN_KEYS
     m_query.prepare("DELETE FROM articles WHERE subscriptionId = ?");
@@ -434,6 +457,7 @@ void DBConnection::_p_deleteSubscription(const QString &id) {
 }
 
 void DBConnection::_p_updateSubscription(const QString &id, const QVariantMap &properties, bool fetchResult) {
+    Logger::log("DBConnection::_p_updateSubscription(). ID: " + id, Logger::MediumVerbosity);
     QString statement = QString("UPDATE subscriptions SET %1 = ? WHERE id = '%2'")
                                .arg(QStringList(properties.keys()).join(" = ?, "))
                                .arg(id);
@@ -474,6 +498,8 @@ void DBConnection::_p_updateSubscription(const QString &id, const QVariantMap &p
 }
 
 void DBConnection::_p_markSubscriptionRead(const QString &id, bool isRead, bool fetchResult) {
+    Logger::log("DBConnection::_p_markSubscriptionRead(). ID: " + id
+                + (isRead ? ", Status: unread" : ", Status: read"), Logger::MediumVerbosity);
     QString statement("UPDATE articles SET isRead = ?, lastRead = ? WHERE subscriptionId = ? AND isRead = ?");
     m_query = QSqlQuery(database());
     m_query.prepare(statement);
@@ -482,7 +508,7 @@ void DBConnection::_p_markSubscriptionRead(const QString &id, bool isRead, bool 
     m_query.addBindValue(id);
     m_query.addBindValue(isRead ? 0 : 1);
     
-    if (m_query.exec()) {        
+    if (m_query.exec()) {
         if (fetchResult) {
             statement = QString("SELECT %1 FROM subscriptions WHERE id = '%2'").arg(SUBSCRIPTION_FIELDS).arg(id);
             
@@ -509,7 +535,30 @@ void DBConnection::_p_markSubscriptionRead(const QString &id, bool isRead, bool 
     }
     
     emit finished(this);
-}       
+}
+
+void DBConnection::_p_markAllSubscriptionsRead() {
+    Logger::log("DBConnection::_p_markAllSubscriptionsRead()", Logger::MediumVerbosity);
+    QString statement("UPDATE articles SET isRead = ?, lastRead = ? WHERE isRead = ?");
+    m_query = QSqlQuery(database());
+    m_query.prepare(statement);
+    m_query.addBindValue(1);
+    m_query.addBindValue(QDateTime::currentDateTime().toTime_t());
+    m_query.addBindValue(0);
+    
+    if (m_query.exec()) {
+        setErrorString(QString());
+        setStatus(Ready);
+        
+        emit DBNotify::instance()->allSubscriptionsRead();
+    }
+    else {    
+        setErrorString(tr("Error executing query \"%1\": %2").arg(m_query.lastQuery()).arg(m_query.lastError().text()));
+        setStatus(Error);
+    }
+    
+    emit finished(this);
+}
 
 void DBConnection::_p_fetchSubscription(const QString &id) {
     m_query = QSqlQuery(database());
@@ -613,6 +662,7 @@ void DBConnection::_p_addArticles(const QList<QVariantList> &articles, const QSt
 }
 
 void DBConnection::_p_deleteArticle(const QString &id) {
+    Logger::log("DBConnection::_p_deleteArticle(). ID: " + id, Logger::MediumVerbosity);
     m_query = QSqlQuery(database());
     m_query.prepare("SELECT subscriptionId FROM articles WHERE id = ?");
     m_query.addBindValue(id);
@@ -637,7 +687,9 @@ void DBConnection::_p_deleteArticle(const QString &id) {
     emit finished(this);
 }
 
-void DBConnection::_p_deleteExpiredArticles(int expiryDate) {
+void DBConnection::_p_deleteReadArticles(int expiryDate) {
+    Logger::log("DBConnection::_p_deleteReadArticles(). Expiry date: " + QString::number(expiryDate),
+                Logger::MediumVerbosity);
     m_query = QSqlQuery(database());
     m_query.prepare("SELECT id, subscriptionId FROM articles WHERE isRead = ? AND isFavourite = 0 AND lastRead < ?");
     m_query.addBindValue(1);
@@ -651,20 +703,25 @@ void DBConnection::_p_deleteExpiredArticles(int expiryDate) {
             articleIds << m_query.value(0).toString();
             subscriptionIds << m_query.value(1).toString();
         }
-
+        
         if (!articleIds.isEmpty()) {
             m_query.prepare("DELETE FROM articles WHERE isRead = ? AND isFavourite = 0 AND lastRead < ?");
             m_query.addBindValue(1);
             m_query.addBindValue(expiryDate);
+            const int p = 100 / articleIds.size();
             
             if (m_query.exec()) {
                 for (int i = 0; i < articleIds.size(); i++) {
                     Utils::removeDirectory(QString("%1%2/%3").arg(CACHE_PATH).arg(subscriptionIds.at(i))
                                                              .arg(articleIds.at(i)));
+                    setProgress(progress() + p);
                 }
-            
+                
+                Logger::log(QString("DBConnection::_p_deleteReadArticles(). %1 articles deleted")
+                            .arg(articleIds.size()), Logger::LowVerbosity);
                 setErrorString(QString());
                 setStatus(Ready);
+                emit DBNotify::instance()->readArticlesDeleted(articleIds.size());
             }
             else {
                 setErrorString(tr("Error executing query \"%1\": %2").arg(m_query.lastQuery())
@@ -673,6 +730,7 @@ void DBConnection::_p_deleteExpiredArticles(int expiryDate) {
             }
         }
         else {
+            Logger::log("DBConnection::_p_deleteReadArticles(). No articles deleted", Logger::LowVerbosity);
             setErrorString(QString());
             setStatus(Ready);
         }
@@ -686,6 +744,7 @@ void DBConnection::_p_deleteExpiredArticles(int expiryDate) {
 }
 
 void DBConnection::_p_updateArticle(const QString &id, const QVariantMap &properties, bool fetchResult) {
+    Logger::log("DBConnection::_p_updateArticle(). ID: " + id, Logger::MediumVerbosity);
     QString statement = QString("UPDATE articles SET %1 = ? WHERE id = '%2'")
                                .arg(QStringList(properties.keys()).join(" = ?, "))
                                .arg(id);
@@ -726,6 +785,8 @@ void DBConnection::_p_updateArticle(const QString &id, const QVariantMap &proper
 }
 
 void DBConnection::_p_markArticleFavourite(const QString &id, bool isFavourite, bool fetchResult) {
+    Logger::log("DBConnection::_p_markArticleFavourite(). ID: " + id
+                + (isFavourite ? ", Status: favourite" : ", Status: unfavourite"), Logger::MediumVerbosity);
     QString statement("UPDATE articles SET isFavourite = ? WHERE id = ?");
     m_query = QSqlQuery(database());
     m_query.prepare(statement);
@@ -762,6 +823,8 @@ void DBConnection::_p_markArticleFavourite(const QString &id, bool isFavourite, 
 }
 
 void DBConnection::_p_markArticleRead(const QString &id, bool isRead, bool fetchResult) {
+    Logger::log("DBConnection::_p_markArticleRead(). ID: " + id
+                + (isRead ? ", Status: read" : ", Status: unread"), Logger::MediumVerbosity);
     QString statement("UPDATE articles SET isRead = ?, lastRead = ? WHERE id = ?");
     m_query = QSqlQuery(database());
     m_query.prepare(statement);
@@ -796,26 +859,6 @@ void DBConnection::_p_markArticleRead(const QString &id, bool isRead, bool fetch
     
     emit finished(this);
 };
-
-void DBConnection::_p_markAllArticlesRead() {
-    QString statement("UPDATE articles SET isRead = ?, lastRead = ?");
-    m_query = QSqlQuery(database());
-    m_query.prepare(statement);
-    m_query.addBindValue(1);
-    m_query.addBindValue(QDateTime::currentDateTime().toTime_t());
-    
-    if (m_query.exec()) {
-        setErrorString(QString());
-        setStatus(Ready);
-        emit DBNotify::instance()->allArticlesRead();
-    }
-    else {
-        setErrorString(tr("Error executing query \"%1\": %2").arg(m_query.lastQuery()).arg(m_query.lastError().text()));
-        setStatus(Error);
-    }
-    
-    emit finished(this);
-}
 
 void DBConnection::_p_fetchArticle(const QString &id) {
     m_query = QSqlQuery(database());

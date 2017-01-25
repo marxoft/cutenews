@@ -28,7 +28,8 @@ struct Category {
 class Settings : public QObject
 {
     Q_OBJECT
-    
+
+    Q_PROPERTY(QByteArray articlesHeaderViewState READ articlesHeaderViewState WRITE setArticlesHeaderViewState)
     Q_PROPERTY(QStringList categoryNames READ categoryNames NOTIFY categoriesChanged)
     Q_PROPERTY(QString customTransferCommand READ customTransferCommand WRITE setCustomTransferCommand
                NOTIFY customTransferCommandChanged)
@@ -79,6 +80,8 @@ public:
     ~Settings();
     
     static Settings* instance();
+
+    static QByteArray articlesHeaderViewState();
     
     static QStringList categoryNames();
     static QList<Category> categories();
@@ -129,6 +132,8 @@ public:
     Q_INVOKABLE static QVariant value(const QString &key, const QVariant &defaultValue = QVariant());
 
 public Q_SLOTS:
+    static void setArticlesHeaderViewState(const QByteArray &state);
+    
     static void addCategory(const QString &name, const QString &path);
     static void setDefaultCategory(const QString &category);
     static void removeCategory(const QString &name);

@@ -16,15 +16,52 @@
 
 import QtQuick 1.0
 import org.hildon.components 1.0
+import org.hildon.utils 1.0
 import cuteNews 1.0
 
 Dialog {
     id: root
     
-    property Article article
+    property variant article
     
     title: qsTr("Enclosures")
     height: Math.min(360, view.count * 70 + platformStyle.paddingMedium)
+    
+    Action {
+        id: openAction
+        
+        text: qsTr("Open externally")
+        autoRepeat: false
+        shortcut: qsTr("o")
+        enabled: view.currentIndex >= 0
+        onTriggered: {
+            var url = article.enclosures[view.currentIndex].url;
+            
+            if (!urlopener.open(url)) {
+                Qt.openUrlExternally(url);
+            }            
+        }
+    }
+    
+    Action {
+        id: copyAction
+        
+        text: qsTr("Copy URL")
+        autoRepeat: false
+        shortcut: qsTr("c")
+        enabled: view.currentIndex >= 0
+        onTriggered: clipboard.text = article.enclosures[view.currentIndex].url
+    }
+    
+    Action {
+        id: downloadAction
+        
+        text: qsTr("Download")
+        autoRepeat: false
+        shortcut: qsTr("d")
+        enabled: view.currentIndex >= 0
+        onTriggered: popups.open(downloadDialog, root)
+    }
     
     ListView {
         id: view
@@ -33,40 +70,35 @@ Dialog {
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
         model: article ? article.enclosures : null
         delegate: EnclosureDelegate {
-            onClicked: {
-                if (!urlopener.open(modelData.url)) {
-                    Qt.openUrlExternally(modelData.url);
-                }
-                
-                root.accept();
-            }
-            onPressAndHold: contextMenu.popup()
+            onClicked: if (!urlopener.open(modelData.url)) Qt.openUrlExternally(modelData.url);
+            onPressAndHold: popups.open(contextMenu, root)
         }
     }
     
-    Menu {
+    Component {
         id: contextMenu
         
-        MenuItem {
-            text: qsTr("Open externally")
-            onTriggered: {
-                var url = article.enclosures[view.currentIndex].url;
-                
-                if (!urlopener.open(url)) {
-                    Qt.openUrlExternally(url);
-                }
-                
-                root.accept();
+        Menu {        
+            MenuItem {
+                action: openAction
+            }
+            
+            MenuItem {
+                action: copyAction
+            }
+            
+            MenuItem {
+                action: downloadAction
             }
         }
+    }
+    
+    Component {
+        id: downloadDialog
         
-        MenuItem {
-            text: qsTr("Download")
-            onTriggered: {
-                transfers.addEnclosureDownload(article.enclosures[view.currentIndex].url, article.subscriptionId);
-                informationBox.information(qsTr("Download added"));
-                root.accept();
-            }
+        DownloadDialog {
+            url: article.enclosures[view.currentIndex].url
+            subscriptionId: article.subscriptionId
         }
-    }    
+    }
 }

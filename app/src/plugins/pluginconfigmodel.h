@@ -45,6 +45,9 @@ public:
 #endif
     
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const;
+    
+    QVariant headerData(int section, Qt::Orientation orientation = Qt::Horizontal, int role = Qt::DisplayRole) const;
         
     QVariant data(const QModelIndex &index, int role = DisplayNameRole) const;
     QMap<int, QVariant> itemData(const QModelIndex &index) const;
