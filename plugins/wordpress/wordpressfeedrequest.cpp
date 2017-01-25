@@ -230,10 +230,11 @@ void WordpressFeedRequest::checkPage() {
         getArticle(m_articleUrls.takeFirst());
     }
     else {
-#ifdef WORDPRESS_DEBUG
-        qDebug() << "WordpressFeedRequest::checkPage(). Writing end of feed";
-#endif
         writeEndFeed();
+#ifdef WORDPRESS_DEBUG
+        qDebug() << "WordpressFeedRequest::checkPage(). Writing end of feed. Result:";
+        qDebug() << result();
+#endif
         setErrorString(QString());
         setStatus(Ready);
         emit finished(this);
@@ -329,10 +330,11 @@ void WordpressFeedRequest::checkArticle() {
         getArticle(m_articleUrls.takeFirst());
     }
     else {
-#ifdef WORDPRESS_DEBUG
-        qDebug() << "WordpressFeedRequest::checkArticle(). Writing end of feed";
-#endif
         writeEndFeed();
+#ifdef WORDPRESS_DEBUG
+        qDebug() << "WordpressFeedRequest::checkArticle(). Writing end of feed. Result:";
+        qDebug() << result();
+#endif
         setErrorString(QString());
         setStatus(Ready);
         emit finished(this);
@@ -395,13 +397,22 @@ QString WordpressFeedRequest::getRedirect(const QNetworkReply *reply) {
 }
 
 QString WordpressFeedRequest::getLatestPageUrl(const QHtmlElement &element) {
-    const QHtmlElement pagination = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "wp-pagenavi"));
+    const QHtmlElement pagination = element.firstElementByTagName("div", QHtmlAttributeMatches()
+                                                                  << QHtmlAttributeMatch("class", "wp-pagenavi")
+                                                                  << QHtmlAttributeMatch("class", "pagination",
+                                                                  QHtmlParser::MatchStartsWith),
+                                                                  QHtmlParser::MatchAny);
     
     if (!pagination.isNull()) {
-        const QHtmlElement first = pagination.firstElementByTagName("a", QHtmlAttributeMatch("class", "first"));
+        const QHtmlElement first = pagination.firstElementByTagName("a", QHtmlAttributeMatches()
+                                                                    << QHtmlAttributeMatch("class", "first")
+                                                                    << QHtmlAttributeMatch("class", "page-numbers"),
+                                                                    QHtmlParser::MatchAny);
         
         if (!first.isNull()) {
-            return first.attribute("href");
+            if (!pagination.firstElementByTagName("a", QHtmlAttributeMatch("class", "prev page-numbers")).isNull()) {
+                return first.attribute("href");
+            }
         }
     }
     
@@ -409,10 +420,15 @@ QString WordpressFeedRequest::getLatestPageUrl(const QHtmlElement &element) {
 }
 
 QString WordpressFeedRequest::getNextPageUrl(const QHtmlElement &element) {
-    const QHtmlElement pagination = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "wp-pagenavi"));
+    const QHtmlElement pagination = element.firstElementByTagName("div", QHtmlAttributeMatches()
+                                                                  << QHtmlAttributeMatch("class", "wp-pagenavi")
+                                                                  << QHtmlAttributeMatch("class", "pagination",
+                                                                  QHtmlParser::MatchStartsWith),
+                                                                  QHtmlParser::MatchAny);
     
     if (!pagination.isNull()) {
-        const QHtmlElement next = pagination.firstElementByTagName("a", QHtmlAttributeMatch("class", "nextpostslink"));
+        const QHtmlElement next = pagination.firstElementByTagName("a", QHtmlAttributeMatch("class", "next",
+                                                                   QHtmlParser::MatchStartsWith));
 
         if (!next.isNull()) {
             return next.attribute("href");

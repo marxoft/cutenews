@@ -4,8 +4,6 @@ CONFIG += plugin
 TARGET = cutenews-xenforo
 TEMPLATE = lib
 
-DEFINES += XENFORO_DEBUG
-
 HEADERS += \
     xenforofeedplugin.h \
     xenforofeedrequest.h
@@ -33,6 +31,7 @@ maemo5 {
         config
 
 } else:unix {
+    DEFINES += XENFORO_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser

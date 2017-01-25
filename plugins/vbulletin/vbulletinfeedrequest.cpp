@@ -19,6 +19,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegExp>
+#include <QStringList>
 #ifdef VBULLETIN_DEBUG
 #include <QDebug>
 #endif
@@ -288,10 +289,12 @@ void VbulletinFeedRequest::checkPage() {
             return;
         }
     }
-#ifdef VBULLETIN_DEBUG
-    qDebug() << "VbulletinFeedRequest::checkPage(). Writing end of feed";
-#endif
+    
     writeEndFeed();
+#ifdef VBULLETIN_DEBUG
+    qDebug() << "VbulletinFeedRequest::checkPage(). Writing end of feed. Result:";
+    qDebug() << result();
+#endif
     setErrorString(QString());
     setStatus(Ready);
     emit finished(this);
@@ -422,7 +425,7 @@ QHtmlElementList VbulletinFeedRequest::getItems(const QHtmlElement &element) {
     }
 
     posts = element.firstElementByTagName("ol", QHtmlAttributeMatch("id", "posts"));
-    return posts.elementsByTagName("li");
+    return posts.elementsByTagName("li", QHtmlAttributeMatch("id", "post_", QHtmlParser::MatchStartsWith));
 }
 
 void VbulletinFeedRequest::writeStartFeed() {
@@ -604,7 +607,8 @@ void VbulletinFeedRequest::writeItemUrl(const QHtmlElement &element) {
         m_writer.writeTextElement("link", report.firstElementByTagName("a").attribute("href"));
     }
     else {
-        m_writer.writeTextElement("link", element.firstElementByTagName("a").attribute("href"));
+        m_writer.writeTextElement("link", element.firstElementByTagName("a",
+                                  QHtmlAttributeMatch("href", "http", QHtmlParser::MatchStartsWith)).attribute("href"));
     }
 }
 

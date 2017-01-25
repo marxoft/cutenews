@@ -293,10 +293,12 @@ void PhpbbFeedRequest::checkPage() {
             return;
         }
     }
-#ifdef PHPBB_DEBUG
-    qDebug() << "PhpbbFeedRequest::checkPage(). Writing end of feed";
-#endif
+    
     writeEndFeed();
+#ifdef PHPBB_DEBUG
+    qDebug() << "PhpbbFeedRequest::checkPage(). Writing end of feed. Result:";
+    qDebug() << result();
+#endif
     setErrorString(QString());
     setStatus(Ready);
     emit finished(this);
@@ -386,15 +388,45 @@ QString PhpbbFeedRequest::getLatestPageUrl(const QHtmlElement &element) {
         return QString();
     }
     
-    const QHtmlElement nav = element.nthElementByTagName(2, "span", QHtmlAttributeMatch("class", "nav"));
+    pagination = element.nthElementByTagName(2, "span", QHtmlAttributeMatch("class", "nav"));
     
-    if (!nav.isNull()) {
-        const QHtmlElementList anchors = nav.elementsByTagName("a");
+    if (!pagination.isNull()) {
+        const QHtmlElementList anchors = pagination.elementsByTagName("a");
         
         if (anchors.size() > 1) {
             if (anchors.last().text() == "Next") {
                 return anchors.at(anchors.size() - 2).attribute("href");
             }
+        }
+        
+        return QString();
+    }
+    
+    pagination = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "pagenav",
+                                                                          QHtmlParser::MatchStartsWith));
+    
+    if (!pagination.isNull()) {
+        const QHtmlElement current = pagination.firstElementByTagName("a", QHtmlAttributeMatch("class",
+                                                                      "btn btn-default active"));
+        
+        if (!current.isNull()) {
+            const QHtmlElement input = pagination.firstElementByTagName("input", QHtmlAttributeMatch("name",
+                                                                        "page-number"));
+            
+            if (!input.isNull()) {
+                const QString max = input.attribute("max");
+                
+                if ((!max.isEmpty()) && (current.text() == max)) {
+                    return QString();
+                }
+            }
+        }
+        
+        const QHtmlElement anchor = pagination.lastElementByTagName("a", QHtmlAttributeMatch("class",
+                                                                    "btn btn-default"));
+        
+        if (!anchor.isNull()) {            
+            return anchor.attribute("href");
         }
     }
     
@@ -428,10 +460,10 @@ QString PhpbbFeedRequest::getNextPageUrl(const QHtmlElement &element) {
         return QString();
     }
     
-    const QHtmlElement nav = element.nthElementByTagName(2, "span", QHtmlAttributeMatch("class", "nav"));
+    pagination = element.nthElementByTagName(2, "span", QHtmlAttributeMatch("class", "nav"));
     
-    if (!nav.isNull()) {
-        const QHtmlElementList anchors = nav.elementsByTagName("a");
+    if (!pagination.isNull()) {
+        const QHtmlElementList anchors = pagination.elementsByTagName("a");
         
         foreach (const QHtmlElement &anchor, anchors) {
             if (anchor.text() == "Previous") {
@@ -442,14 +474,26 @@ QString PhpbbFeedRequest::getNextPageUrl(const QHtmlElement &element) {
         return QString();
     }
     
+    pagination = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "pagenav",
+                                                                          QHtmlParser::MatchStartsWith));
+    
+    if (!pagination.isNull()) {
+        const QHtmlElement anchor = pagination.firstElementByTagName("a", QHtmlAttributeMatch("class",
+                                                                     "btn btn-default last_item"));
+        
+        if (!anchor.isNull()) {
+            return anchor.attribute("href");
+        }
+    }
+    
     return QString();
 }
 
 QHtmlElementList PhpbbFeedRequest::getItems(const QHtmlElement &element) {
-    QHtmlElementList tables = element.elementsByTagName("table", QHtmlAttributeMatch("class", "forumline"));
+    QHtmlElementList elements = element.elementsByTagName("table", QHtmlAttributeMatch("class", "forumline"));
     
-    if (tables.size() > 1) {
-        QHtmlElementList rows = tables.at(tables.size() - 2).elementsByTagName("tr");
+    if (elements.size() > 1) {
+        QHtmlElementList rows = elements.at(elements.size() - 2).elementsByTagName("tr");
 
         for (int i = rows.size() - 1; i >= 0; i--) {
             if (rows.at(i).firstElementByTagName("span").attribute("class") != "name") {
@@ -460,13 +504,37 @@ QHtmlElementList PhpbbFeedRequest::getItems(const QHtmlElement &element) {
         return rows;
     }
 
-    tables = element.elementsByTagName("table", QHtmlAttributeMatch("class", "tablebg"));
+    elements = element.elementsByTagName("table", QHtmlAttributeMatch("class", "tablebg"));
 
-    if (tables.size() > 5) {
-        return tables.mid(2, tables.size() - 5);
+    if (elements.size() > 5) {
+        return elements.mid(2, elements.size() - 5);
+    }    
+    
+    elements = element.elementsByTagName("div", QHtmlAttributeMatch("class", "post has-profile bg2"));
+    
+    if (!elements.isEmpty()) {
+        return elements;
     }
-
-    return element.elementsByTagName("div", QHtmlAttributeMatch("class", "post has-profile bg2"));
+    
+    const QHtmlElement topic = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "view-topic",
+                                                                                        QHtmlParser::MatchEndsWith));
+    
+    if (!topic.isNull()) {
+        elements = topic.elementsByTagName("div", QHtmlAttributeMatch("class", "row-wrap"));
+        
+        if (!elements.isEmpty()) {
+            for (int i = elements.size() - 1; i >= 0; i--) {
+                const QHtmlElement body = elements.at(i).firstElementByTagName("div", QHtmlAttributeMatch("class",
+                                                                               "postbody", QHtmlParser::MatchEndsWith));
+                
+                if (body.isNull()) {
+                    elements.removeAt(i);
+                }
+            }            
+        }
+    }
+    
+    return elements;
 }
 
 void PhpbbFeedRequest::writeStartFeed() {
@@ -513,6 +581,10 @@ void PhpbbFeedRequest::writeItemAuthor(const QHtmlElement &element) {
 
     if (author.isNull()) {
         author = element.firstElementByTagName("b");
+        
+        if (author.isNull()) {
+            author = element.firstElementByTagName("span");
+        }
     }
     
     m_writer.writeTextElement("dc:creator", author.text(true));
@@ -520,15 +592,19 @@ void PhpbbFeedRequest::writeItemAuthor(const QHtmlElement &element) {
 
 void PhpbbFeedRequest::writeItemBody(const QHtmlElement &element) {
     m_writer.writeStartElement("content:encoded");
-
-    QHtmlElement body = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "postbody"));    
-
-    if (body.isNull()) {
-        body = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "content"));
-    }
-
+    QHtmlElement body = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "postbody"));
+    
     if (body.isNull()) {
         body = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "postbody"));
+        
+        if (body.isNull()) {
+            body = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "content"));
+            
+            if (body.isNull()) {
+                body = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "post-text",
+                                                                                QHtmlParser::MatchEndsWith));
+            }
+        }
     }
     
     m_writer.writeCDATA(body.toString());
@@ -573,9 +649,15 @@ void PhpbbFeedRequest::writeItemUrl(const QHtmlElement &element) {
 
     if (el.isNull()) {
         el = element.firstElementByTagName("table");
+        
+        if (el.isNull()) {
+            el = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "postbody",
+                                                                          QHtmlParser::MatchEndsWith));
+        }
     }
     
-    m_writer.writeTextElement("link", el.firstElementByTagName("a").attribute("href"));
+    m_writer.writeTextElement("link", el.firstElementByTagName("a", QHtmlAttributeMatch("href", "http",
+                                                               QHtmlParser::MatchStartsWith)).attribute("href"));
 }
 
 QNetworkAccessManager* PhpbbFeedRequest::networkAccessManager() {

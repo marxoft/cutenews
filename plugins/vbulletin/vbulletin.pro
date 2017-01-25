@@ -4,8 +4,6 @@ CONFIG += plugin
 TARGET = cutenews-vbulletin
 TEMPLATE = lib
 
-DEFINES += VBULLETIN_DEBUG
-
 HEADERS += \
     vbulletinfeedplugin.h \
     vbulletinfeedrequest.h
@@ -33,6 +31,7 @@ maemo5 {
         config
 
 } else:unix {
+    DEFINES += VBULLETIN_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser

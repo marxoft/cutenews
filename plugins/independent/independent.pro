@@ -4,8 +4,6 @@ CONFIG += plugin
 TARGET = cutenews-independent
 TEMPLATE = lib
 
-DEFINES += INDEPENDENT_DEBUG
-
 HEADERS += \
     feedparser.h \
     independentfeedplugin.h \
@@ -35,6 +33,7 @@ maemo5 {
         config
 
 } else:unix {
+    DEFINES += INDEPENDENT_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser

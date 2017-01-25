@@ -4,8 +4,6 @@ CONFIG += plugin
 TARGET = cutenews-guardian
 TEMPLATE = lib
 
-DEFINES += GUARDIAN_DEBUG
-
 HEADERS += \
     feedparser.h \
     guardianfeedplugin.h \
@@ -35,6 +33,7 @@ maemo5 {
         config
 
 } else:unix {
+    DEFINES += GUARDIAN_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser

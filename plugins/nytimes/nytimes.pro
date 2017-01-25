@@ -4,8 +4,6 @@ CONFIG += plugin
 TARGET = cutenews-nytimes
 TEMPLATE = lib
 
-DEFINES += NYTIMES_DEBUG
-
 HEADERS += \
     feedparser.h \
     nytimesfeedplugin.h \
@@ -35,6 +33,7 @@ maemo5 {
         config
 
 } else:unix {
+    DEFINES += NYTIMES_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser

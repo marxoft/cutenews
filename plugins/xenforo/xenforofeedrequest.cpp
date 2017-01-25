@@ -19,6 +19,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegExp>
+#include <QStringList>
 #ifdef XENFORO_DEBUG
 #include <QDebug>
 #endif

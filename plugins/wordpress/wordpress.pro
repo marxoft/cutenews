@@ -4,8 +4,6 @@ CONFIG += plugin
 TARGET = cutenews-wordpress
 TEMPLATE = lib
 
-DEFINES += WORDPRESS_DEBUG
-
 HEADERS += \
     wordpressfeedplugin.h \
     wordpressfeedrequest.h
@@ -33,6 +31,7 @@ maemo5 {
         config
 
 } else:unix {
+    DEFINES += WORDPRESS_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser

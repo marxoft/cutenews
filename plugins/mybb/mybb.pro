@@ -4,8 +4,6 @@ CONFIG += plugin
 TARGET = cutenews-mybb
 TEMPLATE = lib
 
-DEFINES += MYBB_DEBUG
-
 HEADERS += \
     mybbfeedplugin.h \
     mybbfeedrequest.h
@@ -33,6 +31,7 @@ maemo5 {
         config
 
 } else:unix {
+    DEFINES += MYBB_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser
