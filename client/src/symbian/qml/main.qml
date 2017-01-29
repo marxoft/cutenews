@@ -38,7 +38,7 @@ AppWindow {
     Connections {
         target: notifier
         onError: infoBanner.information(errorString)
-        onReadArticlesDeleted: informationBox.information(count + " " + qsTr("read articles deleted"));
+        onReadArticlesDeleted: infoBanner.information(count + " " + qsTr("read articles deleted"));
     }
     
     Connections {
