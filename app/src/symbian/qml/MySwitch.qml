@@ -56,7 +56,7 @@ Item {
         maximumLineCount: 2
         elide: Text.ElideRight
         wrapMode: Text.WordWrap
-        color: platformStyle.colorDisabledLight
+        color: root.enabled ? platformStyle.colorNormalLight : platformStyle.colorDisabledLight
     }
 
     Switch {
