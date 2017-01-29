@@ -1,0 +1,240 @@
+/*
+ * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import QtQuick 1.0
+import org.hildon.components 1.0
+import org.hildon.utils 1.0
+import cuteNews 1.0
+
+Window {
+    id: root
+    
+    function load(subscriptionId) {
+        articleModel.load(subscriptionId);
+    }
+    
+    function search(query) {
+        articleModel.search(query);
+    }
+    
+    title: qsTr("Articles")
+    menuBar: MenuBar {
+        MenuItem {
+            action: reloadAction
+        }
+        
+        MenuItem {
+            action: readAllAction
+        }
+    }
+    
+    Action {
+        id: reloadAction
+        
+        text: qsTr("Reload")
+        autoRepeat: false
+        shortcut: qsTr("Ctrl+L")
+        onTriggered: articleModel.reload()
+    }
+    
+    Action {
+        id: readAllAction
+        
+        text: qsTr("Mark as read")
+        autoRepeat: false
+        shortcut: qsTr("Ctrl+R")
+        enabled: (articleModel.subscriptionId != ALL_ARTICLES_SUBSCRIPTION_ID)
+        && (articleModel.subscriptionId != FAVOURITES_SUBSCRIPTION_ID)
+        onTriggered: database.markSubscriptionRead(articleModel.subscriptionId, true)
+    }
+    
+    Action {
+        id: openAction
+        
+        text: qsTr("Open externally")
+        autoRepeat: false
+        shortcut: qsTr("o")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: {
+            var url = articleModel.data(articleView.currentIndex, "url");
+            
+            if (!urlopener.open(url)) {
+                Qt.openUrlExternally(url);
+            }
+        }
+    }
+    
+    Action {
+        id: copyAction
+        
+        text: qsTr("Copy URL")
+        autoRepeat: false
+        shortcut: qsTr("c")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: clipboard.text = articleModel.data(articleView.currentIndex, "url")
+    }
+    
+    Action {
+        id: readAction
+        
+        autoRepeat: false
+        shortcut: qsTr("r")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: articleModel.setData(articleView.currentIndex,
+        !articleModel.data(articleView.currentIndex, "read"), "read")
+    }
+    
+    Action {
+        id: favouriteAction
+        
+        autoRepeat: false
+        shortcut: qsTr("f")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: articleModel.setData(articleView.currentIndex,
+        !articleModel.data(articleView.currentIndex, "favourite"), "favourite")
+    }
+    
+    Action {
+        id: enclosuresAction
+        
+        text: qsTr("Enclosures")
+        autoRepeat: false
+        shortcut: qsTr("e")
+        enabled: (articleView.currentIndex >= 0)
+        && (articleModel.data(articleView.currentIndex, "hasEnclosures") === true)
+        onTriggered: popups.open(enclosuresDialog, root)
+    }
+    
+    Action {
+        id: deleteAction
+        
+        text: qsTr("Delete")
+        autoRepeat: false
+        shortcut: qsTr("d")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: popups.open(deleteDialog, root)
+    }
+    
+    ListView {
+        id: articleView
+        
+        anchors.fill: parent
+        horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
+        model: ArticleModel {
+            id: articleModel
+            
+            limit: 20
+            onStatusChanged: {
+                switch (status) {
+                case ArticleModel.Active: {
+                    root.showProgressIndicator = true;
+                    reloadAction.enabled = false;
+                    label.visible = false;
+                    break;
+                }
+                default: {
+                    root.showProgressIndicator = false;
+                    reloadAction.enabled = true;
+                    label.visible = (count == 0);
+                    break;
+                }
+                }
+            }
+        }
+        delegate: ArticleDelegate {
+            onClicked: windowStack.push(articleWindow)
+            onPressAndHold: popups.open(contextMenu, root)
+        }
+    }
+    
+    Label {
+        id: label
+        
+        anchors.centerIn: parent
+        font.pointSize: platformStyle.fontSizeLarge
+        color: platformStyle.disabledTextColor
+        text: qsTr("No articles")
+        visible: false
+    }
+    
+    Component {
+        id: contextMenu
+        
+        Menu {
+            MenuItem {
+                action: openAction
+            }
+            
+            MenuItem {
+                action: copyAction
+            }
+            
+            MenuItem {
+                text: articleModel.data(articleView.currentIndex, "read") ? qsTr("Mark as unread")
+                : qsTr("Mark as read")
+                action: readAction
+            }
+            
+            MenuItem {
+                text: articleModel.data(articleView.currentIndex, "favourite") ? qsTr("Unfavourite") : qsTr("Favourite")
+                action: favouriteAction
+            }
+            
+            MenuItem {
+                action: enclosuresAction
+            }
+            
+            MenuItem {
+                action: deleteAction
+            }
+        }
+    }
+    
+    Component {
+        id: articleWindow
+        
+        ArticleWindow {
+            article: articleModel.get(articleView.currentIndex)
+            onNext: articleView.incrementCurrentIndex()
+            onNextUnread: {
+                var index = articleModel.match(Math.min(articleView.currentIndex + 1, articleView.count - 1),
+                "read", false);
+                
+                if (index != -1) {
+                    articleView.currentIndex = index;
+                }
+            }
+            onPrevious: articleView.decrementCurrentIndex()
+        }
+    }
+    
+    Component {
+        id: enclosuresDialog
+        
+        EnclosuresDialog {
+            article: articleModel.itemData(articleView.currentIndex)
+        }
+    }
+    
+    Component {
+        id: deleteDialog
+        
+        MessageBox {
+            text: qsTr("Do you want to delete") + " '" + articleModel.data(articleView.currentIndex, "title") + "'?"
+            onAccepted: articleModel.remove(articleView.currentIndex)
+        }
+    }
+}
