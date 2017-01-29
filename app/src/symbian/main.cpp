@@ -125,6 +125,8 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     context->setContextProperty("subscriptions", subscriptions.data());
     context->setContextProperty("transfers", transfers.data());
     context->setContextProperty("utils", &utils);
+    context->setContextProperty("ALL_ARTICLES_SUBSCRIPTION_ID", ALL_ARTICLES_SUBSCRIPTION_ID);
+    context->setContextProperty("FAVOURITES_SUBSCRIPTION_ID", FAVOURITES_SUBSCRIPTION_ID);
     context->setContextProperty("VERSION_NUMBER", VERSION_NUMBER);
 
     view.setSource(QUrl::fromLocalFile(app.applicationDirPath() + "/qml/main.qml"));

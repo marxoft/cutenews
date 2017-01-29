@@ -52,8 +52,8 @@ int Transfers::count() const {
     return m_transfers.size();
 }
 
-void Transfers::addEnclosureDownload(const QString &url, const QString &subscriptionId, const QString &category,
-                                     int priority) {
+Transfer* Transfers::addEnclosureDownload(const QString &url, const QString &subscriptionId, const QString &category,
+                                          int priority) {
     Logger::log(QString("Transfers::addEnclosureDownload(). URL: %1, Subscription ID: %2").arg(url).arg(subscriptionId),
                 Logger::LowVerbosity);
     EnclosureDownload *transfer = new EnclosureDownload(this);
@@ -75,6 +75,8 @@ void Transfers::addEnclosureDownload(const QString &url, const QString &subscrip
     if (Settings::startTransfersAutomatically()) {
         transfer->queue();
     }
+    
+    return transfer;
 }
 
 Transfer* Transfers::get(int i) const {

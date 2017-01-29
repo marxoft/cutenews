@@ -19,6 +19,7 @@
 #include "json.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
+#include "subscription.h"
 #include "subscriptions.h"
 #include "utils.h"
 
@@ -59,30 +60,48 @@ bool SubscriptionServer::handleRequest(QHttpRequest *request, QHttpResponse *res
     
     if (parts.size() == 1) {
         if (request->method() == QHttpRequest::HTTP_GET) {
-            const QString queryString = Utils::urlQueryToSqlQuery(request->url());
             m_responses.enqueue(response);
-            
-            if (queryString.isEmpty()) {
-                DBConnection::connection(this, SLOT(onSubscriptionsFetched(DBConnection*)))->fetchSubscriptions();
-            }
-            else {
-                DBConnection::connection(this,
-                SLOT(onSubscriptionsFetched(DBConnection*)))->fetchSubscriptions(queryString);
-            }
-            
+            const QUrl url = request->url();
+            const int offset = Utils::urlQueryItemValue(url, "offset", "0").toInt();
+            const int limit = Utils::urlQueryItemValue(url, "limit", "0").toInt();
+            DBConnection::connection(this, SLOT(onSubscriptionsFetched(DBConnection*)))->fetchSubscriptions(offset,
+                                                                                                            limit);
             return true;
         }
         
         if (request->method() == QHttpRequest::HTTP_POST) {
-            const QVariantMap properties = QtJson::Json::parse(request->body()).toMap();
-            const QString source = properties.value("source").toString();
+            const QVariantList list = QtJson::Json::parse(request->body()).toList();
+            QVariantList subscriptions;
             
-            if (!source.isEmpty()) {
-                const int sourceType = properties.value("sourceType").toInt();
-                const bool downloadEnclosures = properties.value("downloadEnclosures").toBool();
+            foreach (const QVariant &v, list) {
+                const QVariantMap properties = v.toMap();
+                const QString source = properties.value("source").toString();
+            
+                if (!source.isEmpty()) {
+                    const int sourceType = properties.value("sourceType", Subscription::Url).toInt();
+                    const bool downloadEnclosures = properties.value("downloadEnclosures", false).toBool();
+                    const int updateInterval = properties.value("updateInterval", 0).toInt();
+                    const QString id = Subscriptions::instance()->create(source, sourceType, downloadEnclosures,
+                                                                         updateInterval);
                 
-                Subscriptions::instance()->create(source, sourceType, downloadEnclosures);
-                writeResponse(response, QHttpResponse::STATUS_CREATED);
+                    QVariantMap subscription;
+                    subscription["description"] = QString();
+                    subscription["downloadEnclosures"] = downloadEnclosures;
+                    subscription["iconPath"] = QString();
+                    subscription["id"] = id;
+                    subscription["lastUpdated"] = QDateTime();
+                    subscription["source"] = source;
+                    subscription["sourceType"] = sourceType;
+                    subscription["title"] = tr("New subscription");
+                    subscription["unreadArticles"] = 0;
+                    subscription["updateInterval"] = updateInterval;
+                    subscription["url"] = QString();
+                    subscriptions << subscription;
+                }
+            }
+            
+            if (!subscriptions.isEmpty()) {
+                writeResponse(response, QHttpResponse::STATUS_CREATED, QtJson::Json::serialize(subscriptions));
             }
             else {
                 writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
@@ -97,17 +116,21 @@ bool SubscriptionServer::handleRequest(QHttpRequest *request, QHttpResponse *res
     
     if (parts.at(1) == "update") {
         if (request->method() == QHttpRequest::HTTP_GET) {
-            const QString updateId = Utils::urlQueryItemValue(request->url(), "id");
+            const QString id = Utils::urlQueryItemValue(request->url(), "id");
             
-            if (!updateId.isEmpty()) {
-                Subscriptions::instance()->update(updateId);
-                writeResponse(response, QHttpResponse::STATUS_OK);
+            if (!id.isEmpty()) {
+                Subscriptions::instance()->update(id);
             }
             else {
                 Subscriptions::instance()->updateAll();
-                writeResponse(response, QHttpResponse::STATUS_OK);
             }
             
+            QVariantMap status;
+            status["activeSubscription"] = Subscriptions::instance()->activeSubscription();
+            status["progress"] = Subscriptions::instance()->progress();
+            status["status"] = Subscriptions::instance()->status();
+            status["statusText"] = Subscriptions::instance()->statusText();
+            writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(status));
             return true;
         }
         
@@ -135,6 +158,46 @@ bool SubscriptionServer::handleRequest(QHttpRequest *request, QHttpResponse *res
         if (request->method() == QHttpRequest::HTTP_GET) {
             Subscriptions::instance()->cancel();
             writeResponse(response, QHttpResponse::STATUS_OK);
+            return true;
+        }
+        
+        writeResponse(response, QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
+        return true;
+    }
+    
+    if (parts.at(1) == "read") {
+        if (request->method() == QHttpRequest::HTTP_GET) {
+            m_responses.enqueue(response);
+            const QString id = Utils::urlQueryItemValue(request->url(), "id");
+            
+            if (!id.isEmpty()) {
+                DBConnection::connection(this,
+                SLOT(onSubscriptionFetched(DBConnection*)))->markSubscriptionRead(id, true, true);
+            }
+            else {
+                DBConnection::connection(this, SLOT(onConnectionFinished(DBConnection*)))->markAllSubscriptionsRead();
+            }
+            
+            return true;
+        }
+        
+        writeResponse(response, QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
+        return true;
+    }
+    
+    if (parts.at(1) == "unread") {
+        if (request->method() == QHttpRequest::HTTP_GET) {
+            m_responses.enqueue(response);
+            const QString id = Utils::urlQueryItemValue(request->url(), "id");
+            
+            if (!id.isEmpty()) {
+                DBConnection::connection(this,
+                SLOT(onSubscriptionFetched(DBConnection*)))->markSubscriptionRead(id, false, true);
+            }
+            else {
+                writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
+            }
+            
             return true;
         }
         

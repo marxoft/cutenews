@@ -29,7 +29,6 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QLineEdit>
-#include <QMessageBox>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSpinBox>
@@ -303,28 +302,19 @@ void PluginDialog::onSubscriptionFetched(DBConnection *connection) {
                 const int interval = connection->value(2).toInt();
                 
                 if (interval > 0) {
-                   for (int i = m_updateIntervalSelector->count() - 1; i >= 0; i--) {
-                       const int value = m_updateIntervalSelector->itemData(i, UpdateIntervalTypeModel::ValueRole)
-                                                                           .toInt();
+                    for (int i = m_updateIntervalSelector->count() - 1; i >= 0; i--) {
+                        const int value = m_updateIntervalSelector->itemData(i, UpdateIntervalTypeModel::ValueRole)
+                            .toInt();
                    
-                       if ((value > 0) && (interval % value == 0)) {
-                           m_updateIntervalSpinBox->setValue(interval / value);
-                           m_updateIntervalSelector->setCurrentIndex(i);
-                           break;
-                       }
-                   }
-               }
-            }
-            else {
-                QMessageBox::critical(this, tr("Database error"), tr("Cannot parse response"));
+                        if ((value > 0) && (interval % value == 0)) {
+                            m_updateIntervalSpinBox->setValue(interval / value);
+                            m_updateIntervalSelector->setCurrentIndex(i);
+                            break;
+                        }
+                    }
+                }
             }
         }
-        else {
-            QMessageBox::critical(this, tr("Database error"), tr("Unknown error"));
-        }
-    }
-    else {
-        QMessageBox::critical(this, tr("Database error"), connection->errorString());
     }
     
     connection->deleteLater();
@@ -332,11 +322,8 @@ void PluginDialog::onSubscriptionFetched(DBConnection *connection) {
 
 void PluginDialog::onSubscriptionUpdated(DBConnection *connection) {
     if (connection->status() == DBConnection::Ready) {
-        connection->deleteLater();
         QDialog::accept();
     }
-    else {
-        QMessageBox::critical(this, tr("Database error"), connection->errorString());
-        connection->deleteLater();
-    }    
+    
+    connection->deleteLater();
 }

@@ -57,7 +57,6 @@ public:
     Q_INVOKABLE static QVariantMap urlQueryItemMap(const QUrl &url);
     Q_INVOKABLE static QString urlQueryItemValue(const QUrl &url, const QString &queryItem,
                                                  const QString &defaultValue = QString());
-    Q_INVOKABLE static QString urlQueryToSqlQuery(const QUrl &url);
 };
 
 #endif // UTILS_H

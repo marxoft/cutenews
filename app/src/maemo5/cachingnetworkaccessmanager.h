@@ -14,19 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ARTICLECACHE_H
-#define ARTICLECACHE_H
+#ifndef CACHINGNETWORKACCESSMANAGER_H
+#define CACHINGNETWORKACCESSMANAGER_H
 
-#include <QNetworkDiskCache>
+#include <QNetworkAccessManager>
 
-class ArticleCache : public QNetworkDiskCache
+class CachingNetworkAccessManager : public QNetworkAccessManager
 {
     Q_OBJECT
 
 public:
-    explicit ArticleCache(QObject *parent = 0);
-        
-    virtual QIODevice* prepare(const QNetworkCacheMetaData &metaData);
+    explicit CachingNetworkAccessManager(QObject *parent = 0);
+
+private:
+    virtual QNetworkReply* createRequest(Operation op, const QNetworkRequest &req, QIODevice *outgoingData = 0);
 };
 
-#endif // ARTICLECACHE_H
+#endif // CACHINGNETWORKACCESSMANAGER_H

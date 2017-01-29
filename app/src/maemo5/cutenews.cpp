@@ -38,9 +38,7 @@
 #include "transfers.h"
 #include "updateintervaltypemodel.h"
 #include "urlopenermodel.h"
-#include "userinterfacemodel.h"
 #include "utils.h"
-#include "viewmodemodel.h"
 #include <QCoreApplication>
 #include <QDBusConnection>
 #include <QDeclarativeEngine>
@@ -153,8 +151,6 @@ void CuteNews::initEngine() {
     qmlRegisterType<TransferModel>("cuteNews", 1, 0, "TransferModel");
     qmlRegisterType<TransferPriorityModel>("cuteNews", 1, 0, "TransferPriorityModel");
     qmlRegisterType<UpdateIntervalTypeModel>("cuteNews", 1, 0, "UpdateIntervalTypeModel");
-    qmlRegisterType<UserInterfaceModel>("cuteNews", 1, 0, "UserInterfaceModel");
-    qmlRegisterType<ViewModeModel>("cuteNews", 1, 0, "ViewModeModel");
     
     qmlRegisterUncreatableType<DBConnection>("cuteNews", 1, 0, "DBConnection", "");
     qmlRegisterUncreatableType<FeedPluginConfig>("cuteNews", 1, 0, "FeedPluginConfig", "");

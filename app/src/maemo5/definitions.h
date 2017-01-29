@@ -39,11 +39,9 @@ static const QString LIB_PREFIX("lib");
 static const QString LIB_SUFFIX(".so");
 
 // Icons
-static const QString DEFAULT_ICON("/opt/cutenews/icons/cutenews.png");
 static const int ICON_SIZE = 48;
 
 // Cache
-static const QString CACHE_PREFIX("http://localhost");
 static const QString CACHE_PATH(HOME_PATH + "/cutenews/cache/");
 
 // Database

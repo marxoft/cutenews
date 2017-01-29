@@ -30,7 +30,7 @@ ListItem {
             margins: platformStyle.paddingMedium
         }
         width: height
-        source: iconPath ? iconPath : "image://icon/general_rss"
+        source: iconPath ? iconPath : "image://icon/cutenews"
         smooth: true
     }
     

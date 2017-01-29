@@ -37,10 +37,16 @@ MyPage {
         }
     }
     
-    showProgressIndicator: (articleModel.status == ArticleModel.Active)
-    || (subscriptions.activeSubscription == articleModel.subscriptionId)
     tools: ToolBarLayout {
         BackToolButton {}
+        
+        MyToolButton {
+            iconSource: "images/read.svg"
+            toolTip: qsTr("Mark as read")
+            enabled: (articleModel.subscriptionId != ALL_ARTICLES_SUBSCRIPTION_ID)
+            && (articleModel.subscriptionId != FAVOURITES_SUBSCRIPTION_ID)
+            onClicked: database.markSubscriptionRead(articleModel.subscriptionId)
+        }
     }
     
     MyListView {
@@ -51,6 +57,20 @@ MyPage {
             id: articleModel
 
             limit: 20
+            onStatusChanged: {
+                switch (status) {
+                case ArticleModel.Active: {
+                    root.showProgressIndicator = true;
+                    label.visible = false;
+                    break;
+                }
+                default: {
+                    root.showProgressIndicator = false;
+                    label.visible = (count == 0);
+                    break;
+                }
+                }
+            }
         }
         delegate: ArticleDelegate {
             onActivated: appWindow.pageStack.push(articlePage)
@@ -76,7 +96,7 @@ MyPage {
         font.pixelSize: 32
         color: platformStyle.colorNormalMid
         text: qsTr("No articles")
-        visible: (articleModel.count == 0) && (root.status == PageStatus.Active) && (articleModel.status != ArticleModel.Active)
+        visible: false
     }
     
     Component {
@@ -122,7 +142,8 @@ MyPage {
         id: articlePage
 
         ArticlePage {
-            article: articleModel.get(articleView.currentIndex)
+            id: page
+
             onNext: articleView.incrementCurrentIndex()
             onNextUnread: {
                 var index = articleModel.match(Math.min(articleView.currentIndex + 1, articleView.count - 1),
@@ -133,6 +154,13 @@ MyPage {
                 }
             }
             onPrevious: articleView.decrementCurrentIndex()
+
+            Binding {
+                target: page
+                property: "article"
+                value: articleModel.get(articleView.currentIndex)
+                when: page.status == PageStatus.Active
+            }
         }
     }
     

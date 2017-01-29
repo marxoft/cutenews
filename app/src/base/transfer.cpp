@@ -37,6 +37,8 @@ QVariant Transfer::data(int role) const {
     switch (role) {
     case BytesTransferredRole:
         return bytesTransferred();
+    case BytesTransferredStringRole:
+        return bytesTransferredString();
     case ErrorStringRole:
         return errorString();
     case IdRole:
@@ -65,6 +67,8 @@ QVariant Transfer::data(int role) const {
         return statusString();
     case TransferTypeRole:
         return transferType();
+    case TransferTypeStringRole:
+        return transferTypeString();
     case UrlRole:
         return url();
     default:
@@ -122,6 +126,10 @@ void Transfer::setBytesTransferred(qint64 b) {
         emit bytesTransferredChanged();
         emit dataChanged(this, BytesTransferredRole);
     }
+}
+
+QString Transfer::bytesTransferredString() const {
+    return Utils::formatBytes(bytesTransferred());
 }
 
 QString Transfer::errorString() const {
@@ -295,6 +303,19 @@ QString Transfer::statusString() const {
 
 Transfer::TransferType Transfer::transferType() const {
     return m_transferType;
+}
+
+QString Transfer::transferTypeString() const {
+    switch (transferType()) {
+    case Download:
+        return tr("Download");
+    case EnclosureDownload:
+        return tr("Enclosure download");
+    case Upload:
+        return tr("Upload");
+    default:
+        return QString();
+    }
 }
 
 QString Transfer::url() const {

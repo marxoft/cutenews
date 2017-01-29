@@ -23,25 +23,30 @@
 
 static QVariantMap transferToMap(const Transfer *transfer) {
     QVariantMap map;
-    map["bytesTransferred"] = transfer->property("bytesTransferred");
-    map["category"] = transfer->property("category");
-    map["customCommand"] = transfer->property("customCommand");
-    map["customCommandOverrideEnabled"] = transfer->property("customCommandOverrideEnabled");
-    map["downloadPath"] = transfer->property("downloadPath");
-    map["errorString"] = transfer->property("errorString");
-    map["fileName"] = transfer->property("fileName");
-    map["id"] = transfer->property("id");
-    map["name"] = transfer->property("name");
-    map["priority"] = transfer->property("priority");
-    map["priorityString"] = transfer->property("priorityString");
-    map["progress"] = transfer->property("progress");
-    map["progressString"] = transfer->property("progressString");
-    map["size"] = transfer->property("size");
-    map["status"] = transfer->property("status");
-    map["statusString"] = transfer->property("statusString");
-    map["subscriptionId"] = transfer->property("subscriptionId");
-    map["transferType"] = transfer->property("transferType");
-    map["url"] = transfer->property("url");
+    map["bytesTransferred"] = transfer->data(Transfer::BytesTransferredRole);
+    map["bytesTransferredString"] = transfer->data(Transfer::BytesTransferredStringRole);
+    map["category"] = transfer->data(Transfer::CategoryRole);
+    map["customCommand"] = transfer->data(Transfer::CustomCommandRole);
+    map["customCommandOverrideEnabled"] = transfer->data(Transfer::CustomCommandOverrideEnabledRole);
+    map["downloadPath"] = transfer->data(Transfer::DownloadPathRole);
+    map["errorString"] = transfer->data(Transfer::ErrorStringRole);
+    map["fileName"] = transfer->data(Transfer::FileNameRole);
+    map["id"] = transfer->data(Transfer::IdRole);
+    map["name"] = transfer->data(Transfer::NameRole);
+    map["priority"] = transfer->data(Transfer::PriorityRole);
+    map["priorityString"] = transfer->data(Transfer::PriorityStringRole);
+    map["progress"] = transfer->data(Transfer::ProgressRole);
+    map["progressString"] = transfer->data(Transfer::ProgressStringRole);
+    map["size"] = transfer->data(Transfer::SizeRole);
+    map["sizeString"] = transfer->data(Transfer::SizeStringRole);
+    map["speed"] = transfer->data(Transfer::SpeedRole);
+    map["speedString"] = transfer->data(Transfer::SpeedStringRole);
+    map["status"] = transfer->data(Transfer::StatusRole);
+    map["statusString"] = transfer->data(Transfer::StatusStringRole);
+    map["subscriptionId"] = transfer->data(Transfer::SubscriptionIdRole);
+    map["transferType"] = transfer->data(Transfer::TransferTypeRole);
+    map["transferTypeString"] = transfer->data(Transfer::TransferTypeStringRole);
+    map["url"] = transfer->data(Transfer::UrlRole);
     return map;
 }
 
@@ -66,8 +71,9 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
     
     if (parts.size() == 1) {
         if (request->method() == QHttpRequest::HTTP_GET) {
-            const int offset = qMax(0, Utils::urlQueryItemValue(request->url(), "offset").toInt());
-            int limit = Utils::urlQueryItemValue(request->url(), "limit").toInt();
+            const QUrl url = request->url();
+            const int offset = Utils::urlQueryItemValue(url, "offset", "0").toInt();
+            int limit = Utils::urlQueryItemValue(request->url(), "limit", "0").toInt();
             
             if ((limit <= 0) || (limit > Transfers::instance()->count())) {
                 limit = Transfers::instance()->count();
@@ -89,16 +95,31 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
         }
         
         if (request->method() == QHttpRequest::HTTP_POST) {
-            const QVariantMap properties = QtJson::Json::parse(request->body()).toMap();
-            const QString url = properties.value("url").toString();
-            const QString subscriptionId = properties.value("subscriptionId").toString();
+            const QVariantList list = QtJson::Json::parse(request->body()).toList();
+            QVariantList transfers;
             
-            if ((url.isEmpty()) || (subscriptionId.isEmpty())) {
-                writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
+            foreach (const QVariant &v, list) {
+                const QVariantMap properties = v.toMap();
+                const QString url = properties.value("url").toString();
+                const QString subscriptionId = properties.value("subscriptionId").toString();
+                
+                if ((!url.isEmpty()) && (!subscriptionId.isEmpty())) {
+                    const QString category = properties.value("category").toString();
+                    const int priority = properties.value("priority", Transfer::NormalPriority).toInt();
+                    const Transfer *transfer = Transfers::instance()->addEnclosureDownload(url, subscriptionId,
+                                                                                           category, priority);
+                
+                    if (transfer) {
+                        transfers << transferToMap(transfer);
+                    }
+                }
+            }
+            
+            if (!transfers.isEmpty()) {
+                writeResponse(response, QHttpResponse::STATUS_CREATED, QtJson::Json::serialize(transfers));
             }
             else {
-                Transfers::instance()->addEnclosureDownload(url, subscriptionId);
-                writeResponse(response, QHttpResponse::STATUS_CREATED);
+                writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
             }
             
             return true;
@@ -113,8 +134,9 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
             const QString id = Utils::urlQueryItemValue(request->url(), "id");
             
             if (!id.isEmpty()) {
-                if (Transfers::instance()->start(id)) {
-                    writeResponse(response, QHttpResponse::STATUS_OK);
+                if (Transfer *transfer = Transfers::instance()->get(id)) {
+                    transfer->queue();
+                    writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(transferToMap(transfer)));
                 }
                 else {
                     writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
@@ -137,8 +159,9 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
             const QString id = Utils::urlQueryItemValue(request->url(), "id");
             
             if (!id.isEmpty()) {
-                if (Transfers::instance()->pause(id)) {
-                    writeResponse(response, QHttpResponse::STATUS_OK);
+                if (Transfer *transfer = Transfers::instance()->get(id)) {
+                    transfer->pause();
+                    writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(transferToMap(transfer)));
                 }
                 else {
                     writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
@@ -186,14 +209,9 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
     
     if (request->method() == QHttpRequest::HTTP_PUT) {
         Transfer *transfer = Transfers::instance()->get(parts.at(1));
+        const QVariantMap properties = QtJson::Json::parse(request->body()).toMap();
         
-        if (!transfer) {
-            return false;
-        }
-        
-        QVariantMap properties = QtJson::Json::parse(request->body()).toMap();
-        
-        if (properties.isEmpty()) {
+        if ((!transfer) || (properties.isEmpty())) {
             writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
             return true;
         }
@@ -209,7 +227,7 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
             }
         }
         
-        writeResponse(response, QHttpResponse::STATUS_OK);
+        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(transferToMap(transfer)));
         return true;
     }
     

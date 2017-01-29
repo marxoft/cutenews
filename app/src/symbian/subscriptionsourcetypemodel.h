@@ -31,6 +31,7 @@ public:
     {
         append(tr("URL"), Subscription::Url);
         append(tr("Local file"), Subscription::LocalFile);
+        append(tr("Command"), Subscription::Command);
         
         const FeedPluginList plugins = PluginManager::instance()->plugins();
         
@@ -41,4 +42,4 @@ public:
     }
 };
 
-#endif // SUBSCRIPTIONSOURCEMODEL_H
+#endif // SUBSCRIPTIONSOURCETYPEMODEL_H

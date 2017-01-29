@@ -37,7 +37,6 @@ static const QString LIB_SUFFIX(".qtplugin");
 static const int ICON_SIZE = 64;
 
 // Cache
-static const QString CACHE_PREFIX("http://localhost/");
 static const QString CACHE_PATH(HOME_PATH + "cutenews/.cache/");
 
 // Database

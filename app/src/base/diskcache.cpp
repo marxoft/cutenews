@@ -14,14 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "articlecache.h"
+#include "diskcache.h"
 
-ArticleCache::ArticleCache(QObject *parent) :
+DiskCache::DiskCache(QObject *parent) :
     QNetworkDiskCache(parent)
 {
 }
 
-QIODevice* ArticleCache::prepare(const QNetworkCacheMetaData &metaData) {
+QIODevice* DiskCache::prepare(const QNetworkCacheMetaData &metaData) {
     QNetworkCacheMetaData md(metaData);
     md.setSaveToDisk(true);
     md.setRawHeaders(QList< QPair<QByteArray, QByteArray> >());

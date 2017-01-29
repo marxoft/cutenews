@@ -54,7 +54,8 @@ bool SettingsServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
     }
     
     if (request->method() == QHttpRequest::HTTP_PUT) {
-        QVariantMap settings = QtJson::Json::parse(QString::fromUtf8(request->body())).toMap();
+        const QByteArray body = request->body();
+        const QVariantMap settings = QtJson::Json::parse(QString::fromUtf8(body)).toMap();
         
         if (settings.isEmpty()) {
             writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
@@ -72,7 +73,7 @@ bool SettingsServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
             }
         }
         
-        writeResponse(response, QHttpResponse::STATUS_OK);
+        writeResponse(response, QHttpResponse::STATUS_OK, body);
         return true;
     }
     

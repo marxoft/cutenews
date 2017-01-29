@@ -25,7 +25,7 @@
 
 ArticleModel::ArticleModel(QObject *parent) :
     QAbstractListModel(parent),
-    m_limit(-1),
+    m_limit(0),
     m_offset(0),
     m_insert(false),
     m_moreResults(false),
@@ -130,19 +130,14 @@ bool ArticleModel::canFetchMore(const QModelIndex &) const {
 
 void ArticleModel::fetchMore(const QModelIndex &) {
     if (canFetchMore()) {
+        setStatus(Active);
+        DBConnection *connection = DBConnection::connection(this, SLOT(onArticlesFetched(DBConnection*)));
+        
         if (!m_query.isEmpty()) {
-            fetchArticles(m_query);
+            connection->searchArticles(m_query, m_offset, m_limit);
         }
         else {
-            if (m_subscriptionId == ALL_ARTICLES_SUBSCRIPTION_ID) {
-                fetchArticles();
-            }
-            else if (m_subscriptionId == FAVOURITES_SUBSCRIPTION_ID) {
-                fetchArticles("WHERE isFavourite = 1");
-            }
-            else {
-                fetchArticles(QString("WHERE subscriptionId = '%1'").arg(m_subscriptionId));
-            }
+            connection->fetchArticlesForSubscription(m_subscriptionId, m_offset, m_limit);
         }
     }
 }
@@ -322,16 +317,8 @@ void ArticleModel::load(const QString &subscriptionId) {
     emit queryChanged(m_query);
     emit subscriptionIdChanged(m_subscriptionId);
     clear();
-    
-    if (subscriptionId == ALL_ARTICLES_SUBSCRIPTION_ID) {
-        fetchArticles();
-    }
-    else if (subscriptionId == FAVOURITES_SUBSCRIPTION_ID) {
-        fetchArticles("WHERE isFavourite = 1");
-    }
-    else {
-        fetchArticles(QString("WHERE subscriptionId = '%1'").arg(subscriptionId));
-    }
+    DBConnection::connection(this,
+    SLOT(onArticlesFetched(DBConnection*)))->fetchArticlesForSubscription(m_subscriptionId, 0, m_limit);
 }
 
 void ArticleModel::search(const QString &query) {
@@ -339,18 +326,12 @@ void ArticleModel::search(const QString &query) {
         return;
     }
     
-    if (query.startsWith("WHERE ")) {
-        m_query = query;
-    }
-    else {
-        m_query = QString("WHERE author LIKE '%%1%' OR title LIKE '%%1%' OR body LIKE '%%1%'").arg(query);
-    }
-    
-    m_subscriptionId = QString();
+    m_query = query;
+    m_subscriptionId = ALL_ARTICLES_SUBSCRIPTION_ID;
     emit queryChanged(m_query);
     emit subscriptionIdChanged(m_subscriptionId);
     clear();
-    fetchArticles(m_query);
+    DBConnection::connection(this, SLOT(onArticlesFetched(DBConnection*)))->searchArticles(m_query, 0, m_limit);
 }
 
 void ArticleModel::reload() {
@@ -360,14 +341,6 @@ void ArticleModel::reload() {
     else {
         load(m_subscriptionId);
     }
-}
-
-void ArticleModel::fetchArticles(const QString &query) {
-    m_insert = false;
-    setStatus(Active);
-    DBConnection::connection(this, SLOT(onArticlesFetched(DBConnection*)))->fetchArticles(QString("%1 %2%3")
-                            .arg(query).arg(QString("ORDER BY date DESC")).arg(limit() > 0 ? QString(" LIMIT %1, %2")
-                            .arg(m_offset).arg(limit()) : QString()));
 }
 
 void ArticleModel::onArticleChanged(Article *article, int role) {

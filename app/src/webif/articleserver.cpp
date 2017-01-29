@@ -58,47 +58,70 @@ bool ArticleServer::handleRequest(QHttpRequest *request, QHttpResponse *response
     
     if (parts.size() == 1) {
         if (request->method() == QHttpRequest::HTTP_GET) {
-            const QString queryString = Utils::urlQueryToSqlQuery(request->url());
             m_responses.enqueue(response);
+            const QUrl url = request->url();
+            const QString ids = Utils::urlQueryItemValue(url, "id");
             
-            if (queryString.isEmpty()) {
-                DBConnection::connection(this, SLOT(onArticlesFetched(DBConnection*)))->fetchArticles();
-            }
-            else {
-                DBConnection::connection(this, SLOT(onArticlesFetched(DBConnection*)))->fetchArticles(queryString);
+            if (!ids.isEmpty()) {
+                DBConnection::connection(this,
+                SLOT(onArticlesFetched(DBConnection*)))->fetchArticles(ids.split(",", QString::SkipEmptyParts));
+                return true;
             }
             
+            const int offset = Utils::urlQueryItemValue(url, "offset", "0").toInt();
+            const int limit = Utils::urlQueryItemValue(url, "limit", "0").toInt();
+            const QString subscriptionId = Utils::urlQueryItemValue(url, "subscriptionId");
+            
+            if (!subscriptionId.isEmpty()) {
+                DBConnection::connection(this,
+                SLOT(onArticlesFetched(DBConnection*)))->fetchArticlesForSubscription(subscriptionId, offset, limit);
+                return true;
+            }
+            
+            const QString query = Utils::urlQueryItemValue(url, "search");
+                
+            if (!query.isEmpty()) {
+                DBConnection::connection(this,
+                SLOT(onArticlesFetched(DBConnection*)))->searchArticles(query, offset, limit);
+                return true;
+            }
+            
+            DBConnection::connection(this, SLOT(onArticlesFetched(DBConnection*)))->fetchArticles(offset, limit);
             return true;
         }
                
         writeResponse(response, QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
         return true;
     }
-
+    
     if (parts.size() == 2) {
         if (request->method() == QHttpRequest::HTTP_GET) {
+            m_responses.enqueue(response);
+            
             if (parts.at(1) == "read") {
                 const QString id = Utils::urlQueryItemValue(request->url(), "id");
-                m_responses.enqueue(response);
                 DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->markArticleRead(id, true, true);
             }
             else if (parts.at(1) == "unread") {
                 const QString id = Utils::urlQueryItemValue(request->url(), "id");
-                m_responses.enqueue(response);
                 DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->markArticleRead(id, false, true);
             }
             else if (parts.at(1) == "favourite") {
                 const QString id = Utils::urlQueryItemValue(request->url(), "id");
-                m_responses.enqueue(response);
-                DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->markArticleFavourite(id, true, true);
+                DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->markArticleFavourite(id, true,
+                                                                                                            true);
             }
             else if (parts.at(1) == "unfavourite") {
                 const QString id = Utils::urlQueryItemValue(request->url(), "id");
-                m_responses.enqueue(response);
-                DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->markArticleFavourite(id, false, true);
+                DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->markArticleFavourite(id, false,
+                                                                                                            true);
+            }
+            else if (parts.at(1) == "deleteread") {
+                const int expiryDate = Utils::urlQueryItemValue(request->url(), "expiry", 0).toInt();
+                DBConnection::connection(this,
+                SLOT(onReadArticlesDeleted(DBConnection*)))->deleteReadArticles(expiryDate);
             }
             else {
-                m_responses.enqueue(response);
                 DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->fetchArticle(parts.at(1));
             }
 
@@ -150,6 +173,26 @@ void ArticleServer::onArticlesFetched(DBConnection *connection) {
         }
         
         writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articles));
+    }
+    else {
+        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+    }
+    
+    connection->deleteLater();
+}
+
+void ArticleServer::onReadArticlesDeleted(DBConnection *connection) {
+    if (m_responses.isEmpty()) {
+        connection->deleteLater();
+        return;
+    }
+    
+    QHttpResponse *response = m_responses.dequeue();
+    
+    if (connection->status() == DBConnection::Ready) {
+        QVariantMap result;
+        result["count"] = connection->numRowsAffected();
+        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(result));
     }
     else {
         writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);

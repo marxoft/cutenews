@@ -190,6 +190,7 @@ Window {
                 width: parent.width
                 wrapMode: Text.Wrap
                 textFormat: Text.RichText
+                clip: true
                 onLinkActivated: {
                     var m = popups.load(urlMenu, root)
                     m.url = link;
@@ -244,7 +245,7 @@ Window {
             dateLabel.text = qsTr("Date") + ": " + (article.dateString ? article.dateString : qsTr("Unknown"));
             categoriesLabel.text = qsTr("Categories") + ": "
             + (article.categories.length > 0 ? article.categories.join(", ") : qsTr("None"));
-            bodyLabel.text = article.body;
+            bodyLabel.text = article.body.replace(/ src="/g, " src=\"http://localhost");
             
             if (!article.read) {
                 article.markRead(true);

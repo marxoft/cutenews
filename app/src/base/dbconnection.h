@@ -72,7 +72,7 @@ public Q_SLOTS:
     void markAllSubscriptionsRead();
     
     void fetchSubscription(const QString &id);
-    void fetchSubscriptions();
+    void fetchSubscriptions(int offset = 0, int limit = 0);
     void fetchSubscriptions(const QStringList &ids);
     void fetchSubscriptions(const QString &criteria);
     
@@ -85,9 +85,13 @@ public Q_SLOTS:
     void markArticleRead(const QString &id, bool isRead = true, bool fetchResult = false);
     
     void fetchArticle(const QString &id);
-    void fetchArticles();
+    void fetchArticles(int offset = 0, int limit = 0);
     void fetchArticles(const QStringList &ids);
     void fetchArticles(const QString &criteria);
+    void fetchArticlesForSubscription(const QString &subscriptionId, int offset = 0, int limit = 0);
+    void fetchFavouriteArticles(int offset = 0, int limit = 0);
+    void fetchUnreadArticles(int offset = 0, int limit = 0);
+    void searchArticles(const QString &query, int offset = 0, int limit = 0);
     
     void exec(const QString &statement);
 
@@ -95,6 +99,9 @@ public Q_SLOTS:
     void close();
     
     bool nextRecord();
+    
+    int numRowsAffected() const;
+    int size() const;
     
     QVariant value(int index) const;
     QVariant value(const QString &name) const;
@@ -108,7 +115,7 @@ private Q_SLOTS:
     void _p_markAllSubscriptionsRead();
     
     void _p_fetchSubscription(const QString &id);
-    void _p_fetchSubscriptions();
+    void _p_fetchSubscriptions(int offset, int limit);
     void _p_fetchSubscriptions(const QStringList &ids);
     void _p_fetchSubscriptions(const QString &criteria);
     
@@ -121,9 +128,13 @@ private Q_SLOTS:
     void _p_markArticleRead(const QString &id, bool isRead, bool fetchResult);
     
     void _p_fetchArticle(const QString &id);
-    void _p_fetchArticles();
+    void _p_fetchArticles(int offset, int limit);
     void _p_fetchArticles(const QStringList &ids);
     void _p_fetchArticles(const QString &criteria);
+    void _p_fetchArticlesForSubscription(const QString &subscriptionId, int offset, int limit);
+    void _p_fetchFavouriteArticles(int offset, int limit);
+    void _p_fetchUnreadArticles(int offset, int limit);
+    void _p_searchArticles(const QString &query, int offset, int limit);
     
     void _p_exec(const QString &statement);
 

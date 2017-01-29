@@ -76,7 +76,7 @@ public Q_SLOTS:
     
     void cancel();
     
-    void create(const QString &source, int sourceType, bool downloadEnclosures = false, int updateInterval = 0);
+    QString create(const QString &source, int sourceType, bool downloadEnclosures = false, int updateInterval = 0);
     bool importFromOpml(const QString &fileName, bool downloadEnclosures = false, int updateInterval = 0);
     
     Q_SCRIPTABLE void update(const QString &id);

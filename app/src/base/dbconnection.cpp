@@ -183,14 +183,14 @@ void DBConnection::fetchSubscription(const QString &id) {
     QMetaObject::invokeMethod(this, "_p_fetchSubscription", connType, Q_ARG(QString, id));
 }
 
-void DBConnection::fetchSubscriptions() {
+void DBConnection::fetchSubscriptions(int offset, int limit) {
     if (status() == Active) {
         return;
     }
     
     setStatus(Active);
     const Qt::ConnectionType connType = isAsynchronous() ? Qt::QueuedConnection : Qt::DirectConnection;
-    QMetaObject::invokeMethod(this, "_p_fetchSubscriptions", connType);
+    QMetaObject::invokeMethod(this, "_p_fetchSubscriptions", connType, Q_ARG(int, offset), Q_ARG(int, limit));
 }
 
 void DBConnection::fetchSubscriptions(const QStringList &ids) {
@@ -298,14 +298,14 @@ void DBConnection::fetchArticle(const QString &id) {
     QMetaObject::invokeMethod(this, "_p_fetchArticle", connType, Q_ARG(QString, id));
 }
 
-void DBConnection::fetchArticles() {
+void DBConnection::fetchArticles(int offset, int limit) {
     if (status() == Active) {
         return;
     }
     
     setStatus(Active);
     const Qt::ConnectionType connType = isAsynchronous() ? Qt::QueuedConnection : Qt::DirectConnection;
-    QMetaObject::invokeMethod(this, "_p_fetchArticles", connType);
+    QMetaObject::invokeMethod(this, "_p_fetchArticles", connType, Q_ARG(int, offset), Q_ARG(int, limit));
 }
 
 void DBConnection::fetchArticles(const QStringList &ids) {
@@ -326,6 +326,48 @@ void DBConnection::fetchArticles(const QString &criteria) {
     setStatus(Active);
     const Qt::ConnectionType connType = isAsynchronous() ? Qt::QueuedConnection : Qt::DirectConnection;
     QMetaObject::invokeMethod(this, "_p_fetchArticles", connType, Q_ARG(QString, criteria));
+}
+
+void DBConnection::fetchArticlesForSubscription(const QString &query, int offset, int limit) {
+    if (status() == Active) {
+        return;
+    }
+    
+    setStatus(Active);
+    const Qt::ConnectionType connType = isAsynchronous() ? Qt::QueuedConnection : Qt::DirectConnection;
+    QMetaObject::invokeMethod(this, "_p_fetchArticlesForSubscription", connType, Q_ARG(QString, query),
+                              Q_ARG(int, offset), Q_ARG(int, limit));
+}
+
+void DBConnection::fetchFavouriteArticles(int offset, int limit) {
+    if (status() == Active) {
+        return;
+    }
+    
+    setStatus(Active);
+    const Qt::ConnectionType connType = isAsynchronous() ? Qt::QueuedConnection : Qt::DirectConnection;
+    QMetaObject::invokeMethod(this, "_p_fetchFavouriteArticles", connType, Q_ARG(int, offset), Q_ARG(int, limit));
+}
+
+void DBConnection::fetchUnreadArticles(int offset, int limit) {
+    if (status() == Active) {
+        return;
+    }
+    
+    setStatus(Active);
+    const Qt::ConnectionType connType = isAsynchronous() ? Qt::QueuedConnection : Qt::DirectConnection;
+    QMetaObject::invokeMethod(this, "_p_fetchUnreadArticles", connType, Q_ARG(int, offset), Q_ARG(int, limit));
+}
+
+void DBConnection::searchArticles(const QString &query, int offset, int limit) {
+    if (status() == Active) {
+        return;
+    }
+    
+    setStatus(Active);
+    const Qt::ConnectionType connType = isAsynchronous() ? Qt::QueuedConnection : Qt::DirectConnection;
+    QMetaObject::invokeMethod(this, "_p_searchArticles", connType, Q_ARG(QString, query), Q_ARG(int, offset),
+                              Q_ARG(int, limit));
 }
 
 void DBConnection::exec(const QString &statement) {
@@ -357,6 +399,22 @@ bool DBConnection::nextRecord() {
     }
     
     return false;
+}
+
+int DBConnection::numRowsAffected() const {
+    if (status() == Ready) {
+        return m_query.numRowsAffected();
+    }
+    
+    return -1;
+}
+
+int DBConnection::size() const {
+    if (status() == Ready) {
+        return m_query.size();
+    }
+    
+    return -1;
 }
 
 QVariant DBConnection::value(int index) const {
@@ -470,9 +528,13 @@ void DBConnection::_p_updateSubscription(const QString &id, const QVariantMap &p
     
     if (m_query.exec()) {        
         if (fetchResult) {
-            statement = QString("SELECT %1 FROM subscriptions WHERE id = '%2'").arg(SUBSCRIPTION_FIELDS).arg(id);
+            statement = QString("SELECT %1, COUNT(articles.id) FROM subscriptions LEFT JOIN articles ON \
+            subscriptions.id = articles.subscriptionId AND articles.isRead = 0 WHERE subscriptions.id = ? \
+            GROUP BY subscriptions.id").arg(SUBSCRIPTION_FIELDS);
+            m_query.prepare(statement);
+            m_query.addBindValue(id);
             
-            if ((m_query.exec(statement)) && (m_query.next())) {
+            if ((m_query.exec()) && (m_query.next())) {
                 setErrorString(QString());
                 setStatus(Ready);
             }
@@ -510,9 +572,13 @@ void DBConnection::_p_markSubscriptionRead(const QString &id, bool isRead, bool 
     
     if (m_query.exec()) {
         if (fetchResult) {
-            statement = QString("SELECT %1 FROM subscriptions WHERE id = '%2'").arg(SUBSCRIPTION_FIELDS).arg(id);
+            statement = QString("SELECT %1, COUNT(articles.id) FROM subscriptions LEFT JOIN articles ON \
+            subscriptions.id = articles.subscriptionId AND articles.isRead = 0 WHERE subscriptions.id = ? \
+            GROUP BY subscriptions.id").arg(SUBSCRIPTION_FIELDS);
+            m_query.prepare(statement);
+            m_query.addBindValue(id);
             
-            if ((m_query.exec(statement)) && (m_query.next())) {
+            if ((m_query.exec()) && (m_query.next())) {
                 setErrorString(QString());
                 setStatus(Ready);
             }
@@ -579,10 +645,19 @@ void DBConnection::_p_fetchSubscription(const QString &id) {
     emit finished(this);
 }
 
-void DBConnection::_p_fetchSubscriptions() {
-    _p_exec(QString("SELECT %1, COUNT(articles.id) FROM subscriptions LEFT JOIN articles ON \
+void DBConnection::_p_fetchSubscriptions(int offset, int limit) {
+    QString statement = QString("SELECT %1, COUNT(articles.id) FROM subscriptions LEFT JOIN articles ON \
     subscriptions.id = articles.subscriptionId AND articles.isRead = 0 GROUP BY subscriptions.id \
-    ORDER BY subscriptions.rowid ASC").arg(SUBSCRIPTION_FIELDS));
+    ORDER BY subscriptions.rowid ASC").arg(SUBSCRIPTION_FIELDS);
+    
+    if (limit > 0) {
+        statement.append(QString(" LIMIT %1, %2").arg(offset).arg(limit));
+    }
+    else if (offset > 0) {
+        statement.append(QString(" OFFSET %1").arg(offset));
+    }
+    
+    _p_exec(statement);
 }
 
 void DBConnection::_p_fetchSubscriptions(const QStringList &ids) {
@@ -607,7 +682,7 @@ void DBConnection::_p_fetchSubscriptions(const QString &criteria) {
         statement.append(" ");
         statement.append(criteria.mid(pos));
     }
-
+    
     _p_exec(statement);
 }
 
@@ -877,16 +952,88 @@ void DBConnection::_p_fetchArticle(const QString &id) {
     emit finished(this);
 }
 
-void DBConnection::_p_fetchArticles() {
-    _p_exec(QString("SELECT %1 FROM articles").arg(ARTICLE_FIELDS));
+void DBConnection::_p_fetchArticles(int offset, int limit) {
+    QString statement = QString("SELECT %1 FROM articles ORDER BY date DESC").arg(ARTICLE_FIELDS);
+    
+    if (limit > 0) {
+        statement.append(QString(" LIMIT %1, %2").arg(offset).arg(limit));
+    }
+    else if (offset > 0) {
+        statement.append(QString(" OFFSET %1").arg(offset));
+    }
+    
+    _p_exec(statement);
 }
 
 void DBConnection::_p_fetchArticles(const QStringList &ids) {
-    _p_fetchArticles(QString("WHERE id = '%1'").arg(ids.join("' OR id = '")));
+    _p_exec(QString("SELECT %1 FROM articles WHERE id = '%2'").arg(ARTICLE_FIELDS).arg(ids.join("' OR id = '")));
 }
 
 void DBConnection::_p_fetchArticles(const QString &criteria) {
     _p_exec(QString("SELECT %1 FROM articles %2").arg(ARTICLE_FIELDS).arg(criteria));
+}
+
+void DBConnection::_p_fetchArticlesForSubscription(const QString &subscriptionId, int offset, int limit) {
+    if (subscriptionId == ALL_ARTICLES_SUBSCRIPTION_ID) {
+        _p_fetchArticles(offset, limit);
+        return;
+    }
+    
+    if (subscriptionId == FAVOURITES_SUBSCRIPTION_ID) {
+        _p_fetchFavouriteArticles(offset, limit);
+        return;
+    }
+    
+    QString statement = QString("SELECT %1 FROM articles WHERE subscriptionId = '%2' ORDER BY date DESC")
+        .arg(ARTICLE_FIELDS).arg(subscriptionId);
+    
+    if (limit > 0) {
+        statement.append(QString(" LIMIT %1, %2").arg(offset).arg(limit));
+    }
+    else if (offset > 0) {
+        statement.append(QString(" OFFSET %1").arg(offset));
+    }
+    
+    _p_exec(statement);
+}
+
+void DBConnection::_p_fetchFavouriteArticles(int offset, int limit) {
+    QString statement = QString("SELECT %1 FROM articles WHERE isFavourite = 1 ORDER BY date DESC").arg(ARTICLE_FIELDS);
+    
+    if (limit > 0) {
+        statement.append(QString(" LIMIT %1, %2").arg(offset).arg(limit));
+    }
+    else if (offset > 0) {
+        statement.append(QString(" OFFSET %1").arg(offset));
+    }
+    
+    _p_exec(statement);
+}
+
+void DBConnection::_p_fetchUnreadArticles(int offset, int limit) {
+    QString statement = QString("SELECT %1 FROM articles WHERE isRead = 0 ORDER BY date DESC").arg(ARTICLE_FIELDS);
+    
+    if (limit > 0) {
+        statement.append(QString(" LIMIT %1, %2").arg(offset).arg(limit));
+    }
+    else if (offset > 0) {
+        statement.append(QString(" OFFSET %1").arg(offset));
+    }
+    
+    _p_exec(statement);
+}
+
+void DBConnection::_p_searchArticles(const QString &query, int offset, int limit) {
+    QString statement = QString("SELECT %1 FROM articles WHERE author LIKE '%%2%' OR title LIKE '%%2%' OR body LIKE '%%2%' ORDER BY date DESC").arg(ARTICLE_FIELDS).arg(query);
+    
+    if (limit > 0) {
+        statement.append(QString(" LIMIT %1, %2").arg(offset).arg(limit));
+    }
+    else if (offset > 0) {
+        statement.append(QString(" OFFSET %1").arg(offset));
+    }
+    
+    _p_exec(statement);
 }
 
 void DBConnection::_p_exec(const QString &statement) {

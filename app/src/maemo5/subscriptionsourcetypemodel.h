@@ -42,4 +42,4 @@ public:
     }
 };
 
-#endif // SUBSCRIPTIONSOURCEMODEL_H
+#endif // SUBSCRIPTIONSOURCETYPEMODEL_H

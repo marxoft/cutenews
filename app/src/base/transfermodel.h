@@ -28,31 +28,6 @@ class TransferModel : public QAbstractListModel
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     
 public:
-    enum Roles {
-        BytesTransferredRole = Qt::UserRole + 1,
-        CategoryRole,
-        CustomCommandRole,
-        CustomCommandOverrideEnabledRole,
-        DownloadPathRole,
-        ErrorStringRole,
-        FileNameRole,
-        IdRole,
-        NameRole,
-        PriorityRole,
-        PriorityStringRole,
-        ProgressRole,
-        ProgressStringRole,
-        SizeRole,
-        SizeStringRole,
-        SpeedRole,
-        SpeedStringRole,
-        StatusRole,
-        StatusStringRole,
-        SubscriptionIdRole,
-        TransferTypeRole,
-        UrlRole
-    };
-    
     explicit TransferModel(QObject *parent = 0);
     
 #if QT_VERSION >= 0x050000

@@ -111,9 +111,7 @@ private:
     void setErrorString(const QString &e);
     
     void setStatus(Status s);
-    
-    void fetchArticles(const QString &query = QString());
-    
+        
     QList<Article*> m_list;
     
     QHash<int, QByteArray> m_roles;

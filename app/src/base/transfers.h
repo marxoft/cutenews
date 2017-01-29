@@ -37,9 +37,9 @@ public:
     int active() const;
     int count() const;
     
-    Q_INVOKABLE void addEnclosureDownload(const QString &url, const QString &subscriptionId,
-                                          const QString &category = QString(),
-                                          int priority = Transfer::NormalPriority);
+    Q_INVOKABLE Transfer* addEnclosureDownload(const QString &url, const QString &subscriptionId,
+                                               const QString &category = QString(),
+                                               int priority = Transfer::NormalPriority);
     
     Q_INVOKABLE Transfer* get(int i) const;
     Q_INVOKABLE Transfer* get(const QString &id) const;
@@ -55,16 +55,6 @@ public Q_SLOTS:
     
     void load();
     void save();
-    
-private:
-    Transfers();
-    
-    void getNextTransfers();
-    
-    void removeTransfer(Transfer *transfer);
-
-    void addActiveTransfer(Transfer *transfer);
-    void removeActiveTransfer(Transfer *transfer);
 
 private Q_SLOTS:
     void startNextTransfers();
@@ -77,6 +67,15 @@ Q_SIGNALS:
     void transferAdded(Transfer *transfer);
     
 private:
+    Transfers();
+    
+    void getNextTransfers();
+    
+    void removeTransfer(Transfer *transfer);
+
+    void addActiveTransfer(Transfer *transfer);
+    void removeActiveTransfer(Transfer *transfer);
+    
     static Transfers *self;
         
     QNetworkAccessManager *m_nam;

@@ -163,12 +163,14 @@ void Subscriptions::cancel() {
     }   
 }
 
-void Subscriptions::create(const QString &source, int sourceType, bool downloadEnclosures, int updateInterval) {
+QString Subscriptions::create(const QString &source, int sourceType, bool downloadEnclosures, int updateInterval) {
+    const QString id = Utils::createId();
     Logger::log("Subscriptions::create(). Source: " + source, Logger::LowVerbosity);
     DBConnection::connection(this, SLOT(onConnectionFinished(DBConnection*)))->addSubscription(QVariantList() 
-                             << Utils::createId() << QString() << (downloadEnclosures ? 1 : 0)
+                             << id << QString() << (downloadEnclosures ? 1 : 0)
                              << QString() << 0 << source << sourceType << tr("New subscription") << updateInterval
                              << QString());
+    return id;
 }
 
 bool Subscriptions::importFromOpml(const QString &fileName, bool downloadEnclosures, int updateInterval) {
@@ -219,7 +221,7 @@ bool Subscriptions::importFromOpml(const QString &fileName, bool downloadEnclosu
 void Subscriptions::update(const QString &id) {
     Logger::log("Subscriptions::update(). ID: " + id, Logger::LowVerbosity);
     m_queue.enqueue(id);
-    m_total++;
+    ++m_total;
     
     if (status() != Active) {
         next();
@@ -373,9 +375,8 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     QVariantList enc = parser.enclosures();    
     QVariantList ids = QVariantList() << id;
     QVariantList authors = QVariantList() << parser.author();
-    QVariantList bodies = QVariantList() << replaceImageUrls(parser.description(), QString("%1%2%3/%4/")
-                                                             .arg(CACHE_PREFIX).arg(CACHE_PATH).arg(subscriptionId)
-                                                             .arg(id));
+    QVariantList bodies = QVariantList() << replaceImageUrls(parser.description(), QString("%1%2/%3/")
+                                                             .arg(CACHE_PATH).arg(subscriptionId).arg(id));
     QVariantList categories = QVariantList() << parser.categories().join(", ");
     QVariantList dates = QVariantList() << parser.date().toTime_t();
     QVariantList enclosures = QVariantList() << QtJson::Json::serialize(enc);
@@ -397,8 +398,8 @@ void Subscriptions::parseXml(const QByteArray &xml) {
         enc = parser.enclosures();
         ids << id;
         authors << parser.author();
-        bodies << replaceImageUrls(parser.description(), QString("%1%2%3/%4/").arg(CACHE_PREFIX).arg(CACHE_PATH)
-                                                                              .arg(subscriptionId).arg(id));
+        bodies << replaceImageUrls(parser.description(), QString("%1%2/%3/").arg(CACHE_PATH).arg(subscriptionId)
+                                   .arg(id));
         categories << parser.categories().join(", ");
         dates << parser.date().toTime_t();
         enclosures << QtJson::Json::serialize(enc);

@@ -36,6 +36,7 @@ public:
 private Q_SLOTS:
     void onArticleFetched(DBConnection *connection);
     void onArticlesFetched(DBConnection *connection);
+    void onReadArticlesDeleted(DBConnection *connection);
     void onConnectionFinished(DBConnection *connection);
 
 private:    

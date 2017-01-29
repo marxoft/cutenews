@@ -15,11 +15,10 @@
  */
 
 #include "cachingnetworkaccessmanager.h"
-#include "articlecache.h"
 #include "definitions.h"
+#include "diskcache.h"
 #include "logger.h"
 #include "settings.h"
-#include <QNetworkDiskCache>
 #include <QNetworkRequest>
 
 CachingNetworkAccessManager::CachingNetworkAccessManager(QObject *parent) :
@@ -33,23 +32,23 @@ QNetworkReply* CachingNetworkAccessManager::createRequest(QNetworkAccessManager:
         return QNetworkAccessManager::createRequest(op, req, outgoingData);
     }
         
-    const QString path = (CACHE_PREFIX.isEmpty() ? req.url().path() : req.url().toString().section(CACHE_PREFIX, 1));
+    const QString path = req.url().path();
     
     if (!path.startsWith(CACHE_PATH)) {
         return QNetworkAccessManager::createRequest(op, req, outgoingData);
     }
 
-    ArticleCache *ac = qobject_cast<ArticleCache*>(cache());
+    DiskCache *dc = qobject_cast<DiskCache*>(cache());
 
-    if (!ac) {
-        ac = new ArticleCache(this);
-        setCache(ac);
+    if (!dc) {
+        dc = new DiskCache(this);
+        setCache(dc);
     }
 
     const QString cacheDir = path.left(path.lastIndexOf("/"));
 
-    if (ac->cacheDirectory() != cacheDir) {
-        ac->setCacheDirectory(cacheDir);
+    if (dc->cacheDirectory() != cacheDir) {
+        dc->setCacheDirectory(cacheDir);
     }
     
     const QByteArray url = QByteArray::fromBase64(path.mid(path.lastIndexOf("/") + 1).toUtf8());

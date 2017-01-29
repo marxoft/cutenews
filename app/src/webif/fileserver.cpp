@@ -16,6 +16,7 @@
 
 #include "fileserver.h"
 #include "definitions.h"
+#include "diskcache.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
 #include <QFile>
@@ -73,10 +74,10 @@ bool FileServer::handleRequest(QHttpRequest *request, QHttpResponse *response) {
 
 QNetworkDiskCache* FileServer::cache(const QString &cacheDir) {
     QNetworkAccessManager *manager = networkAccessManager();
-    QNetworkDiskCache *dc = qobject_cast<QNetworkDiskCache*>(manager->cache());
+    DiskCache *dc = qobject_cast<DiskCache*>(manager->cache());
     
     if (!dc) {
-        dc = new QNetworkDiskCache(manager);
+        dc = new DiskCache(manager);
         manager->setCache(dc);
     }
 
@@ -100,7 +101,8 @@ void FileServer::getCachedFile(const QString &cacheDir, const QUrl &url, QHttpRe
     if (cache(cacheDir)->cacheDirectory() == cacheDir) {
         QNetworkRequest request(url);
         request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferCache);
-        m_replies.insert(networkAccessManager()->get(request), response);
+        QNetworkReply *reply = networkAccessManager()->get(request);
+        m_replies.insert(reply, response);
     }
     else {
         response->setProperty("cacheDir", cacheDir);

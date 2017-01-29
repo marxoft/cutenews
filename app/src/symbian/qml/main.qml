@@ -34,6 +34,22 @@ AppWindow {
     PopupLoader {
         id: popups
     }
+    
+    Connections {
+        target: notifier
+        onError: infoBanner.information(errorString)
+        onReadArticlesDeleted: informationBox.information(count + " " + qsTr("read articles deleted"));
+    }
+    
+    Connections {
+        target: plugins
+        onError: infoBanner.information(errorString)
+    }
+    
+    Connections {
+        target: transfers
+        onTransferAdded: infoBanner.information(qsTr("Enclosure added to downloads"))
+    }
 
     Component.onCompleted: {
         plugins.load();
@@ -41,18 +57,6 @@ AppWindow {
         
         if ((settings.updateSubscriptionsOnStartup) && (!settings.offlineModeEnabled)) {
             subscriptions.updateAll();
-        };
-        
-        notifier.error.connect(function(errorString) {
-            infoBanner.information(errorString);
-        });
-
-        notifier.readArticlesDeleted.connect(function(count) {
-            infoBanner.information(count + " " + qsTr("read articles deleted"));
-        });
-
-        transfers.transferAdded.connect(function() {
-            infoBanner.information(qsTr("Enclosure added to downloads"));
-        });
+        }
     }
 }

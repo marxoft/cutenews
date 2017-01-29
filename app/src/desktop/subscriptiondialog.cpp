@@ -27,7 +27,6 @@
 #include <QFileDialog>
 #include <QFormLayout>
 #include <QLineEdit>
-#include <QMessageBox>
 #include <QPushButton>
 #include <QSpinBox>
 
@@ -184,20 +183,14 @@ void SubscriptionDialog::onSubscriptionFetched(DBConnection *connection) {
            }
         }
     }
-    else {
-        QMessageBox::critical(this, tr("Database error"), connection->errorString());
-    }
     
     connection->deleteLater();
 }
 
 void SubscriptionDialog::onSubscriptionUpdated(DBConnection *connection) {
     if (connection->status() == DBConnection::Ready) {
-        connection->deleteLater();
         QDialog::accept();
     }
-    else {
-        QMessageBox::critical(this, tr("Database error"), connection->errorString());
-        connection->deleteLater();
-    }
+    
+    connection->deleteLater();
 }

@@ -24,14 +24,30 @@ Window {
     title: qsTr("Downloads")
     menuBar: MenuBar {
         MenuItem {
-            text: qsTr("Start all downloads")
-            onTriggered: transfers.start()
+            action: startAction
         }
         
         MenuItem {
-            text: qsTr("Pause all downloads")
-            onTriggered: transfers.pause()
+            action: pauseAction
         }
+    }
+    
+    Action {
+        id: startAction
+        
+        text: qsTr("Start all downloads")
+        autoRepeat: false
+        shortcut: qsTr("Ctrl+S")
+        onTriggered: transfers.start()
+    }
+    
+    Action {
+        id: pauseAction
+        
+        text: qsTr("Pause all downloads")
+        autoRepeat: false
+        shortcut: qsTr("Ctrl+P")
+        onTriggered: transfers.pause()
     }
     
     ListView {
@@ -91,6 +107,7 @@ Window {
             title: qsTr("Category")
             model: CategoryNameModel {}
             textRole: "name"
+            currentIndex: Math.max(0, model.match(0, "value", transferModel.data(view.currentIndex, "category")))
             onSelected: transferModel.setData(view.currentIndex, text, "category")
         }
     }
@@ -102,6 +119,7 @@ Window {
             title: qsTr("Priority")
             model: TransferPriorityModel {}
             textRole: "name"
+            currentIndex: Math.max(0, model.match(0, "value", transferModel.data(view.currentIndex, "priority")))
             onSelected: transferModel.setData(view.currentIndex, model.data(currentIndex, "value"), "priority")
         }
     }

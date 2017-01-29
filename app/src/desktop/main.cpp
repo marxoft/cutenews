@@ -40,6 +40,7 @@ void registerTypes() {
 
 Q_DECL_EXPORT int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
+    app.setOrganizationName("cuteNews");
     app.setApplicationName("cuteNews");
     app.setApplicationVersion(VERSION_NUMBER);
     app.setWindowIcon(QIcon::fromTheme("cutenews"));

@@ -14,22 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef VIEWMODEMODEL_H
-#define VIEWMODEMODEL_H
+#ifndef DISKCACHE_H
+#define DISKCACHE_H
 
-#include "selectionmodel.h"
+#include <QNetworkDiskCache>
 
-class ViewModeModel : public SelectionModel
+class DiskCache : public QNetworkDiskCache
 {
     Q_OBJECT
-    
+
 public:
-    explicit ViewModeModel(QObject *parent = 0) :
-        SelectionModel(parent)
-    {
-        append(tr("Dark on light"), QString("light"));
-        append(tr("Light on dark"), QString("dark"));
-    }
+    explicit DiskCache(QObject *parent = 0);
+        
+    virtual QIODevice* prepare(const QNetworkCacheMetaData &metaData);
 };
 
-#endif // VIEWMODEMODEL_H
+#endif // DISKCACHE_H

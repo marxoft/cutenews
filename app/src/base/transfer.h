@@ -28,6 +28,7 @@ class Transfer : public QObject
     Q_OBJECT
     
     Q_PROPERTY(qint64 bytesTransferred READ bytesTransferred NOTIFY bytesTransferredChanged)
+    Q_PROPERTY(QString bytesTransferredString READ bytesTransferredString NOTIFY bytesTransferredChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY statusChanged)
     Q_PROPERTY(QString id READ id WRITE setId NOTIFY idChanged)
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
@@ -42,6 +43,7 @@ class Transfer : public QObject
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QString statusString READ statusString NOTIFY statusChanged)
     Q_PROPERTY(TransferType transferType READ transferType CONSTANT)
+    Q_PROPERTY(QString transferTypeString READ transferTypeString CONSTANT)
     Q_PROPERTY(QString url READ url WRITE setUrl NOTIFY urlChanged)
     
     Q_ENUMS(DataRole Priority Status TransferType)
@@ -49,6 +51,7 @@ class Transfer : public QObject
 public:
     enum DataRole {
         BytesTransferredRole = Qt::UserRole + 1,
+        BytesTransferredStringRole,
         CategoryRole,
         CustomCommandRole,
         CustomCommandOverrideEnabledRole,
@@ -69,6 +72,7 @@ public:
         StatusStringRole,
         SubscriptionIdRole,
         TransferTypeRole,
+        TransferTypeStringRole,
         UrlRole
     };
     
@@ -107,6 +111,7 @@ public:
     void setNetworkAccessManager(QNetworkAccessManager *manager);
     
     qint64 bytesTransferred() const;
+    QString bytesTransferredString() const;
     
     QString errorString() const;
     
@@ -134,7 +139,7 @@ public:
     QString statusString() const;
     
     TransferType transferType() const;
-    void setTransferType(TransferType type);
+    QString transferTypeString() const;
     
     QString url() const;
     void setUrl(const QString &u);

@@ -75,7 +75,7 @@ MyPage {
         delegate: SubscriptionDelegate {
             onActivated: appWindow.pageStack.push(Qt.resolvedUrl("ArticlesPage.qml"), {title: title}).load(id)
             onClicked: appWindow.pageStack.push(Qt.resolvedUrl("ArticlesPage.qml"), {title: title}).load(id)
-            onPressAndHold: popups.open(contextMenu, root)
+            onPressAndHold: if (index > 1) popups.open(contextMenu, root);
         }
     }
     
@@ -88,8 +88,13 @@ MyPage {
         
         MyMenu {
             focusItem: subscriptionView
-            
+                        
             MenuLayout {
+                MenuItem {
+                    text: qsTr("Mark all as read")
+                    onClicked: database.markAllSubscriptionsRead()
+                }
+                
                 MenuItem {
                     text: qsTr("Import from OPML")
                     onClicked: appWindow.pageStack.push(Qt.resolvedUrl("ImportPage.qml"))
@@ -140,6 +145,10 @@ MyPage {
                             appWindow.pageStack.push(Qt.resolvedUrl("LocalFileSubscriptionPage.qml"),
                             {subscriptionId: id});
                             break;
+                        case Subscription.Command:
+                            appWindow.pageStack.push(Qt.resolvedUrl("CommandSubscriptionPage.qml"),
+                            {subscriptionId: id});
+                            break;
                         default:
                             appWindow.pageStack.push(Qt.resolvedUrl("PluginSubscriptionPage.qml"),
                             {subscriptionId: id});
@@ -171,6 +180,9 @@ MyPage {
                     break;
                 case Subscription.LocalFile:
                     appWindow.pageStack.push(Qt.resolvedUrl("LocalFileSubscriptionPage.qml"));
+                    break;
+                case Subscription.Command:
+                    appWindow.pageStack.push(Qt.resolvedUrl("CommandSubscriptionPage.qml"));
                     break;
                 default:
                     appWindow.pageStack.push(Qt.resolvedUrl("PluginSubscriptionPage.qml"), {pluginId: value});

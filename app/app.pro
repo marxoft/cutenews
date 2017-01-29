@@ -9,15 +9,14 @@ INCLUDEPATH += \
 
 HEADERS += \
     src/base/article.h \
-    src/base/articlecache.h \
     src/base/articlemodel.h \
-    src/base/cachingnetworkaccessmanager.h \
     src/base/categorymodel.h \
     src/base/categorynamemodel.h \
     src/base/concurrenttransfersmodel.h \
     src/base/database.h \
     src/base/dbconnection.h \
     src/base/dbnotify.h \
+    src/base/diskcache.h \
     src/base/download.h \
     src/base/enclosuredownload.h \
     src/base/feedparser.h \
@@ -54,12 +53,11 @@ HEADERS += \
 
 SOURCES += \
     src/base/article.cpp \
-    src/base/articlecache.cpp \
     src/base/articlemodel.cpp \
-    src/base/cachingnetworkaccessmanager.cpp \
     src/base/categorymodel.cpp \
     src/base/dbconnection.cpp \
     src/base/dbnotify.cpp \
+    src/base/diskcache.cpp \
     src/base/download.cpp \
     src/base/enclosuredownload.cpp \
     src/base/feedparser.cpp \
@@ -97,17 +95,17 @@ maemo5 {
     INCLUDEPATH += src/maemo5
     
     HEADERS += \
+        src/maemo5/cachingnetworkaccessmanager.h \
         src/maemo5/cachingnetworkaccessmanagerfactory.h \
         src/maemo5/cutenews.h \
         src/maemo5/definitions.h \
         src/maemo5/eventfeed.h \
         src/maemo5/logger.h \
         src/maemo5/settings.h \
-        src/maemo5/subscriptionsourcetypemodel.h \
-        src/maemo5/userinterfacemodel.h \
-        src/maemo5/viewmodemodel.h
+        src/maemo5/subscriptionsourcetypemodel.h
     
     SOURCES += \
+        src/maemo5/cachingnetworkaccessmanager.cpp \
         src/maemo5/cutenews.cpp \
         src/maemo5/eventfeed.cpp \
         src/maemo5/logger.cpp \
@@ -207,6 +205,7 @@ maemo5 {
     INCLUDEPATH += src/symbian
     
     HEADERS += \
+        src/symbian/cachingnetworkaccessmanager.h \
         src/symbian/cachingnetworkaccessmanagerfactory.h \
         src/symbian/clipboard.h \
         src/symbian/cutenews.h \
@@ -219,6 +218,7 @@ maemo5 {
         src/symbian/subscriptionsourcetypemodel.h
     
     SOURCES += \
+        src/symbian/cachingnetworkaccessmanager.cpp \
         src/symbian/clipboard.cpp \
         src/symbian/cutenews.cpp \
         src/symbian/logger.cpp \
@@ -237,6 +237,7 @@ maemo5 {
         src/symbian/qml/ArticlesPage.qml \
         src/symbian/qml/BackToolButton.qml \
         src/symbian/qml/CategorySettingsPage.qml \
+        src/symbian/qml/CommandSubscriptionPage.qml \
         src/symbian/qml/DateSelector.qml \
         src/symbian/qml/DeletePage.qml \
         src/symbian/qml/DownloadPage.qml \
@@ -337,6 +338,7 @@ maemo5 {
     HEADERS += \
         src/desktop/aboutdialog.h \
         src/desktop/browser.h \
+        src/desktop/cachingnetworkaccessmanager.h \
         src/desktop/categorysettingstab.h \
         src/desktop/customcommanddialog.h \
         src/desktop/cutenews.h \
@@ -358,6 +360,7 @@ maemo5 {
     SOURCES += \
         src/desktop/aboutdialog.cpp \
         src/desktop/browser.cpp \
+        src/desktop/cachingnetworkaccessmanager.cpp \
         src/desktop/categorysettingstab.cpp \
         src/desktop/customcommanddialog.cpp \
         src/desktop/cutenews.cpp \

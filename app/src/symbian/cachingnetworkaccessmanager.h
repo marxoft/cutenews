@@ -14,22 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef USERINTERFACEMODEL_H
-#define USERINTERFACEMODEL_H
+#ifndef CACHINGNETWORKACCESSMANAGER_H
+#define CACHINGNETWORKACCESSMANAGER_H
 
-#include "selectionmodel.h"
+#include <QNetworkAccessManager>
 
-class UserInterfaceModel : public SelectionModel
+class CachingNetworkAccessManager : public QNetworkAccessManager
 {
     Q_OBJECT
-    
+
 public:
-    explicit UserInterfaceModel(QObject *parent = 0) :
-        SelectionModel(parent)
-    {
-        append(tr("Touch"), QString("touch"));
-        append(QString("OSSO"), QString("osso"));
-    }
+    explicit CachingNetworkAccessManager(QObject *parent = 0);
+
+private:
+    virtual QNetworkReply* createRequest(Operation op, const QNetworkRequest &req, QIODevice *outgoingData = 0);
 };
 
-#endif // USERINTERFACEMODEL_H
+#endif // CACHINGNETWORKACCESSMANAGER_H

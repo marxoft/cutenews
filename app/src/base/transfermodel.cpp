@@ -16,12 +16,12 @@
 
 #include "transfermodel.h"
 #include "transfers.h"
-#include "utils.h"
 
 TransferModel::TransferModel(QObject *parent) :
     QAbstractListModel(parent)
 {
     m_roles[Transfer::BytesTransferredRole] = "bytesTransferred";
+    m_roles[Transfer::BytesTransferredStringRole] = "bytesTransferredString";
     m_roles[Transfer::CategoryRole] = "category";
     m_roles[Transfer::CustomCommandRole] = "customCommand";
     m_roles[Transfer::CustomCommandOverrideEnabledRole] = "customCommandOverrideEnabled";
@@ -42,6 +42,7 @@ TransferModel::TransferModel(QObject *parent) :
     m_roles[Transfer::StatusStringRole] = "statusString";
     m_roles[Transfer::SubscriptionIdRole] = "subscriptionId";
     m_roles[Transfer::TransferTypeRole] = "transferType";
+    m_roles[Transfer::TransferTypeStringRole] = "transferTypeString";
     m_roles[Transfer::UrlRole] = "url";
 #if QT_VERSION < 0x050000
     setRoleNames(m_roles);

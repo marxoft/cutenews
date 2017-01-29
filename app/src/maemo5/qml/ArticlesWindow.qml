@@ -31,8 +31,6 @@ Window {
     }
     
     title: qsTr("Articles")
-    showProgressIndicator: (articleModel.status == ArticleModel.Active)
-                           || (subscriptions.activeSubscription == articleModel.subscriptionId)
     menuBar: MenuBar {
         MenuItem {
             action: updateAction
@@ -141,6 +139,20 @@ Window {
             id: articleModel
             
             limit: 20
+            onStatusChanged: {
+                switch (status) {
+                case ArticleModel.Active: {
+                    root.showProgressIndicator = true;
+                    label.visible = false;
+                    break;
+                }
+                default: {
+                    root.showProgressIndicator = false;
+                    label.visible = (count == 0);
+                    break;
+                }
+                }
+            }
         }
         delegate: ArticleDelegate {
             onClicked: windowStack.push(articleWindow)
@@ -149,11 +161,13 @@ Window {
     }
     
     Label {
+        id: label
+        
         anchors.centerIn: parent
         font.pointSize: platformStyle.fontSizeLarge
         color: platformStyle.disabledTextColor
         text: qsTr("No articles")
-        visible: (articleModel.status != ArticleModel.Active) && (articleModel.count == 0)
+        visible: false
     }
     
     Component {
