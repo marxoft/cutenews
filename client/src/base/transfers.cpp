@@ -72,10 +72,8 @@ void Transfers::setStatus(Transfers::Status s) {
     }
 }
 
-void Transfers::addEnclosureDownload(const QString &url, const QString &subscriptionId, const QString &category,
-                                     int priority) {
-    Logger::log(QString("Transfers::addEnclosureDownload(). URL: %1, Subscription ID: %2").arg(url).arg(subscriptionId),
-                Logger::LowVerbosity);
+void Transfers::addEnclosureDownload(const QString &url, const QString &category, int priority) {
+    Logger::log("Transfers::addEnclosureDownload(). URL: " + url, Logger::LowVerbosity);
     
     if (status() == Active) {
         return;
@@ -84,7 +82,6 @@ void Transfers::addEnclosureDownload(const QString &url, const QString &subscrip
     setStatus(Active);
     QVariantMap properties;
     properties["url"] = url;
-    properties["subscriptionId"] = subscriptionId;
     properties["category"] = category;
     properties["priority"] = priority;
     QNetworkReply *reply =

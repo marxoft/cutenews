@@ -168,6 +168,7 @@ void FeedParser::clear() {
     setDate(QDateTime());
     setDescription(QString());
     setEnclosures(QVariantList());
+    setErrorString(QString());
     setIconUrl(QString());
     setTitle(QString());
     setUrl(QString());
@@ -369,8 +370,14 @@ void FeedParser::readCategories() {
 
 void FeedParser::readDate() {
     if (m_reader.qualifiedName() == "pubDate") {
-        setDate(QDateTime::fromString(m_reader.readElementText().section(' ', 0, -2),
-                                              "ddd, dd MMM yyyy HH:mm:ss"));
+        const QString text = m_reader.readElementText();
+        QDateTime date = QDateTime::fromString(text.left(text.lastIndexOf(" ")), "ddd, dd MMM yyyy HH:mm:ss");
+        
+        if (!date.isValid()) {
+            date = QDateTime::fromString(text, "yyyy-MM-dd HH:mm:ss");
+        }
+        
+        setDate(date);
     }
     else {
         setDate(QDateTime::fromString(m_reader.readElementText(), Qt::ISODate));

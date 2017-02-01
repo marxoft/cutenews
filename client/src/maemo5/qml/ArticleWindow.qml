@@ -233,7 +233,7 @@ Window {
         id: enclosuresDialog
         
         EnclosuresDialog {
-            article: root.article
+            enclosures: article.enclosures
         }
     }
     

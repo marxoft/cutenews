@@ -40,7 +40,6 @@ TransferModel::TransferModel(QObject *parent) :
     m_roles[Transfer::SpeedStringRole] = "speedString";
     m_roles[Transfer::StatusRole] = "status";
     m_roles[Transfer::StatusStringRole] = "statusString";
-    m_roles[Transfer::SubscriptionIdRole] = "subscriptionId";
     m_roles[Transfer::TransferTypeRole] = "transferType";
     m_roles[Transfer::TransferTypeStringRole] = "transferTypeString";
     m_roles[Transfer::UrlRole] = "url";

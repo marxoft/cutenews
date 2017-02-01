@@ -15,9 +15,9 @@
  */
 
 #include "settingsdialog.h"
-#include "clientsettingstab.h"
-#include "serversettingstab.h"
-#include "urlopenersettingstab.h"
+#include "clientsettingspage.h"
+#include "serversettingspage.h"
+#include "urlopenersettingspage.h"
 #include <QDialogButtonBox>
 #include <QPushButton>
 #include <QStackedWidget>
@@ -26,9 +26,9 @@
 
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
-    m_clientTab(0),
-    m_serverTab(0),
-    m_openerTab(0),
+    m_clientPage(0),
+    m_serverPage(0),
+    m_openerPage(0),
     m_tabBar(new QTabBar(this)),
     m_stack(new QStackedWidget(this)),
     m_buttonBox(new QDialogButtonBox(QDialogButtonBox::Cancel | QDialogButtonBox::Save, Qt::Horizontal, this)),
@@ -46,62 +46,62 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     m_layout->addWidget(m_stack);
     m_layout->addWidget(m_buttonBox);
     
-    connect(m_tabBar, SIGNAL(currentChanged(int)), this, SLOT(setCurrentTab(int)));
+    connect(m_tabBar, SIGNAL(currentChanged(int)), this, SLOT(setCurrentPage(int)));
     connect(m_buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
     connect(m_buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
     
-    showClientTab();
+    showClientPage();
 }
 
 void SettingsDialog::accept() {
     for (int i = 0; i < m_stack->count(); i++) {
-        if (SettingsTab *tab = qobject_cast<SettingsTab*>(m_stack->widget(i))) {
-            tab->save();
+        if (SettingsPage *page = qobject_cast<SettingsPage*>(m_stack->widget(i))) {
+            page->save();
         }
     }
 
     QDialog::accept();
 }
 
-void SettingsDialog::setCurrentTab(int index) {
+void SettingsDialog::setCurrentPage(int index) {
     switch (index) {
     case 0:
-        showClientTab();
+        showClientPage();
         break;
     case 1:
-        showServerTab();
+        showServerPage();
         break;
     case 2:
-        showUrlOpenerTab();
+        showUrlOpenerPage();
         break;
     default:
         break;
     }
 }
 
-void SettingsDialog::showClientTab() {
-    if (!m_clientTab) {
-        m_clientTab = new ClientSettingsTab(m_stack);
-        m_stack->addWidget(m_clientTab);
+void SettingsDialog::showClientPage() {
+    if (!m_clientPage) {
+        m_clientPage = new ClientSettingsPage(m_stack);
+        m_stack->addWidget(m_clientPage);
     }
 
-    m_stack->setCurrentWidget(m_clientTab);
+    m_stack->setCurrentWidget(m_clientPage);
 }
 
-void SettingsDialog::showServerTab() {
-    if (!m_serverTab) {
-        m_serverTab = new ServerSettingsTab(m_stack);
-        m_stack->addWidget(m_serverTab);
+void SettingsDialog::showServerPage() {
+    if (!m_serverPage) {
+        m_serverPage = new ServerSettingsPage(m_stack);
+        m_stack->addWidget(m_serverPage);
     }
 
-    m_stack->setCurrentWidget(m_serverTab);
+    m_stack->setCurrentWidget(m_serverPage);
 }
 
-void SettingsDialog::showUrlOpenerTab() {
-    if (!m_openerTab) {
-        m_openerTab = new UrlOpenerSettingsTab(m_stack);
-        m_stack->addWidget(m_openerTab);
+void SettingsDialog::showUrlOpenerPage() {
+    if (!m_openerPage) {
+        m_openerPage = new UrlOpenerSettingsPage(m_stack);
+        m_stack->addWidget(m_openerPage);
     }
 
-    m_stack->setCurrentWidget(m_openerTab);
+    m_stack->setCurrentWidget(m_openerPage);
 }

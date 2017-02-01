@@ -356,7 +356,7 @@ Dialog {
                 }
                 
                 internal.settings = source.settings;
-                repeater.model = plugins.getConfig(pluginId).settings;
+                repeater.model = plugins.getConfig(pluginId).feedSettings;
             }
         }
     }

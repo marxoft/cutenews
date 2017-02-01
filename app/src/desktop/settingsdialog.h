@@ -19,11 +19,12 @@
 
 #include <QDialog>
 
-class CategorySettingsTab;
-class GeneralSettingsTab;
-class InterfaceSettingsTab;
-class NetworkSettingsTab;
-class UrlOpenerSettingsTab;
+class CategorySettingsPage;
+class GeneralSettingsPage;
+class InterfaceSettingsPage;
+class NetworkSettingsPage;
+class PluginsSettingsPage;
+class UrlOpenerSettingsPage;
 class QDialogButtonBox;
 class QStackedWidget;
 class QTabBar;
@@ -40,20 +41,22 @@ public Q_SLOTS:
     virtual void accept();
 
 private Q_SLOTS:
-    void setCurrentTab(int index);
+    void setCurrentPage(int index);
     
-    void showGeneralTab();
-    void showNetworkTab();
-    void showInterfaceTab();
-    void showCategoryTab();
-    void showUrlOpenerTab();
+    void showGeneralPage();
+    void showNetworkPage();
+    void showInterfacePage();
+    void showCategoryPage();
+    void showUrlOpenerPage();
+    void showPluginPage();
 
 private:
-    GeneralSettingsTab *m_generalTab;
-    NetworkSettingsTab *m_networkTab;
-    InterfaceSettingsTab *m_interfaceTab;
-    CategorySettingsTab *m_categoryTab;
-    UrlOpenerSettingsTab *m_openerTab;
+    GeneralSettingsPage *m_generalPage;
+    NetworkSettingsPage *m_networkPage;
+    InterfaceSettingsPage *m_interfacePage;
+    CategorySettingsPage *m_categoryPage;
+    UrlOpenerSettingsPage *m_openerPage;
+    PluginsSettingsPage *m_pluginPage;
     
     QTabBar *m_tabBar;
     

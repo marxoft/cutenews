@@ -70,7 +70,6 @@ public:
         SpeedStringRole,
         StatusRole,
         StatusStringRole,
-        SubscriptionIdRole,
         TransferTypeRole,
         TransferTypeStringRole,
         UrlRole

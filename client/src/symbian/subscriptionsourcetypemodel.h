@@ -36,7 +36,9 @@ public:
         const FeedPluginList plugins = PluginManager::instance()->plugins();
         
         for (int i = 0; i < plugins.size(); i++) {
-            append(plugins.at(i)->displayName(), plugins.at(i)->id());
+            if (plugins.at(i)->supportsFeeds()) {
+                append(plugins.at(i)->displayName(), plugins.at(i)->id());
+            }
         }
     }
 };

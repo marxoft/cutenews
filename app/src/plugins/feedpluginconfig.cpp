@@ -24,6 +24,7 @@
 FeedPluginConfig::FeedPluginConfig(QObject *parent) :
     QObject(parent),
     m_enclosures(false),
+    m_feeds(true),
     m_version(1)
 {
 }
@@ -34,10 +35,6 @@ QString FeedPluginConfig::displayName() const {
 
 QString FeedPluginConfig::filePath() const {
     return m_filePath;
-}
-
-bool FeedPluginConfig::handlesEnclosures() const {
-    return m_enclosures;
 }
 
 QString FeedPluginConfig::id() const {
@@ -52,8 +49,24 @@ QString FeedPluginConfig::pluginType() const {
     return m_pluginType;
 }
 
-QVariantList FeedPluginConfig::settings() const {
-    return m_settings;
+bool FeedPluginConfig::supportsEnclosures() const {
+    return m_enclosures;
+}
+
+QRegExp FeedPluginConfig::enclosureRegExp() const {
+    return m_enclosureRegExp;
+}
+
+QVariantList FeedPluginConfig::enclosureSettings() const {
+    return m_enclosureSettings;
+}
+
+bool FeedPluginConfig::supportsFeeds() const {
+    return m_feeds;
+}
+
+QVariantList FeedPluginConfig::feedSettings() const {
+    return m_feedSettings;
 }
 
 int FeedPluginConfig::version() const {
@@ -90,10 +103,13 @@ bool FeedPluginConfig::load(const QString &filePath) {
     const QString fileName = filePath.mid(slash + 1);
     const int dot = fileName.lastIndexOf(".");
     m_displayName = config.value("name").toString();
-    m_enclosures = config.value("handlesEnclosures", false).toBool();
     m_id = fileName.left(dot);
     m_pluginType = config.value("type").toString();
-    m_settings = config.value("settings").toList();
+    m_enclosures = config.value("supportsEnclosures", false).toBool();
+    m_enclosureRegExp = QRegExp(config.value("enclosureRegExp").toString());
+    m_enclosureSettings = config.value("enclosureSettings").toList();
+    m_feeds = config.value("supportsFeeds", false).toBool();
+    m_feedSettings = config.value("feedSettings").toList();
     m_version = qMax(1, config.value("version").toInt());
     
     if (m_pluginType == "qt") {
@@ -109,4 +125,8 @@ bool FeedPluginConfig::load(const QString &filePath) {
     
     emit changed();
     return true;
+}
+
+bool FeedPluginConfig::enclosureIsSupported(const QString &url) const {
+    return m_enclosureRegExp.indexIn(url) == 0;
 }

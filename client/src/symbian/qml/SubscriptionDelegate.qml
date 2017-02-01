@@ -77,9 +77,8 @@ MyListItem {
     Component {
         id: countIndicator
         
-        MyListItemText {
-            role: "Title"
-            mode: root.mode
+        Label {
+            color: root.mode == "pressed" ? platformStyle.colorNormalLight : platformStyle.colorNormalLink
             text: unreadArticles
         }
     }

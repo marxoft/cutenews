@@ -2,64 +2,10 @@
     "type": "qt",
     "version": 1,
     "name": "YouTube videos",
-    "handlesEnclosures": true,
-    "settings": [
-        {
-            "type": "text",
-            "key": "query",
-            "label": "Query"
-        },
-
-        {
-            "type": "list",
-            "key": "type",
-            "label": "Type",
-            "value": "search",
-            "options": [
-                {
-                    "label": "Search",
-                    "value": "search"
-                },
-
-                {
-                    "label": "Channel",
-                    "value": "channel"
-                }
-            ]
-        },
-
-        {
-            "type": "integer",
-            "key": "maxResults",
-            "label": "Maximum results",
-            "minimum": 5,
-            "maximum": 50,
-            "value": 20
-        },
-
-        {
-            "type": "list",
-            "key": "safeSearch",
-            "label": "Safe search",
-            "value": "none",
-            "options": [
-                {
-                    "label": "None",
-                    "value": "none"
-                },
-
-                {
-                    "label": "Moderate",
-                    "value": "moderate",
-                },
-
-                {
-                    "label": "Strict",
-                    "value": "strict"
-                }
-            ]
-        },
-
+    "supportsFeeds": true,
+    "supportsEnclosures": true,
+    "enclosureRegExp": "(http(s|)://(www.|m.|)youtube.com/(v/|.+)(v=|)|http(s|)://youtu.be/)",
+    "enclosureSettings": [
         {
             "type": "list",
             "key": "videoFormat",
@@ -119,6 +65,64 @@
                 {
                     "label": "144P",
                     "value": "17"
+                }
+            ]
+        }
+    ],
+    
+    "feedSettings": [
+        {
+            "type": "text",
+            "key": "query",
+            "label": "Query"
+        },
+
+        {
+            "type": "list",
+            "key": "type",
+            "label": "Type",
+            "value": "search",
+            "options": [
+                {
+                    "label": "Search",
+                    "value": "search"
+                },
+
+                {
+                    "label": "Channel",
+                    "value": "channel"
+                }
+            ]
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        },
+
+        {
+            "type": "list",
+            "key": "safeSearch",
+            "label": "Safe search",
+            "value": "none",
+            "options": [
+                {
+                    "label": "None",
+                    "value": "none"
+                },
+
+                {
+                    "label": "Moderate",
+                    "value": "moderate",
+                },
+
+                {
+                    "label": "Strict",
+                    "value": "strict"
                 }
             ]
         }

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "urlopenersettingstab.h"
+#include "urlopenersettingspage.h"
 #include "urlopenermodel.h"
 #include <QFormLayout>
 #include <QHeaderView>
@@ -23,8 +23,8 @@
 #include <QPushButton>
 #include <QTreeView>
 
-UrlOpenerSettingsTab::UrlOpenerSettingsTab(QWidget *parent) :
-    SettingsTab(parent),
+UrlOpenerSettingsPage::UrlOpenerSettingsPage(QWidget *parent) :
+    SettingsPage(parent),
     m_view(new QTreeView(this)),
     m_regexpEdit(new QLineEdit(this)),
     m_commandEdit(new QLineEdit(this)),
@@ -62,26 +62,26 @@ UrlOpenerSettingsTab::UrlOpenerSettingsTab(QWidget *parent) :
     restore();
 }
 
-void UrlOpenerSettingsTab::restore() {
+void UrlOpenerSettingsPage::restore() {
     UrlOpenerModel::instance()->load();
 }
 
-void UrlOpenerSettingsTab::save() {
+void UrlOpenerSettingsPage::save() {
     UrlOpenerModel::instance()->save();
 }
 
-void UrlOpenerSettingsTab::addOpener() {
+void UrlOpenerSettingsPage::addOpener() {
     UrlOpenerModel::instance()->append(m_regexpEdit->text(), m_commandEdit->text());
     m_regexpEdit->clear();
     m_commandEdit->clear();
 }
 
-void UrlOpenerSettingsTab::setCurrentOpener(const QModelIndex &index) {
+void UrlOpenerSettingsPage::setCurrentOpener(const QModelIndex &index) {
     m_regexpEdit->setText(index.data(UrlOpenerModel::NameRole).toString());
     m_commandEdit->setText(index.data(UrlOpenerModel::ValueRole).toString());
 }
 
-void UrlOpenerSettingsTab::showContextMenu(const QPoint &pos) {
+void UrlOpenerSettingsPage::showContextMenu(const QPoint &pos) {
     if (!m_view->currentIndex().isValid()) {
         return;
     }
@@ -94,10 +94,10 @@ void UrlOpenerSettingsTab::showContextMenu(const QPoint &pos) {
     }
 }
 
-void UrlOpenerSettingsTab::onRegExpChanged(const QString &pattern) {
+void UrlOpenerSettingsPage::onRegExpChanged(const QString &pattern) {
     m_saveButton->setEnabled((!pattern.isEmpty()) && (!m_commandEdit->text().isEmpty()));
 }
 
-void UrlOpenerSettingsTab::onCommandChanged(const QString &command) {
+void UrlOpenerSettingsPage::onCommandChanged(const QString &command) {
     m_saveButton->setEnabled((!command.isEmpty()) && (!m_regexpEdit->text().isEmpty()));
 }

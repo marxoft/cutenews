@@ -389,7 +389,7 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     
     if (subscription()->downloadEnclosures()) {
         foreach (const QVariant &e, enc) {
-            Transfers::instance()->addEnclosureDownload(e.toMap().value("url").toString(), subscriptionId);
+            Transfers::instance()->addEnclosureDownload(e.toMap().value("url").toString());
         }
     }
     

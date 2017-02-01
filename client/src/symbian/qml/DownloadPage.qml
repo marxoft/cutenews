@@ -22,7 +22,6 @@ EditPage {
     id: root
     
     property string url
-    property string subscriptionId
     property alias category: categorySelector.value
     property alias priority: prioritySelector.value
     
@@ -75,7 +74,7 @@ EditPage {
     }
     
     onAccepted: {
-        transfers.addEnclosureDownload(url, subscriptionId, category, priority);
+        transfers.addEnclosureDownload(url, category, priority);
         appWindow.pageStack.pop();
     }
 }

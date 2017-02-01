@@ -73,7 +73,7 @@ EditPage {
         
         function load() {
             settings = subscription.source.settings;
-            repeater.model = plugins.getConfig(root.pluginId).settings;
+            repeater.model = plugins.getConfig(root.pluginId).feedSettings;
             enclosuresSwitch.checked = subscription.downloadEnclosures;
             var interval = subscription.updateInterval;
             

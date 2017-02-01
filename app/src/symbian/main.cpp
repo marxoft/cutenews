@@ -31,6 +31,7 @@
 #include "networkproxytypemodel.h"
 #include "pluginconfigmodel.h"
 #include "pluginmanager.h"
+#include "pluginsettings.h"
 #include "screenorientationmodel.h"
 #include "settings.h"
 #include "subscription.h"
@@ -62,6 +63,7 @@ inline void registerTypes() {
     qmlRegisterType<MaskedItem>("cuteNews", 1, 0, "MaskedItem");
     qmlRegisterType<NetworkProxyTypeModel>("cuteNews", 1, 0, "NetworkProxyTypeModel");
     qmlRegisterType<PluginConfigModel>("cuteNews", 1, 0, "PluginConfigModel");
+    qmlRegisterType<PluginSettings>("cuteNews", 1, 0, "PluginSettings");
     qmlRegisterType<ScreenOrientationModel>("cuteNews", 1, 0, "ScreenOrientationModel");
     qmlRegisterType<SelectionModel>("cuteNews", 1, 0, "SelectionModel");
     qmlRegisterType<Subscription>("cuteNews", 1, 0, "Subscription");

@@ -16,62 +16,73 @@
  */
 
 #include "feedpluginconfig.h"
-#include "definitions.h"
-#include "json.h"
-#include "logger.h"
-#include <QFile>
 
 FeedPluginConfig::FeedPluginConfig(QObject *parent) :
-    QObject(parent)
+    QObject(parent),
+    m_enclosures(false),
+    m_feeds(true),
+    m_version(1)
 {
 }
 
-FeedPluginConfig::FeedPluginConfig(const QVariantMap &properties, QObject *parent) :
-    QObject(parent)
+FeedPluginConfig::FeedPluginConfig(const QVariantMap &config, QObject *parent) :
+    QObject(parent),
+    m_enclosures(false),
+    m_feeds(true),
+    m_version(1)
 {
-    load(properties);
+    load(config);
 }
 
 QString FeedPluginConfig::displayName() const {
     return m_displayName;
 }
 
-QString FeedPluginConfig::filePath() const {
-    return m_filePath;
-}
-
-bool FeedPluginConfig::handlesEnclosures() const {
-    return m_handlesEnclosures;
-}
-
 QString FeedPluginConfig::id() const {
     return m_id;
-}
-
-QString FeedPluginConfig::pluginFilePath() const {
-    return m_pluginFilePath;
 }
 
 QString FeedPluginConfig::pluginType() const {
     return m_pluginType;
 }
 
-QVariantList FeedPluginConfig::settings() const {
-    return m_settings;
+bool FeedPluginConfig::supportsEnclosures() const {
+    return m_enclosures;
+}
+
+QRegExp FeedPluginConfig::enclosureRegExp() const {
+    return m_enclosureRegExp;
+}
+
+QVariantList FeedPluginConfig::enclosureSettings() const {
+    return m_enclosureSettings;
+}
+
+bool FeedPluginConfig::supportsFeeds() const {
+    return m_feeds;
+}
+
+QVariantList FeedPluginConfig::feedSettings() const {
+    return m_feedSettings;
 }
 
 int FeedPluginConfig::version() const {
     return m_version;
 }
 
-void FeedPluginConfig::load(const QVariantMap &properties) {
-    m_displayName = properties.value("displayName").toString();
-    m_filePath = properties.value("filePath").toString();
-    m_handlesEnclosures = properties.value("handlesEnclosures", false).toBool();
-    m_id = properties.value("id").toString();
-    m_pluginFilePath = properties.value("pluginFilePath").toString();
-    m_pluginType = properties.value("pluginType", "qt").toString();
-    m_settings = properties.value("settings").toList();
-    m_version = properties.value("version", 1).toInt();
+void FeedPluginConfig::load(const QVariantMap &config) {
+    m_displayName = config.value("displayName").toString();
+    m_id = config.value("id").toString();
+    m_pluginType = config.value("pluginType").toString();
+    m_enclosures = config.value("supportsEnclosures", false).toBool();
+    m_enclosureRegExp = QRegExp(config.value("enclosureRegExp").toString());
+    m_enclosureSettings = config.value("enclosureSettings").toList();
+    m_feeds = config.value("supportsFeeds", false).toBool();
+    m_feedSettings = config.value("feedSettings").toList();
+    m_version = qMax(1, config.value("version").toInt());
     emit changed();
+}
+
+bool FeedPluginConfig::enclosureIsSupported(const QString &url) const {
+    return m_enclosureRegExp.indexIn(url) == 0;
 }

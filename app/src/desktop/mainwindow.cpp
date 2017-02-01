@@ -152,7 +152,11 @@ MainWindow::MainWindow(QWidget *parent) :
     const FeedPluginList plugins = PluginManager::instance()->plugins();
     
     for (int i = 0; i < plugins.size(); i++) {
-        m_newSubscriptionMenu->addAction(plugins.at(i).config->displayName())->setData(plugins.at(i).config->id());
+        const FeedPluginConfig *config = plugins.at(i).config;
+
+        if (config->supportsFeeds()) {
+            m_newSubscriptionMenu->addAction(config->displayName())->setData(config->id());
+        }
     }
     
     m_subscriptionMenu->addAction(m_updateSubscriptionAction);
@@ -578,8 +582,7 @@ void MainWindow::openCurrentEnclosureExternally() {
 
 void MainWindow::downloadCurrentEnclosure() {
     if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
-        Transfers::instance()->addEnclosureDownload(item->text(), m_articlesView->currentIndex()
-                                                    .data(Article::SubscriptionIdRole).toString());
+        Transfers::instance()->addEnclosureDownload(item->text());
     }
 }
 
@@ -588,10 +591,22 @@ void MainWindow::setCurrentSubscription(const QModelIndex &index) {
         m_subscriptionsView->setCurrentIndex(index);
     }
     
-    m_infoLabel->setText(tr("<b>Feed:</b> <a href='%1'>%2</a><br><b>Source:</b> <a href='%3'>%3</a>")
-                           .arg(index.data(Subscription::UrlRole).toString())
-                           .arg(index.data(Subscription::TitleRole).toString())
-                           .arg(index.data(Subscription::SourceRole).toString()));
+    if (index.data(Subscription::SourceTypeRole) == Subscription::Plugin) {
+        const QString pluginId = index.data(Subscription::SourceRole).toMap().value("pluginId").toString();
+        const FeedPluginConfig *config = PluginManager::instance()->getConfig(pluginId);
+        m_infoLabel->setText(tr("<b>Feed:</b> <a href='%1'>%2</a><br><b>Source:</b> %3")
+                             .arg(index.data(Subscription::UrlRole).toString())
+                             .arg(index.data(Subscription::TitleRole).toString())
+                             .arg(config ? config->displayName() : tr("Plugin")));
+        
+    }
+    else {
+        m_infoLabel->setText(tr("<b>Feed:</b> <a href='%1'>%2</a><br><b>Source:</b> <a href='%3'>%3</a>")
+                             .arg(index.data(Subscription::UrlRole).toString())
+                             .arg(index.data(Subscription::TitleRole).toString())
+                             .arg(index.data(Subscription::SourceRole).toString()));
+    }
+    
     m_browser->setHtml(index.data(Subscription::DescriptionRole).toString());
     m_enclosuresLabel->hide();
     m_enclosuresView->hide();

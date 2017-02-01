@@ -2,7 +2,8 @@
     "type": "qt",
     "version": 1,
     "name": "WordPress",
-    "settings": [
+    "supportsFeeds": true,
+    "feedSettings": [
         {
             "type": "text",
             "key": "url",

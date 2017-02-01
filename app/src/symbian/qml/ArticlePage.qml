@@ -258,8 +258,7 @@ MyPage {
                 MenuItem {
                     text: qsTr("Download")
                     onClicked: appWindow.pageStack.push(Qt.resolvedUrl("DownloadPage.qml"),
-                        {url: article.enclosures[enclosuresRepeater.currentIndex].url,
-                        subscriptionId: article.subscriptionId})
+                        {url: article.enclosures[enclosuresRepeater.currentIndex].url})
                 }                
             }
         }

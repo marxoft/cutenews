@@ -14,43 +14,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GENERALSETTINGSTAB_H
-#define GENERALSETTINGSTAB_H
+#ifndef INTERFACESETTINGSPAGE_H
+#define INTERFACESETTINGSPAGE_H
 
-#include "settingstab.h"
+#include "settingspage.h"
 
 class QCheckBox;
 class QFormLayout;
 class QLineEdit;
-class QPushButton;
 class QSpinBox;
 
-class GeneralSettingsTab : public SettingsTab
+class InterfaceSettingsPage : public SettingsPage
 {
     Q_OBJECT
 
 public:
-    explicit GeneralSettingsTab(QWidget *parent = 0);
+    explicit InterfaceSettingsPage(QWidget *parent = 0);
 
 public Q_SLOTS:
     virtual void restore();
     virtual void save();
 
-private Q_SLOTS:
-    void showFileDialog();
-    
-private:    
-    QLineEdit *m_pathEdit;
-    QLineEdit *m_commandEdit;
-    
-    QPushButton *m_pathButton;
+private:
+    QCheckBox *m_webCheckBox;
+    QCheckBox *m_authCheckBox;
 
-    QSpinBox *m_concurrentSpinBox;
-    
-    QCheckBox *m_commandCheckBox;
-    QCheckBox *m_automaticCheckBox;
-    
+    QLineEdit *m_usernameEdit;
+    QLineEdit *m_passwordEdit;
+
+    QSpinBox *m_portSpinBox;
+
     QFormLayout *m_layout;
 };
-    
-#endif // GENERALSETTINGSTAB_H
+
+#endif // INTERFACESETTINGSPAGE_H

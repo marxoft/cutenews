@@ -14,34 +14,50 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CLIENTSETTINGSTAB_H
-#define CLIENTSETTINGSTAB_H
+#ifndef CATEGORYSETTINGSPAGE_H
+#define CATEGORYSETTINGSPAGE_H
 
-#include "settingstab.h"
+#include "settingspage.h"
 
-class QCheckBox;
+class CategoryModel;
 class QFormLayout;
 class QLineEdit;
+class QPushButton;
+class QTreeView;
 
-class ClientSettingsTab : public SettingsTab
+class CategorySettingsPage : public SettingsPage
 {
     Q_OBJECT
 
 public:
-    explicit ClientSettingsTab(QWidget *parent = 0);
+    explicit CategorySettingsPage(QWidget *parent = 0);
 
 public Q_SLOTS:
     virtual void restore();
     virtual void save();
 
-private:    
-    QCheckBox *m_authCheckBox;
+private Q_SLOTS:
+    void addCategory();
+    void setCurrentCategory(const QModelIndex &index);
     
-    QLineEdit *m_addressEdit;
-    QLineEdit *m_usernameEdit;
-    QLineEdit *m_passwordEdit;
+    void showContextMenu(const QPoint &pos);
+    void showFileDialog();
+
+    void onNameChanged(const QString &name);
+    void onPathChanged(const QString &path);
+
+private:
+    CategoryModel *m_model;
     
+    QTreeView *m_view;
+
+    QLineEdit *m_nameEdit;
+    QLineEdit *m_pathEdit;
+
+    QPushButton *m_pathButton;
+    QPushButton *m_saveButton;
+
     QFormLayout *m_layout;
 };
 
-#endif // CLIENTSETTINGSTAB_H
+#endif // CATEGORYSETTINGSPAGE_H

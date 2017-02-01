@@ -2,7 +2,8 @@
     "type": "qt",
     "version": 1,
     "name": "vBulletin",
-    "settings": [
+    "supportsFeeds": true,
+    "feedSettings": [
         {
             "type": "text",
             "key": "url",

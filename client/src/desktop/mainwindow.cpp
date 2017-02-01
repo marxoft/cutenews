@@ -592,8 +592,7 @@ void MainWindow::openCurrentEnclosureExternally() {
 
 void MainWindow::downloadCurrentEnclosure() {
     if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
-        Transfers::instance()->addEnclosureDownload(item->text(), m_articlesView->currentIndex()
-                                                    .data(Article::SubscriptionIdRole).toString());
+        Transfers::instance()->addEnclosureDownload(item->text());
     }
 }
 
@@ -602,10 +601,22 @@ void MainWindow::setCurrentSubscription(const QModelIndex &index) {
         m_subscriptionsView->setCurrentIndex(index);
     }
     
-    m_infoLabel->setText(tr("<b>Feed:</b> <a href='%1'>%2</a><br><b>Source:</b> <a href='%3'>%3</a>")
-                           .arg(index.data(Subscription::UrlRole).toString())
-                           .arg(index.data(Subscription::TitleRole).toString())
-                           .arg(index.data(Subscription::SourceRole).toString()));
+    if (index.data(Subscription::SourceTypeRole) == Subscription::Plugin) {
+        const QString pluginId = index.data(Subscription::SourceRole).toMap().value("pluginId").toString();
+        const FeedPluginConfig *config = PluginManager::instance()->getConfig(pluginId);
+        m_infoLabel->setText(tr("<b>Feed:</b> <a href='%1'>%2</a><br><b>Source:</b> %3")
+                             .arg(index.data(Subscription::UrlRole).toString())
+                             .arg(index.data(Subscription::TitleRole).toString())
+                             .arg(config ? config->displayName() : tr("Plugin")));
+        
+    }
+    else {
+        m_infoLabel->setText(tr("<b>Feed:</b> <a href='%1'>%2</a><br><b>Source:</b> <a href='%3'>%3</a>")
+                             .arg(index.data(Subscription::UrlRole).toString())
+                             .arg(index.data(Subscription::TitleRole).toString())
+                             .arg(index.data(Subscription::SourceRole).toString()));
+    }
+    
     m_browser->setHtml(index.data(Subscription::DescriptionRole).toString(), Settings::serverAddress());
     m_enclosuresLabel->hide();
     m_enclosuresView->hide();
@@ -864,8 +875,10 @@ void MainWindow::onPluginsLoaded(int count) {
     
     const FeedPluginList plugins = PluginManager::instance()->plugins();
     
-    for (int i = 0; i < plugins.size(); i++) {
-        m_newSubscriptionMenu->addAction(plugins.at(i)->displayName())->setData(plugins.at(i)->id());
+    for (int i = 0; i < plugins.size(); i++) {        
+        if (plugins.at(i)->supportsFeeds()) {
+            m_newSubscriptionMenu->addAction(plugins.at(i)->displayName())->setData(plugins.at(i)->id());
+        }
     }
 }
 

@@ -22,7 +22,7 @@ import cuteNews 1.0
 Dialog {
     id: root
     
-    property variant article
+    property variant enclosures
     
     title: qsTr("Enclosures")
     height: Math.min(360, view.count * 70 + platformStyle.paddingMedium)
@@ -35,7 +35,7 @@ Dialog {
         shortcut: qsTr("o")
         enabled: view.currentIndex >= 0
         onTriggered: {
-            var url = article.enclosures[view.currentIndex].url;
+            var url = enclosures[view.currentIndex].url;
             
             if (!urlopener.open(url)) {
                 Qt.openUrlExternally(url);
@@ -50,7 +50,7 @@ Dialog {
         autoRepeat: false
         shortcut: qsTr("c")
         enabled: view.currentIndex >= 0
-        onTriggered: clipboard.text = article.enclosures[view.currentIndex].url
+        onTriggered: clipboard.text = enclosures[view.currentIndex].url
     }
     
     Action {
@@ -68,7 +68,7 @@ Dialog {
         
         anchors.fill: parent
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
-        model: article ? article.enclosures : null
+        model: enclosures
         delegate: EnclosureDelegate {
             onClicked: if (!urlopener.open(modelData.url)) Qt.openUrlExternally(modelData.url);
             onPressAndHold: popups.open(contextMenu, root)
@@ -97,8 +97,7 @@ Dialog {
         id: downloadDialog
         
         DownloadDialog {
-            url: article.enclosures[view.currentIndex].url
-            subscriptionId: article.subscriptionId
+            url: enclosures[view.currentIndex].url
         }
     }
 }

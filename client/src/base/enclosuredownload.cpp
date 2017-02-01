@@ -37,8 +37,6 @@ QVariant EnclosureDownload::data(int role) const {
         return downloadPath();
     case FileNameRole:
         return fileName();
-    case SubscriptionIdRole:
-        return subscriptionId();
     default:
         return Transfer::data(role);
     }
@@ -138,18 +136,6 @@ void EnclosureDownload::setFileName(const QString &name) {
     }    
 }
 
-QString EnclosureDownload::subscriptionId() const {
-    return m_subscriptionId;
-}
-
-void EnclosureDownload::setSubscriptionId(const QString &i) {
-    if (i != subscriptionId()) {
-        m_subscriptionId = i;
-        emit subscriptionIdChanged();
-        emit dataChanged(this, SubscriptionIdRole);
-    }
-}
-
 void EnclosureDownload::load(const QVariantMap &properties) {
     Transfer::load(properties);
     
@@ -159,6 +145,5 @@ void EnclosureDownload::load(const QVariantMap &properties) {
         updateCustomCommandOverrideEnabled(properties.value("customCommandOverrideEnabled", false).toBool());
         setDownloadPath(properties.value("downloadPath").toString());
         setFileName(properties.value("fileName").toString());
-        setSubscriptionId(properties.value("subscriptionId").toString());
     }
 }

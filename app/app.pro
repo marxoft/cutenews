@@ -49,6 +49,7 @@ HEADERS += \
     src/plugins/javascriptfeedrequestglobalobject.h \
     src/plugins/pluginconfigmodel.h \
     src/plugins/pluginmanager.h \
+    src/plugins/pluginsettings.h \
     src/plugins/xmlhttprequest.h
 
 SOURCES += \
@@ -83,6 +84,7 @@ SOURCES += \
     src/plugins/javascriptfeedrequestglobalobject.cpp \
     src/plugins/pluginconfigmodel.cpp \
     src/plugins/pluginmanager.cpp \
+    src/plugins/pluginsettings.cpp \
     src/plugins/xmlhttprequest.cpp
 
 maemo5 {
@@ -274,6 +276,8 @@ maemo5 {
         src/symbian/qml/MyTextField.qml \
         src/symbian/qml/MyToolButton.qml \
         src/symbian/qml/NetworkSettingsPage.qml \
+        src/symbian/qml/PluginSettingsPage.qml \
+        src/symbian/qml/PluginsSettingsPage.qml \
         src/symbian/qml/PluginSubscriptionPage.qml \
         src/symbian/qml/PopupLoader.qml \
         src/symbian/qml/SettingsPage.qml \
@@ -339,44 +343,48 @@ maemo5 {
         src/desktop/aboutdialog.h \
         src/desktop/browser.h \
         src/desktop/cachingnetworkaccessmanager.h \
-        src/desktop/categorysettingstab.h \
+        src/desktop/categorysettingspage.h \
         src/desktop/customcommanddialog.h \
         src/desktop/cutenews.h \
         src/desktop/definitions.h \
-        src/desktop/generalsettingstab.h \
-        src/desktop/interfacesettingstab.h \
+        src/desktop/generalsettingspage.h \
+        src/desktop/interfacesettingspage.h \
         src/desktop/logger.h \
         src/desktop/mainwindow.h \
-        src/desktop/networksettingstab.h \
+        src/desktop/networksettingspage.h \
         src/desktop/plugindialog.h \
+        src/desktop/pluginsettingspage.h \
+        src/desktop/pluginssettingspage.h \
         src/desktop/settings.h \
         src/desktop/settingsdialog.h \
-        src/desktop/settingstab.h \
+        src/desktop/settingspage.h \
         src/desktop/subscriptiondialog.h \
         src/desktop/subscriptionsourcetypemodel.h \
         src/desktop/transfersview.h \
-        src/desktop/urlopenersettingstab.h
+        src/desktop/urlopenersettingspage.h
     
     SOURCES += \
         src/desktop/aboutdialog.cpp \
         src/desktop/browser.cpp \
         src/desktop/cachingnetworkaccessmanager.cpp \
-        src/desktop/categorysettingstab.cpp \
+        src/desktop/categorysettingspage.cpp \
         src/desktop/customcommanddialog.cpp \
         src/desktop/cutenews.cpp \
-        src/desktop/generalsettingstab.cpp \
-        src/desktop/interfacesettingstab.cpp \
+        src/desktop/generalsettingspage.cpp \
+        src/desktop/interfacesettingspage.cpp \
         src/desktop/logger.cpp \
         src/desktop/main.cpp \
         src/desktop/mainwindow.cpp \
-        src/desktop/networksettingstab.cpp \
+        src/desktop/networksettingspage.cpp \
         src/desktop/plugindialog.cpp \
+        src/desktop/pluginsettingspage.cpp \
+        src/desktop/pluginssettingspage.cpp \
         src/desktop/settings.cpp \
         src/desktop/settingsdialog.cpp \
-        src/desktop/settingstab.cpp \
+        src/desktop/settingspage.cpp \
         src/desktop/subscriptiondialog.cpp \
         src/desktop/transfersview.cpp \
-        src/desktop/urlopenersettingstab.cpp
+        src/desktop/urlopenersettingspage.cpp
     
     desktop.files = desktop/desktop/cutenews.desktop
     desktop.path = /usr/share/applications

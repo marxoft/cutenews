@@ -14,21 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SETTINGSTAB_H
-#define SETTINGSTAB_H
+#include "settingspage.h"
 
-#include <QWidget>
-
-class SettingsTab : public QWidget
+SettingsPage::SettingsPage(QWidget *parent) :
+    QWidget(parent)
 {
-    Q_OBJECT
+}
 
-public:
-    explicit SettingsTab(QWidget *parent = 0);
+void SettingsPage::restore() {}
 
-public Q_SLOTS:
-    virtual void restore();
-    virtual void save();
-};
-
-#endif // SETTINGSTAB_H
+void SettingsPage::save() {}

@@ -29,12 +29,13 @@ class PluginConfigModel : public QAbstractListModel
 public:
     enum Roles {
         DisplayNameRole = Qt::DisplayRole,
-        FilePathRole = Qt::UserRole + 1,
-        HandlesEnclosuresRole,
+        EnclosureRegExpRole = Qt::UserRole + 1,
+        EnclosureSettingsRole,
+        FeedSettingsRole,
         IdRole,
-        PluginFilePathRole,
         PluginTypeRole,
-        SettingsRole,
+        SupportsEnclosuresRole,
+        SupportsFeedsRole,
         VersionRole
     };
     

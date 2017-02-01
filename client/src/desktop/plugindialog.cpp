@@ -141,7 +141,7 @@ void PluginDialog::accept() {
 
 void PluginDialog::loadUi() {
     if (const FeedPluginConfig *config = PluginManager::instance()->getConfig(m_pluginId)) {
-        foreach (const QVariant &setting, config->settings()) {
+        foreach (const QVariant &setting, config->feedSettings()) {
             addWidget(m_form, setting.toMap());
         }
     }

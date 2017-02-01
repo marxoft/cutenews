@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "serversettingstab.h"
+#include "serversettingspage.h"
 #include "definitions.h"
 #include "serversettings.h"
 #include "settings.h"
@@ -23,8 +23,8 @@
 #include <QLineEdit>
 #include <QSpinBox>
 
-ServerSettingsTab::ServerSettingsTab(QWidget *parent) :
-    SettingsTab(parent),
+ServerSettingsPage::ServerSettingsPage(QWidget *parent) :
+    SettingsPage(parent),
     m_commandEdit(new QLineEdit(this)),
     m_concurrentSpinBox(new QSpinBox(this)),
     m_commandCheckBox(new QCheckBox(tr("Enable &custom download command"), this)),
@@ -44,13 +44,13 @@ ServerSettingsTab::ServerSettingsTab(QWidget *parent) :
     restore();
 }
 
-void ServerSettingsTab::restore() {
+void ServerSettingsPage::restore() {
     if (!Settings::serverAddress().isEmpty()) {
         ServerSettings::instance()->load();
     }
 }
 
-void ServerSettingsTab::save() {
+void ServerSettingsPage::save() {
     if (!Settings::serverAddress().isEmpty()) {
         ServerSettings::instance()->setMaximumConcurrentTransfers(m_concurrentSpinBox->value());
         ServerSettings::instance()->setCustomTransferCommand(m_commandEdit->text());
@@ -59,7 +59,7 @@ void ServerSettingsTab::save() {
     }
 }
 
-void ServerSettingsTab::onSettingsLoaded() {
+void ServerSettingsPage::onSettingsLoaded() {
     m_concurrentSpinBox->setValue(ServerSettings::instance()->maximumConcurrentTransfers());
     m_commandEdit->setText(ServerSettings::instance()->customTransferCommand());
     m_commandCheckBox->setChecked(ServerSettings::instance()->customTransferCommandEnabled());

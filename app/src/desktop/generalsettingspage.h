@@ -14,45 +14,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef URLOPENERSETTINGSTAB_H
-#define URLOPENERSETTINGSTAB_H
+#ifndef GENERALSETTINGSPAGE_H
+#define GENERALSETTINGSPAGE_H
 
-#include "settingstab.h"
+#include "settingspage.h"
 
+class QCheckBox;
 class QFormLayout;
 class QLineEdit;
 class QPushButton;
-class QTreeView;
+class QSpinBox;
 
-class UrlOpenerSettingsTab : public SettingsTab
+class GeneralSettingsPage : public SettingsPage
 {
     Q_OBJECT
 
 public:
-    explicit UrlOpenerSettingsTab(QWidget *parent = 0);
+    explicit GeneralSettingsPage(QWidget *parent = 0);
 
 public Q_SLOTS:
     virtual void restore();
     virtual void save();
 
 private Q_SLOTS:
-    void addOpener();
-    void setCurrentOpener(const QModelIndex &index);
+    void showFileDialog();
     
-    void showContextMenu(const QPoint &pos);
-    
-    void onRegExpChanged(const QString &pattern);
-    void onCommandChanged(const QString &command);
-
 private:    
-    QTreeView *m_view;
-
-    QLineEdit *m_regexpEdit;
+    QLineEdit *m_pathEdit;
     QLineEdit *m_commandEdit;
     
-    QPushButton *m_saveButton;
+    QPushButton *m_pathButton;
+
+    QSpinBox *m_concurrentSpinBox;
+    
+    QCheckBox *m_commandCheckBox;
+    QCheckBox *m_automaticCheckBox;
     
     QFormLayout *m_layout;
 };
-
-#endif // URLOPENERSETTINGSTAB_H
+    
+#endif // GENERALSETTINGSPAGE_H

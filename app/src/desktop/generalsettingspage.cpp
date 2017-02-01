@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "generalsettingstab.h"
+#include "generalsettingspage.h"
 #include "definitions.h"
 #include "settings.h"
 #include <QCheckBox>
@@ -24,8 +24,8 @@
 #include <QPushButton>
 #include <QSpinBox>
 
-GeneralSettingsTab::GeneralSettingsTab(QWidget *parent) :
-    SettingsTab(parent),
+GeneralSettingsPage::GeneralSettingsPage(QWidget *parent) :
+    SettingsPage(parent),
     m_pathEdit(new QLineEdit(this)),
     m_commandEdit(new QLineEdit(this)),
     m_pathButton(new QPushButton(QIcon::fromTheme("document-open"), tr("&Browse"), this)),
@@ -49,7 +49,7 @@ GeneralSettingsTab::GeneralSettingsTab(QWidget *parent) :
     restore();
 }
 
-void GeneralSettingsTab::restore() {
+void GeneralSettingsPage::restore() {
     m_pathEdit->setText(Settings::downloadPath());
     m_concurrentSpinBox->setValue(Settings::maximumConcurrentTransfers());
     m_commandEdit->setText(Settings::customTransferCommand());
@@ -57,7 +57,7 @@ void GeneralSettingsTab::restore() {
     m_automaticCheckBox->setChecked(Settings::startTransfersAutomatically());
 }
 
-void GeneralSettingsTab::save() {
+void GeneralSettingsPage::save() {
     Settings::setDownloadPath(m_pathEdit->text());
     Settings::setMaximumConcurrentTransfers(m_concurrentSpinBox->value());
     Settings::setCustomTransferCommand(m_commandEdit->text());
@@ -65,7 +65,7 @@ void GeneralSettingsTab::save() {
     Settings::setStartTransfersAutomatically(m_automaticCheckBox->isChecked());
 }
 
-void GeneralSettingsTab::showFileDialog() {
+void GeneralSettingsPage::showFileDialog() {
     const QString path = QFileDialog::getExistingDirectory(this, tr("Download path"), Settings::downloadPath());
 
     if (!path.isEmpty()) {

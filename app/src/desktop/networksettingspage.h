@@ -14,50 +14,44 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef CATEGORYSETTINGSTAB_H
-#define CATEGORYSETTINGSTAB_H
+#ifndef NETWORKSETTINGSPAGE_H
+#define NETWORKSETTINGSPAGE_H
 
-#include "settingstab.h"
+#include "settingspage.h"
 
-class CategoryModel;
+class NetworkProxyTypeModel;
+class QCheckBox;
+class QComboBox;
 class QFormLayout;
 class QLineEdit;
-class QPushButton;
-class QTreeView;
+class QSpinBox;
 
-class CategorySettingsTab : public SettingsTab
+class NetworkSettingsPage : public SettingsPage
 {
     Q_OBJECT
 
 public:
-    explicit CategorySettingsTab(QWidget *parent = 0);
+    explicit NetworkSettingsPage(QWidget *parent = 0);
 
 public Q_SLOTS:
     virtual void restore();
     virtual void save();
 
-private Q_SLOTS:
-    void addCategory();
-    void setCurrentCategory(const QModelIndex &index);
-    
-    void showContextMenu(const QPoint &pos);
-    void showFileDialog();
-
-    void onNameChanged(const QString &name);
-    void onPathChanged(const QString &path);
-
 private:
-    CategoryModel *m_model;
+    NetworkProxyTypeModel *m_proxyTypeModel;
     
-    QTreeView *m_view;
+    QCheckBox *m_proxyCheckBox;
+    QCheckBox *m_authCheckBox;
 
-    QLineEdit *m_nameEdit;
-    QLineEdit *m_pathEdit;
+    QComboBox *m_proxyTypeSelector;
 
-    QPushButton *m_pathButton;
-    QPushButton *m_saveButton;
+    QLineEdit *m_hostEdit;
+    QLineEdit *m_usernameEdit;
+    QLineEdit *m_passwordEdit;
+
+    QSpinBox *m_portSpinBox;
 
     QFormLayout *m_layout;
 };
 
-#endif // CATEGORYSETTINGSTAB_H
+#endif // NETWORKSETTINGSPAGE_H

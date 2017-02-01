@@ -52,10 +52,9 @@ int Transfers::count() const {
     return m_transfers.size();
 }
 
-Transfer* Transfers::addEnclosureDownload(const QString &url, const QString &subscriptionId, const QString &category,
+Transfer* Transfers::addEnclosureDownload(const QString &url, const QString &category,
                                           int priority) {
-    Logger::log(QString("Transfers::addEnclosureDownload(). URL: %1, Subscription ID: %2").arg(url).arg(subscriptionId),
-                Logger::LowVerbosity);
+    Logger::log("Transfers::addEnclosureDownload(). URL: " + url, Logger::LowVerbosity);
     EnclosureDownload *transfer = new EnclosureDownload(this);
     transfer->setNetworkAccessManager(m_nam);
     transfer->setCategory(category);
@@ -64,7 +63,6 @@ Transfer* Transfers::addEnclosureDownload(const QString &url, const QString &sub
     transfer->setFileName(url.mid(url.lastIndexOf("/") + 1));
     transfer->setName(transfer->fileName());
     transfer->setPriority(Transfer::Priority(priority));
-    transfer->setSubscriptionId(subscriptionId);
     transfer->setUrl(url);
     connect(transfer, SIGNAL(statusChanged()), this, SLOT(onTransferStatusChanged()));
     
@@ -157,7 +155,6 @@ void Transfers::save() {
         settings.setValue("name", transfer->data(Transfer::NameRole));
         settings.setValue("priority", transfer->data(Transfer::PriorityRole));
         settings.setValue("size", transfer->data(Transfer::SizeRole));
-        settings.setValue("subscriptionId", transfer->data(Transfer::SubscriptionIdRole));
         settings.setValue("transferType", transfer->data(Transfer::TransferTypeRole));
         settings.setValue("url", transfer->data(Transfer::UrlRole));
     }
@@ -194,7 +191,6 @@ void Transfers::load() {
         transfer->setData(Transfer::NameRole, settings.value("name"));
         transfer->setData(Transfer::PriorityRole, settings.value("priority"));
         transfer->setData(Transfer::SizeRole, settings.value("size"));
-        transfer->setData(Transfer::SubscriptionIdRole, settings.value("subscriptionId"));
         transfer->setData(Transfer::UrlRole, settings.value("url"));
         connect(transfer, SIGNAL(statusChanged()), this, SLOT(onTransferStatusChanged()));
     

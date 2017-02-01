@@ -15,14 +15,12 @@
  */
 
 #include "enclosuredownload.h"
-#include "dbconnection.h"
 #include "definitions.h"
 #include "enclosurerequest.h"
-#include "json.h"
 #include "logger.h"
 #include "pluginmanager.h"
+#include "pluginsettings.h"
 #include "settings.h"
-#include "subscription.h"
 #include "utils.h"
 #include <QBuffer>
 #include <QDir>
@@ -54,8 +52,6 @@ QVariant EnclosureDownload::data(int role) const {
         return downloadPath();
     case FileNameRole:
         return fileName();
-    case SubscriptionIdRole:
-        return subscriptionId();
     default:
         return Transfer::data(role);
     }
@@ -77,9 +73,6 @@ bool EnclosureDownload::setData(int role, const QVariant &value) {
         return true;
     case FileNameRole:
         setFileName(value.toString());
-        return true;
-    case SubscriptionIdRole:
-        setSubscriptionId(value.toString());
         return true;
     default:
         return Transfer::setData(role, value);
@@ -164,18 +157,6 @@ void EnclosureDownload::setFileName(const QString &name) {
     }    
 }
 
-QString EnclosureDownload::subscriptionId() const {
-    return m_subscriptionId;
-}
-
-void EnclosureDownload::setSubscriptionId(const QString &i) {
-    if (i != subscriptionId()) {
-        m_subscriptionId = i;
-        emit subscriptionIdChanged();
-        emit dataChanged(this, SubscriptionIdRole);
-    }
-}
-
 void EnclosureDownload::queue() {
     switch (status()) {
     case Canceled:
@@ -204,8 +185,27 @@ void EnclosureDownload::start() {
         break;
     }
     
-    setStatus(Connecting);
-    DBConnection::connection(this, SLOT(onSubscriptionFetched(DBConnection*)))->exec(QString("SELECT sourceType, source FROM subscriptions WHERE id = '%1'").arg(subscriptionId()));
+    const FeedPluginList plugins = PluginManager::instance()->plugins();
+
+    for (int i = 0; i < plugins.size(); i++) {
+        const FeedPluginConfig *config = plugins.at(i).config;
+
+        if ((config->supportsEnclosures()) && (config->enclosureIsSupported(url()))) {
+            EnclosureRequest *request = plugins.at(i).plugin->enclosureRequest(this);
+
+            if (request) {
+                setStatus(Connecting);
+                connect(request, SIGNAL(finished(EnclosureRequest*)),
+                        this, SLOT(onEnclosureRequestFinished(EnclosureRequest*)));
+
+                PluginSettings settings(config->id(), this);
+                request->getEnclosure(url(), settings.values());
+                return;
+            }
+        }
+    }
+    
+    startDownload(url());
 }
 
 void EnclosureDownload::pause() {
@@ -405,42 +405,6 @@ void EnclosureDownload::moveDownloadedFiles() {
     downDir.rmdir(downDir.path());
     setErrorString(QString());
     setStatus(Completed);
-}
-
-void EnclosureDownload::onSubscriptionFetched(DBConnection *connection) {
-    if (connection->status() == DBConnection::Ready) {
-        if (connection->nextRecord()) {
-            if (connection->value(0) == Subscription::Plugin) {
-                const QVariantMap source = QtJson::Json::parse(connection->value(1).toString()).toMap();
-                const QString pluginId = source.value("pluginId").toString();
-                const FeedPluginConfig *config = PluginManager::instance()->getConfig(pluginId);
-                
-                if ((config) && (config->handlesEnclosures())) {
-                    EnclosureRequest *request = PluginManager::instance()->enclosureRequest(pluginId, this);
-                    
-                    if (request) {
-                        connect(request, SIGNAL(finished(EnclosureRequest*)),
-                                this, SLOT(onEnclosureRequestFinished(EnclosureRequest*)));
-                        request->getEnclosure(url(), source.value("settings").toMap());
-                        connection->deleteLater();
-                        return;
-                    }
-                }
-            }
-            
-            startDownload(url());
-        }
-        else {
-            setErrorString(tr("Database error"));
-            setStatus(Failed);
-        }
-    }
-    else {
-        setErrorString(connection->errorString());
-        setStatus(Failed);
-    }
-    
-    connection->deleteLater();
 }
 
 void EnclosureDownload::onEnclosureRequestFinished(EnclosureRequest *request) {

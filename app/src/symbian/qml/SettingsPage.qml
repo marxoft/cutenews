@@ -29,7 +29,7 @@ MyPage {
         id: view
         
         anchors.fill: parent
-        model: [qsTr("General"), qsTr("Downloads"), qsTr("Network"), qsTr("Logging"), qsTr("About")]
+        model: [qsTr("General"), qsTr("Downloads"), qsTr("Network"), qsTr("Logging"), qsTr("Plugins"),  qsTr("About")]
         delegate: TextDelegate {
             subItemIndicator: true
             text: modelData
@@ -48,6 +48,9 @@ MyPage {
                     appWindow.pageStack.push(Qt.resolvedUrl("LoggingSettingsPage.qml"));
                     break;
                 case 4:
+                    appWindow.pageStack.push(Qt.resolvedUrl("PluginsSettingsPage.qml"));
+                    break;
+                case 5:
                     appWindow.pageStack.push(Qt.resolvedUrl("AboutPage.qml"));
                     break;
                 default:

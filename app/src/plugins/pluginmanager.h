@@ -48,12 +48,14 @@ public:
     FeedPluginList plugins() const;
 
     Q_INVOKABLE FeedPluginConfig* getConfig(const QString &id) const;
+    Q_INVOKABLE FeedPluginConfig* getConfigForEnclosure(const QString &url) const;
     Q_INVOKABLE FeedPlugin* getPlugin(const QString &id) const;
+    Q_INVOKABLE FeedPlugin* getPluginForEnclosure(const QString &url) const;
     
-    Q_INVOKABLE EnclosureRequest* enclosureRequest(const QString &id, QObject *parent = 0) const;
+    Q_INVOKABLE EnclosureRequest* enclosureRequest(const QString &url, QObject *parent = 0) const;
     Q_INVOKABLE FeedRequest* feedRequest(const QString &id, QObject *parent = 0) const;
 
-public Q_SLOTS:    
+public Q_SLOTS:
     int load();
 
 Q_SIGNALS:
@@ -62,7 +64,7 @@ Q_SIGNALS:
 private:
     PluginManager();
     
-    FeedPluginConfig* getConfigByFilePath(const QString &filePath) const;
+    FeedPluginConfig* getConfigForFilePath(const QString &filePath) const;
 
     static PluginManager *self;
 

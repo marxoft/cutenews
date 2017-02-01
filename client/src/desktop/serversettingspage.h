@@ -14,13 +14,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "settingstab.h"
+#ifndef SERVERSETTINGSPAGE_H
+#define SERVERSETTINGSPAGE_H
 
-SettingsTab::SettingsTab(QWidget *parent) :
-    QWidget(parent)
+#include "settingspage.h"
+
+class QCheckBox;
+class QFormLayout;
+class QLineEdit;
+class QSpinBox;
+
+class ServerSettingsPage : public SettingsPage
 {
-}
+    Q_OBJECT
 
-void SettingsTab::restore() {}
+public:
+    explicit ServerSettingsPage(QWidget *parent = 0);
 
-void SettingsTab::save() {}
+public Q_SLOTS:
+    virtual void restore();
+    virtual void save();
+
+private Q_SLOTS:
+    void onSettingsLoaded();
+    
+private:    
+    QLineEdit *m_commandEdit;
+    
+    QSpinBox *m_concurrentSpinBox;
+    
+    QCheckBox *m_commandCheckBox;
+    QCheckBox *m_automaticCheckBox;
+    
+    QFormLayout *m_layout;
+};
+    
+#endif // SERVERSETTINGSPAGE_H

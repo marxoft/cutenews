@@ -14,14 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "clientsettingstab.h"
+#include "clientsettingspage.h"
 #include "settings.h"
 #include <QCheckBox>
 #include <QFormLayout>
 #include <QLineEdit>
 
-ClientSettingsTab::ClientSettingsTab(QWidget *parent) :
-    SettingsTab(parent),
+ClientSettingsPage::ClientSettingsPage(QWidget *parent) :
+    SettingsPage(parent),
     m_authCheckBox(new QCheckBox(tr("Enable server &authentication"), this)),
     m_addressEdit(new QLineEdit(this)),
     m_usernameEdit(new QLineEdit(this)),
@@ -40,14 +40,14 @@ ClientSettingsTab::ClientSettingsTab(QWidget *parent) :
     restore();
 }
 
-void ClientSettingsTab::restore() {
+void ClientSettingsPage::restore() {
     m_authCheckBox->setChecked(Settings::serverAuthenticationEnabled());
     m_addressEdit->setText(Settings::serverAddress());
     m_usernameEdit->setText(Settings::serverUsername());
     m_passwordEdit->setText(Settings::serverPassword());
 }
 
-void ClientSettingsTab::save() {
+void ClientSettingsPage::save() {
     Settings::setServerUsername(m_usernameEdit->text());
     Settings::setServerPassword(m_passwordEdit->text());
     Settings::setServerAuthenticationEnabled(m_authCheckBox->isChecked());

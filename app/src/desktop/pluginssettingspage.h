@@ -14,45 +14,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef URLOPENERSETTINGSTAB_H
-#define URLOPENERSETTINGSTAB_H
+#ifndef PLUGINSSETTINGSPAGE_H
+#define PLUGINSSETTINGSPAGE_H
 
-#include "settingstab.h"
+#include "settingspage.h"
 
-class QFormLayout;
-class QLineEdit;
-class QPushButton;
-class QTreeView;
+class PluginConfigModel;
+class QListView;
+class QScrollArea;
+class QSplitter;
+class QVBoxLayout;
 
-class UrlOpenerSettingsTab : public SettingsTab
+class PluginsSettingsPage : public SettingsPage
 {
     Q_OBJECT
 
 public:
-    explicit UrlOpenerSettingsTab(QWidget *parent = 0);
+    explicit PluginsSettingsPage(QWidget *parent = 0);
 
 public Q_SLOTS:
-    virtual void restore();
     virtual void save();
 
 private Q_SLOTS:
-    void addOpener();
-    void setCurrentOpener(const QModelIndex &index);
-    
-    void showContextMenu(const QPoint &pos);
-    
-    void onRegExpChanged(const QString &pattern);
-    void onCommandChanged(const QString &command);
+    void setCurrentPlugin(const QModelIndex &index);
 
-private:    
-    QTreeView *m_view;
+private:
+    PluginConfigModel *m_model;
 
-    QLineEdit *m_regexpEdit;
-    QLineEdit *m_commandEdit;
-    
-    QPushButton *m_saveButton;
-    
-    QFormLayout *m_layout;
+    QListView *m_view;
+
+    QScrollArea *m_scrollArea;
+
+    QSplitter *m_splitter;
+
+    QVBoxLayout *m_layout;
 };
 
-#endif // URLOPENERSETTINGSTAB_H
+#endif // PLUGINSSETTINGSPAGE_H

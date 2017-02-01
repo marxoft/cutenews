@@ -14,21 +14,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SETTINGSTAB_H
-#define SETTINGSTAB_H
+#ifndef CLIENTSETTINGSPAGE_H
+#define CLIENTSETTINGSPAGE_H
 
-#include <QWidget>
+#include "settingspage.h"
 
-class SettingsTab : public QWidget
+class QCheckBox;
+class QFormLayout;
+class QLineEdit;
+
+class ClientSettingsPage : public SettingsPage
 {
     Q_OBJECT
 
 public:
-    explicit SettingsTab(QWidget *parent = 0);
+    explicit ClientSettingsPage(QWidget *parent = 0);
 
 public Q_SLOTS:
     virtual void restore();
     virtual void save();
+
+private:    
+    QCheckBox *m_authCheckBox;
+    
+    QLineEdit *m_addressEdit;
+    QLineEdit *m_usernameEdit;
+    QLineEdit *m_passwordEdit;
+    
+    QFormLayout *m_layout;
 };
 
-#endif // SETTINGSTAB_H
+#endif // CLIENTSETTINGSPAGE_H

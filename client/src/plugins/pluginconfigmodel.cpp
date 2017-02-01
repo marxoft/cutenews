@@ -20,12 +20,13 @@ PluginConfigModel::PluginConfigModel(QObject *parent) :
     QAbstractListModel(parent)
 {
     m_roles[DisplayNameRole] = "displayName";
-    m_roles[FilePathRole] = "filePath";
-    m_roles[HandlesEnclosuresRole] = "handlesEnclosures";
+    m_roles[EnclosureRegExpRole] = "enclosureRegExp";
+    m_roles[EnclosureSettingsRole] = "enclosureSettings";
+    m_roles[FeedSettingsRole] = "feedSettings";
     m_roles[IdRole] = "id";
-    m_roles[PluginFilePathRole] = "pluginFilePath";
     m_roles[PluginTypeRole] = "pluginType";
-    m_roles[SettingsRole] = "settings";
+    m_roles[SupportsEnclosuresRole] = "supportsEnclosures";
+    m_roles[SupportsFeedsRole] = "supportsFeeds";
     m_roles[VersionRole] = "version";
 #if QT_VERSION < 0x050000
     setRoleNames(m_roles);
@@ -89,16 +90,20 @@ QVariant PluginConfigModel::data(const QModelIndex &index, int role) const {
         }
         
         return QVariant();
-    case FilePathRole:
-        return config->filePath();
+    case EnclosureRegExpRole:
+        return config->enclosureRegExp();
+    case EnclosureSettingsRole:
+        return config->enclosureSettings();
+    case FeedSettingsRole:
+        return config->feedSettings();
     case IdRole:
         return config->id();
-    case PluginFilePathRole:
-        return config->pluginFilePath();
     case PluginTypeRole:
         return config->pluginType();
-    case SettingsRole:
-        return config->settings();
+    case SupportsEnclosuresRole:
+        return config->supportsEnclosures();
+    case SupportsFeedsRole:
+        return config->supportsFeeds();
     case VersionRole:
         return config->version();
     default:

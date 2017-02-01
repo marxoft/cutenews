@@ -37,7 +37,10 @@ public:
         
         for (int i = 0; i < plugins.size(); i++) {
             const FeedPluginConfig *config = plugins.at(i).config;
-            append(config->displayName(), config->id());
+
+            if (config->supportsFeeds()) {
+                append(config->displayName(), config->id());
+            }
         }
     }
 };

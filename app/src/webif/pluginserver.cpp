@@ -23,10 +23,13 @@
 static QVariantMap pluginConfigToMap(const FeedPluginConfig *config) {
     QVariantMap map;
     map["displayName"] = config->displayName();
-    map["handlesEnclosures"] = config->handlesEnclosures();
     map["id"] = config->id();
     map["pluginType"] = config->pluginType();
-    map["settings"] = config->settings();
+    map["supportsEnclosures"] = config->supportsEnclosures();
+    map["enclosureRegExp"] = config->enclosureRegExp().pattern();
+    map["enclosureSettings"] = config->enclosureSettings();
+    map["supportsFeeds"] = config->supportsFeeds();
+    map["feedSettings"] = config->feedSettings();
     map["version"] = config->version();
     return map;
 }

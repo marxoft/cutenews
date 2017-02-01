@@ -21,7 +21,6 @@
 #include <QFile>
 #include <QTime>
 
-class DBConnection;
 class EnclosureRequest;
 class QNetworkReply;
 class QNetworkRequest;
@@ -51,7 +50,6 @@ class EnclosureDownload : public Transfer
                NOTIFY customCommandOverrideEnabledChanged)
     Q_PROPERTY(QString downloadPath READ downloadPath WRITE setDownloadPath NOTIFY downloadPathChanged)
     Q_PROPERTY(QString fileName READ fileName WRITE setFileName NOTIFY fileNameChanged)
-    Q_PROPERTY(QString subscriptionId READ subscriptionId WRITE setSubscriptionId NOTIFY subscriptionIdChanged)
 
 public:
     explicit EnclosureDownload(QObject *parent = 0);
@@ -73,9 +71,6 @@ public:
     QString fileName() const;
     void setFileName(const QString &fn);
     
-    QString subscriptionId() const;
-    void setSubscriptionId(const QString &i);
-    
 public Q_SLOTS:
     virtual void queue();
     virtual void start();
@@ -83,7 +78,6 @@ public Q_SLOTS:
     virtual void cancel();    
 
 private Q_SLOTS:
-    void onSubscriptionFetched(DBConnection *connection);
     void onEnclosureRequestFinished(EnclosureRequest *request);
     void onReplyMetaDataChanged();
     void onReplyReadyRead();
@@ -97,7 +91,6 @@ Q_SIGNALS:
     void customCommandOverrideEnabledChanged();
     void downloadPathChanged();
     void fileNameChanged();
-    void subscriptionIdChanged();
 
 private:
     QProcess* process();
@@ -127,8 +120,6 @@ private:
     QString m_downloadPath;
         
     QString m_fileName;
-
-    QString m_subscriptionId;
     
     int m_redirects;
     

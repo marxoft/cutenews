@@ -19,9 +19,9 @@
 
 #include <QDialog>
 
-class ClientSettingsTab;
-class ServerSettingsTab;
-class UrlOpenerSettingsTab;
+class ClientSettingsPage;
+class ServerSettingsPage;
+class UrlOpenerSettingsPage;
 class QDialogButtonBox;
 class QStackedWidget;
 class QTabBar;
@@ -38,16 +38,16 @@ public Q_SLOTS:
     virtual void accept();
 
 private Q_SLOTS:
-    void setCurrentTab(int index);
+    void setCurrentPage(int index);
     
-    void showClientTab();
-    void showServerTab();
-    void showUrlOpenerTab();
+    void showClientPage();
+    void showServerPage();
+    void showUrlOpenerPage();
 
 private:
-    ClientSettingsTab *m_clientTab;
-    ServerSettingsTab *m_serverTab;
-    UrlOpenerSettingsTab *m_openerTab;
+    ClientSettingsPage *m_clientPage;
+    ServerSettingsPage *m_serverPage;
+    UrlOpenerSettingsPage *m_openerPage;
     
     QTabBar *m_tabBar;
     

@@ -249,37 +249,37 @@ maemo5 {
     HEADERS += \
         src/desktop/aboutdialog.h \
         src/desktop/browser.h \
-        src/desktop/clientsettingstab.h \
+        src/desktop/clientsettingspage.h \
         src/desktop/customcommanddialog.h \
         src/desktop/definitions.h \
         src/desktop/logger.h \
         src/desktop/mainwindow.h \
         src/desktop/plugindialog.h \
-        src/desktop/serversettingstab.h \
+        src/desktop/serversettingspage.h \
         src/desktop/settings.h \
         src/desktop/settingsdialog.h \
-        src/desktop/settingstab.h \
+        src/desktop/settingspage.h \
         src/desktop/subscriptiondialog.h \
         src/desktop/subscriptionsourcetypemodel.h \
         src/desktop/transfersview.h \
-        src/desktop/urlopenersettingstab.h
+        src/desktop/urlopenersettingspage.h
     
     SOURCES += \
         src/desktop/aboutdialog.cpp \
         src/desktop/browser.cpp \
-        src/desktop/clientsettingstab.cpp \
+        src/desktop/clientsettingspage.cpp \
         src/desktop/customcommanddialog.cpp \
         src/desktop/logger.cpp \
         src/desktop/main.cpp \
         src/desktop/mainwindow.cpp \
         src/desktop/plugindialog.cpp \
-        src/desktop/serversettingstab.cpp \
+        src/desktop/serversettingspage.cpp \
         src/desktop/settings.cpp \
         src/desktop/settingsdialog.cpp \
-        src/desktop/settingstab.cpp \
+        src/desktop/settingspage.cpp \
         src/desktop/subscriptiondialog.cpp \
         src/desktop/transfersview.cpp \
-        src/desktop/urlopenersettingstab.cpp
+        src/desktop/urlopenersettingspage.cpp
     
     desktop.files = desktop/desktop/cutenews-client.desktop
     desktop.path = /usr/share/applications

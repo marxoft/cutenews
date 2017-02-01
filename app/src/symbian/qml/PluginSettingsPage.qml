@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,41 +14,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import QtQuick 1.0
-import org.hildon.components 1.0
+import QtQuick 1.1
+import com.nokia.symbian 1.1
 import cuteNews 1.0
 
-Dialog {
+MyPage {
     id: root
     
-    property string subscriptionId
-    property string pluginId
-        
-    title: qsTr("Subscription properties")
-    height: 360
+    property alias pluginId: plugin.pluginId
+    property alias pluginSettings: repeater.model
+
+    title: qsTr("Plugin settings")
+    tools: ToolBarLayout {
+        BackToolButton {}
+    }
     
-    Flickable {
+    PluginSettings {
+        id: plugin
+    }
+    
+    KeyNavFlickable {
         id: flickable
         
-        anchors {
-            left: parent.left
-            right: button.left
-            rightMargin: platformStyle.paddingMedium
-            top: parent.top
-            bottom: parent.bottom
-        }
-        horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
-        contentHeight: flow.height + platformStyle.paddingMedium * 5
+        anchors.fill: parent
+        contentHeight: inputContext.visible ? height : column.height + platformStyle.paddingLarge * 2
         
-        Flow {
-            id: flow
+        Column {
+            id: column
             
             anchors {
                 left: parent.left
                 right: parent.right
                 top: parent.top
+                margins: platformStyle.paddingLarge
             }
-            spacing: platformStyle.paddingMedium
+            spacing: platformStyle.paddingLarge
             
             Repeater {
                 id: repeater
@@ -77,71 +77,37 @@ Dialog {
                         default:
                             break;
                         }
-                        
+
                         if (item) {
                             item.init(modelData);
                         }
                     }
-                    
+
                     Component.onCompleted: initSourceComponent()
                 }
             }
-            
-            Label {
-                width: parent.width
-                text: qsTr("Update interval (0 to disable)")
-            }
-            
-            SpinBox {
-                id: updateIntervalSpinBox
-                
-                width: parent.width - updateIntervalSelector.width - parent.spacing
-            }
-            
-            ComboBox {
-                id: updateIntervalSelector
-                
-                model: UpdateIntervalTypeModel {
-                    id: updateIntervalModel
-                }
-                textRole: "name"
-            }
-            
-            CheckBox {
-                id: enclosuresCheckBox
-                
-                width: parent.width
-                text: qsTr("Download enclosures automatically")
-            }
         }
-    }
-    
-    Button {
-        id: button
         
-        anchors {
-            right: parent.right
-            bottom: parent.bottom
+        ScrollDecorator {
+            flickableItem: flickable
         }
-        style: DialogButtonStyle {}
-        text: qsTr("Done")
-        onClicked: root.accept()
     }
     
     Component {
         id: checkBox
         
-        CheckBox {
+        MySwitch {
             property string key
 
             function init(modelData, group) {
                 key = (group ? group + "/" : "") + modelData.key;
                 text = modelData.label;
-                checked = internal.getValue(key, modelData.value) === true;
+                checked = plugin.value(key, modelData.value) === true;
             }
 
-            width: flow.width
-            onCheckedChanged: internal.setValue(key, checked)
+            width: column.width
+            visible: !inputContext.visible
+            onCheckedChanged: plugin.setValue(key, checked)
         }
     }
     
@@ -155,15 +121,14 @@ Dialog {
                 repeater.model = modelData.settings;
             }
 
-            width: flow.width
+            width: column.width
             spacing: platformStyle.paddingLarge
             
-            Label {
+            HeaderLabel {
                 id: label
 
                 width: parent.width
-                horizontalAlignment: Text.AlignHCenter
-                color: platformStyle.secondaryTextColor
+                visible: !inputContext.visible
             }
             
             Repeater {
@@ -211,39 +176,33 @@ Dialog {
             function init(modelData, group) {
                 label.text = modelData.label;
                 field.key = (group ? group + "/" : "") + modelData.key;
-                
-                if (modelData.minimum) {
-                    field.minimum = modelData.minimum;
-                }
-                
-                if (modelData.maximum) {
-                    field.maximum = modelData.maximum;
-                }
-                
-                if (modelData.step) {
-                    field.singleStep = modelData.step;
-                }
-                
-                field.value = internal.getValue(field.key, modelData.value) || 0;
+                field.validator.bottom = Math.max(0, parseInt(modelData.minimum));
+                field.validator.top = Math.max(1, parseInt(modelData.maximum));
+                field.text = plugin.value(field.key, modelData.value);
             }
 
-            width: flow.width
-            spacing: platformStyle.paddingMedium
+            width: column.width
+            spacing: platformStyle.paddingLarge
             
             Label {
                 id: label
 
                 width: parent.width
                 elide: Text.ElideRight
+                visible: field.visible
             }
             
-            SpinBox {
+            MyTextField {
                 id: field
 
                 property string key
 
                 width: parent.width
-                onValueChanged: internal.setValue(key, value)
+                validator: IntValidator {}
+                inputMethodHints: Qt.ImhDigitsOnly
+                visible: (!inputContext.visible) || (activeFocus)
+                onTextChanged: plugin.setValue(key, text)
+                onAccepted: closeSoftwareInputPanel()
             }
         }
     }
@@ -255,27 +214,31 @@ Dialog {
             function init(modelData, group) {
                 label.text = modelData.label;
                 field.key = (group ? group + "/" : "") + modelData.key;
-                field.text = internal.getValue(field.key, modelData.value) || "";
+                field.text = plugin.value(field.key, modelData.value);
             }
 
-            width: flow.width
-            spacing: platformStyle.paddingMedium
+            width: column.width
+            spacing: platformStyle.paddingLarge
             
             Label {
                 id: label
 
                 width: parent.width
                 elide: Text.ElideRight
+                visible: field.visible
             }
             
-            TextField {
+            MyTextField {
                 id: field
 
                 property string key
 
                 width: parent.width
                 echoMode: TextInput.Password
-                onTextChanged: internal.setValue(key, text)
+                inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText
+                visible: (!inputContext.visible) || (activeFocus)
+                onTextChanged: plugin.setValue(key, text)
+                onAccepted: closeSoftwareInputPanel()
             }
         }
     }
@@ -287,26 +250,30 @@ Dialog {
             function init(modelData, group) {
                 label.text = modelData.label;
                 field.key = (group ? group + "/" : "") + modelData.key;
-                field.text = internal.getValue(field.key, modelData.value) || "";
+                field.text = plugin.value(field.key, modelData.value);
             }
 
-            width: flow.width
-            spacing: platformStyle.paddingMedium
+            width: column.width
+            spacing: platformStyle.paddingLarge
             
             Label {
                 id: label
 
                 width: parent.width
                 elide: Text.ElideRight
+                visible: field.visible
             }
             
-            TextField {
+            MyTextField {
                 id: field
 
                 property string key
 
                 width: parent.width
-                onTextChanged: internal.setValue(key, text)
+                inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText
+                visible: (!inputContext.visible) || (activeFocus)
+                onTextChanged: plugin.setValue(key, text)
+                onAccepted: closeSoftwareInputPanel()
             }
         }
     }
@@ -314,105 +281,26 @@ Dialog {
     Component {
         id: valueSelector
         
-        ListSelectorButton {
+        ValueSelector {
             property string key
 
             function init(modelData, group) {
                 key = (group ? group + "/" : "") + modelData.key
-                text = modelData.label;
+                title = modelData.label;
 
                 for (var i = 0; i < modelData.options.length; i++) {
                     var option = modelData.options[i];
                     model.append(option.label, option.value);
                 }
 
-                value = internal.getValue(key, modelData.value) || model.data(0, "value");
+                value = plugin.value(key, modelData.value);
             }
 
-            width: flow.width
+            x: -platformStyle.paddingLarge
+            width: column.width + platformStyle.paddingLarge * 2
             model: SelectionModel {}
-            onSelected: internal.setValue(key, value)
+            visible: !inputContext.visible
+            onAccepted: plugin.setValue(key, value)
         }
-    }
-    
-    Subscription {
-        id: subscription
-        
-        onStatusChanged: {
-            if (status == Subscription.Ready) {
-                pluginId = source.pluginId;
-                enclosuresCheckBox.checked = downloadEnclosures;
-                
-                if (updateInterval > 0) {
-                    for (var i = updateIntervalModel.count - 1; i >= 0; i--) {
-                        var value = updateIntervalModel.data(i, "value");
-                        
-                        if ((value > 0) && (updateInterval % value == 0)) {
-                            updateIntervalSpinBox.value = updateInterval / value;
-                            updateIntervalSelector.currentIndex = i;
-                            break;
-                        }
-                    }
-                }
-                
-                internal.settings = source.settings;
-                repeater.model = plugins.getConfig(pluginId).feedSettings;
-            }
-        }
-    }
-    
-    QtObject {
-        id: internal
-        
-        property variant settings
-        
-        function getValue(key, defaultValue) {
-            if ((settings) && (settings.hasOwnProperty(key))) {
-                return settings[key];
-            }
-            
-            return defaultValue;
-        }
-        
-        function setValue(key, value) {
-            var p = settings ? settings : {};
-            p[key] = value;
-            settings = p;
-        }
-                
-        function stringifySource() {
-            var s = {};
-            s["pluginId"] = pluginId;
-            s["settings"] = settings;
-            return JSON.stringify(s);
-        }
-    }
-    
-    onStatusChanged: {
-        if (status == DialogStatus.Opening) {
-            internal.settings = null;
-            
-            if (subscriptionId) {
-                subscription.load(subscriptionId);
-            }
-            else if (pluginId) {
-                repeater.model = plugins.getConfig(pluginId).settings;
-            }
-        }
-    }
-    onAccepted: {
-        var interval = updateIntervalSpinBox.value;
-        
-        if (interval > 0) {
-            interval *= updateIntervalModel.data(updateIntervalSelector.currentIndex, "value");
-        }
-        
-        if (subscriptionId) {
-            subscription.update({source: internal.stringifySource(),
-            downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0, updateInterval: interval});
-        }
-        else {
-            subscriptions.create(internal.stringifySource(), Subscription.Plugin, enclosuresCheckBox.checked, interval);
-        }        
     }
 }

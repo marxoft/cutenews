@@ -22,7 +22,6 @@ Dialog {
     id: root
     
     property string url
-    property string subscriptionId
     property alias category: categorySelector.value
     property alias priority: prioritySelector.value
     
@@ -73,5 +72,5 @@ Dialog {
         onClicked: root.accept()
     }
     
-    onAccepted: transfers.addEnclosureDownload(url, subscriptionId, category, priority)
+    onAccepted: transfers.addEnclosureDownload(url, category, priority)
 }

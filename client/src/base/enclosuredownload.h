@@ -29,7 +29,6 @@ class EnclosureDownload : public Transfer
                NOTIFY customCommandOverrideEnabledChanged)
     Q_PROPERTY(QString downloadPath READ downloadPath NOTIFY downloadPathChanged)
     Q_PROPERTY(QString fileName READ fileName NOTIFY fileNameChanged)
-    Q_PROPERTY(QString subscriptionId READ subscriptionId NOTIFY subscriptionIdChanged)
 
 public:
     explicit EnclosureDownload(const QVariantMap &properties, QObject *parent = 0);
@@ -49,8 +48,6 @@ public:
     
     QString fileName() const;
     
-    QString subscriptionId() const;
-
 protected:
     virtual void load(const QVariantMap &result);
     
@@ -60,15 +57,12 @@ Q_SIGNALS:
     void customCommandOverrideEnabledChanged();
     void downloadPathChanged();
     void fileNameChanged();
-    void subscriptionIdChanged();
 
 private:
     void setDownloadPath(const QString &path);
     
     void setFileName(const QString &fn);
-    
-    void setSubscriptionId(const QString &i);
-    
+        
     void updateCategory(const QString &c);
     
     void updateCustomCommand(const QString &c);
@@ -82,8 +76,6 @@ private:
     QString m_downloadPath;
         
     QString m_fileName;
-
-    QString m_subscriptionId;
 };
 
 #endif // ENCLOSUREDOWNLOAD_H

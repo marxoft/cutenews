@@ -60,16 +60,28 @@ FeedPluginConfig* PluginManager::getConfig(const QString &id) const {
     return 0;
 }
 
-FeedPluginConfig* PluginManager::getConfigByFilePath(const QString &filePath) const {
+FeedPluginConfig* PluginManager::getConfigForEnclosure(const QString &url) const {
+    foreach (const FeedPluginPair &pair, m_plugins) {
+        if (pair.config->enclosureIsSupported(url)) {
+            Logger::log("PluginManager::getConfigForEnclosure(). PluginFound: " + url, Logger::HighVerbosity);
+            return pair.config;
+        }
+    }
+    
+    Logger::log("PluginManager::getConfigForEnclosure(). No Plugin found for enclosure " + url, Logger::HighVerbosity);
+    return 0;
+}
+
+FeedPluginConfig* PluginManager::getConfigForFilePath(const QString &filePath) const {
     foreach (const FeedPluginPair &pair, m_plugins) {
         if (pair.config->filePath() == filePath) {
-            Logger::log("PluginManager::getConfigByFilePath(). PluginFound: " + pair.config->id(),
+            Logger::log("PluginManager::getConfigForFilePath(). PluginFound: " + pair.config->id(),
                         Logger::HighVerbosity);
             return pair.config;
         }
     }
     
-    Logger::log("PluginManager::getConfigByFilePath(). No Plugin found for filePath " + filePath,
+    Logger::log("PluginManager::getConfigForFilePath(). No Plugin found for filePath " + filePath,
                 Logger::HighVerbosity);
     return 0;
 }
@@ -86,8 +98,20 @@ FeedPlugin* PluginManager::getPlugin(const QString &id) const {
     return 0;
 }
 
-EnclosureRequest* PluginManager::enclosureRequest(const QString &id, QObject *parent) const {
-    if (FeedPlugin *plugin = getPlugin(id)) {
+FeedPlugin* PluginManager::getPluginForEnclosure(const QString &url) const {
+    foreach (const FeedPluginPair &pair, m_plugins) {
+        if (pair.config->enclosureIsSupported(url)) {
+            Logger::log("PluginManager::getPluginForEnclosure(). PluginFound: " + url, Logger::HighVerbosity);
+            return pair.plugin;
+        }
+    }
+    
+    Logger::log("PluginManager::getPluginForEnclosure(). No Plugin found for enclosure " + url, Logger::HighVerbosity);
+    return 0;
+}
+
+EnclosureRequest* PluginManager::enclosureRequest(const QString &url, QObject *parent) const {
+    if (FeedPlugin *plugin = getPluginForEnclosure(url)) {
         return plugin->enclosureRequest(parent);
     }
 
@@ -113,7 +137,7 @@ int PluginManager::load() {
         
         foreach (const QFileInfo &info, dir.entryInfoList(QStringList() << "*.json", QDir::Files, QDir::Time)) {
             if (info.lastModified() > m_lastLoaded) {
-                FeedPluginConfig *config = getConfigByFilePath(info.absoluteFilePath());
+                FeedPluginConfig *config = getConfigForFilePath(info.absoluteFilePath());
                 
                 if (!config) {
                     config = new FeedPluginConfig(this);

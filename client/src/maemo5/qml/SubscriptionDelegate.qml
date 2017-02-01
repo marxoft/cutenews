@@ -25,7 +25,7 @@ ListItem {
         
         anchors {
             left: parent.left
-            right: parent.right
+            right: !read ? unreadLoader.left : parent.right
             top: index > 1 ? parent.top : undefined
             verticalCenter: index > 1 ? undefined : parent.verticalCenter
             margins: platformStyle.paddingMedium

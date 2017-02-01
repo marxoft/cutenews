@@ -43,7 +43,6 @@ static QVariantMap transferToMap(const Transfer *transfer) {
     map["speedString"] = transfer->data(Transfer::SpeedStringRole);
     map["status"] = transfer->data(Transfer::StatusRole);
     map["statusString"] = transfer->data(Transfer::StatusStringRole);
-    map["subscriptionId"] = transfer->data(Transfer::SubscriptionIdRole);
     map["transferType"] = transfer->data(Transfer::TransferTypeRole);
     map["transferTypeString"] = transfer->data(Transfer::TransferTypeStringRole);
     map["url"] = transfer->data(Transfer::UrlRole);
@@ -101,13 +100,11 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
             foreach (const QVariant &v, list) {
                 const QVariantMap properties = v.toMap();
                 const QString url = properties.value("url").toString();
-                const QString subscriptionId = properties.value("subscriptionId").toString();
                 
-                if ((!url.isEmpty()) && (!subscriptionId.isEmpty())) {
+                if (!url.isEmpty()) {
                     const QString category = properties.value("category").toString();
                     const int priority = properties.value("priority", Transfer::NormalPriority).toInt();
-                    const Transfer *transfer = Transfers::instance()->addEnclosureDownload(url, subscriptionId,
-                                                                                           category, priority);
+                    const Transfer *transfer = Transfers::instance()->addEnclosureDownload(url, category, priority);
                 
                     if (transfer) {
                         transfers << transferToMap(transfer);

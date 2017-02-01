@@ -51,8 +51,7 @@ public:
     
     Status status() const;
     
-    Q_INVOKABLE void addEnclosureDownload(const QString &url, const QString &subscriptionId,
-                                          const QString &category = QString(),
+    Q_INVOKABLE void addEnclosureDownload(const QString &url, const QString &category = QString(),
                                           int priority = Transfer::NormalPriority);
     
     Q_INVOKABLE Transfer* get(int i) const;

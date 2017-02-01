@@ -162,10 +162,8 @@ MyPage {
                     x: -platformStyle.paddingLarge
                     width: column.width + platformStyle.paddingLarge * 2
                     flickableMode: true
-                    onActivated: appWindow.pageStack.push(Qt.resolvedUrl("DownloadPage.qml"),
-                    {url: modelData.url, subscriptionId: article.subscriptionId})
-                    onClicked: appWindow.pageStack.push(Qt.resolvedUrl("DownloadPage.qml"),
-                    {url: modelData.url, subscriptionId: article.subscriptionId})
+                    onActivated: appWindow.pageStack.push(Qt.resolvedUrl("DownloadPage.qml"), {url: modelData.url})
+                    onClicked: appWindow.pageStack.push(Qt.resolvedUrl("DownloadPage.qml"), {url: modelData.url})
                     onPressAndHold: {
                         enclosuresRepeater.currentIndex = index;
                         popups.open(enclosureMenu, root);
@@ -258,8 +256,7 @@ MyPage {
                 MenuItem {
                     text: qsTr("Download")
                     onClicked: appWindow.pageStack.push(Qt.resolvedUrl("DownloadPage.qml"),
-                        {url: article.enclosures[enclosuresRepeater.currentIndex].url,
-                        subscriptionId: article.subscriptionId})
+                        {url: article.enclosures[enclosuresRepeater.currentIndex].url})
                 }                
             }
         }

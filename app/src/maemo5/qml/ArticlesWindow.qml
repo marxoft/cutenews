@@ -225,7 +225,7 @@ Window {
         id: enclosuresDialog
         
         EnclosuresDialog {
-            article: articleModel.itemData(articleView.currentIndex)
+            enclosures: articleModel.data(articleView.currentIndex, "enclosures")
         }
     }
     
