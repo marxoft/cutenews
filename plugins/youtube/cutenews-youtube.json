@@ -4,7 +4,7 @@
     "name": "YouTube videos",
     "supportsFeeds": true,
     "supportsEnclosures": true,
-    "enclosureRegExp": "(http(s|)://(www.|m.|)youtube.com/(v/|.+)(v=|)|http(s|)://youtu.be/)",
+    "enclosureRegExp": "(http(s|)://(www\\.|m\\.|)youtube\\.com/(v/|.+)(v=|)|http(s|)://youtu\\.be/)",
     "enclosureSettings": [
         {
             "type": "list",
