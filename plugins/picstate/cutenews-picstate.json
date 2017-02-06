@@ -1,0 +1,8 @@
+{
+    "type": "js",
+    "version": 1,
+    "name": "PicState images",
+    "supportsFeeds": false,
+    "supportsEnclosures": true,
+    "enclosureRegExp": "http(s|)://(www\\.|)picstate\\.com/view/full/[\\w_]+"
+}
