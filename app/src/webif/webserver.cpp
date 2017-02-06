@@ -48,6 +48,10 @@ WebServer* WebServer::instance() {
     return self ? self : self = new WebServer;
 }
 
+QString WebServer::address() const {
+    return m_server ? m_server->serverAddress().toString() : QString();
+}
+
 int WebServer::port() const {
     return m_port;
 }

@@ -14,12 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "transfersview.h"
+#include "transferspage.h"
 #include "customcommanddialog.h"
 #include "definitions.h"
+#include "serversettings.h"
 #include "settings.h"
+#include "transfer.h"
 #include "transfermodel.h"
-#include "transfers.h"
 #include <QActionGroup>
 #include <QApplication>
 #include <QHeaderView>
@@ -31,10 +32,9 @@
 #include <QTreeView>
 #include <QVBoxLayout>
 
-TransfersView::TransfersView(QWidget *parent) :
-    QWidget(parent),
-    m_model(new TransferModel(this)),
-    m_transferMenu(new QMenu(tr("&Transfer"), this)),
+TransfersPage::TransfersPage(QWidget *parent) :
+    Page(parent),
+    m_transferMenu(new QMenu(tr("&Download"), this)),
     m_categoryMenu(new QMenu(tr("&Category"), this)),
     m_priorityMenu(new QMenu(tr("&Priority"), this)),
     m_propertiesMenu(new QMenu(tr("&Properties"), this)),
@@ -61,7 +61,7 @@ TransfersView::TransfersView(QWidget *parent) :
     m_transferMenu->addAction(m_transferRemoveAction);
     m_transferMenu->setEnabled(false);
     
-    setCategoryMenuActions();
+    setCategoryMenuActions(ServerSettings::instance()->categoryNames());
     
     const QStringList priorities = QStringList() << tr("Highest") << tr("High") << tr("Normal") << tr("Low")
                                                  << tr("Lowest");
@@ -73,7 +73,7 @@ TransfersView::TransfersView(QWidget *parent) :
         m_priorityGroup->addAction(action);
     }
     
-    const int max = Settings::maximumConcurrentTransfers();
+    const int max = ServerSettings::instance()->maximumConcurrentTransfers();
     
     for (int i = 1; i <= MAX_CONCURRENT_TRANSFERS; i++) {
         QAction *action = m_concurrentMenu->addAction(QString::number(i), this, SLOT(setMaximumConcurrentTransfers()));
@@ -90,7 +90,7 @@ TransfersView::TransfersView(QWidget *parent) :
     m_toolBar->addAction(m_pauseAction);
     m_toolBar->addAction(m_propertiesAction);
     
-    m_view->setModel(m_model);
+    m_view->setModel(TransferModel::instance());
     m_view->setItemDelegate(new TransferDelegate(m_view));
     m_view->setAlternatingRowColors(true);
     m_view->setSelectionBehavior(QTreeView::SelectRows);
@@ -108,8 +108,8 @@ TransfersView::TransfersView(QWidget *parent) :
     
     connect(m_categoryMenu, SIGNAL(aboutToShow()), this, SLOT(setActiveCategoryMenuAction()));
     connect(m_priorityMenu, SIGNAL(aboutToShow()), this, SLOT(setActivePriorityMenuAction()));
-    connect(m_startAction, SIGNAL(triggered()), Transfers::instance(), SLOT(start()));
-    connect(m_pauseAction, SIGNAL(triggered()), Transfers::instance(), SLOT(pause()));
+    connect(m_startAction, SIGNAL(triggered()), TransferModel::instance(), SLOT(start()));
+    connect(m_pauseAction, SIGNAL(triggered()), TransferModel::instance(), SLOT(pause()));
     connect(m_propertiesAction, SIGNAL(triggered()), this, SLOT(showPropertiesMenu()));
     connect(m_transferCommandAction, SIGNAL(triggered()), this, SLOT(setTransferCustomCommand()));
     connect(m_transferStartAction, SIGNAL(triggered()), this, SLOT(queueTransfer()));
@@ -118,48 +118,53 @@ TransfersView::TransfersView(QWidget *parent) :
     connect(m_view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showContextMenu(QPoint)));
     connect(m_view->selectionModel(), SIGNAL(currentRowChanged(QModelIndex, QModelIndex)),
             this, SLOT(onCurrentTransferChanged(QModelIndex)));
-    connect(Settings::instance(), SIGNAL(categoriesChanged()), this, SLOT(setCategoryMenuActions()));
-    connect(Settings::instance(), SIGNAL(maximumConcurrentTransfersChanged(int)),
+    connect(ServerSettings::instance(), SIGNAL(categoryNamesChanged(QStringList)),
+            this, SLOT(setCategoryMenuActions(QStringList)));
+    connect(ServerSettings::instance(), SIGNAL(maximumConcurrentTransfersChanged(int)),
             this, SLOT(onMaximumConcurrentTransfersChanged(int)));
+    
+    if (!Settings::serverAddress().isEmpty()) {
+        TransferModel::instance()->load();
+    }
 }
 
-void TransfersView::closeEvent(QCloseEvent *e) {
+void TransfersPage::closeEvent(QCloseEvent *e) {
     Settings::setTransfersHeaderViewState(m_view->header()->saveState());
     QWidget::closeEvent(e);
 }
 
-void TransfersView::queueTransfer() {
+void TransfersPage::queueTransfer() {
     if (m_view->currentIndex().isValid()) {
         queueTransfer(m_view->currentIndex());
     }
 }
 
-void TransfersView::queueTransfer(const QModelIndex &index) {
-    if (Transfer *transfer = Transfers::instance()->get(index.row())) {
+void TransfersPage::queueTransfer(const QModelIndex &index) {
+    if (Transfer *transfer = TransferModel::instance()->get(index.row())) {
         transfer->queue();
     }
 }
 
-void TransfersView::pauseTransfer() {
+void TransfersPage::pauseTransfer() {
     if (m_view->currentIndex().isValid()) {
         pauseTransfer(m_view->currentIndex());
     }
 }
 
-void TransfersView::pauseTransfer(const QModelIndex &index) {
-    if (Transfer *transfer = Transfers::instance()->get(index.row())) {
+void TransfersPage::pauseTransfer(const QModelIndex &index) {
+    if (Transfer *transfer = TransferModel::instance()->get(index.row())) {
         transfer->pause();
     }
 }
 
-void TransfersView::removeTransfer() {
+void TransfersPage::removeTransfer() {
     if (m_view->currentIndex().isValid()) {
         removeTransfer(m_view->currentIndex());
     }
 }
 
-void TransfersView::removeTransfer(const QModelIndex &index) {
-    if (Transfer *transfer = Transfers::instance()->get(index.row())) {
+void TransfersPage::removeTransfer(const QModelIndex &index) {
+    if (Transfer *transfer = TransferModel::instance()->get(index.row())) {
         if (QMessageBox::question(this, tr("Remove?"),
             tr("Do you want to remove download '%1'?").arg(transfer->name())) == QMessageBox::Yes) {
             transfer->cancel();
@@ -167,7 +172,7 @@ void TransfersView::removeTransfer(const QModelIndex &index) {
     }
 }
 
-void TransfersView::setTransferCategory() {
+void TransfersPage::setTransferCategory() {
     if (m_view->currentIndex().isValid()) {
         if (const QAction *action = m_categoryGroup->checkedAction()) {
             setTransferCategory(m_view->currentIndex(), action->text());
@@ -175,11 +180,11 @@ void TransfersView::setTransferCategory() {
     }
 }
 
-void TransfersView::setTransferCategory(const QModelIndex &index, const QString &category) {
-    m_model->setData(index, category, Transfer::CategoryRole);
+void TransfersPage::setTransferCategory(const QModelIndex &index, const QString &category) {
+    TransferModel::instance()->setData(index, category, Transfer::CategoryRole);
 }
 
-void TransfersView::setTransferCustomCommand() {
+void TransfersPage::setTransferCustomCommand() {
     const QModelIndex index = m_view->currentIndex();
     
     if (index.isValid()) {
@@ -193,12 +198,12 @@ void TransfersView::setTransferCustomCommand() {
     }
 }
 
-void TransfersView::setTransferCustomCommand(const QModelIndex &index, const QString &command, bool overrideEnabled) {
-    m_model->setData(index, command, Transfer::CustomCommandRole);
-    m_model->setData(index, overrideEnabled, Transfer::CustomCommandOverrideEnabledRole);
+void TransfersPage::setTransferCustomCommand(const QModelIndex &index, const QString &command, bool overrideEnabled) {
+    TransferModel::instance()->setData(index, command, Transfer::CustomCommandRole);
+    TransferModel::instance()->setData(index, overrideEnabled, Transfer::CustomCommandOverrideEnabledRole);
 }
 
-void TransfersView::setTransferPriority() {
+void TransfersPage::setTransferPriority() {
     if (m_view->currentIndex().isValid()) {
         if (const QAction *action = m_priorityGroup->checkedAction()) {
             setTransferPriority(m_view->currentIndex(), action->data().toInt());
@@ -206,12 +211,11 @@ void TransfersView::setTransferPriority() {
     }
 }
 
-void TransfersView::setTransferPriority(const QModelIndex &index, int priority) {
-    m_model->setData(index, priority, Transfer::PriorityRole);
+void TransfersPage::setTransferPriority(const QModelIndex &index, int priority) {
+    TransferModel::instance()->setData(index, priority, Transfer::PriorityRole);
 }
 
-void TransfersView::setCategoryMenuActions() {
-    const QStringList categories = Settings::categoryNames();
+void TransfersPage::setCategoryMenuActions(const QStringList &categories) {
     m_categoryMenu->clear();
     
     foreach (const QString &category, categories) {
@@ -222,7 +226,7 @@ void TransfersView::setCategoryMenuActions() {
     }
 }
 
-void TransfersView::setActiveCategoryMenuAction() {
+void TransfersPage::setActiveCategoryMenuAction() {
     if (!m_view->currentIndex().isValid()) {
         return;
     }
@@ -237,7 +241,7 @@ void TransfersView::setActiveCategoryMenuAction() {
     }
 }
 
-void TransfersView::setActivePriorityMenuAction() {
+void TransfersPage::setActivePriorityMenuAction() {
     if (!m_view->currentIndex().isValid()) {
         return;
     }
@@ -252,27 +256,27 @@ void TransfersView::setActivePriorityMenuAction() {
     }
 }
 
-void TransfersView::setMaximumConcurrentTransfers() {
+void TransfersPage::setMaximumConcurrentTransfers() {
     if (const QAction *action = m_concurrentGroup->checkedAction()) {
-        Settings::setMaximumConcurrentTransfers(action->data().toInt());
+        ServerSettings::instance()->setMaximumConcurrentTransfers(action->data().toInt());
     }
 }
 
-void TransfersView::showContextMenu(const QPoint &pos) {
+void TransfersPage::showContextMenu(const QPoint &pos) {
     if (m_view->currentIndex().isValid()) {
         m_transferMenu->popup(m_view->mapToGlobal(pos));
     }
 }
 
-void TransfersView::showPropertiesMenu() {
+void TransfersPage::showPropertiesMenu() {
     m_propertiesMenu->popup(QCursor::pos());
 }
 
-void TransfersView::onCurrentTransferChanged(const QModelIndex &index) {
+void TransfersPage::onCurrentTransferChanged(const QModelIndex &index) {
     m_transferMenu->setEnabled(index.isValid());
 }
 
-void TransfersView::onMaximumConcurrentTransfersChanged(int maximum) {
+void TransfersPage::onMaximumConcurrentTransfersChanged(int maximum) {
     foreach (QAction *action, m_concurrentGroup->actions()) {
         if (action->data() == maximum) {
             action->setChecked(true);

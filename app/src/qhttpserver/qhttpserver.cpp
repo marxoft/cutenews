@@ -94,6 +94,18 @@ QHttpServer::~QHttpServer()
 {
 }
 
+QHostAddress QHttpServer::serverAddress() const
+{
+    Q_ASSERT(m_tcpServer);
+    return m_tcpServer->serverAddress();
+}
+
+qint16 QHttpServer::serverPort() const
+{
+    Q_ASSERT(m_tcpServer);
+    return m_tcpServer->serverPort();
+}
+
 void QHttpServer::newConnection()
 {
     Q_ASSERT(m_tcpServer);

@@ -107,13 +107,19 @@ MyPage {
             
             MenuLayout {
                 MenuItem {
+                    text: qsTr("Copy URL")
+                    onClicked: clipboard.text = articleModel.data(articleView.currentIndex, "url")
+                }
+                
+                MenuItem {
                     text: qsTr("Open externally")
                     onClicked: Qt.openUrlExternally(articleModel.data(articleView.currentIndex, "url"))
                 }
-
+                
                 MenuItem {
-                    text: qsTr("Copy URL")
-                    onClicked: clipboard.text = articleModel.data(articleView.currentIndex, "url")
+                    text: qsTr("Download")
+                    onClicked: appWindow.pageStack.push(Qt.resolvedUrl("DownloadPage.qml"),
+                    {url: articleModel.data(articleView.currentIndex, "url")})
                 }
 
                 MenuItem {

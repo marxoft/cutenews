@@ -79,8 +79,12 @@ public:
                      const QDateTime &date, const QVariantList &enclosures, bool isFavourite, bool isRead,
                      const QString &subscriptionId, const QString &title, const QString &url, QObject *parent = 0);
 
+    static QHash<int, QByteArray> roleNames();
+
     Q_INVOKABLE QVariant data(int role) const;
+    Q_INVOKABLE QVariant data(const QByteArray &roleName) const;
     Q_INVOKABLE bool setData(int role, const QVariant &value);
+    Q_INVOKABLE bool setData(const QByteArray &roleName, const QVariant &value);
     
     QString id() const;
     
@@ -146,6 +150,8 @@ Q_SIGNALS:
     void autoUpdateChanged();
 
 private:
+    static QHash<int, QByteArray> roles;
+    
     void setId(const QString &i);
     
     void setAuthor(const QString &a);

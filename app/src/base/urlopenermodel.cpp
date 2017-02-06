@@ -16,7 +16,11 @@
 
 #include "urlopenermodel.h"
 #include "definitions.h"
+#include "enclosurerequest.h"
 #include "logger.h"
+#include "pluginmanager.h"
+#include "pluginsettings.h"
+#include <QDesktopServices>
 #include <QProcess>
 #include <QRegExp>
 #include <QSettings>
@@ -116,11 +120,51 @@ bool UrlOpenerModel::open(const QString &url) {
         
         if (re.indexIn(url) == 0) {
             const QString command = data(i, "value").toString().replace("%u", url);
-            Logger::log(QString("UrlOpener::open(). URL: %1, Command: %2").arg(url).arg(command), Logger::LowVerbosity);
-            return QProcess::startDetached(command);
+            Logger::log(QString("UrlOpenerModel::open(). URL: %1, Command: %2").arg(url).arg(command),
+                        Logger::LowVerbosity);
+            
+            if (QProcess::startDetached(command)) {
+                return true;
+            }
         }
     }
     
-    Logger::log("UrlOpener::open(). No opener found for URL: " + url, Logger::LowVerbosity);
-    return false;
+    Logger::log("UrlOpener::open(). Using QDesktopServices::openUrl() for URL: " + url, Logger::LowVerbosity);
+    return QDesktopServices::openUrl(url);
+}
+
+bool UrlOpenerModel::openWithPlugin(const QString &url) {
+    const FeedPluginList plugins = PluginManager::instance()->plugins();
+
+    for (int i = 0; i < plugins.size(); i++) {
+        const FeedPluginConfig *config = plugins.at(i).config;
+
+        if ((config->supportsEnclosures()) && (config->enclosureIsSupported(url))) {
+            EnclosureRequest *request = plugins.at(i).plugin->enclosureRequest(this);
+            
+            if (request) {
+                connect(request, SIGNAL(finished(EnclosureRequest*)),
+                        this, SLOT(onEnclosureRequestFinished(EnclosureRequest*)));
+
+                PluginSettings settings(config->id(), this);
+                request->setProperty("url", url);
+                request->getEnclosure(url, settings.values());
+                return true;
+            }
+        }
+    }
+    
+    return open(url);
+}
+
+void UrlOpenerModel::onEnclosureRequestFinished(EnclosureRequest *request) {
+    if (request->status() == EnclosureRequest::Ready) {
+        open(request->result().request.url().toString());
+    }
+    else {
+        Logger::log("UrlOpenerModel::onEnclosureRequestFinished(). Error: " + request->errorString());
+        open(request->property("url").toString());
+    }
+    
+    request->deleteLater();
 }

@@ -88,8 +88,12 @@ public:
                           SourceType sourceType, const QString &title, int updateInterval, const QString &url,
                           int unreadArticles, QObject *parent = 0);
 
+    static QHash<int, QByteArray> roleNames();
+
     Q_INVOKABLE QVariant data(int role) const;
+    Q_INVOKABLE QVariant data(const QByteArray &roleName) const;
     Q_INVOKABLE bool setData(int role, const QVariant &value);
+    Q_INVOKABLE bool setData(const QByteArray &roleName, const QVariant &value);
     
     QString id() const;
         
@@ -155,6 +159,8 @@ Q_SIGNALS:
     void autoUpdateChanged();
 
 private:
+    static QHash<int, QByteArray> roles;
+    
     void setId(const QString &i);
         
     void setDescription(const QString &d);

@@ -60,6 +60,7 @@ public:
         FileNameRole,
         IdRole,
         NameRole,
+        PluginSettingsRole,
         PriorityRole,
         PriorityStringRole,
         ProgressRole,
@@ -72,7 +73,8 @@ public:
         StatusStringRole,
         TransferTypeRole,
         TransferTypeStringRole,
-        UrlRole
+        UrlRole,
+        UsePluginRole
     };
     
     enum Priority {
@@ -103,9 +105,13 @@ public:
     };
     
     explicit Transfer(TransferType transferType, QObject *parent = 0);
+    
+    static QHash<int, QByteArray> roleNames();
 
     Q_INVOKABLE virtual QVariant data(int role) const;
+    Q_INVOKABLE virtual QVariant data(const QByteArray &roleName);
     Q_INVOKABLE virtual bool setData(int role, const QVariant &value);
+    Q_INVOKABLE virtual bool setData(const QByteArray &roleName, const QVariant &value);
     
     void setNetworkAccessManager(QNetworkAccessManager *manager);
     
@@ -176,6 +182,8 @@ protected:
     QNetworkAccessManager* networkAccessManager();
 
 private:
+    static QHash<int, QByteArray> roles;
+    
     QPointer<QNetworkAccessManager> m_nam;
     
     bool m_ownNetworkAccessManager;

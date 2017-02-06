@@ -128,5 +128,5 @@ bool FeedPluginConfig::load(const QString &filePath) {
 }
 
 bool FeedPluginConfig::enclosureIsSupported(const QString &url) const {
-    return m_enclosureRegExp.indexIn(url) == 0;
+    return (!m_enclosureRegExp.isEmpty()) && (m_enclosureRegExp.indexIn(url) == 0);
 }

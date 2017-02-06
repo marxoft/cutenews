@@ -32,21 +32,8 @@ ArticleModel::ArticleModel(QObject *parent) :
     m_status(Idle),
     m_subscriptionId(ALL_ARTICLES_SUBSCRIPTION_ID)
 {
-    m_roles[Article::AuthorRole] = "author";
-    m_roles[Article::BodyRole] = "body";
-    m_roles[Article::CategoriesRole] = "categories";
-    m_roles[Article::DateRole] = "date";
-    m_roles[Article::DateStringRole] = "dateString";
-    m_roles[Article::EnclosuresRole] = "enclosures";
-    m_roles[Article::FavouriteRole] = "favourite";
-    m_roles[Article::HasEnclosuresRole] = "hasEnclosures";
-    m_roles[Article::IdRole] = "id";
-    m_roles[Article::ReadRole] = "read";
-    m_roles[Article::SubscriptionIdRole] = "subscriptionId";
-    m_roles[Article::TitleRole] = "title";
-    m_roles[Article::UrlRole] = "url";
 #if QT_VERSION <= 0x050000
-    setRoleNames(m_roles);
+    setRoleNames(Article::roleNames());
 #endif
     connect(DBNotify::instance(), SIGNAL(articlesAdded(QStringList, QString)),
             this, SLOT(onArticlesAdded(QStringList, QString)));
@@ -97,7 +84,7 @@ QString ArticleModel::subscriptionId() const {
 
 #if QT_VERSION >= 0x050000
 QHash<int, QByteArray> ArticleModel::roleNames() const {
-    return m_roles;
+    return Article::roleNames();
 }
 #endif
 
@@ -199,7 +186,7 @@ QVariant ArticleModel::data(const QModelIndex &index, int role) const {
 }
 
 QVariant ArticleModel::data(int row, const QByteArray &role) const {
-    return data(index(row), m_roles.key(role));
+    return data(index(row), roleNames().key(role));
 }
 
 bool ArticleModel::setData(const QModelIndex &index, const QVariant &value, int role) {
@@ -211,12 +198,12 @@ bool ArticleModel::setData(const QModelIndex &index, const QVariant &value, int 
 }
 
 bool ArticleModel::setData(int row, const QVariant &value, const QByteArray &role) {
-    return setData(index(row), value, m_roles.key(role));
+    return setData(index(row), value, roleNames().key(role));
 }
 
 QMap<int, QVariant> ArticleModel::itemData(const QModelIndex &index) const {
     QMap<int, QVariant> map;
-        
+    
     if (const Article *article = get(index.row())) {
         for (int i = Article::AuthorRole; i <= Article::UrlRole; i++) {
             map[i] = article->data(i);
@@ -228,10 +215,10 @@ QMap<int, QVariant> ArticleModel::itemData(const QModelIndex &index) const {
 
 QVariantMap ArticleModel::itemData(int row) const {
     QVariantMap map;
-        
+    
     if (const Article *article = get(row)) {
         for (int i = Article::AuthorRole; i <= Article::UrlRole; i++) {
-            map[m_roles.value(i)] = article->data(i);
+            map[roleNames().value(i)] = article->data(i);
         }
     }
     
@@ -289,7 +276,7 @@ QModelIndexList ArticleModel::match(const QModelIndex &start, int role, const QV
 }
 
 int ArticleModel::match(int start, const QByteArray &role, const QVariant &value, int flags) const {
-    const QModelIndexList indexes = match(index(start), m_roles.key(role), value, Qt::MatchFlags(flags));
+    const QModelIndexList indexes = match(index(start), roleNames().key(role), value, Qt::MatchFlags(flags));
     return indexes.isEmpty() ? -1 : indexes.first().row();
 }
 

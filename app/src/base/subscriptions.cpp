@@ -351,6 +351,8 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     sub["lastUpdated"] = QDateTime::currentDateTime().toTime_t();
     
     if (parser.date() <= lastUpdated) {
+        Logger::log(QString("Subscriptions::parseXml(). No new articles since %1 for subscription %2")
+                    .arg(lastUpdated.toString()).arg(subscriptionId), Logger::LowVerbosity);
         DBConnection::connection(this, SLOT(onConnectionFinished(DBConnection*)))->updateSubscription(subscriptionId,
                                                                                                       sub);
         
@@ -370,15 +372,17 @@ void Subscriptions::parseXml(const QByteArray &xml) {
         next();
         return;
     }
-
+    
     QString id = Utils::createId();
+    QDateTime date = parser.date();
     QVariantList enc = parser.enclosures();    
     QVariantList ids = QVariantList() << id;
     QVariantList authors = QVariantList() << parser.author();
-    QVariantList bodies = QVariantList() << replaceImageUrls(parser.description(), QString("%1%2/%3/")
-                                                             .arg(CACHE_PATH).arg(subscriptionId).arg(id));
+    QVariantList bodies = QVariantList() << replaceImageUrls(parser.description(), QString("%1%2%3/%4/")
+                                                             .arg(CACHE_AUTHORITY).arg(CACHE_PATH).arg(subscriptionId)
+                                                             .arg(id));
     QVariantList categories = QVariantList() << parser.categories().join(", ");
-    QVariantList dates = QVariantList() << parser.date().toTime_t();
+    QVariantList dates = QVariantList() << date.toTime_t();
     QVariantList enclosures = QVariantList() << QtJson::Json::serialize(enc);
     QVariantList favourites = QVariantList() << 0;
     QVariantList reads = QVariantList() << 0;
@@ -389,17 +393,17 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     
     if (subscription()->downloadEnclosures()) {
         foreach (const QVariant &e, enc) {
-            Transfers::instance()->addEnclosureDownload(e.toMap().value("url").toString());
+            Transfers::instance()->addEnclosureDownload(e.toMap().value("url").toString(), true);
         }
     }
     
-    while ((parser.readNextArticle()) && (parser.date() > lastUpdated)) {
+    while ((parser.readNextArticle()) && ((date = parser.date()) > lastUpdated)) {
         id = Utils::createId();
         enc = parser.enclosures();
         ids << id;
         authors << parser.author();
-        bodies << replaceImageUrls(parser.description(), QString("%1%2/%3/").arg(CACHE_PATH).arg(subscriptionId)
-                                   .arg(id));
+        bodies << replaceImageUrls(parser.description(), QString("%1%2%3/%4/").arg(CACHE_AUTHORITY).arg(CACHE_PATH)
+                                   .arg(subscriptionId).arg(id));
         categories << parser.categories().join(", ");
         dates << parser.date().toTime_t();
         enclosures << QtJson::Json::serialize(enc);
@@ -412,10 +416,13 @@ void Subscriptions::parseXml(const QByteArray &xml) {
 
         if (subscription()->downloadEnclosures()) {
             foreach (const QVariant &e, enc) {
-                Transfers::instance()->addEnclosureDownload(e.toMap().value("url").toString(), subscriptionId);
+                Transfers::instance()->addEnclosureDownload(e.toMap().value("url").toString(), true);
             }
         }
     }
+    
+    Logger::log(QString("Subscriptions::parseXml(). %1 new articles found since %2 for subscription %3").arg(ids.size())
+                .arg(lastUpdated.toString()).arg(subscriptionId), Logger::LowVerbosity);
     
     DBConnection::connection(this, SLOT(onConnectionFinished(DBConnection*)))->addArticles(QList<QVariantList>()
                              << ids << authors << bodies << categories << dates << enclosures << favourites << reads

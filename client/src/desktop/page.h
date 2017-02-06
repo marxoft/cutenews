@@ -14,13 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "settingspage.h"
+#ifndef PAGE_H
+#define PAGE_H
 
-SettingsPage::SettingsPage(QWidget *parent) :
-    Page(parent)
+#include <QWidget>
+
+class Page : public QWidget
 {
-}
+    Q_OBJECT
 
-void SettingsPage::restore() {}
+public:
+    explicit Page(QWidget *parent = 0);
+};
 
-void SettingsPage::save() {}
+#endif // PAGE_H

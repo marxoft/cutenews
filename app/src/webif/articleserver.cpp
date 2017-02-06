@@ -16,16 +16,17 @@
 
 #include "articleserver.h"
 #include "dbconnection.h"
+#include "definitions.h"
 #include "json.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
 #include "utils.h"
 
-static QVariantMap articleQueryToMap(const DBConnection *connection) {
+static QVariantMap articleQueryToMap(const DBConnection *connection, const QString &authority) {
     QVariantMap article;
     article["id"] = connection->value(0);
     article["author"] = connection->value(1);
-    article["body"] = connection->value(2);
+    article["body"] = connection->value(2).toString().replace(CACHE_AUTHORITY, authority);
     article["categories"] = connection->value(3).toString().split(", ", QString::SkipEmptyParts);
     article["date"] = connection->value(4);
     article["enclosures"] = QtJson::Json::parse(connection->value(5).toString());
@@ -56,11 +57,18 @@ bool ArticleServer::handleRequest(QHttpRequest *request, QHttpResponse *response
         return false;
     }
     
+    QString authority("http://" + request->header("host"));
+    
+    if (CACHE_AUTHORITY.endsWith("/")) {
+        authority.append("/");
+    }
+    
+    response->setProperty("authority", authority);
+    
     if (parts.size() == 1) {
         if (request->method() == QHttpRequest::HTTP_GET) {
             m_responses.enqueue(response);
-            const QUrl url = request->url();
-            const QString ids = Utils::urlQueryItemValue(url, "id");
+            const QString ids = Utils::urlQueryItemValue(request->url(), "id");
             
             if (!ids.isEmpty()) {
                 DBConnection::connection(this,
@@ -68,9 +76,9 @@ bool ArticleServer::handleRequest(QHttpRequest *request, QHttpResponse *response
                 return true;
             }
             
-            const int offset = Utils::urlQueryItemValue(url, "offset", "0").toInt();
-            const int limit = Utils::urlQueryItemValue(url, "limit", "0").toInt();
-            const QString subscriptionId = Utils::urlQueryItemValue(url, "subscriptionId");
+            const int offset = Utils::urlQueryItemValue(request->url(), "offset", "0").toInt();
+            const int limit = Utils::urlQueryItemValue(request->url(), "limit", "0").toInt();
+            const QString subscriptionId = Utils::urlQueryItemValue(request->url(), "subscriptionId");
             
             if (!subscriptionId.isEmpty()) {
                 DBConnection::connection(this,
@@ -78,7 +86,7 @@ bool ArticleServer::handleRequest(QHttpRequest *request, QHttpResponse *response
                 return true;
             }
             
-            const QString query = Utils::urlQueryItemValue(url, "search");
+            const QString query = Utils::urlQueryItemValue(request->url(), "search");
                 
             if (!query.isEmpty()) {
                 DBConnection::connection(this,
@@ -146,9 +154,11 @@ void ArticleServer::onArticleFetched(DBConnection *connection) {
     }
     
     QHttpResponse *response = m_responses.dequeue();
+    const QString authority = response->property("authority").toString();
     
     if (connection->status() == DBConnection::Ready) {
-        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articleQueryToMap(connection)));
+        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articleQueryToMap(connection,
+                                                                                                    authority)));
     }
     else {
         writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
@@ -164,12 +174,13 @@ void ArticleServer::onArticlesFetched(DBConnection *connection) {
     }
     
     QHttpResponse *response = m_responses.dequeue();
+    const QString authority = response->property("authority").toString();
     
     if (connection->status() == DBConnection::Ready) {
         QVariantList articles;
         
         while (connection->nextRecord()) {
-            articles << articleQueryToMap(connection);
+            articles << articleQueryToMap(connection, authority);
         }
         
         writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articles));

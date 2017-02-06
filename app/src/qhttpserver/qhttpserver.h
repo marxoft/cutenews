@@ -56,13 +56,16 @@ extern QHash<int, QString> STATUS_CODES;
 class QHTTPSERVER_API QHttpServer : public QObject
 {
     Q_OBJECT
-
+    
 public:
     /// Construct a new HTTP Server.
     /** @param parent Parent QObject for the server. */
     QHttpServer(QObject *parent = 0);
 
     virtual ~QHttpServer();
+    
+    QHostAddress serverAddress() const;
+    qint16 serverPort() const;
 
     /// Start the server by bounding to the given @c address and @c port.
     /** @note This function returns immediately, it does not block.

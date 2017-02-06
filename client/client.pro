@@ -28,7 +28,6 @@ HEADERS += \
     src/base/transfer.h \
     src/base/transfermodel.h \
     src/base/transferprioritymodel.h \
-    src/base/transfers.h \
     src/base/updateintervaltypemodel.h \
     src/base/urlopenermodel.h \
     src/base/utils.h \
@@ -52,7 +51,6 @@ SOURCES += \
     src/base/subscriptions.cpp \
     src/base/transfer.cpp \
     src/base/transfermodel.cpp \
-    src/base/transfers.cpp \
     src/base/urlopenermodel.cpp \
     src/base/utils.cpp \
     src/plugins/feedpluginconfig.cpp \
@@ -254,14 +252,16 @@ maemo5 {
         src/desktop/definitions.h \
         src/desktop/logger.h \
         src/desktop/mainwindow.h \
+        src/desktop/page.h \
         src/desktop/plugindialog.h \
+        src/desktop/qdatetimedialog.h \
         src/desktop/serversettingspage.h \
         src/desktop/settings.h \
         src/desktop/settingsdialog.h \
         src/desktop/settingspage.h \
         src/desktop/subscriptiondialog.h \
         src/desktop/subscriptionsourcetypemodel.h \
-        src/desktop/transfersview.h \
+        src/desktop/transferspage.h \
         src/desktop/urlopenersettingspage.h
     
     SOURCES += \
@@ -272,13 +272,15 @@ maemo5 {
         src/desktop/logger.cpp \
         src/desktop/main.cpp \
         src/desktop/mainwindow.cpp \
+        src/desktop/page.cpp \
         src/desktop/plugindialog.cpp \
+        src/desktop/qdatetimedialog.cpp \
         src/desktop/serversettingspage.cpp \
         src/desktop/settings.cpp \
         src/desktop/settingsdialog.cpp \
         src/desktop/settingspage.cpp \
         src/desktop/subscriptiondialog.cpp \
-        src/desktop/transfersview.cpp \
+        src/desktop/transferspage.cpp \
         src/desktop/urlopenersettingspage.cpp
     
     desktop.files = desktop/desktop/cutenews-client.desktop

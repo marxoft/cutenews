@@ -22,7 +22,7 @@
 #include "pluginmanager.h"
 #include "settings.h"
 #include "subscriptions.h"
-#include "transfers.h"
+#include "transfermodel.h"
 #include "urlopenermodel.h"
 #include <QApplication>
 #include <QIcon>
@@ -60,7 +60,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     QScopedPointer<PluginManager> plugins(PluginManager::instance());
     QScopedPointer<Settings> settings(Settings::instance());
     QScopedPointer<Subscriptions> subscriptions(Subscriptions::instance());
-    QScopedPointer<Transfers> transfers(Transfers::instance());
+    QScopedPointer<TransferModel> transfers(TransferModel::instance());
     QScopedPointer<UrlOpenerModel> opener(UrlOpenerModel::instance());
     
     MainWindow window;

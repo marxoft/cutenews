@@ -68,9 +68,7 @@ Window {
         
         anchors.fill: parent
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
-        model: TransferModel {
-            id: transferModel
-        }
+        model: transfers
         delegate: TransferDelegate {
             onClicked: popups.open(contextMenu, root)
             onPressAndHold: popups.open(contextMenu, root)
@@ -92,9 +90,9 @@ Window {
         
         Menu {            
             MenuItem {
-                text: transferModel.data(view.currentIndex, "status") == Transfer.Downloading ? qsTr("Pause")
+                text: transfers.data(view.currentIndex, "status") == Transfer.Downloading ? qsTr("Pause")
                 : qsTr("Start")
-                onTriggered: transferModel.data(view.currentIndex, "status") == Transfer.Downloading
+                onTriggered: transfers.data(view.currentIndex, "status") == Transfer.Downloading
                 ? transfers.get(view.currentIndex).pause() : transfers.get(view.currentIndex).queue()
             }
             
@@ -122,8 +120,8 @@ Window {
             title: qsTr("Category")
             model: CategoryNameModel {}
             textRole: "name"
-            currentIndex: Math.max(0, model.match(0, "value", transferModel.data(view.currentIndex, "category")))
-            onSelected: transferModel.setData(view.currentIndex, text, "category")
+            currentIndex: Math.max(0, model.match(0, "value", transfers.data(view.currentIndex, "category")))
+            onSelected: transfers.setData(view.currentIndex, text, "category")
         }
     }
     
@@ -134,8 +132,8 @@ Window {
             title: qsTr("Priority")
             model: TransferPriorityModel {}
             textRole: "name"
-            currentIndex: Math.max(0, model.match(0, "value", transferModel.data(view.currentIndex, "priority")))
-            onSelected: transferModel.setData(view.currentIndex, model.data(currentIndex, "value"), "priority")
+            currentIndex: Math.max(0, model.match(0, "value", transfers.data(view.currentIndex, "priority")))
+            onSelected: transfers.setData(view.currentIndex, model.data(currentIndex, "value"), "priority")
         }
     }
     
@@ -143,13 +141,15 @@ Window {
         target: transfers
         onStatusChanged: {
             switch (transfers.status) {
-            case Transfers.Active: {
+            case TransferModel.Active: {
                 root.showProgressIndicator = true;
+                reloadAction.enabled = false;
                 label.visible = false;
                 break;
             }
             default: {
                 root.showProgressIndicator = false;
+                reloadAction.enabled = true;
                 label.visible = (transfers.count == 0);
                 break;
             }

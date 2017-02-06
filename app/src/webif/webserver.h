@@ -31,6 +31,7 @@ class WebServer : public QObject
 {
     Q_OBJECT
     
+    Q_PROPERTY(QString address READ address)
     Q_PROPERTY(int port READ port WRITE setPort NOTIFY portChanged)
     Q_PROPERTY(bool authenticationEnabled READ authenticationEnabled WRITE setAuthenticationEnabled
                NOTIFY authenticationEnabledChanged)
@@ -51,7 +52,8 @@ public:
     ~WebServer();
     
     static WebServer* instance();
-        
+    
+    QString address() const;
     int port() const;
     
     bool authenticationEnabled() const;

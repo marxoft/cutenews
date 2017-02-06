@@ -54,6 +54,5 @@ AppWindow {
     Connections {
         target: transfers
         onError: infoBanner.information(errorString)
-        onTransferAdded: infoBanner.information(qsTr("Enclosure added to downloads"))
     }
 }

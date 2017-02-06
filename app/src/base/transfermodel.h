@@ -53,10 +53,7 @@ public:
                           Qt::MatchFlags flags = Qt::MatchFlags(Qt::MatchExactly | Qt::MatchWrap)) const;
     Q_INVOKABLE int match(int start, const QByteArray &role, const QVariant &value,
                           int flags = Qt::MatchFlags(Qt::MatchExactly | Qt::MatchWrap)) const;
-    
-private:
-    int indexOf(Transfer *transfer) const;
-    
+
 private Q_SLOTS:
     void onCountChanged(int count);
     void onTransferAdded(Transfer *transfer);
@@ -66,7 +63,7 @@ Q_SIGNALS:
     void countChanged(int count);
     
 private:
-    QHash<int, QByteArray> m_roles;
+    int indexOf(Transfer *transfer) const;
 };
 
 #endif // TRANSFERMODEL_H

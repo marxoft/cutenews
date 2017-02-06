@@ -23,29 +23,13 @@
 
 static QVariantMap transferToMap(const Transfer *transfer) {
     QVariantMap map;
-    map["bytesTransferred"] = transfer->data(Transfer::BytesTransferredRole);
-    map["bytesTransferredString"] = transfer->data(Transfer::BytesTransferredStringRole);
-    map["category"] = transfer->data(Transfer::CategoryRole);
-    map["customCommand"] = transfer->data(Transfer::CustomCommandRole);
-    map["customCommandOverrideEnabled"] = transfer->data(Transfer::CustomCommandOverrideEnabledRole);
-    map["downloadPath"] = transfer->data(Transfer::DownloadPathRole);
-    map["errorString"] = transfer->data(Transfer::ErrorStringRole);
-    map["fileName"] = transfer->data(Transfer::FileNameRole);
-    map["id"] = transfer->data(Transfer::IdRole);
-    map["name"] = transfer->data(Transfer::NameRole);
-    map["priority"] = transfer->data(Transfer::PriorityRole);
-    map["priorityString"] = transfer->data(Transfer::PriorityStringRole);
-    map["progress"] = transfer->data(Transfer::ProgressRole);
-    map["progressString"] = transfer->data(Transfer::ProgressStringRole);
-    map["size"] = transfer->data(Transfer::SizeRole);
-    map["sizeString"] = transfer->data(Transfer::SizeStringRole);
-    map["speed"] = transfer->data(Transfer::SpeedRole);
-    map["speedString"] = transfer->data(Transfer::SpeedStringRole);
-    map["status"] = transfer->data(Transfer::StatusRole);
-    map["statusString"] = transfer->data(Transfer::StatusStringRole);
-    map["transferType"] = transfer->data(Transfer::TransferTypeRole);
-    map["transferTypeString"] = transfer->data(Transfer::TransferTypeStringRole);
-    map["url"] = transfer->data(Transfer::UrlRole);
+    QHashIterator<int, QByteArray> iterator(Transfer::roleNames());
+    
+    while (iterator.hasNext()) {
+        iterator.next();
+        map[iterator.value()] = transfer->data(iterator.key());
+    }
+    
     return map;
 }
 
@@ -70,8 +54,7 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
     
     if (parts.size() == 1) {
         if (request->method() == QHttpRequest::HTTP_GET) {
-            const QUrl url = request->url();
-            const int offset = Utils::urlQueryItemValue(url, "offset", "0").toInt();
+            const int offset = Utils::urlQueryItemValue(request->url(), "offset", "0").toInt();
             int limit = Utils::urlQueryItemValue(request->url(), "limit", "0").toInt();
             
             if ((limit <= 0) || (limit > Transfers::instance()->count())) {
@@ -104,7 +87,9 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
                 if (!url.isEmpty()) {
                     const QString category = properties.value("category").toString();
                     const int priority = properties.value("priority", Transfer::NormalPriority).toInt();
-                    const Transfer *transfer = Transfers::instance()->addEnclosureDownload(url, category, priority);
+                    const bool usePlugin = properties.value("usePlugin", false).toBool();
+                    const Transfer *transfer = Transfers::instance()->addEnclosureDownload(url, category, priority,
+                                                                                           usePlugin);
                 
                     if (transfer) {
                         transfers << transferToMap(transfer);
@@ -218,7 +203,7 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
         while (iterator.hasNext()) {
             iterator.next();
             
-            if (!transfer->setProperty(iterator.key().toUtf8(), iterator.value())) {
+            if (!transfer->setData(iterator.key().toUtf8(), iterator.value())) {
                 writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
                 return true;
             }

@@ -37,8 +37,9 @@ public:
     int active() const;
     int count() const;
     
-    Q_INVOKABLE Transfer* addEnclosureDownload(const QString &url, const QString &category = QString(),
-                                               int priority = Transfer::NormalPriority);
+    Q_INVOKABLE Transfer* addEnclosureDownload(const QString &url, bool usePlugin);
+    Q_INVOKABLE Transfer* addEnclosureDownload(const QString &url, const QString &category, int priority,
+                                               bool usePlugin);
     
     Q_INVOKABLE Transfer* get(int i) const;
     Q_INVOKABLE Transfer* get(const QString &id) const;

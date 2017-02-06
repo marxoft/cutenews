@@ -17,9 +17,9 @@
 #ifndef SETTINGSPAGE_H
 #define SETTINGSPAGE_H
 
-#include <QWidget>
+#include "page.h"
 
-class SettingsPage : public QWidget
+class SettingsPage : public Page
 {
     Q_OBJECT
 

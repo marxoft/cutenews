@@ -20,31 +20,8 @@
 TransferModel::TransferModel(QObject *parent) :
     QAbstractListModel(parent)
 {
-    m_roles[Transfer::BytesTransferredRole] = "bytesTransferred";
-    m_roles[Transfer::BytesTransferredStringRole] = "bytesTransferredString";
-    m_roles[Transfer::CategoryRole] = "category";
-    m_roles[Transfer::CustomCommandRole] = "customCommand";
-    m_roles[Transfer::CustomCommandOverrideEnabledRole] = "customCommandOverrideEnabled";
-    m_roles[Transfer::DownloadPathRole] = "downloadPath";
-    m_roles[Transfer::ErrorStringRole] = "errorString";
-    m_roles[Transfer::FileNameRole] = "fileName";
-    m_roles[Transfer::IdRole] = "id";
-    m_roles[Transfer::NameRole] = "name";
-    m_roles[Transfer::PriorityRole] = "priority";
-    m_roles[Transfer::PriorityStringRole] = "priorityString";
-    m_roles[Transfer::ProgressRole] = "progress";
-    m_roles[Transfer::ProgressStringRole] = "progressString";
-    m_roles[Transfer::SizeRole] = "size";
-    m_roles[Transfer::SizeStringRole] = "sizeString";
-    m_roles[Transfer::SpeedRole] = "speed";
-    m_roles[Transfer::SpeedStringRole] = "speedString";
-    m_roles[Transfer::StatusRole] = "status";
-    m_roles[Transfer::StatusStringRole] = "statusString";
-    m_roles[Transfer::TransferTypeRole] = "transferType";
-    m_roles[Transfer::TransferTypeStringRole] = "transferTypeString";
-    m_roles[Transfer::UrlRole] = "url";
 #if QT_VERSION < 0x050000
-    setRoleNames(m_roles);
+    setRoleNames(Transfer::roleNames());
 #endif    
     for (int i = 0; i < Transfers::instance()->count(); i++) {
         if (Transfer *transfer = Transfers::instance()->get(i)) {
@@ -58,7 +35,7 @@ TransferModel::TransferModel(QObject *parent) :
 
 #if QT_VERSION >= 0x050000
 QHash<int, QByteArray> TransferModel::roleNames() const {
-    return m_roles;
+    return Transfer::roleNames();
 }
 #endif
 
@@ -120,27 +97,7 @@ QMap<int, QVariant> TransferModel::itemData(const QModelIndex &index) const {
     QMap<int, QVariant> map;
     
     if (const Transfer *transfer = Transfers::instance()->get(index.row())) {
-        switch (index.column()) {
-        case 0:
-            map[Qt::DisplayRole] = transfer->data(Transfer::NameRole);
-            break;
-        case 1:
-            map[Qt::DisplayRole] = transfer->data(Transfer::PriorityStringRole);
-            break;
-        case 2:
-            map[Qt::DisplayRole] = transfer->data(Transfer::ProgressStringRole);
-            break;
-        case 3:
-            map[Qt::DisplayRole] = transfer->data(Transfer::SpeedStringRole);
-            break;
-        case 4:
-            map[Qt::DisplayRole] = transfer->data(Transfer::StatusStringRole);
-            break;
-        default:
-            break;
-        }
-            
-        for (int i = Transfer::BytesTransferredRole; i <= Transfer::UrlRole; i++) {
+        for (int i = Transfer::BytesTransferredRole; i <= Transfer::UsePluginRole; i++) {
             map[i] = transfer->data(i);
         }
     }
@@ -171,15 +128,15 @@ bool TransferModel::setItemData(const QModelIndex &index, const QMap<int, QVaria
 }
 
 QVariant TransferModel::data(int row, const QByteArray &role) const {
-    return data(index(row), m_roles.key(role));
+    return data(index(row), roleNames().key(role));
 }
 
 QVariantMap TransferModel::itemData(int row) const {
     QVariantMap map;
     
     if (const Transfer *transfer = Transfers::instance()->get(row)) {
-        for (int i = Transfer::BytesTransferredRole; i <= Transfer::UrlRole; i++) {
-            map[m_roles.value(i)] = transfer->data(i);
+        for (int i = Transfer::BytesTransferredRole; i <= Transfer::UsePluginRole; i++) {
+            map[roleNames().value(i)] = transfer->data(i);
         }
     }
 
@@ -187,7 +144,7 @@ QVariantMap TransferModel::itemData(int row) const {
 }
 
 bool TransferModel::setData(int row, const QVariant &value, const QByteArray &role) {
-    return setData(index(row), value, m_roles.key(role));
+    return setData(index(row), value, roleNames().key(role));
 }
 
 bool TransferModel::setItemData(int row, const QVariantMap &roles) {
@@ -210,7 +167,7 @@ QModelIndexList TransferModel::match(const QModelIndex &start, int role, const Q
 }
 
 int TransferModel::match(int start, const QByteArray &role, const QVariant &value, int flags) const {
-    const QModelIndexList indexes = match(index(start), m_roles.key(role), value, Qt::MatchFlags(flags));
+    const QModelIndexList indexes = match(index(start), roleNames().key(role), value, Qt::MatchFlags(flags));
     return indexes.isEmpty() ? -1 : indexes.first().row();
 }
 

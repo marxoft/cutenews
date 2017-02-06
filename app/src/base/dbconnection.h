@@ -143,7 +143,7 @@ Q_SIGNALS:
     void progressChanged(int p);
     void statusChanged(DBConnection::Status s);
 
-private:    
+private:
     void setErrorString(const QString &e);
     
     void setStatus(Status s);
@@ -162,7 +162,6 @@ private:
     
     Status m_status;
     
-    QString m_connectionName;
     QSqlQuery m_query;
 };
 

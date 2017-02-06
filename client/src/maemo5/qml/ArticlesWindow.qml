@@ -62,22 +62,6 @@ Window {
     }
     
     Action {
-        id: openAction
-        
-        text: qsTr("Open externally")
-        autoRepeat: false
-        shortcut: qsTr("o")
-        enabled: articleView.currentIndex >= 0
-        onTriggered: {
-            var url = articleModel.data(articleView.currentIndex, "url");
-            
-            if (!urlopener.open(url)) {
-                Qt.openUrlExternally(url);
-            }
-        }
-    }
-    
-    Action {
         id: copyAction
         
         text: qsTr("Copy URL")
@@ -87,6 +71,26 @@ Window {
         onTriggered: clipboard.text = articleModel.data(articleView.currentIndex, "url")
     }
     
+    Action {
+        id: openAction
+        
+        text: qsTr("Open externally")
+        autoRepeat: false
+        shortcut: qsTr("o")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: urlopener.open(articleModel.data(articleView.currentIndex, "url"))
+    }
+    
+    Action {
+        id: downloadAction
+        
+        text: qsTr("Download")
+        autoRepeat: false
+        shortcut: qsTr("d")
+        enabled: articleView.currentIndex >= 0
+        onTriggered: popups.open(downloadDialog, root)
+    }
+        
     Action {
         id: readAction
         
@@ -123,7 +127,7 @@ Window {
         
         text: qsTr("Delete")
         autoRepeat: false
-        shortcut: qsTr("d")
+        shortcut: qsTr("Shift+D")
         enabled: articleView.currentIndex >= 0
         onTriggered: popups.open(deleteDialog, root)
     }
@@ -175,13 +179,17 @@ Window {
         
         Menu {
             MenuItem {
+                action: copyAction
+            }
+            
+            MenuItem {
                 action: openAction
             }
             
             MenuItem {
-                action: copyAction
+                action: downloadAction
             }
-            
+                        
             MenuItem {
                 text: articleModel.data(articleView.currentIndex, "read") ? qsTr("Mark as unread")
                 : qsTr("Mark as read")
@@ -207,7 +215,8 @@ Window {
         id: articleWindow
         
         ArticleWindow {
-            article: articleModel.get(articleView.currentIndex)
+            id: window
+            
             onNext: articleView.incrementCurrentIndex()
             onNextUnread: {
                 var index = articleModel.match(Math.min(articleView.currentIndex + 1, articleView.count - 1),
@@ -218,6 +227,13 @@ Window {
                 }
             }
             onPrevious: articleView.decrementCurrentIndex()
+            
+            Binding {
+                target: window
+                property: "article"
+                value: articleModel.get(articleView.currentIndex)
+                when: window.status == WindowStatus.Active
+            }
         }
     }
     
@@ -226,6 +242,14 @@ Window {
         
         EnclosuresDialog {
             enclosures: articleModel.data(articleView.currentIndex, "enclosures")
+        }
+    }
+    
+    Component {
+        id: downloadDialog
+        
+        DownloadDialog {
+            url: articleModel.data(articleView.currentIndex, "url")
         }
     }
     

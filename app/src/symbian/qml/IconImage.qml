@@ -68,7 +68,7 @@ MaskedItem {
             sourceSize.width: width
             sourceSize.height: height
             smooth: true
-            fillMode: Image.PreserveAspectCrop
+            fillMode: Image.PreserveAspectFit
             clip: true
             asynchronous: true
             onStatusChanged: if ((status == Image.Error) && (source == root.source)) source = root.placeholderSource;

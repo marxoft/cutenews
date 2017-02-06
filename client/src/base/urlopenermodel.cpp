@@ -17,9 +17,11 @@
 #include "urlopenermodel.h"
 #include "definitions.h"
 #include "logger.h"
+#include <QDesktopServices>
 #include <QProcess>
 #include <QRegExp>
 #include <QSettings>
+#include <QUrl>
 
 UrlOpenerModel* UrlOpenerModel::self = 0;
 
@@ -121,6 +123,6 @@ bool UrlOpenerModel::open(const QString &url) {
         }
     }
     
-    Logger::log("UrlOpener::open(). No opener found for URL: " + url, Logger::LowVerbosity);
-    return false;
+    Logger::log("UrlOpener::open(). Using QDesktopServices::openUrl() for URL: " + url, Logger::LowVerbosity);
+    return QDesktopServices::openUrl(url);
 }

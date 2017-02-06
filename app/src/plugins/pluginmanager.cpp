@@ -51,7 +51,7 @@ FeedPluginList PluginManager::plugins() const {
 FeedPluginConfig* PluginManager::getConfig(const QString &id) const {
     foreach (const FeedPluginPair &pair, m_plugins) {
         if (pair.config->id() == id) {
-            Logger::log("PluginManager::getConfig(). PluginFound: " + id, Logger::HighVerbosity);
+            Logger::log("PluginManager::getConfig(). Plugin found: " + id, Logger::HighVerbosity);
             return pair.config;
         }
     }
@@ -63,7 +63,8 @@ FeedPluginConfig* PluginManager::getConfig(const QString &id) const {
 FeedPluginConfig* PluginManager::getConfigForEnclosure(const QString &url) const {
     foreach (const FeedPluginPair &pair, m_plugins) {
         if (pair.config->enclosureIsSupported(url)) {
-            Logger::log("PluginManager::getConfigForEnclosure(). PluginFound: " + url, Logger::HighVerbosity);
+            Logger::log("PluginManager::getConfigForEnclosure(). Plugin found for enclosure: " + url,
+                        Logger::HighVerbosity);
             return pair.config;
         }
     }
@@ -75,7 +76,7 @@ FeedPluginConfig* PluginManager::getConfigForEnclosure(const QString &url) const
 FeedPluginConfig* PluginManager::getConfigForFilePath(const QString &filePath) const {
     foreach (const FeedPluginPair &pair, m_plugins) {
         if (pair.config->filePath() == filePath) {
-            Logger::log("PluginManager::getConfigForFilePath(). PluginFound: " + pair.config->id(),
+            Logger::log("PluginManager::getConfigForFilePath(). Plugin found: " + pair.config->id(),
                         Logger::HighVerbosity);
             return pair.config;
         }
@@ -89,7 +90,7 @@ FeedPluginConfig* PluginManager::getConfigForFilePath(const QString &filePath) c
 FeedPlugin* PluginManager::getPlugin(const QString &id) const {
     foreach (const FeedPluginPair &pair, m_plugins) {
         if (pair.config->id() == id) {
-            Logger::log("PluginManager::getPlugin(). PluginFound: " + id, Logger::HighVerbosity);
+            Logger::log("PluginManager::getPlugin(). Plugin found: " + id, Logger::HighVerbosity);
             return pair.plugin;
         }
     }
@@ -101,13 +102,27 @@ FeedPlugin* PluginManager::getPlugin(const QString &id) const {
 FeedPlugin* PluginManager::getPluginForEnclosure(const QString &url) const {
     foreach (const FeedPluginPair &pair, m_plugins) {
         if (pair.config->enclosureIsSupported(url)) {
-            Logger::log("PluginManager::getPluginForEnclosure(). PluginFound: " + url, Logger::HighVerbosity);
+            Logger::log("PluginManager::getPluginForEnclosure(). Plugin found for enclosure: " + url,
+                        Logger::HighVerbosity);
             return pair.plugin;
         }
     }
     
     Logger::log("PluginManager::getPluginForEnclosure(). No Plugin found for enclosure " + url, Logger::HighVerbosity);
     return 0;
+}
+
+bool PluginManager::enclosureIsSupported(const QString &url) const {
+    foreach (const FeedPluginPair &pair, m_plugins) {
+        if (pair.config->enclosureIsSupported(url)) {
+            Logger::log("PluginManager::enclosureIsSupported(). Plugin found for enclosure " + url,
+                        Logger::HighVerbosity);
+            return true;
+        }
+    }
+    
+    Logger::log("PluginManager::enclosureIsSupported(). No Plugin found for enclosure " + url, Logger::HighVerbosity);
+    return false;
 }
 
 EnclosureRequest* PluginManager::enclosureRequest(const QString &url, QObject *parent) const {

@@ -25,7 +25,7 @@ class Article;
 class ArticleModel;
 class Browser;
 class SubscriptionModel;
-class TransfersView;
+class TransfersPage;
 class QLabel;
 class QMenu;
 class QModelIndex;
@@ -69,12 +69,15 @@ private Q_SLOTS:
     void openCurrentArticleInTab();
     void openCurrentArticleInBrowser();
     void openCurrentArticleExternally();
+    void downloadCurrentArticle();
+    void downloadCurrentArticleWithPlugin();
     
     void copyCurrentEnclosureUrl();
     void openCurrentEnclosureInTab();
     void openCurrentEnclosureInBrowser();
     void openCurrentEnclosureExternally();
     void downloadCurrentEnclosure();
+    void downloadCurrentEnclosureWithPlugin();
     
     void setCurrentSubscription(const QModelIndex &index);
     void setCurrentArticle(const QModelIndex &index);
@@ -86,8 +89,10 @@ private Q_SLOTS:
     void showArticleContextMenu(const QPoint &pos);
     void showEnclosureContextMenu(const QPoint &pos);
     
-    void openUrlExternally(const QString &url);
     void openUrlInTab(const QString &url);
+    void openUrlExternally(const QString &url);
+    void downloadUrl(const QString &url);
+    void downloadUrlWithPlugin(const QString &url);
 
     void updateTabText(const QString &text);
     void closeTab(int index);
@@ -156,12 +161,15 @@ private:
     QAction *m_openArticleInTabAction;
     QAction *m_openArticleInBrowserAction;
     QAction *m_openArticleExternallyAction;
+    QAction *m_downloadArticleAction;
+    QAction *m_downloadArticleWithPluginAction;
     
     QAction *m_copyEnclosureUrlAction;
     QAction *m_openEnclosureInTabAction;
     QAction *m_openEnclosureInBrowserAction;
     QAction *m_openEnclosureExternallyAction;
     QAction *m_downloadEnclosureAction;
+    QAction *m_downloadEnclosureWithPluginAction;
     
     QAction *m_transfersAction;
     QAction *m_closeTabAction;
@@ -195,7 +203,7 @@ private:
     QVBoxLayout *m_tabsLayout;
     QVBoxLayout *m_articleLayout;
     
-    QPointer<TransfersView> m_transfersTab;
+    QPointer<TransfersPage> m_transfersPage;
 };  
     
 #endif // MAINWINDOW_H

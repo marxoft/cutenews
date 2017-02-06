@@ -24,6 +24,7 @@ EditPage {
     property string url
     property alias category: categorySelector.value
     property alias priority: prioritySelector.value
+    property alias usePlugin: pluginSwitch.checked
     
     title: qsTr("Download")
     
@@ -66,6 +67,20 @@ EditPage {
                 }
                 value: Transfer.NormalPriority
             }
+
+            Item {
+                width: parent.width
+                height: platformStyle.paddingLarge
+            }
+            
+            MySwitch {
+                id: pluginSwitch
+                
+                x: platformStyle.paddingLarge
+                width: parent.width - platformStyle.paddingLarge * 2
+                text: qsTr("Use plugin")
+                enabled: plugins.enclosureIsSupported(root.url)
+            }
         }
     }
     
@@ -74,7 +89,7 @@ EditPage {
     }
     
     onAccepted: {
-        transfers.addEnclosureDownload(url, category, priority);
+        transfers.addEnclosureDownload(url, category, priority, usePlugin);
         appWindow.pageStack.pop();
     }
 }

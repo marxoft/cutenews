@@ -72,12 +72,37 @@ MyPage {
                 top: parent.top
                 margins: platformStyle.paddingLarge
             }
+
+            Label {
+                id: titleLabel
+
+                width: parent.width
+                wrapMode: Text.Wrap
+                font.pixelSize: platformStyle.fontSizeLarge
+            }
+
+            Item {
+                width: parent.width
+                height: platformStyle.paddingLarge
+            }
+
+            HeaderLabel {
+                id: detailsHeader
+
+                width: parent.width
+                text: qsTr("Details")
+            }
+
+            Item {
+                width: parent.width
+                height: platformStyle.paddingLarge
+            }
             
             Label {
                 id: authorLabel
                 
                 width: parent.width
-                elide: Text.ElideRight
+                wrapMode: Text.Wrap
             }
             
             Item {
@@ -89,7 +114,7 @@ MyPage {
                 id: dateLabel
                 
                 width: parent.width
-                elide: Text.ElideRight
+                wrapMode: Text.Wrap
             }
             
             Item {
@@ -185,15 +210,20 @@ MyPage {
             
             MenuLayout {
                 MenuItem {
-                    text: qsTr("Open externally")
-                    onClicked: Qt.openUrlExternally(article.url)
-                }
-
-                MenuItem {
                     text: qsTr("Copy URL")
                     onClicked: clipboard.text = article.url
                 }
-
+                
+                MenuItem {
+                    text: qsTr("Open externally")
+                    onClicked: Qt.openUrlExternally(article.url)
+                }
+                
+                MenuItem {
+                    text: qsTr("Download")
+                    onClicked: appWindow.pageStack.push(Qt.resolvedUrl("DownloadPage.qml"), {url: article.url})
+                }
+                
                 MenuItem {
                     text: article.read ? qsTr("Mark as unread") : qsTr("Mark as read")
                     onClicked: article.markRead(!article.read)
@@ -224,13 +254,18 @@ MyPage {
 
             MenuLayout {
                 MenuItem {
+                    text: qsTr("Copy URL")
+                    onClicked: clipboard.text = menu.url
+                }
+                
+                MenuItem {
                     text: qsTr("Open externally")
                     onClicked: Qt.openUrlExternally(menu.url)
                 }
-
+                
                 MenuItem {
-                    text: qsTr("Copy URL")
-                    onClicked: clipboard.text = menu.url
+                    text: qsTr("Download")
+                    onClicked: appWindow.pageStack.push(Qt.resolvedUrl("DownloadPage.qml"), {url: menu.url})
                 }
             }
         }
@@ -244,20 +279,20 @@ MyPage {
             
             MenuLayout {
                 MenuItem {
-                    text: qsTr("Open externally")
-                    onClicked: Qt.openUrlExternally(article.enclosures[enclosuresRepeater.currentIndex].url)
-                }
-
-                MenuItem {
                     text: qsTr("Copy URL")
                     onClicked: clipboard.text = article.enclosures[enclosuresRepeater.currentIndex].url
                 }
-
+                
+                MenuItem {
+                    text: qsTr("Open externally")
+                    onClicked: Qt.openUrlExternally(article.enclosures[enclosuresRepeater.currentIndex].url)
+                }                
+                
                 MenuItem {
                     text: qsTr("Download")
                     onClicked: appWindow.pageStack.push(Qt.resolvedUrl("DownloadPage.qml"),
                         {url: article.enclosures[enclosuresRepeater.currentIndex].url})
-                }                
+                }
             }
         }
     }
@@ -277,11 +312,12 @@ MyPage {
         if (article) {
             flickable.contentY = 0;
             title = article.title ? article.title : qsTr("Article");
+            titleLabel.text = title;
             authorLabel.text = qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown"));
             dateLabel.text = qsTr("Date") + ": " + (article.dateString ? article.dateString : qsTr("Unknown"));
             categoriesLabel.text = qsTr("Categories") + ": "
             + (article.categories.length > 0 ? article.categories.join(", ") : qsTr("None"));
-            bodyLabel.text = article.body.replace(/ src="/g, " src=\"" + settings.serverAddress);
+            bodyLabel.text = article.body;
             enclosuresRepeater.model = article.enclosures;
 
             if (!article.read) {

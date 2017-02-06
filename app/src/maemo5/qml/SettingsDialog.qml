@@ -128,6 +128,12 @@ Dialog {
                 onClicked: popups.open(urlOpenersDialog, root)
             }
             
+            Button {
+                width: parent.width
+                text: qsTr("Plugins")
+                onClicked: popups.open(pluginsDialog, root)
+            }
+            
             ListSelectorButton {
                 width: parent.width
                 text: qsTr("Logging verbosity")
@@ -188,6 +194,35 @@ Dialog {
         id: urlOpenersDialog
         
         UrlOpenersDialog {}
+    }
+    
+    Component {
+        id: pluginsDialog
+        
+        ListPickSelector {
+            model: PluginConfigModel {}
+            textRole: "displayName"
+            onSelected: {
+                var plugin = model.itemData(currentIndex);
+                
+                if ((plugin.supportsEnclosures) && (plugin.enclosureSettings)) {
+                    var dialog = popups.load(pluginDialog, root);
+                    dialog.title = plugin.displayName;
+                    dialog.pluginId = plugin.id;
+                    dialog.pluginSettings = plugin.enclosureSettings;
+                    dialog.open();
+                }
+                else {
+                    informationBox.information(qsTr("No settings for this plugin"));
+                }
+            }
+        }
+    }
+    
+    Component {
+        id: pluginDialog
+        
+        PluginSettingsDialog {}
     }
     
     Component {

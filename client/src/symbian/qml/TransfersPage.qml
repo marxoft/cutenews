@@ -27,6 +27,8 @@ MyPage {
         BackToolButton {}
 
         MyToolButton {
+            id: startButton
+            
             iconSource: "toolbar-mediacontrol-play"
             toolTip: qsTr("Start")
             enabled: transfers.count > 0
@@ -34,10 +36,20 @@ MyPage {
         }
 
         MyToolButton {
+            id: pauseButton
+            
             iconSource: "toolbar-mediacontrol-pause"
             toolTip: qsTr("Pause")
             enabled: transfers.count > 0
             onClicked: transfers.pause()
+        }
+        
+        MyToolButton {
+            id: reloadButton
+            
+            iconSource: "toolbar-refresh"
+            toolTip: qsTr("Reload")
+            onClicked: transfers.load()
         }
     }
 
@@ -45,9 +57,7 @@ MyPage {
         id: view
 
         anchors.fill: parent
-        model: TransferModel {
-            id: transferModel
-        }
+        model: transfers
         delegate: TransferDelegate {
             onClicked: popups.open(contextMenu, root)
             onPressAndHold: popups.open(contextMenu, root)
@@ -86,13 +96,13 @@ MyPage {
 
                 MenuItem {
                     text: qsTr("Start")
-                    enabled: transferModel.data(view.currentIndex, "status") <= Transfer.Queued
+                    enabled: transfers.data(view.currentIndex, "status") <= Transfer.Queued
                     onClicked: transfers.get(view.currentIndex).queue()
                 }
 
                 MenuItem {
                     text: qsTr("Pause")
-                    enabled: transferModel.data(view.currentIndex, "status") >= Transfer.Downloading
+                    enabled: transfers.data(view.currentIndex, "status") >= Transfer.Downloading
                     onClicked: transfers.get(view.currentIndex).pause()
                 }
 
@@ -123,8 +133,8 @@ MyPage {
             focusItem: view
             titleText: qsTr("Priority")
             model: TransferPriorityModel {}
-            value: transferModel.data(view.currentIndex, "priority")
-            onAccepted: transferModel.setData(view.currentIndex, value, "priority")
+            value: transfers.data(view.currentIndex, "priority")
+            onAccepted: transfers.setData(view.currentIndex, value, "priority")
         }
     }
 
@@ -135,8 +145,8 @@ MyPage {
             focusItem: view
             titleText: qsTr("Category")
             model: CategoryNameModel {}
-            value: transferModel.data(view.currentIndex, "category")
-            onAccepted: transferModel.setData(view.currentIndex, value, "category")
+            value: transfers.data(view.currentIndex, "category")
+            onAccepted: transfers.setData(view.currentIndex, value, "category")
         }
     }
     
@@ -145,7 +155,7 @@ MyPage {
         
         MyQueryDialog {
             titleText: qsTr("Remove?")
-            message: qsTr("Do you want to remove") + " '" + transferModel.data(view.currentIndex, "name")+ "'?"
+            message: qsTr("Do you want to remove") + " '" + transfers.data(view.currentIndex, "name")+ "'?"
             onAccepted: transfers.get(view.currentIndex).cancel()
         }
     }
@@ -153,15 +163,17 @@ MyPage {
     Connections {
         target: transfers
         onStatusChanged: {
-            switch (status) {
-            case Transfers.Active: {
+            switch (transfers.status) {
+            case TransferModel.Active: {
                 root.showProgressIndicator = true;
+                reloadButton.enabled = false;
                 label.visible = false;
                 break;
             }
             default: {
                 root.showProgressIndicator = false;
-                label.visible = true;
+                reloadButton.enabled = true;
+                label.visible = (transfers.count == 0);
                 break;
             }
             }

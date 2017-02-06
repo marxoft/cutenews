@@ -70,13 +70,26 @@ FeedPluginList PluginManager::plugins() const {
 FeedPluginConfig* PluginManager::getConfig(const QString &id) const {
     foreach (FeedPluginConfig *config, m_plugins) {
         if (config->id() == id) {
-            Logger::log("PluginManager::getConfig(). PluginFound: " + id, Logger::HighVerbosity);
+            Logger::log("PluginManager::getConfig(). Plugin found: " + id, Logger::HighVerbosity);
             return config;
         }
     }
     
     Logger::log("PluginManager::getConfig(). No Plugin found for id" + id, Logger::HighVerbosity);
     return 0;
+}
+
+bool PluginManager::enclosureIsSupported(const QString &url) const {
+    foreach (FeedPluginConfig *config, m_plugins) {
+        if (config->enclosureIsSupported(url)) {
+            Logger::log("PluginManager::enclosureIsSupported(). Plugin found for enclosure " + url,
+                        Logger::HighVerbosity);
+            return true;
+        }
+    }
+    
+    Logger::log("PluginManager::enclosureIsSupported(). No Plugin found for enclosure " + url, Logger::HighVerbosity);
+    return false;
 }
 
 void PluginManager::load() {

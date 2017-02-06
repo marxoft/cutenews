@@ -15,55 +15,65 @@
  */
 
 #include "transfermodel.h"
-#include "transfers.h"
+#include "download.h"
+#include "enclosuredownload.h"
+#include "json.h"
+#include "logger.h"
+#include "requests.h"
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 
-TransferModel::TransferModel(QObject *parent) :
-    QAbstractListModel(parent)
+TransferModel* TransferModel::self = 0;
+
+TransferModel::TransferModel() :
+    QAbstractListModel(),
+    m_nam(0),
+    m_status(Idle)
 {
-    m_roles[Transfer::BytesTransferredRole] = "bytesTransferred";
-    m_roles[Transfer::BytesTransferredStringRole] = "bytesTransferredString";
-    m_roles[Transfer::CategoryRole] = "category";
-    m_roles[Transfer::CustomCommandRole] = "customCommand";
-    m_roles[Transfer::CustomCommandOverrideEnabledRole] = "customCommandOverrideEnabled";
-    m_roles[Transfer::DownloadPathRole] = "downloadPath";
-    m_roles[Transfer::ErrorStringRole] = "errorString";
-    m_roles[Transfer::FileNameRole] = "fileName";
-    m_roles[Transfer::IdRole] = "id";
-    m_roles[Transfer::NameRole] = "name";
-    m_roles[Transfer::PriorityRole] = "priority";
-    m_roles[Transfer::PriorityStringRole] = "priorityString";
-    m_roles[Transfer::ProgressRole] = "progress";
-    m_roles[Transfer::ProgressStringRole] = "progressString";
-    m_roles[Transfer::SizeRole] = "size";
-    m_roles[Transfer::SizeStringRole] = "sizeString";
-    m_roles[Transfer::SpeedRole] = "speed";
-    m_roles[Transfer::SpeedStringRole] = "speedString";
-    m_roles[Transfer::StatusRole] = "status";
-    m_roles[Transfer::StatusStringRole] = "statusString";
-    m_roles[Transfer::TransferTypeRole] = "transferType";
-    m_roles[Transfer::TransferTypeStringRole] = "transferTypeString";
-    m_roles[Transfer::UrlRole] = "url";
 #if QT_VERSION < 0x050000
-    setRoleNames(m_roles);
-#endif    
-    for (int i = 0; i < Transfers::instance()->count(); i++) {
-        if (Transfer *transfer = Transfers::instance()->get(i)) {
-            onTransferAdded(transfer);
-        }
-    }
+    setRoleNames(Transfer::roleNames());
+#endif
+}
+
+TransferModel::~TransferModel() {
+    self = 0;
+}
+
+TransferModel* TransferModel::instance() {
+    return self ? self : self = new TransferModel;
+}
+
+QString TransferModel::errorString() const {
+    return m_errorString;
+}
+
+void TransferModel::setErrorString(const QString &e) {
+    m_errorString = e;
     
-    connect(Transfers::instance(), SIGNAL(countChanged(int)), this, SLOT(onCountChanged(int)));
-    connect(Transfers::instance(), SIGNAL(transferAdded(Transfer*)), this, SLOT(onTransferAdded(Transfer*)));
+    if (!e.isEmpty()) {
+        emit error(e);
+    }
+}
+
+TransferModel::Status TransferModel::status() const {
+    return m_status;
+}
+
+void TransferModel::setStatus(TransferModel::Status s) {
+    if (s != status()) {
+        m_status = s;
+        emit statusChanged(s);
+    }
 }
 
 #if QT_VERSION >= 0x050000
 QHash<int, QByteArray> TransferModel::roleNames() const {
-    return m_roles;
+    return Transfer::roleNames();
 }
 #endif
 
 int TransferModel::rowCount(const QModelIndex &) const {
-    return Transfers::instance()->count();
+    return m_items.size();
 }
 
 int TransferModel::columnCount(const QModelIndex &) const {
@@ -92,7 +102,7 @@ QVariant TransferModel::headerData(int section, Qt::Orientation orientation, int
 }
 
 QVariant TransferModel::data(const QModelIndex &index, int role) const {
-    if (const Transfer *transfer = Transfers::instance()->get(index.row())) {
+    if (const Transfer *transfer = get(index.row())) {
         if (role == Qt::DisplayRole) {
             switch (index.column()) {
             case 0:
@@ -119,28 +129,8 @@ QVariant TransferModel::data(const QModelIndex &index, int role) const {
 QMap<int, QVariant> TransferModel::itemData(const QModelIndex &index) const {
     QMap<int, QVariant> map;
     
-    if (const Transfer *transfer = Transfers::instance()->get(index.row())) {
-        switch (index.column()) {
-        case 0:
-            map[Qt::DisplayRole] = transfer->data(Transfer::NameRole);
-            break;
-        case 1:
-            map[Qt::DisplayRole] = transfer->data(Transfer::PriorityStringRole);
-            break;
-        case 2:
-            map[Qt::DisplayRole] = transfer->data(Transfer::ProgressStringRole);
-            break;
-        case 3:
-            map[Qt::DisplayRole] = transfer->data(Transfer::SpeedStringRole);
-            break;
-        case 4:
-            map[Qt::DisplayRole] = transfer->data(Transfer::StatusStringRole);
-            break;
-        default:
-            break;
-        }
-            
-        for (int i = Transfer::BytesTransferredRole; i <= Transfer::UrlRole; i++) {
+    if (const Transfer *transfer = get(index.row())) {
+        for (int i = Transfer::BytesTransferredRole; i <= Transfer::UsePluginRole; i++) {
             map[i] = transfer->data(i);
         }
     }
@@ -149,7 +139,7 @@ QMap<int, QVariant> TransferModel::itemData(const QModelIndex &index) const {
 }
 
 bool TransferModel::setData(const QModelIndex &index, const QVariant &value, int role) {
-    if (Transfer *transfer = Transfers::instance()->get(index.row())) {
+    if (Transfer *transfer = get(index.row())) {
         return transfer->setData(role, value);
     }
     
@@ -171,15 +161,15 @@ bool TransferModel::setItemData(const QModelIndex &index, const QMap<int, QVaria
 }
 
 QVariant TransferModel::data(int row, const QByteArray &role) const {
-    return data(index(row), m_roles.key(role));
+    return data(index(row), roleNames().key(role));
 }
 
 QVariantMap TransferModel::itemData(int row) const {
     QVariantMap map;
     
-    if (const Transfer *transfer = Transfers::instance()->get(row)) {
-        for (int i = Transfer::BytesTransferredRole; i <= Transfer::UrlRole; i++) {
-            map[m_roles.value(i)] = transfer->data(i);
+    if (const Transfer *transfer = get(row)) {
+        for (int i = Transfer::BytesTransferredRole; i <= Transfer::UsePluginRole; i++) {
+            map[roleNames().value(i)] = transfer->data(i);
         }
     }
 
@@ -187,7 +177,7 @@ QVariantMap TransferModel::itemData(int row) const {
 }
 
 bool TransferModel::setData(int row, const QVariant &value, const QByteArray &role) {
-    return setData(index(row), value, m_roles.key(role));
+    return setData(index(row), value, roleNames().key(role));
 }
 
 bool TransferModel::setItemData(int row, const QVariantMap &roles) {
@@ -210,32 +200,147 @@ QModelIndexList TransferModel::match(const QModelIndex &start, int role, const Q
 }
 
 int TransferModel::match(int start, const QByteArray &role, const QVariant &value, int flags) const {
-    const QModelIndexList indexes = match(index(start), m_roles.key(role), value, Qt::MatchFlags(flags));
+    const QModelIndexList indexes = match(index(start), roleNames().key(role), value, Qt::MatchFlags(flags));
     return indexes.isEmpty() ? -1 : indexes.first().row();
 }
 
-int TransferModel::indexOf(Transfer *transfer) const {
-    for (int i = 0; i < Transfers::instance()->count(); i++) {
-        if (Transfers::instance()->get(i) == transfer) {
-            return i;
+Transfer* TransferModel::get(int row) const {
+    if ((row >= 0) && (row < m_items.size())) {
+        return m_items.at(row);
+    }
+    
+    return 0;
+}
+
+Transfer* TransferModel::get(const QString &id) const {
+    foreach (Transfer *transfer, m_items) {
+        if (transfer->id() == id) {
+            return transfer;
         }
     }
     
-    return -1;
+    return 0;
 }
 
-void TransferModel::onCountChanged(int count) {
-    beginResetModel();
-    endResetModel();
-    emit countChanged(count);
+void TransferModel::addEnclosureDownload(const QString &url, bool usePlugin) {
+    addEnclosureDownload(url, QString(), Transfer::NormalPriority, usePlugin);
 }
 
-void TransferModel::onTransferAdded(Transfer *transfer) {
+void TransferModel::addEnclosureDownload(const QString &url, const QString &category, int priority, bool usePlugin) {
+    Logger::log("TransferModel::addEnclosureDownload(). URL: " + url, Logger::LowVerbosity);
+    
+    if (status() == Active) {
+        return;
+    }
+    
+    setStatus(Active);
+    QVariantMap properties;
+    properties["url"] = url;
+    properties["category"] = category;
+    properties["priority"] = priority;
+    properties["usePlugin"] = usePlugin;
+    QNetworkReply *reply =
+        networkAccessManager()->post(buildRequest("/transfers", QNetworkAccessManager::PostOperation),
+                                                  QtJson::Json::serialize(QVariantList() << properties));
+    connect(reply, SIGNAL(finished()), this, SLOT(onTransfersLoaded()));
+}
+
+void TransferModel::start() {
+    if (status() == Active) {
+        return;
+    }
+    
+    setStatus(Active);
+    QNetworkReply *reply = networkAccessManager()->get(buildRequest("/transfers/start"));
+    connect(reply, SIGNAL(finished()), this, SLOT(onTransfersChanged()));
+}
+
+void TransferModel::pause() {
+    if (status() == Active) {
+        return;
+    }
+    
+    setStatus(Active);
+    QNetworkReply *reply = networkAccessManager()->get(buildRequest("/transfers/pause"));
+    connect(reply, SIGNAL(finished()), this, SLOT(onTransfersChanged()));
+}
+
+bool TransferModel::start(const QString &id) {
+    if (Transfer *transfer = get(id)) {
+        transfer->queue();
+        return true;
+    }
+    
+    return false;
+}
+
+bool TransferModel::pause(const QString &id) {
+    if (Transfer *transfer = get(id)) {
+        transfer->pause();
+        return true;
+    }
+    
+    return false;
+}
+
+bool TransferModel::cancel(const QString &id) {
+    if (Transfer *transfer = get(id)) {
+        transfer->cancel();
+        return true;
+    }
+    
+    return false;
+}
+
+void TransferModel::load() {
+    if (status() == Active) {
+        return;
+    }
+    
+    setStatus(Active);
+    clear();
+    QNetworkReply *reply = networkAccessManager()->get(buildRequest("/transfers"));
+    connect(reply, SIGNAL(finished()), this, SLOT(onTransfersLoaded()));
+}
+
+void TransferModel::append(Transfer *transfer) {
+    beginInsertRows(QModelIndex(), rowCount(), rowCount());
+    m_items << transfer;
     connect(transfer, SIGNAL(dataChanged(Transfer*, int)), this, SLOT(onTransferDataChanged(Transfer*, int)));
+    connect(transfer, SIGNAL(finished(Transfer*)), this, SLOT(onTransferFinished(Transfer*)));
+    endInsertRows();
+    emit countChanged(rowCount());
+}
+
+void TransferModel::remove(int row) {
+    if ((row >= 0) && (row < m_items.size())) {
+        beginRemoveRows(QModelIndex(), row, row);
+        m_items.takeAt(row)->deleteLater();
+        endRemoveRows();
+        emit countChanged(rowCount());
+    }
+}
+
+void TransferModel::clear() {
+    if (!m_items.isEmpty()) {
+        beginResetModel();
+        qDeleteAll(m_items);
+        m_items.clear();
+        endResetModel();
+        emit countChanged(0);
+    }
+}
+
+QNetworkAccessManager* TransferModel::networkAccessManager() {
+    if (!m_nam) {
+        m_nam = new QNetworkAccessManager(this);
+    }
+    
+    return m_nam;
 }
 
 void TransferModel::onTransferDataChanged(Transfer* transfer, int role) {
-    const int row = indexOf(transfer);
+    const int row = m_items.indexOf(transfer);
 
     if (row == -1) {
         return;
@@ -264,4 +369,84 @@ void TransferModel::onTransferDataChanged(Transfer* transfer, int role) {
 
     const QModelIndex idx = index(row, column);
     emit dataChanged(idx, idx);
+}
+
+void TransferModel::onTransferFinished(Transfer *transfer) {
+    const int row = m_items.indexOf(transfer);
+
+    if (row == -1) {
+        return;
+    }
+    
+    switch (transfer->status()) {
+    case Transfer::Completed:
+    case Transfer::Canceled:
+        remove(row);
+        break;
+    default:
+        break;
+    }
+}
+
+void TransferModel::onTransfersChanged() {
+    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    
+    if (!reply) {
+        setErrorString(tr("Network error"));
+        setStatus(Error);
+        return;
+    }
+    
+    if (reply->error() == QNetworkReply::NoError) {
+        setErrorString(QString());
+        setStatus(Ready);
+        load();
+    }
+    else {
+        setErrorString(reply->errorString());
+        setStatus(Error);
+    }
+    
+    reply->deleteLater();
+}
+
+void TransferModel::onTransfersLoaded() {
+    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
+    
+    if (!reply) {
+        setErrorString(tr("Network error"));
+        setStatus(Error);
+        return;
+    }
+    
+    if (reply->error() == QNetworkReply::NoError) {
+        const QVariantList list = QtJson::Json::parse(QString::fromUtf8(reply->readAll())).toList();
+        
+        foreach (const QVariant &v, list) {
+            const QVariantMap result = v.toMap();
+            const Transfer::TransferType type = Transfer::TransferType(result.value("transferType", Transfer::Download)
+                                                                       .toInt());
+            Transfer *transfer;
+            
+            switch (type) {
+            case Transfer::EnclosureDownload:
+                transfer = new EnclosureDownload(result, this);
+                break;
+            default:
+                transfer = new Download(result, this);
+                break;
+            }
+            
+            append(transfer);
+        }
+        
+        setErrorString(QString());
+        setStatus(Ready);
+    }
+    else {
+        setErrorString(reply->errorString());
+        setStatus(Error);
+    }
+    
+    reply->deleteLater();
 }

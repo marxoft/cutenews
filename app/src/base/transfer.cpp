@@ -19,6 +19,43 @@
 #include "utils.h"
 #include <QNetworkAccessManager>
 
+class TransferRoleNames : public QHash<int, QByteArray>
+{
+
+public:
+    TransferRoleNames() :
+        QHash<int, QByteArray>()
+    {
+        insert(Transfer::BytesTransferredRole, "bytesTransferred");
+        insert(Transfer::BytesTransferredStringRole, "bytesTransferredString");
+        insert(Transfer::CategoryRole, "category");
+        insert(Transfer::CustomCommandRole, "customCommand");
+        insert(Transfer::CustomCommandOverrideEnabledRole, "customCommandOverrideEnabled");
+        insert(Transfer::DownloadPathRole, "downloadPath");
+        insert(Transfer::ErrorStringRole, "errorString");
+        insert(Transfer::FileNameRole, "fileName");
+        insert(Transfer::IdRole, "id");
+        insert(Transfer::NameRole, "name");
+        insert(Transfer::PluginSettingsRole, "pluginSettings");
+        insert(Transfer::PriorityRole, "priority");
+        insert(Transfer::PriorityStringRole, "priorityString");
+        insert(Transfer::ProgressRole, "progress");
+        insert(Transfer::ProgressStringRole, "progressString");
+        insert(Transfer::SizeRole, "size");
+        insert(Transfer::SizeStringRole, "sizeString");
+        insert(Transfer::SpeedRole, "speed");
+        insert(Transfer::SpeedStringRole, "speedString");
+        insert(Transfer::StatusRole, "status");
+        insert(Transfer::StatusStringRole, "statusString");
+        insert(Transfer::TransferTypeRole, "transferType");
+        insert(Transfer::TransferTypeStringRole, "transferTypeString");
+        insert(Transfer::UrlRole, "url");
+        insert(Transfer::UsePluginRole, "usePlugin");
+    }
+};
+
+QHash<int, QByteArray> Transfer::roles = TransferRoleNames();
+
 Transfer::Transfer(Transfer::TransferType transferType, QObject *parent) :
     QObject(parent),
     m_nam(0),
@@ -31,6 +68,10 @@ Transfer::Transfer(Transfer::TransferType transferType, QObject *parent) :
     m_status(Paused),
     m_transferType(transferType)
 {
+}
+
+QHash<int, QByteArray> Transfer::roleNames() {
+    return roles;
 }
 
 QVariant Transfer::data(int role) const {
@@ -76,6 +117,10 @@ QVariant Transfer::data(int role) const {
     }
 }
 
+QVariant Transfer::data(const QByteArray &roleName) {
+    return data(roles.key(roleName));
+}
+
 bool Transfer::setData(int role, const QVariant &value) {
     switch (role) {
     case IdRole:
@@ -96,6 +141,10 @@ bool Transfer::setData(int role, const QVariant &value) {
     default:
         return false;
     }
+}
+
+bool Transfer::setData(const QByteArray &roleName, const QVariant &value) {
+    return setData(roles.key(roleName), value);
 }
 
 QNetworkAccessManager* Transfer::networkAccessManager() {

@@ -61,9 +61,8 @@ bool SubscriptionServer::handleRequest(QHttpRequest *request, QHttpResponse *res
     if (parts.size() == 1) {
         if (request->method() == QHttpRequest::HTTP_GET) {
             m_responses.enqueue(response);
-            const QUrl url = request->url();
-            const int offset = Utils::urlQueryItemValue(url, "offset", "0").toInt();
-            const int limit = Utils::urlQueryItemValue(url, "limit", "0").toInt();
+            const int offset = Utils::urlQueryItemValue(request->url(), "offset", "0").toInt();
+            const int limit = Utils::urlQueryItemValue(request->url(), "limit", "0").toInt();
             DBConnection::connection(this, SLOT(onSubscriptionsFetched(DBConnection*)))->fetchSubscriptions(offset,
                                                                                                             limit);
             return true;

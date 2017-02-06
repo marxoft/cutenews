@@ -19,6 +19,34 @@
 #include "dbnotify.h"
 #include "json.h"
 
+class ArticleRoleNames : public QHash<int, QByteArray>
+{
+
+public:
+    ArticleRoleNames() :
+        QHash<int, QByteArray>()
+    {
+        insert(Article::AuthorRole, "author");
+        insert(Article::AutoUpdateRole, "autoUpdate");
+        insert(Article::BodyRole, "body");
+        insert(Article::CategoriesRole, "categories");
+        insert(Article::DateRole, "date");
+        insert(Article::DateStringRole, "dateString");
+        insert(Article::EnclosuresRole, "enclosures");
+        insert(Article::ErrorStringRole, "errorString");
+        insert(Article::FavouriteRole, "favourite");
+        insert(Article::HasEnclosuresRole, "hasEnclosures");
+        insert(Article::IdRole, "id");
+        insert(Article::ReadRole, "read");
+        insert(Article::StatusRole, "status");
+        insert(Article::SubscriptionIdRole, "subscriptionId");
+        insert(Article::TitleRole, "title");
+        insert(Article::UrlRole, "url");
+    }
+};
+
+QHash<int, QByteArray> Article::roles = ArticleRoleNames();
+
 Article::Article(QObject *parent) :
     QObject(parent),
     m_favourite(false),
@@ -46,6 +74,10 @@ Article::Article(const QString &id, const QString &author, const QString &body, 
     m_url(url),
     m_autoUpdate(false)
 {
+}
+
+QHash<int, QByteArray> Article::roleNames() {
+    return roles;
 }
 
 QVariant Article::data(int role) const {
@@ -85,6 +117,10 @@ QVariant Article::data(int role) const {
     }
 }
 
+QVariant Article::data(const QByteArray &roleName) const {
+    return data(roles.key(roleName));
+}
+
 bool Article::setData(int role, const QVariant &value) {
     switch (role) {
     case AutoUpdateRole:
@@ -99,6 +135,10 @@ bool Article::setData(int role, const QVariant &value) {
     default:
         return false;
     }
+}
+
+bool Article::setData(const QByteArray &roleName, const QVariant &value) {
+    return setData(roles.key(roleName), value);
 }
 
 QString Article::id() const {

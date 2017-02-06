@@ -19,6 +19,34 @@
 #include "dbnotify.h"
 #include "json.h"
 
+class SubscriptionRoleNames : public QHash<int, QByteArray>
+{
+
+public:
+    SubscriptionRoleNames() :
+        QHash<int, QByteArray>()
+    {
+        insert(Subscription::AutoUpdateRole, "autoUpdate");
+        insert(Subscription::DescriptionRole, "description");
+        insert(Subscription::DownloadEnclosuresRole, "downloadEnclosures");
+        insert(Subscription::ErrorStringRole, "errorString");
+        insert(Subscription::IconPathRole, "iconPath");
+        insert(Subscription::IdRole, "id");
+        insert(Subscription::LastUpdatedRole, "lastUpdated");
+        insert(Subscription::LastUpdatedStringRole, "lastUpdatedString");
+        insert(Subscription::ReadRole, "read");
+        insert(Subscription::SourceRole, "source");
+        insert(Subscription::SourceTypeRole, "sourceType");
+        insert(Subscription::StatusRole, "status");
+        insert(Subscription::TitleRole, "title");
+        insert(Subscription::UnreadArticlesRole, "unreadArticles");
+        insert(Subscription::UpdateIntervalRole, "updateInterval");
+        insert(Subscription::UrlRole, "url");
+    }
+};
+
+QHash<int, QByteArray> Subscription::roles = SubscriptionRoleNames();
+
 Subscription::Subscription(QObject *parent) :
     QObject(parent),
     m_downloadEnclosures(false),
@@ -49,6 +77,10 @@ Subscription::Subscription(const QString &id, const QString &description, bool d
     m_unreadArticles(unreadArticles),
     m_autoUpdate(false)
 {
+}
+
+QHash<int, QByteArray> Subscription::roleNames() {
+    return roles;
 }
 
 QVariant Subscription::data(int role) const {
@@ -88,6 +120,10 @@ QVariant Subscription::data(int role) const {
     }
 }
 
+QVariant Subscription::data(const QByteArray &roleName) const {
+    return data(roles.key(roleName));
+}
+
 bool Subscription::setData(int role, const QVariant &value) {
     switch (role) {
     case AutoUpdateRole:
@@ -99,6 +135,10 @@ bool Subscription::setData(int role, const QVariant &value) {
     default:
         return false;
     }
+}
+
+bool Subscription::setData(const QByteArray &roleName, const QVariant &value) {
+    return setData(roles.key(roleName), value);
 }
 
 QString Subscription::id() const {

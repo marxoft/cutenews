@@ -22,9 +22,9 @@ Dialog {
     id: root
     
     property string url
-    property string subscriptionId
     property alias category: categorySelector.value
     property alias priority: prioritySelector.value
+    property alias usePlugin: pluginCheckBox.checked
     
     title: qsTr("Download")
     height: column.height + platformStyle.paddingMedium
@@ -58,6 +58,14 @@ Dialog {
             model: TransferPriorityModel {}
             value: Transfer.NormalPriority
         }
+        
+        CheckBox {
+            id: pluginCheckBox
+            
+            width: parent.width
+            text: qsTr("Use plugin")
+            enabled: plugins.enclosureIsSupported(root.url)
+        }
     }
     
     Button {
@@ -69,9 +77,9 @@ Dialog {
         }
         style: DialogButtonStyle {}
         text: qsTr("Done")
-        enabled: (root.url) && (root.subscriptionId)
+        enabled: root.url
         onClicked: root.accept()
     }
     
-    onAccepted: transfers.addEnclosureDownload(url, subscriptionId, category, priority)
+    onAccepted: transfers.addEnclosureDownload(url, category, priority, pluginCheckBox.checked)
 }

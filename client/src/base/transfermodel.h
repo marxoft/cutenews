@@ -20,15 +20,33 @@
 #include <QAbstractListModel>
 
 class Transfer;
+class QNetworkAccessManager;
 
 class TransferModel : public QAbstractListModel
 {
     Q_OBJECT
     
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
+    Q_PROPERTY(QString errorString READ errorString NOTIFY statusChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    
+    Q_ENUMS(Status)
     
 public:
-    explicit TransferModel(QObject *parent = 0);
+    enum Status {
+        Idle = 0,
+        Active,
+        Ready,
+        Error
+    };
+    
+    ~TransferModel();
+    
+    static TransferModel* instance();
+    
+    QString errorString() const;
+    
+    Status status() const;
     
 #if QT_VERSION >= 0x050000
     QHash<int, QByteArray> roleNames() const;
@@ -54,19 +72,53 @@ public:
     Q_INVOKABLE int match(int start, const QByteArray &role, const QVariant &value,
                           int flags = Qt::MatchFlags(Qt::MatchExactly | Qt::MatchWrap)) const;
     
-private:
-    int indexOf(Transfer *transfer) const;
+    Q_INVOKABLE Transfer* get(int row) const;
+    Q_INVOKABLE Transfer* get(const QString &id) const;
     
+    Q_INVOKABLE void addEnclosureDownload(const QString &url, bool usePlugin);
+    Q_INVOKABLE void addEnclosureDownload(const QString &url, const QString &category, int priority, bool usePlugin);    
+    
+public Q_SLOTS:
+    void load();
+    void start();
+    void pause();
+    bool start(const QString &id);
+    bool pause(const QString &id);
+    bool cancel(const QString &id);
+
 private Q_SLOTS:
-    void onCountChanged(int count);
-    void onTransferAdded(Transfer *transfer);
+    void append(Transfer *transfer);
+    void remove(int row);
+    void clear();
+    
     void onTransferDataChanged(Transfer *transfer, int role);
+    void onTransferFinished(Transfer *transfer);
+    void onTransfersChanged();
+    void onTransfersLoaded();
     
 Q_SIGNALS:
     void countChanged(int count);
+    void error(const QString &errorString);
+    void statusChanged(TransferModel::Status s);
     
 private:
-    QHash<int, QByteArray> m_roles;
+    TransferModel();
+    
+    void setErrorString(const QString &e);
+    
+    void setStatus(Status s);
+        
+    QNetworkAccessManager* networkAccessManager();
+    
+    static TransferModel *self;
+    
+    QNetworkAccessManager *m_nam;
+    
+    QString m_errorString;
+    
+    Status m_status;
+        
+    QList<Transfer*> m_items;
 };
 
 #endif // TRANSFERMODEL_H

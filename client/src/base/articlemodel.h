@@ -112,9 +112,7 @@ private:
     void setStatus(Status s);
         
     QList<Article*> m_list;
-    
-    QHash<int, QByteArray> m_roles;
-        
+            
     QString m_errorString;
     
     int m_limit;

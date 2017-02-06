@@ -34,7 +34,6 @@
 #include "subscriptionsourcetypemodel.h"
 #include "transfermodel.h"
 #include "transferprioritymodel.h"
-#include "transfers.h"
 #include "updateintervaltypemodel.h"
 #include "urlopenermodel.h"
 #include "utils.h"
@@ -60,7 +59,6 @@ inline void registerTypes() {
     qmlRegisterType<Subscription>("cuteNews", 1, 0, "Subscription");
     qmlRegisterType<SubscriptionModel>("cuteNews", 1, 0, "SubscriptionModel");
     qmlRegisterType<SubscriptionSourceTypeModel>("cuteNews", 1, 0, "SubscriptionSourceTypeModel");
-    qmlRegisterType<TransferModel>("cuteNews", 1, 0, "TransferModel");
     qmlRegisterType<TransferPriorityModel>("cuteNews", 1, 0, "TransferPriorityModel");
     qmlRegisterType<UpdateIntervalTypeModel>("cuteNews", 1, 0, "UpdateIntervalTypeModel");
     
@@ -69,7 +67,7 @@ inline void registerTypes() {
     qmlRegisterUncreatableType<ServerSettings>("cuteNews", 1, 0, "ServerSettings", "");
     qmlRegisterUncreatableType<Subscriptions>("cuteNews", 1, 0, "Subscriptions", "");
     qmlRegisterUncreatableType<Transfer>("cuteNews", 1, 0, "Transfer", "");
-    qmlRegisterUncreatableType<Transfer>("cuteNews", 1, 0, "Transfers", "");
+    qmlRegisterUncreatableType<TransferModel>("cuteNews", 1, 0, "TransferModel", "");
 }
 
 Q_DECL_EXPORT int main(int argc, char *argv[]) {
@@ -91,7 +89,7 @@ Q_DECL_EXPORT int main(int argc, char *argv[]) {
     QScopedPointer<ServerSettings> serversettings(ServerSettings::instance());
     QScopedPointer<Settings> settings(Settings::instance());
     QScopedPointer<Subscriptions> subscriptions(Subscriptions::instance());
-    QScopedPointer<Transfers> transfers(Transfers::instance());
+    QScopedPointer<TransferModel> transfers(TransferModel::instance());
     QScopedPointer<UrlOpenerModel> opener(UrlOpenerModel::instance());
     
     DBConnection connection;

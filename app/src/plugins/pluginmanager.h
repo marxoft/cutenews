@@ -52,6 +52,7 @@ public:
     Q_INVOKABLE FeedPlugin* getPlugin(const QString &id) const;
     Q_INVOKABLE FeedPlugin* getPluginForEnclosure(const QString &url) const;
     
+    Q_INVOKABLE bool enclosureIsSupported(const QString &url) const;
     Q_INVOKABLE EnclosureRequest* enclosureRequest(const QString &url, QObject *parent = 0) const;
     Q_INVOKABLE FeedRequest* feedRequest(const QString &id, QObject *parent = 0) const;
 

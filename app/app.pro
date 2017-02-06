@@ -132,6 +132,7 @@ maemo5 {
         src/maemo5/qml/LogDialog.qml \
         src/maemo5/qml/MainWindow.qml \
         src/maemo5/qml/NetworkProxyDialog.qml \
+        src/maemo5/qml/OpenDialog.qml \
         src/maemo5/qml/PluginDialog.qml \
         src/maemo5/qml/PopupLoader.qml \
         src/maemo5/qml/SearchDialog.qml \
@@ -352,15 +353,17 @@ maemo5 {
         src/desktop/logger.h \
         src/desktop/mainwindow.h \
         src/desktop/networksettingspage.h \
+        src/desktop/page.h \
         src/desktop/plugindialog.h \
         src/desktop/pluginsettingspage.h \
         src/desktop/pluginssettingspage.h \
+        src/desktop/qdatetimedialog.h \
         src/desktop/settings.h \
         src/desktop/settingsdialog.h \
         src/desktop/settingspage.h \
         src/desktop/subscriptiondialog.h \
         src/desktop/subscriptionsourcetypemodel.h \
-        src/desktop/transfersview.h \
+        src/desktop/transferspage.h \
         src/desktop/urlopenersettingspage.h
     
     SOURCES += \
@@ -376,14 +379,16 @@ maemo5 {
         src/desktop/main.cpp \
         src/desktop/mainwindow.cpp \
         src/desktop/networksettingspage.cpp \
+        src/desktop/page.cpp \
         src/desktop/plugindialog.cpp \
         src/desktop/pluginsettingspage.cpp \
         src/desktop/pluginssettingspage.cpp \
+        src/desktop/qdatetimedialog.cpp \
         src/desktop/settings.cpp \
         src/desktop/settingsdialog.cpp \
         src/desktop/settingspage.cpp \
         src/desktop/subscriptiondialog.cpp \
-        src/desktop/transfersview.cpp \
+        src/desktop/transferspage.cpp \
         src/desktop/urlopenersettingspage.cpp
     
     desktop.files = desktop/desktop/cutenews.desktop

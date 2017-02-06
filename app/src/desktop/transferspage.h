@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TRANSFERSVIEW_H
-#define TRANSFERSVIEW_H
+#ifndef TRANSFERSPAGE_H
+#define TRANSFERSPAGE_H
 
-#include <QWidget>
+#include "page.h"
 #include <QStyledItemDelegate>
 
 class TransferModel;
@@ -28,12 +28,12 @@ class QToolBar;
 class QTreeView;
 class QVBoxLayout;
 
-class TransfersView : public QWidget
+class TransfersPage : public Page
 {
     Q_OBJECT
 
 public:
-    explicit TransfersView(QWidget *parent = 0);
+    explicit TransfersPage(QWidget *parent = 0);
     
 private Q_SLOTS:
     void queueTransfer();
@@ -108,4 +108,4 @@ public:
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const;
 };
 
-#endif // TRANSFERSVIEW_H
+#endif // TRANSFERSPAGE_H

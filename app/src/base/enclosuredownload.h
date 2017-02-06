@@ -50,6 +50,8 @@ class EnclosureDownload : public Transfer
                NOTIFY customCommandOverrideEnabledChanged)
     Q_PROPERTY(QString downloadPath READ downloadPath WRITE setDownloadPath NOTIFY downloadPathChanged)
     Q_PROPERTY(QString fileName READ fileName WRITE setFileName NOTIFY fileNameChanged)
+    Q_PROPERTY(bool usePlugin READ usePlugin WRITE setUsePlugin NOTIFY usePluginChanged)
+    Q_PROPERTY(QVariantMap pluginSettings READ pluginSettings WRITE setPluginSettings NOTIFY pluginSettingsChanged)
 
 public:
     explicit EnclosureDownload(QObject *parent = 0);
@@ -71,6 +73,11 @@ public:
     QString fileName() const;
     void setFileName(const QString &fn);
     
+    bool usePlugin() const;
+    void setUsePlugin(bool enabled);
+    QVariantMap pluginSettings() const;
+    void setPluginSettings(const QVariantMap &settings);
+    
 public Q_SLOTS:
     virtual void queue();
     virtual void start();
@@ -91,6 +98,8 @@ Q_SIGNALS:
     void customCommandOverrideEnabledChanged();
     void downloadPathChanged();
     void fileNameChanged();
+    void usePluginChanged();
+    void pluginSettingsChanged();
 
 private:
     QProcess* process();
@@ -120,6 +129,9 @@ private:
     QString m_downloadPath;
         
     QString m_fileName;
+    
+    bool m_usePlugin;
+    QVariantMap m_pluginSettings;
     
     int m_redirects;
     

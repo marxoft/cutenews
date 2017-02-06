@@ -27,22 +27,8 @@ SubscriptionModel::SubscriptionModel(QObject *parent) :
     QAbstractListModel(parent),
     m_status(Idle)
 {
-    m_roles[Subscription::AutoUpdateRole] = "autoUpdate";
-    m_roles[Subscription::DescriptionRole] = "description";
-    m_roles[Subscription::DownloadEnclosuresRole] = "downloadEnclosures";
-    m_roles[Subscription::IconPathRole] = "iconPath";
-    m_roles[Subscription::IdRole] = "id";
-    m_roles[Subscription::LastUpdatedRole] = "lastUpdated";
-    m_roles[Subscription::LastUpdatedStringRole] = "lastUpdatedString";
-    m_roles[Subscription::ReadRole] = "read";
-    m_roles[Subscription::SourceRole] = "source";
-    m_roles[Subscription::SourceTypeRole] = "sourceType";
-    m_roles[Subscription::TitleRole] = "title";
-    m_roles[Subscription::UnreadArticlesRole] = "unreadArticles";
-    m_roles[Subscription::UpdateIntervalRole] = "updateInterval";
-    m_roles[Subscription::UrlRole] = "url";
 #if QT_VERSION <= 0x050000
-    setRoleNames(m_roles);
+    setRoleNames(Subscription::roleNames());
 #endif
     connect(DBNotify::instance(), SIGNAL(subscriptionsAdded(QStringList)),
             this, SLOT(onSubscriptionsAdded(QStringList)));
@@ -70,7 +56,7 @@ void SubscriptionModel::setStatus(SubscriptionModel::Status s) {
 
 #if QT_VERSION >= 0x050000
 QHash<int, QByteArray> SubscriptionModel::roleNames() const {
-    return m_roles;
+    return Subscription::roleNames();
 }
 #endif
 
@@ -137,7 +123,7 @@ QVariant SubscriptionModel::data(const QModelIndex &index, int role) const {
 }
 
 QVariant SubscriptionModel::data(int row, const QByteArray &role) const {
-    return data(index(row), m_roles.key(role));
+    return data(index(row), roleNames().key(role));
 }
 
 bool SubscriptionModel::setData(const QModelIndex &index, const QVariant &value, int role) {
@@ -149,12 +135,12 @@ bool SubscriptionModel::setData(const QModelIndex &index, const QVariant &value,
 }
 
 bool SubscriptionModel::setData(int row, const QVariant &value, const QByteArray &role) {
-    return setData(index(row), value, m_roles.key(role));
+    return setData(index(row), value, roleNames().key(role));
 }
 
 QMap<int, QVariant> SubscriptionModel::itemData(const QModelIndex &index) const {
     QMap<int, QVariant> map;
-        
+    
     if (const Subscription *subscription = get(index.row())) {
         for (int i = Subscription::AutoUpdateRole; i <= Subscription::UrlRole; i++) {
             map[i] = subscription->data(i);
@@ -166,10 +152,10 @@ QMap<int, QVariant> SubscriptionModel::itemData(const QModelIndex &index) const 
 
 QVariantMap SubscriptionModel::itemData(int row) const {
     QVariantMap map;
-        
+    
     if (const Subscription *subscription = get(row)) {
         for (int i = Subscription::AutoUpdateRole; i <= Subscription::UrlRole; i++) {
-            map[m_roles.value(i)] = subscription->data(i);
+            map[roleNames().value(i)] = subscription->data(i);
         }
     }
     
@@ -227,7 +213,7 @@ QModelIndexList SubscriptionModel::match(const QModelIndex &start, int role, con
 }
 
 int SubscriptionModel::match(int start, const QByteArray &role, const QVariant &value, int flags) const {
-    const QModelIndexList indexes = match(index(start), m_roles.key(role), value, Qt::MatchFlags(flags));
+    const QModelIndexList indexes = match(index(start), roleNames().key(role), value, Qt::MatchFlags(flags));
     return indexes.isEmpty() ? -1 : indexes.first().row();
 }
 

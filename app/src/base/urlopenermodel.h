@@ -19,6 +19,8 @@
 
 #include "selectionmodel.h"
 
+class EnclosureRequest;
+
 class UrlOpenerModel : public SelectionModel
 {
     Q_OBJECT
@@ -35,9 +37,13 @@ public:
         
 public Q_SLOTS:    
     bool open(const QString &url);
+    bool openWithPlugin(const QString &url);
     
     void load();
     void save();
+
+private Q_SLOTS:
+    void onEnclosureRequestFinished(EnclosureRequest *request);
 
 private:
     UrlOpenerModel();

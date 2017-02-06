@@ -386,12 +386,7 @@ void DBConnection::clear() {
     }
 }
 
-void DBConnection::close() {
-    if ((!m_connectionName.isEmpty()) && (status() != Active)) {
-        QSqlDatabase::removeDatabase(m_connectionName);
-        m_connectionName.clear();
-    }
-}
+void DBConnection::close() {}
 
 bool DBConnection::nextRecord() {
     if (status() == Ready) {
@@ -1052,18 +1047,11 @@ void DBConnection::_p_exec(const QString &statement) {
 }
 
 QSqlDatabase DBConnection::database() {
-    if (m_connectionName.isEmpty()) {
-        m_connectionName = Utils::createId();
-        QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", m_connectionName);
-        db.setDatabaseName(DATABASE_NAME);
-#ifndef NO_SQLITE_FOREIGN_KEYS
-        if (!db.open()) {
-            db.open();
-        }
-        
-        db.exec("PRAGMA foreign_keys = ON");
-#endif
+    QSqlDatabase db = QSqlDatabase::database();
+    
+    if (!db.isOpen()) {
+        db.open();
     }
-
-    return QSqlDatabase::database(m_connectionName);
+    
+    return db;
 }

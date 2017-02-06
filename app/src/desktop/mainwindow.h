@@ -25,7 +25,7 @@ class Article;
 class ArticleModel;
 class Browser;
 class SubscriptionModel;
-class TransfersView;
+class TransfersPage;
 class QLabel;
 class QMenu;
 class QModelIndex;
@@ -52,7 +52,7 @@ private Q_SLOTS:
     void newSubscriptionRequested(QAction *action = 0);
     void importSubscriptions();
     void markAllSubscriptionsRead();
-    
+        
     void updateCurrentSubscription();
     void markCurrentSubscriptionRead();
     void deleteCurrentSubscription();
@@ -68,12 +68,17 @@ private Q_SLOTS:
     void openCurrentArticleInTab();
     void openCurrentArticleInBrowser();
     void openCurrentArticleExternally();
+    void openCurrentArticleWithPlugin();
+    void downloadCurrentArticle();
+    void downloadCurrentArticleWithPlugin();
     
     void copyCurrentEnclosureUrl();
     void openCurrentEnclosureInTab();
     void openCurrentEnclosureInBrowser();
     void openCurrentEnclosureExternally();
+    void openCurrentEnclosureWithPlugin();
     void downloadCurrentEnclosure();
+    void downloadCurrentEnclosureWithPlugin();
     
     void setCurrentSubscription(const QModelIndex &index);
     void setCurrentArticle(const QModelIndex &index);
@@ -85,8 +90,11 @@ private Q_SLOTS:
     void showArticleContextMenu(const QPoint &pos);
     void showEnclosureContextMenu(const QPoint &pos);
     
-    void openUrlExternally(const QString &url);
     void openUrlInTab(const QString &url);
+    void openUrlExternally(const QString &url);
+    void openUrlWithPlugin(const QString &url);
+    void downloadUrl(const QString &url);
+    void downloadUrlWithPlugin(const QString &url);
 
     void updateTabText(const QString &text);
     void closeTab(int index);
@@ -99,6 +107,8 @@ private Q_SLOTS:
     void showSettingsDialog();
     void showAboutDialog();
     
+    void loadPlugins();
+        
     void onSubscriptionsCountChanged(int count);
     void onSubscriptionsStatusChanged(Subscriptions::Status status);
     void onArticlesCountChanged(int count);
@@ -151,18 +161,24 @@ private:
     QAction *m_openArticleInTabAction;
     QAction *m_openArticleInBrowserAction;
     QAction *m_openArticleExternallyAction;
+    QAction *m_openArticleWithPluginAction;
+    QAction *m_downloadArticleAction;
+    QAction *m_downloadArticleWithPluginAction;
     
     QAction *m_copyEnclosureUrlAction;
     QAction *m_openEnclosureInTabAction;
     QAction *m_openEnclosureInBrowserAction;
     QAction *m_openEnclosureExternallyAction;
+    QAction *m_openEnclosureWithPluginAction;
     QAction *m_downloadEnclosureAction;
+    QAction *m_downloadEnclosureWithPluginAction;
     
     QAction *m_transfersAction;
     QAction *m_closeTabAction;
     
     QAction *m_searchAction;
     QAction *m_deleteAction;
+    QAction *m_pluginsAction;
     QAction *m_settingsAction;
 
     QAction *m_aboutAction;
@@ -189,7 +205,7 @@ private:
     QVBoxLayout *m_tabsLayout;
     QVBoxLayout *m_articleLayout;
     
-    QPointer<TransfersView> m_transfersTab;
+    QPointer<TransfersPage> m_transfersPage;
 };  
     
 #endif // MAINWINDOW_H

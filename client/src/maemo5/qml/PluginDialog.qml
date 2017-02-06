@@ -396,7 +396,7 @@ Dialog {
                 subscription.load(subscriptionId);
             }
             else if (pluginId) {
-                repeater.model = plugins.getConfig(pluginId).settings;
+                repeater.model = plugins.getConfig(pluginId).feedSettings;
             }
         }
     }

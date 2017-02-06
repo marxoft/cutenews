@@ -28,22 +28,6 @@ Dialog {
     height: Math.min(360, view.count * 70 + platformStyle.paddingMedium)
     
     Action {
-        id: openAction
-        
-        text: qsTr("Open externally")
-        autoRepeat: false
-        shortcut: qsTr("o")
-        enabled: view.currentIndex >= 0
-        onTriggered: {
-            var url = enclosures[view.currentIndex].url;
-            
-            if (!urlopener.open(url)) {
-                Qt.openUrlExternally(url);
-            }            
-        }
-    }
-    
-    Action {
         id: copyAction
         
         text: qsTr("Copy URL")
@@ -52,6 +36,16 @@ Dialog {
         enabled: view.currentIndex >= 0
         onTriggered: clipboard.text = enclosures[view.currentIndex].url
     }
+    
+    Action {
+        id: openAction
+        
+        text: qsTr("Open externally")
+        autoRepeat: false
+        shortcut: qsTr("o")
+        enabled: view.currentIndex >= 0
+        onTriggered: popups.open(openDialog, root)
+    }    
     
     Action {
         id: downloadAction
@@ -78,18 +72,30 @@ Dialog {
     Component {
         id: contextMenu
         
-        Menu {        
-            MenuItem {
-                action: openAction
-            }
-            
+        Menu {
             MenuItem {
                 action: copyAction
             }
             
             MenuItem {
+                action: openAction
+            }
+            
+            MenuItem {
+                action: pluginAction
+            }            
+            
+            MenuItem {
                 action: downloadAction
             }
+        }
+    }
+    
+    Component {
+        id: openDialog
+        
+        OpenDialog {
+            url: enclosures[view.currentIndex].url
         }
     }
     

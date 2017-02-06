@@ -35,6 +35,7 @@ EnclosureDownload::EnclosureDownload(QObject *parent) :
     m_canceled(false),
     m_category(tr("Default")),
     m_customCommandOverrideEnabled(false),
+    m_usePlugin(false),
     m_redirects(0),
     m_metadataSet(false)
 {
@@ -52,6 +53,10 @@ QVariant EnclosureDownload::data(int role) const {
         return downloadPath();
     case FileNameRole:
         return fileName();
+    case PluginSettingsRole:
+        return pluginSettings();
+    case UsePluginRole:
+        return usePlugin();
     default:
         return Transfer::data(role);
     }
@@ -73,6 +78,12 @@ bool EnclosureDownload::setData(int role, const QVariant &value) {
         return true;
     case FileNameRole:
         setFileName(value.toString());
+        return true;
+    case PluginSettingsRole:
+        setPluginSettings(value.toMap());
+        return true;
+    case UsePluginRole:
+        setUsePlugin(value.toBool());
         return true;
     default:
         return Transfer::setData(role, value);
@@ -157,6 +168,28 @@ void EnclosureDownload::setFileName(const QString &name) {
     }    
 }
 
+bool EnclosureDownload::usePlugin() const {
+    return m_usePlugin;
+}
+
+void EnclosureDownload::setUsePlugin(bool enabled) {
+    if (enabled != usePlugin()) {
+        m_usePlugin = enabled;
+        emit usePluginChanged();
+        emit dataChanged(this, UsePluginRole);
+    }
+}
+
+QVariantMap EnclosureDownload::pluginSettings() const {
+    return m_pluginSettings;
+}
+
+void EnclosureDownload::setPluginSettings(const QVariantMap &settings) {
+    m_pluginSettings = settings;
+    emit pluginSettingsChanged();
+    emit dataChanged(this, PluginSettingsRole);
+}
+
 void EnclosureDownload::queue() {
     switch (status()) {
     case Canceled:
@@ -185,6 +218,11 @@ void EnclosureDownload::start() {
         break;
     }
     
+    if (!usePlugin()) {
+        startDownload(url());
+        return;
+    }
+    
     const FeedPluginList plugins = PluginManager::instance()->plugins();
 
     for (int i = 0; i < plugins.size(); i++) {
@@ -197,14 +235,19 @@ void EnclosureDownload::start() {
                 setStatus(Connecting);
                 connect(request, SIGNAL(finished(EnclosureRequest*)),
                         this, SLOT(onEnclosureRequestFinished(EnclosureRequest*)));
-
-                PluginSettings settings(config->id(), this);
-                request->getEnclosure(url(), settings.values());
+                
+                if (pluginSettings().isEmpty()) {
+                    PluginSettings settings(config->id(), this);
+                    setPluginSettings(settings.values());
+                }
+                
+                request->getEnclosure(url(), pluginSettings());
                 return;
             }
         }
     }
     
+    Logger::log("EnclosureDownload::start(). No plugin found for URL: " + url(), Logger::LowVerbosity);
     startDownload(url());
 }
 

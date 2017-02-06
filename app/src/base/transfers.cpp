@@ -52,8 +52,12 @@ int Transfers::count() const {
     return m_transfers.size();
 }
 
+Transfer* Transfers::addEnclosureDownload(const QString &url, bool usePlugin) {
+    return addEnclosureDownload(url, QString(), Transfer::NormalPriority, usePlugin);
+}
+
 Transfer* Transfers::addEnclosureDownload(const QString &url, const QString &category,
-                                          int priority) {
+                                          int priority, bool usePlugin) {
     Logger::log("Transfers::addEnclosureDownload(). URL: " + url, Logger::LowVerbosity);
     EnclosureDownload *transfer = new EnclosureDownload(this);
     transfer->setNetworkAccessManager(m_nam);
@@ -64,6 +68,7 @@ Transfer* Transfers::addEnclosureDownload(const QString &url, const QString &cat
     transfer->setName(transfer->fileName());
     transfer->setPriority(Transfer::Priority(priority));
     transfer->setUrl(url);
+    transfer->setUsePlugin(usePlugin);
     connect(transfer, SIGNAL(statusChanged()), this, SLOT(onTransferStatusChanged()));
     
     m_transfers << transfer;
@@ -157,6 +162,8 @@ void Transfers::save() {
         settings.setValue("size", transfer->data(Transfer::SizeRole));
         settings.setValue("transferType", transfer->data(Transfer::TransferTypeRole));
         settings.setValue("url", transfer->data(Transfer::UrlRole));
+        settings.setValue("usePlugin", transfer->data(Transfer::UsePluginRole));
+        settings.setValue("pluginSettings", transfer->data(Transfer::PluginSettingsRole));
     }
     
     settings.endArray();
@@ -192,6 +199,8 @@ void Transfers::load() {
         transfer->setData(Transfer::PriorityRole, settings.value("priority"));
         transfer->setData(Transfer::SizeRole, settings.value("size"));
         transfer->setData(Transfer::UrlRole, settings.value("url"));
+        transfer->setData(Transfer::UsePluginRole, settings.value("usePlugin"));
+        transfer->setData(Transfer::PluginSettingsRole, settings.value("pluginSettings"));
         connect(transfer, SIGNAL(statusChanged()), this, SLOT(onTransferStatusChanged()));
     
         m_transfers << transfer;

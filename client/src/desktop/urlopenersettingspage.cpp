@@ -34,7 +34,6 @@ UrlOpenerSettingsPage::UrlOpenerSettingsPage(QWidget *parent) :
     setWindowTitle(tr("URL openers"));
 
     m_view->setModel(UrlOpenerModel::instance());
-    m_view->setAlternatingRowColors(true);
     m_view->setSelectionBehavior(QTreeView::SelectRows);
     m_view->setContextMenuPolicy(Qt::CustomContextMenu);
     m_view->setEditTriggers(QTreeView::NoEditTriggers);

@@ -39,7 +39,8 @@ bool initDatabase() {
         db.open();
     }
     
-    QSqlQuery query = db.exec("CREATE TABLE IF NOT EXISTS subscriptions (id TEXT PRIMARY KEY NOT NULL, \
+    QSqlQuery query(db);
+    query.exec("CREATE TABLE IF NOT EXISTS subscriptions (id TEXT PRIMARY KEY NOT NULL, \
     description TEXT, downloadEnclosures INTEGER, iconPath TEXT, lastUpdated INTEGER, source TEXT, \
     sourceType INTEGER, title TEXT, updateInterval INTEGER, url TEXT)");
     QSqlError error = query.lastError();
@@ -50,7 +51,7 @@ bool initDatabase() {
         return false;
     }
     
-    query = db.exec("CREATE TABLE IF NOT EXISTS articles (id TEXT PRIMARY KEY NOT NULL, author TEXT, body TEXT, \
+    query.exec("CREATE TABLE IF NOT EXISTS articles (id TEXT PRIMARY KEY NOT NULL, author TEXT, body TEXT, \
     categories TEXT, date INTEGER, enclosures TEXT, isFavourite INTEGER, isRead INTEGER, lastRead INTEGER, \
     subscriptionId TEXT REFERENCES subscriptions(id) ON DELETE CASCADE, title TEXT, url TEXT)");
     error = query.lastError();
@@ -60,7 +61,16 @@ bool initDatabase() {
         db.close();
         return false;
     }
+#ifndef NO_SQLITE_FOREIGN_KEYS
+    query.exec("PRAGMA foreign_keys = ON");
+    error = query.lastError();
     
+    if (error.isValid()) {
+        Logger::log("initDatabase(). Error: " +  error.text());
+        db.close();
+        return false;
+    }
+#endif
     Logger::log("initDatabase(). OK", Logger::LowVerbosity);
     db.close();
     return true;

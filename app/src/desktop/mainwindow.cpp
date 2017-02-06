@@ -24,23 +24,20 @@
 #include "definitions.h"
 #include "plugindialog.h"
 #include "pluginmanager.h"
+#include "qdatetimedialog.h"
 #include "settings.h"
 #include "settingsdialog.h"
 #include "subscription.h"
 #include "subscriptiondialog.h"
 #include "subscriptionmodel.h"
 #include "transfers.h"
-#include "transfersview.h"
+#include "transferspage.h"
 #include "urlopenermodel.h"
 #include "utils.h"
 #include <QAction>
 #include <QApplication>
 #include <QClipboard>
-#include <QDateTimeEdit>
-#include <QDesktopServices>
-#include <QDialogButtonBox>
 #include <QFileDialog>
-#include <QFormLayout>
 #include <QHeaderView>
 #include <QIcon>
 #include <QInputDialog>
@@ -97,15 +94,21 @@ MainWindow::MainWindow(QWidget *parent) :
     m_openArticleInTabAction(new QAction(tr("Open in &tab"), this)),
     m_openArticleInBrowserAction(new QAction(tr("Open in &browser"), this)),
     m_openArticleExternallyAction(new QAction(tr("Open &externally"), this)),
+    m_openArticleWithPluginAction(new QAction(tr("Open externally using &plugin"), this)),
+    m_downloadArticleAction(new QAction(tr("&Download"), this)),
+    m_downloadArticleWithPluginAction(new QAction(tr("Download using &plugin"), this)),
     m_copyEnclosureUrlAction(new QAction(tr("&Copy URL"), this)),
     m_openEnclosureInTabAction(new QAction(tr("Open in &tab"), this)),
     m_openEnclosureInBrowserAction(new QAction(tr("Open in &browser"), this)),
     m_openEnclosureExternallyAction(new QAction(tr("Open &externally"), this)),
+    m_openEnclosureWithPluginAction(new QAction(tr("Open externally using &plugin"), this)),
     m_downloadEnclosureAction(new QAction(tr("&Download"), this)),
+    m_downloadEnclosureWithPluginAction(new QAction(tr("Download using &plugin"), this)),
     m_transfersAction(new QAction(QIcon::fromTheme("folder-download"), tr("Show &downloads"), this)),
     m_closeTabAction(new QAction(QIcon::fromTheme("view-close"), tr("Close &tab"), this)),
     m_searchAction(new QAction(QIcon::fromTheme("edit-find"), tr("&Search all articles"), this)),
     m_deleteAction(new QAction(QIcon::fromTheme("edit-delete"), tr("&Delete read articles"), this)),
+    m_pluginsAction(new QAction(QIcon::fromTheme("view-refresh"), tr("&Load plugins"), this)),
     m_settingsAction(new QAction(QIcon::fromTheme("document-properties"), tr("&Preferences"), this)),
     m_aboutAction(new QAction(QIcon::fromTheme("help-contents"), tr("&About"), this)),
     m_horizontalSplitter(new QSplitter(Qt::Horizontal, this)),
@@ -122,7 +125,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_articleContainer(new QWidget(this)),
     m_tabsLayout(new QVBoxLayout(m_tabsContainer)),
     m_articleLayout(new QVBoxLayout(m_articleContainer)),
-    m_transfersTab(0)
+    m_transfersPage(0)
 {
     setWindowTitle("cuteNews");
     setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -176,6 +179,9 @@ MainWindow::MainWindow(QWidget *parent) :
     m_articleMenu->addAction(m_openArticleInTabAction);
     m_articleMenu->addAction(m_openArticleInBrowserAction);
     m_articleMenu->addAction(m_openArticleExternallyAction);
+    m_articleMenu->addAction(m_openArticleWithPluginAction);
+    m_articleMenu->addAction(m_downloadArticleAction);
+    m_articleMenu->addAction(m_downloadArticleWithPluginAction);
     
     m_articleContextMenu->addAction(m_toggleArticleReadAction);
     m_articleContextMenu->addAction(m_toggleArticleFavouriteAction);
@@ -185,18 +191,24 @@ MainWindow::MainWindow(QWidget *parent) :
     m_articleContextMenu->addAction(m_openArticleInTabAction);
     m_articleContextMenu->addAction(m_openArticleInBrowserAction);
     m_articleContextMenu->addAction(m_openArticleExternallyAction);
+    m_articleContextMenu->addAction(m_openArticleWithPluginAction);
+    m_articleContextMenu->addAction(m_downloadArticleAction);
+    m_articleContextMenu->addAction(m_downloadArticleWithPluginAction);
     
     m_enclosureContextMenu->addAction(m_copyEnclosureUrlAction);
     m_enclosureContextMenu->addAction(m_openEnclosureInTabAction);
     m_enclosureContextMenu->addAction(m_openEnclosureInBrowserAction);
     m_enclosureContextMenu->addAction(m_openEnclosureExternallyAction);
+    m_enclosureContextMenu->addAction(m_openEnclosureWithPluginAction);
     m_enclosureContextMenu->addAction(m_downloadEnclosureAction);
+    m_enclosureContextMenu->addAction(m_downloadEnclosureWithPluginAction);
     
     m_viewMenu->addAction(m_transfersAction);
     m_viewMenu->addAction(m_closeTabAction);
     
     m_toolsMenu->addAction(m_searchAction);
     m_toolsMenu->addAction(m_deleteAction);
+    m_toolsMenu->addAction(m_pluginsAction);
     m_toolsMenu->addAction(m_settingsAction);
 
     m_helpMenu->addAction(m_aboutAction);
@@ -243,6 +255,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_closeTabAction->setEnabled(false);
     
     m_searchAction->setShortcut(QKeySequence(tr("Ctrl+F")));
+    m_pluginsAction->setShortcut(QKeySequence(tr("Ctrl+L")));
     m_settingsAction->setShortcut(QKeySequence(tr("Ctrl+P")));
     
     m_horizontalSplitter->addWidget(m_subscriptionsView);
@@ -372,18 +385,24 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_openArticleInTabAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleInTab()));
     connect(m_openArticleInBrowserAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleInBrowser()));
     connect(m_openArticleExternallyAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleExternally()));
+    connect(m_openArticleWithPluginAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleWithPlugin()));
+    connect(m_downloadArticleAction, SIGNAL(triggered()), this, SLOT(downloadCurrentArticle()));
+    connect(m_downloadArticleWithPluginAction, SIGNAL(triggered()), this, SLOT(downloadCurrentArticleWithPlugin()));
     
     connect(m_copyEnclosureUrlAction, SIGNAL(triggered()), this, SLOT(copyCurrentEnclosureUrl()));
     connect(m_openEnclosureInTabAction, SIGNAL(triggered()), this, SLOT(openCurrentEnclosureInTab()));
     connect(m_openEnclosureInBrowserAction, SIGNAL(triggered()), this, SLOT(openCurrentEnclosureInBrowser()));
     connect(m_openEnclosureExternallyAction, SIGNAL(triggered()), this, SLOT(openCurrentEnclosureExternally()));
+    connect(m_openEnclosureWithPluginAction, SIGNAL(triggered()), this, SLOT(openCurrentEnclosureWithPlugin()));
     connect(m_downloadEnclosureAction, SIGNAL(triggered()), this, SLOT(downloadCurrentEnclosure()));
+    connect(m_downloadEnclosureWithPluginAction, SIGNAL(triggered()), this, SLOT(downloadCurrentEnclosureWithPlugin()));
     
     connect(m_transfersAction, SIGNAL(triggered()), this, SLOT(showTransfersTab()));
     connect(m_closeTabAction, SIGNAL(triggered()), this, SLOT(closeCurrentTab()));
     
     connect(m_searchAction, SIGNAL(triggered()), this, SLOT(showSearchDialog()));
     connect(m_deleteAction, SIGNAL(triggered()), this, SLOT(showDeleteDialog()));
+    connect(m_pluginsAction, SIGNAL(triggered()), this, SLOT(loadPlugins()));
     connect(m_settingsAction, SIGNAL(triggered()), this, SLOT(showSettingsDialog()));
 
     connect(m_aboutAction, SIGNAL(triggered()), this, SLOT(showAboutDialog()));
@@ -400,9 +419,12 @@ MainWindow::MainWindow(QWidget *parent) :
     
     connect(m_enclosuresView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showEnclosureContextMenu(QPoint)));
     connect(m_enclosuresView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openCurrentEnclosureInBrowser()));
-
-    connect(m_browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
+    
     connect(m_browser, SIGNAL(openUrlInTab(QString)), this, SLOT(openUrlInTab(QString)));
+    connect(m_browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
+    connect(m_browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
+    connect(m_browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
+    connect(m_browser, SIGNAL(downloadUrlWithPlugin(QString)), this, SLOT(downloadUrlWithPlugin(QString)));
     
     connect(m_tabs, SIGNAL(currentChanged(int)), this, SLOT(onCurrentTabChanged(int)));
     connect(m_tabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
@@ -556,6 +578,18 @@ void MainWindow::openCurrentArticleExternally() {
     openUrlExternally(m_articlesView->currentIndex().data(Article::UrlRole).toString());
 }
 
+void MainWindow::openCurrentArticleWithPlugin() {
+    openUrlWithPlugin(m_articlesView->currentIndex().data(Article::UrlRole).toString());
+}
+
+void MainWindow::downloadCurrentArticle() {
+    downloadUrl(m_articlesView->currentIndex().data(Article::UrlRole).toString());
+}
+
+void MainWindow::downloadCurrentArticleWithPlugin() {
+    downloadUrlWithPlugin(m_articlesView->currentIndex().data(Article::UrlRole).toString());
+}
+
 void MainWindow::copyCurrentEnclosureUrl() {
     if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
         QApplication::clipboard()->setText(item->text());
@@ -580,9 +614,21 @@ void MainWindow::openCurrentEnclosureExternally() {
     }
 }
 
+void MainWindow::openCurrentEnclosureWithPlugin() {
+    if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
+        openUrlWithPlugin(item->text());
+    }
+}
+
 void MainWindow::downloadCurrentEnclosure() {
     if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
-        Transfers::instance()->addEnclosureDownload(item->text());
+        downloadUrl(item->text());
+    }
+}
+
+void MainWindow::downloadCurrentEnclosureWithPlugin() {
+    if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
+        downloadUrlWithPlugin(item->text());
     }
 }
 
@@ -673,6 +719,10 @@ void MainWindow::setCurrentArticle(const QModelIndex &index) {
         m_enclosuresView->show();
     }
     
+    const bool pluginEnabled = PluginManager::instance()->enclosureIsSupported(index.data(Article::UrlRole).toString());
+    m_openArticleWithPluginAction->setEnabled(pluginEnabled);
+    m_downloadArticleWithPluginAction->setEnabled(pluginEnabled);
+    
     if (!isRead) {
         m_articlesModel->setData(m_articlesProxyModel->mapToSource(index), true, Article::ReadRole);
     }
@@ -707,25 +757,42 @@ void MainWindow::showArticleContextMenu(const QPoint &pos) {
 
 void MainWindow::showEnclosureContextMenu(const QPoint &pos) {
     if (m_enclosuresView->currentIndex().isValid()) {
+        const bool pluginEnabled =
+            PluginManager::instance()->enclosureIsSupported(m_enclosuresView->currentIndex().data().toString());
+        m_openEnclosureWithPluginAction->setEnabled(pluginEnabled);
+        m_downloadEnclosureWithPluginAction->setEnabled(pluginEnabled);
         m_enclosureContextMenu->popup(m_enclosuresView->mapToGlobal(pos), m_copyEnclosureUrlAction);
-    }
-}
-
-void MainWindow::openUrlExternally(const QString &url) {
-    if (!UrlOpenerModel::instance()->open(url)) {
-        QDesktopServices::openUrl(url);
     }
 }
 
 void MainWindow::openUrlInTab(const QString &url) {
     Browser *browser = new Browser(url, m_stack);
     browser->setAttribute(Qt::WA_DeleteOnClose, true);
-    connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(browser, SIGNAL(openUrlInTab(QString)), this, SLOT(openUrlInTab(QString)));
+    connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
+    connect(browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
+    connect(browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
+    connect(browser, SIGNAL(downloadUrlWithPlugin(QString)), this, SLOT(downloadUrlWithPlugin(QString)));
     connect(browser, SIGNAL(titleChanged(QString)), this, SLOT(updateTabText(QString)));
     m_stack->addWidget(browser);
     m_tabs->addTab(url);
     m_tabs->show();
+}
+
+void MainWindow::openUrlExternally(const QString &url) {
+    UrlOpenerModel::instance()->open(url);
+}
+
+void MainWindow::openUrlWithPlugin(const QString &url) {
+    UrlOpenerModel::instance()->openWithPlugin(url);
+}
+
+void MainWindow::downloadUrl(const QString &url) {
+    Transfers::instance()->addEnclosureDownload(url, false);
+}
+
+void MainWindow::downloadUrlWithPlugin(const QString &url) {
+    Transfers::instance()->addEnclosureDownload(url, true);
 }
 
 void MainWindow::updateTabText(const QString &text) {
@@ -753,18 +820,18 @@ void MainWindow::closeCurrentTab() {
 }
 
 void MainWindow::showTransfersTab() {
-    if (m_transfersTab) {
-        const int index = m_stack->indexOf(m_transfersTab);
+    if (m_transfersPage) {
+        const int index = m_stack->indexOf(m_transfersPage);
         m_stack->setCurrentIndex(index);
         m_tabs->setCurrentIndex(index);
     }
     else {
-        m_transfersTab = new TransfersView(m_stack);
-        m_transfersTab->setAttribute(Qt::WA_DeleteOnClose, true);
-        m_stack->addWidget(m_transfersTab);
-        m_stack->setCurrentWidget(m_transfersTab);
+        m_transfersPage = new TransfersPage(m_stack);
+        m_transfersPage->setAttribute(Qt::WA_DeleteOnClose, true);
+        m_stack->addWidget(m_transfersPage);
+        m_stack->setCurrentWidget(m_transfersPage);
         m_tabs->addTab(tr("Downloads"));
-        m_tabs->setCurrentIndex(m_stack->indexOf(m_transfersTab));
+        m_tabs->setCurrentIndex(m_stack->indexOf(m_transfersPage));
         m_tabs->show();
     }
 }
@@ -784,25 +851,41 @@ void MainWindow::showSettingsDialog() {
 void MainWindow::showDeleteDialog() {
     const QDateTime current = QDateTime::currentDateTime();
     const int secs = current.toTime_t() - Settings::readArticleExpiry();
-    QDialog dialog(this);
+    QDateTimeDialog dialog(this);
     dialog.setWindowTitle(tr("Delete read articles"));
-    QDateTimeEdit edit(QDateTime::fromTime_t(secs), &dialog);
-    edit.setMaximumDateTime(current);
-    QDialogButtonBox buttonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, &dialog);
-    QFormLayout form(&dialog);
-    form.addRow(tr("&Delete articles read before:"), &edit);
-    form.addWidget(&buttonBox);
-    connect(&buttonBox, SIGNAL(accepted()), &dialog, SLOT(accept()));
-    connect(&buttonBox, SIGNAL(rejected()), &dialog, SLOT(reject()));
+    dialog.setDateTime(QDateTime::fromTime_t(secs));
+    dialog.setMaximumDateTime(current);
     
     if (dialog.exec() == QDialog::Accepted) {
-        Settings::setReadArticleExpiry(edit.dateTime().secsTo(current));
-        deleteReadArticles(edit.dateTime().toTime_t());
+        Settings::setReadArticleExpiry(dialog.dateTime().secsTo(current));
+        deleteReadArticles(dialog.dateTime().toTime_t());
     }
 }
 
 void MainWindow::showAboutDialog() {
     AboutDialog(this).exec();
+}
+
+void MainWindow::loadPlugins() {
+    const int count = PluginManager::instance()->load();
+    
+    if (count > 0) {
+        m_newSubscriptionMenu->clear();
+        const FeedPluginList plugins = PluginManager::instance()->plugins();
+    
+        for (int i = 0; i < plugins.size(); i++) {
+            const FeedPluginConfig *config = plugins.at(i).config;
+            
+            if (config->supportsFeeds()) {
+                m_newSubscriptionMenu->addAction(config->displayName())->setData(config->id());
+            }
+        }
+        
+        QMessageBox::information(this, tr("Load plugins"), tr("%1 new plugins loaded").arg(count));
+    }
+    else {
+        QMessageBox::information(this, tr("Load plugins"), tr("No new plugins loaded"));
+    }
 }
 
 void MainWindow::onSubscriptionsCountChanged(int count) {

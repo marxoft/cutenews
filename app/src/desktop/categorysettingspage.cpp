@@ -37,7 +37,6 @@ CategorySettingsPage::CategorySettingsPage(QWidget *parent) :
     setWindowTitle(tr("Categories"));
 
     m_view->setModel(m_model);
-    m_view->setAlternatingRowColors(true);
     m_view->setSelectionBehavior(QTreeView::SelectRows);
     m_view->setContextMenuPolicy(Qt::CustomContextMenu);
     m_view->setEditTriggers(QTreeView::NoEditTriggers);

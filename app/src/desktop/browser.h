@@ -55,13 +55,19 @@ private Q_SLOTS:
     void showContextMenu(const QPoint &pos);
 
     void copyUrl();
-    void openUrlInTab();
     void openUrlInBrowser();
+    void openUrlInTab();
     void openUrlExternally();
+    void openUrlWithPlugin();
+    void downloadUrl();
+    void downloadUrlWithPlugin();
 
 Q_SIGNALS:
-    void openUrlExternally(const QString &url);
     void openUrlInTab(const QString &url);
+    void openUrlExternally(const QString &url);
+    void openUrlWithPlugin(const QString &url);
+    void downloadUrl(const QString &url);
+    void downloadUrlWithPlugin(const QString &url);
     void titleChanged(const QString &title);
     void urlChanged(const QUrl &url);
     
@@ -82,6 +88,9 @@ private:
     QAction *m_tabAction;
     QAction *m_browserAction;
     QAction *m_externalAction;
+    QAction *m_pluginAction;
+    QAction *m_downloadAction;
+    QAction *m_downloadPluginAction;
     
     QUrl m_url;
 };

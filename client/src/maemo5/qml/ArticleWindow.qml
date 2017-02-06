@@ -32,13 +32,17 @@ Window {
     title: qsTr("Article")
     menuBar: MenuBar {
         MenuItem {
+            action: copyAction
+        }
+        
+        MenuItem {
             action: openAction
         }
         
         MenuItem {
-            action: copyAction
+            action: downloadAction
         }
-        
+                
         MenuItem {
             text: (article != null) && (article.read) ? qsTr("Mark as unread") : qsTr("Mark as read")
             action: readAction
@@ -59,15 +63,6 @@ Window {
     }
     
     Action {
-        id: openAction
-        
-        text: qsTr("Open externally")
-        autoRepeat: false
-        shortcut: qsTr("o")
-        onTriggered: if (!urlopener.open(article.url)) Qt.openUrlExternally(article.url);
-    }
-    
-    Action {
         id: copyAction
         
         text: qsTr("Copy URL")
@@ -75,6 +70,28 @@ Window {
         shortcut: qsTr("c")
         onTriggered: clipboard.text = article.url
     }
+    
+    Action {
+        id: openAction
+        
+        text: qsTr("Open externally")
+        autoRepeat: false
+        shortcut: qsTr("o")
+        onTriggered: urlopener.open(article.url)
+    }
+    
+    Action {
+        id: downloadAction
+        
+        text: qsTr("Download")
+        autoRepeat: false
+        shortcut: qsTr("d")
+        onTriggered: {
+            var dialog = popups.load(downloadDialog, root);
+            dialog.url = article.url;
+            dialog.open();
+        }
+    }    
     
     Action {
         id: readAction
@@ -107,7 +124,7 @@ Window {
         
         text: qsTr("Delete")
         autoRepeat: false
-        shortcut: qsTr("d")
+        shortcut: qsTr("Shift+D")
         onTriggered: popups.open(deleteDialog, root)
     }
     
@@ -158,17 +175,31 @@ Window {
             spacing: platformStyle.paddingMedium
             
             Label {
+                id: titleLabel
+                
+                width: parent.width
+                wrapMode: Text.Wrap
+                font.pointSize: platformStyle.fontSizeLarge
+            }
+            
+            Rectangle {                
+                width: parent.width
+                height: 1
+                color: platformStyle.secondaryTextColor
+            }
+            
+            Label {
                 id: authorLabel
                 
                 width: parent.width
-                elide: Text.ElideRight
+                wrapMode: Text.Wrap
             }
             
             Label {
                 id: dateLabel
                 
                 width: parent.width
-                elide: Text.ElideRight
+                wrapMode: Text.Wrap
             }
             
             Label {
@@ -178,7 +209,7 @@ Window {
                 wrapMode: Text.Wrap
             }
             
-            Rectangle {
+            Rectangle {                
                 width: parent.width
                 height: 1
                 color: platformStyle.secondaryTextColor
@@ -209,14 +240,23 @@ Window {
             property string url
             
             MenuItem {
-                text: qsTr("Open externally")
-                onTriggered: if (!urlopener.open(menu.url)) Qt.openUrlExternally(menu.url);
-            }
-            
-            MenuItem {
                 text: qsTr("Copy URL")
                 onTriggered: clipboard.text = menu.url
             }
+            
+            MenuItem {
+                text: qsTr("Open externally")
+                onTriggered: urlopener.open(menu.url)
+            }
+            
+            MenuItem {
+                text: qsTr("Download")
+                onTriggered: {
+                    var dialog = popups.load(downloadDialog, root);
+                    dialog.url = menu.url;
+                    dialog.open();
+                }
+            }            
         }
     }
     
@@ -237,15 +277,22 @@ Window {
         }
     }
     
+    Component {
+        id: downloadDialog
+        
+        DownloadDialog {}
+    }
+    
     onArticleChanged: {
         if (article) {
             flickable.contentY = 0;
             title = article.title ? article.title : qsTr("Article");
+            titleLabel.text = title;
             authorLabel.text = qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown"));
             dateLabel.text = qsTr("Date") + ": " + (article.dateString ? article.dateString : qsTr("Unknown"));
             categoriesLabel.text = qsTr("Categories") + ": "
             + (article.categories.length > 0 ? article.categories.join(", ") : qsTr("None"));
-            bodyLabel.text = article.body.replace(/ src="/g, " src=\"" + settings.serverAddress);
+            bodyLabel.text = article.body;
             
             if (!article.read) {
                 article.markRead(true);

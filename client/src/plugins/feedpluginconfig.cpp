@@ -84,5 +84,5 @@ void FeedPluginConfig::load(const QVariantMap &config) {
 }
 
 bool FeedPluginConfig::enclosureIsSupported(const QString &url) const {
-    return m_enclosureRegExp.indexIn(url) == 0;
+    return (!m_enclosureRegExp.isEmpty()) && (m_enclosureRegExp.indexIn(url) == 0);
 }

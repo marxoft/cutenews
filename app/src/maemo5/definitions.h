@@ -42,6 +42,7 @@ static const QString LIB_SUFFIX(".so");
 static const int ICON_SIZE = 48;
 
 // Cache
+static const QString CACHE_AUTHORITY("http://localhost");
 static const QString CACHE_PATH(HOME_PATH + "/cutenews/cache/");
 
 // Database

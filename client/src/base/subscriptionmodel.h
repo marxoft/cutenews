@@ -91,9 +91,7 @@ private:
     void setStatus(Status s);
     
     QList<Subscription*> m_list;
-    
-    QHash<int, QByteArray> m_roles;
-    
+        
     QString m_errorString;
     
     Status m_status;

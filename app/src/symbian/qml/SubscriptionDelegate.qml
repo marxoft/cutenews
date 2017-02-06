@@ -29,7 +29,7 @@ MyListItem {
             bottom: root.paddingItem.bottom
         }
         width: height
-        source: iconPath ? iconPath : "images/cutenews.png"
+        source: iconPath ? "file:///" + iconPath : "images/cutenews.png"
     }
     
     MyListItemText {

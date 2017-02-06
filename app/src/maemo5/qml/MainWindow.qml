@@ -133,7 +133,7 @@ ApplicationWindow {
         
         text: qsTr("Unsubscribe")
         autoRepeat: false
-        shortcut: qsTr("d")
+        shortcut: qsTr("Shift+D")
         enabled: subscriptionView.currentIndex > 1
         onTriggered: popups.open(unsubscribeDialog, appWindow)
     }
@@ -334,7 +334,7 @@ ApplicationWindow {
             id: article
             
             autoUpdate: true
-            onFinished: parent.article = article
+            onFinished: windowStack.currentWindow.article = article
         }
     }
     

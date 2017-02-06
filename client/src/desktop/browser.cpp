@@ -15,6 +15,7 @@
  */
 
 #include "browser.h"
+#include "pluginmanager.h"
 #include <QApplication>
 #include <QClipboard>
 #include <QLineEdit>
@@ -37,10 +38,12 @@ Browser::Browser(QWidget *parent) :
     m_layout(new QVBoxLayout(this)),
     m_webView(new QWebView(this)),
     m_menu(new QMenu(this)),
-    m_copyAction(new QAction(tr("Copy URL"), this)),
-    m_tabAction(new QAction(tr("Open in tab"), this)),
-    m_browserAction(new QAction(tr("Open in browser"), this)),
-    m_externalAction(new QAction(tr("Open externally"), this))
+    m_copyAction(new QAction(tr("&Copy URL"), this)),
+    m_tabAction(new QAction(tr("Open in &tab"), this)),
+    m_browserAction(new QAction(tr("Open in &browser"), this)),
+    m_externalAction(new QAction(tr("Open &externally"), this)),
+    m_downloadAction(new QAction(tr("&Download"), this)),
+    m_downloadPluginAction(new QAction(tr("Download using &plugin"), this))
 {
     m_toolBar->addAction(m_webView->pageAction(QWebPage::Back));
     m_toolBar->addAction(m_webView->pageAction(QWebPage::Forward));
@@ -59,6 +62,8 @@ Browser::Browser(QWidget *parent) :
     m_menu->addAction(m_tabAction);
     m_menu->addAction(m_browserAction);
     m_menu->addAction(m_externalAction);
+    m_menu->addAction(m_downloadAction);
+    m_menu->addAction(m_downloadPluginAction);
     
     m_layout->addWidget(m_toolBar);
     m_layout->addWidget(m_webView);
@@ -74,6 +79,8 @@ Browser::Browser(QWidget *parent) :
     connect(m_tabAction, SIGNAL(triggered()), this, SLOT(openUrlInTab()));
     connect(m_browserAction, SIGNAL(triggered()), this, SLOT(openUrlInBrowser()));
     connect(m_externalAction, SIGNAL(triggered()), this, SLOT(openUrlExternally()));
+    connect(m_downloadAction, SIGNAL(triggered()), this, SLOT(downloadUrl()));
+    connect(m_downloadPluginAction, SIGNAL(triggered()), this, SLOT(downloadUrlWithPlugin()));
 }
 
 Browser::Browser(const QUrl &url, QWidget *parent) :
@@ -86,7 +93,9 @@ Browser::Browser(const QUrl &url, QWidget *parent) :
     m_copyAction(new QAction(tr("Copy URL"), this)),
     m_tabAction(new QAction(tr("Open in tab"), this)),
     m_browserAction(new QAction(tr("Open in browser"), this)),
-    m_externalAction(new QAction(tr("Open externally"), this))
+    m_externalAction(new QAction(tr("Open externally"), this)),
+    m_downloadAction(new QAction(tr("&Download"), this)),
+    m_downloadPluginAction(new QAction(tr("Download using &plugin"), this))
 {
     m_toolBar->addAction(m_webView->pageAction(QWebPage::Back));
     m_toolBar->addAction(m_webView->pageAction(QWebPage::Forward));
@@ -102,6 +111,8 @@ Browser::Browser(const QUrl &url, QWidget *parent) :
     m_menu->addAction(m_tabAction);
     m_menu->addAction(m_browserAction);
     m_menu->addAction(m_externalAction);
+    m_menu->addAction(m_downloadAction);
+    m_menu->addAction(m_downloadPluginAction);
     
     m_layout->addWidget(m_toolBar);
     m_layout->addWidget(m_webView);
@@ -117,6 +128,8 @@ Browser::Browser(const QUrl &url, QWidget *parent) :
     connect(m_tabAction, SIGNAL(triggered()), this, SLOT(openUrlInTab()));
     connect(m_browserAction, SIGNAL(triggered()), this, SLOT(openUrlInBrowser()));
     connect(m_externalAction, SIGNAL(triggered()), this, SLOT(openUrlExternally()));
+    connect(m_downloadAction, SIGNAL(triggered()), this, SLOT(downloadUrl()));
+    connect(m_downloadPluginAction, SIGNAL(triggered()), this, SLOT(downloadUrlWithPlugin()));
     
     setUrl(url);
 }
@@ -162,12 +175,16 @@ void Browser::showContextMenu(const QPoint &pos) {
         m_tabAction->setEnabled(true);
         m_browserAction->setEnabled(true);
         m_externalAction->setEnabled(true);
+        m_downloadAction->setEnabled(true);
+        m_downloadPluginAction->setEnabled(PluginManager::instance()->enclosureIsSupported(m_url.toString()));
     }
     else {
         m_copyAction->setEnabled(false);
         m_tabAction->setEnabled(false);
         m_browserAction->setEnabled(false);
         m_externalAction->setEnabled(false);
+        m_downloadAction->setEnabled(false);
+        m_downloadPluginAction->setEnabled(false);
     }
 
     m_menu->popup(m_webView->mapToGlobal(pos));
@@ -187,4 +204,12 @@ void Browser::openUrlInTab() {
 
 void Browser::openUrlExternally() {
     emit openUrlExternally(m_url.toString());
+}
+
+void Browser::downloadUrl() {
+    emit downloadUrl(m_url.toString());
+}
+
+void Browser::downloadUrlWithPlugin() {
+    emit downloadUrlWithPlugin(m_url.toString());
 }
