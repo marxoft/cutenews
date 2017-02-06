@@ -1,0 +1,8 @@
+{
+    "type": "js",
+    "version": 1,
+    "name": "ImageTwist images",
+    "supportsFeeds": false,
+    "supportsEnclosures": true,
+    "enclosureRegExp": "http(s|)://(www\\.|)imagetwist\\.com/\\w+"
+}
