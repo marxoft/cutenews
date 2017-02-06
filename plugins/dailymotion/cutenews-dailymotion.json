@@ -1,0 +1,78 @@
+{
+    "type": "js",
+    "version": 1,
+    "name": "Dailymotion videos",
+    "supportsFeeds": true,
+    "supportsEnclosures": true,
+    "enclosureRegExp": "http(s|)://(www\\.|)dailymotion\\.com/(embed/|)video/\\w+",
+    "enclosureSettings": [
+        {
+            "type": "list",
+            "key": "videoFormat",
+            "label": "Video format",
+            "value": "2160",
+            "options": [
+                {
+                    "label": "2160P",
+                    "value": "2160"
+                },
+                
+                {
+                    "label": "1080P",
+                    "value": "1080"
+                },
+
+                {
+                    "label": "720P",
+                    "value": "720"
+                },
+
+                {
+                    "label": "480P",
+                    "value": "480"
+                },
+
+                {
+                    "label": "380P",
+                    "value": "380"
+                }
+
+                {
+                    "label": "240P",
+                    "value": "240"
+                },
+
+                {
+                    "label": "144P",
+                    "value": "144"
+                }
+            ]
+        }
+    ],
+    
+    "feedSettings": [
+        {
+            "type": "text",
+            "key": "query",
+            "label": "Query"
+        },
+
+        {
+            "type": "list",
+            "key": "type",
+            "label": "Type",
+            "value": "search",
+            "options": [
+                {
+                    "label": "Search",
+                    "value": "search"
+                },
+
+                {
+                    "label": "Channel",
+                    "value": "channel"
+                }
+            ]
+        }
+    ]
+}
