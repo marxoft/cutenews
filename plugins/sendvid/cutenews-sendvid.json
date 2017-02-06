@@ -1,0 +1,8 @@
+{
+    "type": "js",
+    "version": 1,
+    "name": "Sendvid videos",
+    "supportsFeeds": false,
+    "supportsEnclosures": true,
+    "enclosureRegExp": "http(s|)://(www\\.|\\d+\\.|)sendvid\\.com/\\w+"
+}
