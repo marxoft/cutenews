@@ -312,6 +312,16 @@ QString IndependentFeedRequest::getRedirect(const QNetworkReply *reply) {
     return redirect;
 }
 
+QString IndependentFeedRequest::unescape(const QString &text) {
+    QString t(text);
+    t.replace("&amp;", "&");
+    t.replace("&apos;", "'");
+    t.replace("&lt;", "<");
+    t.replace("&gt;", ">");
+    t.replace("&quot;", "\"");
+    return t;
+}
+
 void IndependentFeedRequest::writeStartFeed() {
     m_buffer.close();
     m_buffer.open(QBuffer::WriteOnly);
@@ -337,7 +347,9 @@ void IndependentFeedRequest::writeEndFeed() {
 }
 
 void IndependentFeedRequest::writeFeedTitle(const QString &title) {
-    m_writer.writeTextElement("title", title);
+    m_writer.writeStartElement("title");
+    m_writer.writeCDATA(unescape(title));
+    m_writer.writeEndElement();
 }
 
 void IndependentFeedRequest::writeFeedUrl(const QString &url) {
@@ -385,7 +397,9 @@ void IndependentFeedRequest::writeItemDate(const QDateTime &date) {
 }
 
 void IndependentFeedRequest::writeItemTitle(const QString &title) {
-    m_writer.writeTextElement("title", title);
+    m_writer.writeStartElement("title");
+    m_writer.writeCDATA(unescape(title));
+    m_writer.writeEndElement();
 }
 
 void IndependentFeedRequest::writeItemUrl(const QString &url) {

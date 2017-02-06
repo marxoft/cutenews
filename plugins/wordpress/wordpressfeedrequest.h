@@ -68,6 +68,8 @@ private:
 
     static QHtmlElementList getItems(const QHtmlElement &element);
     
+    static QString unescape(const QString &text);
+    
     void writeStartFeed();
     void writeEndFeed();
     void writeFeedTitle(const QHtmlElement &element);

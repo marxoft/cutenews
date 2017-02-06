@@ -537,6 +537,16 @@ QHtmlElementList PhpbbFeedRequest::getItems(const QHtmlElement &element) {
     return elements;
 }
 
+QString PhpbbFeedRequest::unescape(const QString &text) {
+    QString t(text);
+    t.replace("&amp;", "&");
+    t.replace("&apos;", "'");
+    t.replace("&lt;", "<");
+    t.replace("&gt;", ">");
+    t.replace("&quot;", "\"");
+    return t;
+}
+
 void PhpbbFeedRequest::writeStartFeed() {
     m_buffer.close();
     m_buffer.open(QBuffer::WriteOnly);
@@ -560,7 +570,7 @@ void PhpbbFeedRequest::writeEndFeed() {
 
 void PhpbbFeedRequest::writeFeedTitle(const QString &title) {
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(title);
+    m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
 }
 
@@ -640,7 +650,7 @@ void PhpbbFeedRequest::writeItemDate(const QHtmlElement &element) {
 
 void PhpbbFeedRequest::writeItemTitle(const QString &title) {
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(title);
+    m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
 }
 

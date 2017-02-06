@@ -305,6 +305,16 @@ QString NytimesFeedRequest::getRedirect(const QNetworkReply *reply) {
     return redirect;
 }
 
+QString NytimesFeedRequest::unescape(const QString &text) {
+    QString t(text);
+    t.replace("&amp;", "&");
+    t.replace("&apos;", "'");
+    t.replace("&lt;", "<");
+    t.replace("&gt;", ">");
+    t.replace("&quot;", "\"");
+    return t;
+}
+
 void NytimesFeedRequest::writeStartFeed() {
     m_buffer.close();
     m_buffer.open(QBuffer::WriteOnly);
@@ -330,7 +340,9 @@ void NytimesFeedRequest::writeEndFeed() {
 }
 
 void NytimesFeedRequest::writeFeedTitle(const QString &title) {
-    m_writer.writeTextElement("title", title);
+    m_writer.writeStartElement("title");
+    m_writer.writeCDATA(unescape(title));
+    m_writer.writeEndElement();
 }
 
 void NytimesFeedRequest::writeFeedUrl(const QString &url) {
@@ -373,7 +385,9 @@ void NytimesFeedRequest::writeItemDate(const QDateTime &date) {
 }
 
 void NytimesFeedRequest::writeItemTitle(const QString &title) {
-    m_writer.writeTextElement("title", title);
+    m_writer.writeStartElement("title");
+    m_writer.writeCDATA(unescape(title));
+    m_writer.writeEndElement();
 }
 
 void NytimesFeedRequest::writeItemUrl(const QString &url) {

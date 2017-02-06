@@ -392,6 +392,16 @@ QHtmlElementList MybbFeedRequest::getItems(const QHtmlElement &element) {
                   .elementsByTagName("table", QHtmlAttributeMatch("id", "post_", QHtmlParser::MatchStartsWith));
 }
 
+QString MybbFeedRequest::unescape(const QString &text) {
+    QString t(text);
+    t.replace("&amp;", "&");
+    t.replace("&apos;", "'");
+    t.replace("&lt;", "<");
+    t.replace("&gt;", ">");
+    t.replace("&quot;", "\"");
+    return t;
+}
+
 void MybbFeedRequest::writeStartFeed() {
     m_buffer.close();
     m_buffer.open(QBuffer::WriteOnly);
@@ -415,7 +425,7 @@ void MybbFeedRequest::writeEndFeed() {
 
 void MybbFeedRequest::writeFeedTitle(const QHtmlElement &element) {
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(element.firstElementByTagName("title").text());
+    m_writer.writeCDATA(unescape(element.firstElementByTagName("title").text()));
     m_writer.writeEndElement();
 }
 
@@ -483,8 +493,8 @@ void MybbFeedRequest::writeItemDate(const QHtmlElement &element) {
 
 void MybbFeedRequest::writeItemTitle(const QHtmlElement &element) {
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(element.nthElementByTagName(2, "span", QHtmlAttributeMatch("class", "smalltext"))
-                               .firstChildElement().text());
+    m_writer.writeCDATA(unescape(element.nthElementByTagName(2, "span", QHtmlAttributeMatch("class", "smalltext"))
+                                 .firstChildElement().text()));
     m_writer.writeEndElement();
 }
 

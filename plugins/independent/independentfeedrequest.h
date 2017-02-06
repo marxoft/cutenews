@@ -61,6 +61,8 @@ private:
 
     static QString getRedirect(const QNetworkReply *reply);
     
+    static QString unescape(const QString &text);
+    
     void writeStartFeed();
     void writeEndFeed();
     void writeFeedTitle(const QString &title);

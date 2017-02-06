@@ -448,6 +448,16 @@ QHtmlElementList WordpressFeedRequest::getItems(const QHtmlElement &element) {
     return items;
 }
 
+QString WordpressFeedRequest::unescape(const QString &text) {
+    QString t(text);
+    t.replace("&amp;", "&");
+    t.replace("&apos;", "'");
+    t.replace("&lt;", "<");
+    t.replace("&gt;", ">");
+    t.replace("&quot;", "\"");
+    return t;
+}
+
 void WordpressFeedRequest::writeStartFeed() {
     m_buffer.close();
     m_buffer.open(QBuffer::WriteOnly);
@@ -471,7 +481,7 @@ void WordpressFeedRequest::writeEndFeed() {
 
 void WordpressFeedRequest::writeFeedTitle(const QHtmlElement &element) {
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(element.firstElementByTagName("title").text());
+    m_writer.writeCDATA(unescape(element.firstElementByTagName("title").text()));
     m_writer.writeEndElement();
 }
 
@@ -560,7 +570,7 @@ void WordpressFeedRequest::writeItemTitle(const QHtmlElement &element) {
     }
 
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(title.text(true));
+    m_writer.writeCDATA(unescape(title.text(true)));
     m_writer.writeEndElement();
 }
 
