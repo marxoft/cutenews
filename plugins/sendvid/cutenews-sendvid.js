@@ -21,7 +21,7 @@ var request = null;
 function getEnclosure(url, settings) {
     if (url.substring(url.length - 4) == ".mp4") {
         var fileName = url.substring(url.lastIndexOf("/") + 1);
-        finished({"fileName": fileName, "request": {"url": url}});
+        finished(new Enclosure(fileName, new NetworkRequest(url)));
         return;
     }
     
@@ -33,7 +33,7 @@ function getEnclosure(url, settings) {
             try {
                 var fileName = response.split("og:title\" content=\"")[1].split("\"")[0];
                 var videoUrl = response.split("og:video\" content=\"")[1].split("\"")[0];
-                finished({"fileName": fileName, "request": {"url": videoUrl}});
+                finished(new Enclosure(fileName, new NetworkRequest(videoUrl)));
             }
             catch(err) {
                 error(err);

@@ -1,7 +1,7 @@
 {
     "type": "js",
     "version": 1,
-    "name": "Depic.me images",
+    "name": "Depic.me",
     "supportsFeeds": false,
     "supportsEnclosures": true,
     "enclosureRegExp": "http(s|)://(www\\.|)depic\\.me/\\w+"

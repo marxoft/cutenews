@@ -1,7 +1,7 @@
 {
     "type": "js",
     "version": 1,
-    "name": "Openload videos",
+    "name": "Openload",
     "supportsFeeds": false,
     "supportsEnclosures": true,
     "enclosureRegExp": "http(s|)://openload\\.co/(f|embed)/[\\w-_]+"

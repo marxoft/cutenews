@@ -8,7 +8,7 @@ Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-pixroute
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.0.0)
 Description: A content plugin for cuteNews providing Pix Route image downloads
 XB-Maemo-Display-Name: cuteNews - Pix Route
 XB-Maemo-Icon-26:

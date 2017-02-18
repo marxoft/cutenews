@@ -1,7 +1,7 @@
 {
     "type": "js",
     "version": 1,
-    "name": "Dailymotion videos",
+    "name": "Dailymotion",
     "supportsFeeds": true,
     "supportsEnclosures": true,
     "enclosureRegExp": "http(s|)://(www\\.|)dailymotion\\.com/(embed/|)video/\\w+",

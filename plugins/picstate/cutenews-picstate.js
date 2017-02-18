@@ -27,7 +27,7 @@ function getEnclosure(url, settings) {
             try {
                 var imageUrl = /http(s|):\/\/(www\.|)picstate\.com\/files\/[\w_]+\/.+\.\w+/.exec(response)[0];
                 var fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-                finished({"fileName": fileName, "request": {"url": imageUrl}});
+                finished(new Enclosure(fileName, new NetworkRequest(imageUrl)));
             }
             catch(err) {
                 error(err);

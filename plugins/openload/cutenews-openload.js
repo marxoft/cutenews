@@ -65,7 +65,7 @@ function getEnclosure(url, settings) {
                 
                 var videoUrl = STREAM_URL + urlcode;
                 var fileName = /<meta name="og:title" content="([^"]+)">/.exec(response)[1];
-                finished({"fileName": fileName, "request": {"url": videoUrl}});
+                finished(new Enclosure(fileName, new NetworkRequest(videoUrl)));
             }
             catch(err) {
                 error(err);

@@ -1,7 +1,7 @@
 {
     "type": "js",
     "version": 1,
-    "name": "Pix Route images",
+    "name": "Pix Route",
     "supportsFeeds": false,
     "supportsEnclosures": true,
     "enclosureRegExp": "http(s|)://(www\\.|)pixroute\\.com/\\w+"
