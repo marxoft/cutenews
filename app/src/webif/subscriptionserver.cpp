@@ -60,7 +60,7 @@ bool SubscriptionServer::handleRequest(QHttpRequest *request, QHttpResponse *res
     
     if (parts.size() == 1) {
         if (request->method() == QHttpRequest::HTTP_GET) {
-            m_responses.enqueue(response);
+            enqueueResponse(response);
             const int offset = Utils::urlQueryItemValue(request->url(), "offset", "0").toInt();
             const int limit = Utils::urlQueryItemValue(request->url(), "limit", "0").toInt();
             DBConnection::connection(this, SLOT(onSubscriptionsFetched(DBConnection*)))->fetchSubscriptions(offset,
@@ -166,7 +166,7 @@ bool SubscriptionServer::handleRequest(QHttpRequest *request, QHttpResponse *res
     
     if (parts.at(1) == "read") {
         if (request->method() == QHttpRequest::HTTP_GET) {
-            m_responses.enqueue(response);
+            enqueueResponse(response);
             const QString id = Utils::urlQueryItemValue(request->url(), "id");
             
             if (!id.isEmpty()) {
@@ -186,7 +186,7 @@ bool SubscriptionServer::handleRequest(QHttpRequest *request, QHttpResponse *res
     
     if (parts.at(1) == "unread") {
         if (request->method() == QHttpRequest::HTTP_GET) {
-            m_responses.enqueue(response);
+            enqueueResponse(response);
             const QString id = Utils::urlQueryItemValue(request->url(), "id");
             
             if (!id.isEmpty()) {
@@ -205,7 +205,7 @@ bool SubscriptionServer::handleRequest(QHttpRequest *request, QHttpResponse *res
     }
     
     if (request->method() == QHttpRequest::HTTP_GET) {
-        m_responses.enqueue(response);
+        enqueueResponse(response);
         DBConnection::connection(this, SLOT(onSubscriptionFetched(DBConnection*)))->fetchSubscription(parts.at(1));
         return true;
     }
@@ -217,7 +217,7 @@ bool SubscriptionServer::handleRequest(QHttpRequest *request, QHttpResponse *res
             writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
         }
         else {
-            m_responses.enqueue(response);
+            enqueueResponse(response);
             DBConnection::connection(this,
             SLOT(onSubscriptionFetched(DBConnection*)))->updateSubscription(parts.at(1), properties, true);
         }
@@ -226,7 +226,7 @@ bool SubscriptionServer::handleRequest(QHttpRequest *request, QHttpResponse *res
     }
         
     if (request->method() == QHttpRequest::HTTP_DELETE) {
-        m_responses.enqueue(response);
+        enqueueResponse(response);
         DBConnection::connection(this, SLOT(onConnectionFinished(DBConnection*)))->deleteSubscription(parts.at(1));
         return true;
     }
@@ -235,62 +235,69 @@ bool SubscriptionServer::handleRequest(QHttpRequest *request, QHttpResponse *res
     return true;
 }
 
+void SubscriptionServer::enqueueResponse(QHttpResponse *response) {
+    m_responses.enqueue(response);
+    connect(response, SIGNAL(done()), this, SLOT(onResponseDone()));
+}
+
+QHttpResponse* SubscriptionServer::dequeueResponse() {
+    if (!m_responses.isEmpty()) {
+        QHttpResponse *response = m_responses.dequeue();
+        disconnect(response, SIGNAL(done()), this, SLOT(onResponseDone()));
+        return response;
+    }
+    
+    return 0;
+}
+
 void SubscriptionServer::onConnectionFinished(DBConnection *connection) {
-    if (m_responses.isEmpty()) {
-        connection->deleteLater();
-        return;
-    }
-    
-    QHttpResponse *response = m_responses.dequeue();
-    
-    if (connection->status() == DBConnection::Ready) {
-        writeResponse(response, QHttpResponse::STATUS_OK);
-    }
-    else {
-        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+    if (QHttpResponse *response = dequeueResponse()) {
+        if (connection->status() == DBConnection::Ready) {
+            writeResponse(response, QHttpResponse::STATUS_OK);
+        }
+        else {
+            writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+        }
     }
     
     connection->deleteLater();
 }
 
 void SubscriptionServer::onSubscriptionFetched(DBConnection *connection) {
-    if (m_responses.isEmpty()) {
-        connection->deleteLater();
-        return;
-    }
-    
-    QHttpResponse *response = m_responses.dequeue();
-    
-    if (connection->status() == DBConnection::Ready) {
-        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(subscriptionToMap(connection)));
-    }
-    else {
-        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+    if (QHttpResponse *response = dequeueResponse()) {
+        if (connection->status() == DBConnection::Ready) {
+            writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(subscriptionToMap(connection)));
+        }
+        else {
+            writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+        }
     }
     
     connection->deleteLater();
 }
 
 void SubscriptionServer::onSubscriptionsFetched(DBConnection *connection) {
-    if (m_responses.isEmpty()) {
-        connection->deleteLater();
-        return;
-    }
-    
-    QHttpResponse *response = m_responses.dequeue();
-    
-    if (connection->status() == DBConnection::Ready) {
-        QVariantList subscriptions;
-        
-        while (connection->nextRecord()) {
-            subscriptions << subscriptionToMap(connection);
+    if (QHttpResponse *response = dequeueResponse()) {
+        if (connection->status() == DBConnection::Ready) {
+            QVariantList subscriptions;
+            
+            while (connection->nextRecord()) {
+                subscriptions << subscriptionToMap(connection);
+            }
+            
+            writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(subscriptions));
         }
-        
-        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(subscriptions));
-    }
-    else {
-        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+        else {
+            writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+        }
     }
     
     connection->deleteLater();
+}
+
+void SubscriptionServer::onResponseDone() {
+    if (QHttpResponse *response = qobject_cast<QHttpResponse*>(sender())) {
+        m_responses.removeOne(response);
+        disconnect(response, SIGNAL(done()), this, SLOT(onResponseDone()));
+    }
 }

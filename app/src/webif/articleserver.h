@@ -38,8 +38,12 @@ private Q_SLOTS:
     void onArticlesFetched(DBConnection *connection);
     void onReadArticlesDeleted(DBConnection *connection);
     void onConnectionFinished(DBConnection *connection);
+    void onResponseDone();
 
-private:    
+private:
+    void enqueueResponse(QHttpResponse *response);
+    QHttpResponse* dequeueResponse();
+    
     QQueue<QHttpResponse*> m_responses;
 };
 

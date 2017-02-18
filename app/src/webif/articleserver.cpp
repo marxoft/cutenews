@@ -67,7 +67,7 @@ bool ArticleServer::handleRequest(QHttpRequest *request, QHttpResponse *response
     
     if (parts.size() == 1) {
         if (request->method() == QHttpRequest::HTTP_GET) {
-            m_responses.enqueue(response);
+            enqueueResponse(response);
             const QString ids = Utils::urlQueryItemValue(request->url(), "id");
             
             if (!ids.isEmpty()) {
@@ -104,7 +104,7 @@ bool ArticleServer::handleRequest(QHttpRequest *request, QHttpResponse *response
     
     if (parts.size() == 2) {
         if (request->method() == QHttpRequest::HTTP_GET) {
-            m_responses.enqueue(response);
+            enqueueResponse(response);
             
             if (parts.at(1) == "read") {
                 const QString id = Utils::urlQueryItemValue(request->url(), "id");
@@ -137,7 +137,7 @@ bool ArticleServer::handleRequest(QHttpRequest *request, QHttpResponse *response
         }
 
         if (request->method() == QHttpRequest::HTTP_DELETE) {
-            m_responses.enqueue(response);
+            enqueueResponse(response);
             DBConnection::connection(this, SLOT(onConnectionFinished(DBConnection*)))->deleteArticle(parts.at(1));
             return true;
         }
@@ -147,85 +147,89 @@ bool ArticleServer::handleRequest(QHttpRequest *request, QHttpResponse *response
     return true;
 }
 
+void ArticleServer::enqueueResponse(QHttpResponse *response) {
+    m_responses.enqueue(response);
+    connect(response, SIGNAL(done()), this, SLOT(onResponseDone()));
+}
+
+QHttpResponse* ArticleServer::dequeueResponse() {
+    if (!m_responses.isEmpty()) {
+        QHttpResponse *response = m_responses.dequeue();
+        disconnect(response, SIGNAL(done()), this, SLOT(onResponseDone()));
+        return response;
+    }
+    
+    return 0;
+}
+
 void ArticleServer::onArticleFetched(DBConnection *connection) {
-    if (m_responses.isEmpty()) {
-        connection->deleteLater();
-        return;
-    }
-    
-    QHttpResponse *response = m_responses.dequeue();
-    const QString authority = response->property("authority").toString();
-    
-    if (connection->status() == DBConnection::Ready) {
-        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articleQueryToMap(connection,
-                                                                                                    authority)));
-    }
-    else {
-        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+    if (QHttpResponse *response = dequeueResponse()) {
+        const QString authority = response->property("authority").toString();
+        
+        if (connection->status() == DBConnection::Ready) {
+            writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articleQueryToMap(connection,
+                                                                                                        authority)));
+        }
+        else {
+            writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+        }
     }
     
     connection->deleteLater();
 }
 
 void ArticleServer::onArticlesFetched(DBConnection *connection) {
-    if (m_responses.isEmpty()) {
-        connection->deleteLater();
-        return;
-    }
-    
-    QHttpResponse *response = m_responses.dequeue();
-    const QString authority = response->property("authority").toString();
-    
-    if (connection->status() == DBConnection::Ready) {
-        QVariantList articles;
+    if (QHttpResponse *response = dequeueResponse()) {
+        const QString authority = response->property("authority").toString();
         
-        while (connection->nextRecord()) {
-            articles << articleQueryToMap(connection, authority);
+        if (connection->status() == DBConnection::Ready) {
+            QVariantList articles;
+            
+            while (connection->nextRecord()) {
+                articles << articleQueryToMap(connection, authority);
+            }
+            
+            writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articles));
         }
-        
-        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articles));
-    }
-    else {
-        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+        else {
+            writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+        }
     }
     
     connection->deleteLater();
 }
 
 void ArticleServer::onReadArticlesDeleted(DBConnection *connection) {
-    if (m_responses.isEmpty()) {
-        connection->deleteLater();
-        return;
-    }
-    
-    QHttpResponse *response = m_responses.dequeue();
-    
-    if (connection->status() == DBConnection::Ready) {
-        QVariantMap result;
-        result["count"] = connection->numRowsAffected();
-        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(result));
-    }
-    else {
-        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+    if (QHttpResponse *response = dequeueResponse()) {
+        if (connection->status() == DBConnection::Ready) {
+            QVariantMap result;
+            result["count"] = connection->numRowsAffected();
+            writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(result));
+        }
+        else {
+            writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+        }
     }
     
     connection->deleteLater();
 }
 
 void ArticleServer::onConnectionFinished(DBConnection *connection) {
-    if (m_responses.isEmpty()) {
-        connection->deleteLater();
-        return;
-    }
-    
-    QHttpResponse *response = m_responses.dequeue();
-    
-    if (connection->status() == DBConnection::Ready) {
-        writeResponse(response, QHttpResponse::STATUS_OK);
-    }
-    else {
-        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+    if (QHttpResponse *response = dequeueResponse()) {
+        if (connection->status() == DBConnection::Ready) {
+            writeResponse(response, QHttpResponse::STATUS_OK);
+        }
+        else {
+            writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+        }
     }
     
     connection->deleteLater();
+}
+
+void ArticleServer::onResponseDone() {
+    if (QHttpResponse *response = qobject_cast<QHttpResponse*>(sender())) {
+        m_responses.removeOne(response);
+        disconnect(response, SIGNAL(done()), this, SLOT(onResponseDone()));
+    }
 }

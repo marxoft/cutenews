@@ -195,20 +195,11 @@ void WebServer::onNewRequest(QHttpRequest *request, QHttpResponse *response) {
 }
 
 void WebServer::onRequestEnd() {
-    QHttpRequest *request = qobject_cast<QHttpRequest*>(sender());
-    
-    if (!request) {
-        return;
+    if (QHttpRequest *request = qobject_cast<QHttpRequest*>(sender())) {
+        if (QHttpResponse *response = m_requests.take(request)) {
+            handleRequest(request, response);
+        }
     }
-    
-    QHttpResponse *response = m_requests.value(request);
-    
-    if (!response) {
-        return;
-    }
-    
-    m_requests.remove(request);
-    handleRequest(request, response);
 }
 
 void WebServer::handleRequest(QHttpRequest *request, QHttpResponse *response) {

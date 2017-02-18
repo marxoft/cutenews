@@ -111,7 +111,7 @@ private:
     
     Status m_status;
         
-    QHash<QHttpRequest*, QHttpResponse*> m_requests;    
+    QHash<QHttpRequest*, QHttpResponse*> m_requests;
 };
 
 #endif // WEBSERVER_H

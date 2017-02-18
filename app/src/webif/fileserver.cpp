@@ -97,22 +97,56 @@ QNetworkAccessManager* FileServer::networkAccessManager() {
     return m_nam;
 }
 
+void FileServer::insertReply(QNetworkReply *reply, QHttpResponse *response) {
+    m_replies.insert(reply, response);
+    connect(response, SIGNAL(done()), this, SLOT(onResponseDone()));
+}
+
+QHttpResponse* FileServer::takeReply(QNetworkReply *reply) {
+    if (m_replies.contains(reply)) {
+        QHttpResponse *response = m_replies.take(reply);
+        
+        if (response) {
+            disconnect(response, SIGNAL(done()), this, SLOT(onResponseDone()));
+        }
+        
+        return response;
+    }
+    
+    return 0;
+}
+
+void FileServer::enqueueResponse(QHttpResponse *response) {
+    m_responses.enqueue(response);
+    connect(response, SIGNAL(done()), this, SLOT(onResponseDone()));
+}
+
+QHttpResponse* FileServer::dequeueResponse() {
+    if (!m_responses.isEmpty()) {
+        QHttpResponse *response = m_responses.dequeue();
+        disconnect(response, SIGNAL(done()), this, SLOT(onResponseDone()));
+        return response;
+    }
+    
+    return 0;
+}
+
 void FileServer::getCachedFile(const QString &cacheDir, const QUrl &url, QHttpResponse *response) {
     if (cache(cacheDir)->cacheDirectory() == cacheDir) {
         QNetworkRequest request(url);
         request.setAttribute(QNetworkRequest::CacheLoadControlAttribute, QNetworkRequest::PreferCache);
         QNetworkReply *reply = networkAccessManager()->get(request);
-        m_replies.insert(reply, response);
+        insertReply(reply, response);
     }
     else {
         response->setProperty("cacheDir", cacheDir);
         response->setProperty("url", url);
-        m_queue.enqueue(response);
+        enqueueResponse(response);
     }
 }
 
 void FileServer::writeCachedFile(QNetworkReply *reply) {
-    QHttpResponse *response = m_replies.value(reply);
+    QHttpResponse *response = takeReply(reply);
 
     if (response) {
         QString redirect = QString::fromUtf8(reply->rawHeader("Location"));
@@ -160,14 +194,24 @@ void FileServer::writeCachedFile(QNetworkReply *reply) {
         }
     }
 
-    m_replies.remove(reply);
     reply->deleteLater();
 
-    if ((m_replies.isEmpty()) && (!m_queue.isEmpty())) {
-       QHttpResponse *response = m_queue.dequeue();
+    if (m_replies.isEmpty()) {
+        response = dequeueResponse();
+        
+        if (response) {
+            getCachedFile(response->property("cacheDir").toString(), response->property("url").toString(), response);
+        }
+    }
+}
 
-       if (response) {
-           getCachedFile(response->property("cacheDir").toString(), response->property("url").toString(), response);
-       }
+void FileServer::onResponseDone() {
+    if (QHttpResponse *response = qobject_cast<QHttpResponse*>(sender())) {
+        if (QNetworkReply *reply = m_replies.key(response)) {
+            m_replies.remove(reply);
+        }
+        
+        m_responses.removeOne(response);
+        disconnect(response, SIGNAL(done()), this, SLOT(onResponseDone()));
     }
 }

@@ -38,16 +38,23 @@ public:
 
 private Q_SLOTS:
     void writeCachedFile(QNetworkReply *reply);
+    void onResponseDone();
 
 private:
     QNetworkDiskCache* cache(const QString &cacheDir);
     QNetworkAccessManager* networkAccessManager();
     
-    void getCachedFile(const QString &cacheDir, const QUrl &url, QHttpResponse *response);
+    void insertReply(QNetworkReply *reply, QHttpResponse *response);
+    QHttpResponse* takeReply(QNetworkReply *reply);
+    
+    void enqueueResponse(QHttpResponse *response);
+    QHttpResponse* dequeueResponse();
+    
+    void getCachedFile(const QString &cacheDir, const QUrl &url, QHttpResponse *response);    
 
     QNetworkAccessManager *m_nam;
 
-    QQueue<QHttpResponse*> m_queue;
+    QQueue<QHttpResponse*> m_responses;
     QHash<QNetworkReply*, QHttpResponse*> m_replies;
 };
 
