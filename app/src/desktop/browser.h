@@ -72,6 +72,8 @@ Q_SIGNALS:
     void urlChanged(const QUrl &url);
     
 private:
+    static const QByteArray STYLE_SHEET;
+    
     CachingNetworkAccessManager *m_nam;
     
     QLineEdit *m_urlEdit;

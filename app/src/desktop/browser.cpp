@@ -29,8 +29,8 @@
 #include <QMenu>
 #include <QAction>
 
-static const QByteArray CSS = QByteArray("data:text/css;charset=utf-8;base64,")
-                              + QByteArray("img { max-width: 100%; } iframe { max-width: 100%; }").toBase64();
+const QByteArray Browser::STYLE_SHEET = QByteArray("data:text/css;charset=utf-8;base64,")
+    + QByteArray("img { max-width: 100%; } iframe { max-width: 100%; }").toBase64();
 
 Browser::Browser(QWidget *parent) :
     QWidget(parent),
@@ -59,7 +59,7 @@ Browser::Browser(QWidget *parent) :
     m_webView->setContextMenuPolicy(Qt::CustomContextMenu);
     m_webView->page()->setNetworkAccessManager(m_nam);
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
-    m_webView->settings()->setUserStyleSheetUrl(QUrl::fromEncoded(CSS));
+    m_webView->settings()->setUserStyleSheetUrl(QUrl::fromEncoded(STYLE_SHEET));
 
     m_menu->addAction(m_webView->pageAction(QWebPage::Reload));
     m_menu->addAction(m_copyAction);
