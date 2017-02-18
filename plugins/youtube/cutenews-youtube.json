@@ -1,7 +1,7 @@
 {
     "type": "qt",
     "version": 1,
-    "name": "YouTube videos",
+    "name": "YouTube",
     "supportsFeeds": true,
     "supportsEnclosures": true,
     "enclosureRegExp": "(http(s|)://(www\\.|m\\.|)youtube\\.com/(v/|.+)(v=|)|http(s|)://youtu\\.be/)",
