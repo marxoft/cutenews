@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,14 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "javascriptenclosurerequestglobalobject.h"
+#include "javascriptglobalobject.h"
 #include "logger.h"
 #include "xmlhttprequest.h"
 #include <QNetworkAccessManager>
 #include <QScriptValueIterator>
 #include <QTimerEvent>
 
-JavaScriptEnclosureRequestGlobalObject::JavaScriptEnclosureRequestGlobalObject(QScriptEngine *engine) :
+JavaScriptGlobalObject::JavaScriptGlobalObject(QScriptEngine *engine) :
     QObject(engine),
     m_nam(0),
     m_engine(engine)
@@ -44,11 +44,11 @@ JavaScriptEnclosureRequestGlobalObject::JavaScriptEnclosureRequestGlobalObject(Q
     engine->setGlobalObject(thisGlobal);
 }
 
-QScriptValue JavaScriptEnclosureRequestGlobalObject::newXMLHttpRequest(QScriptContext *context, QScriptEngine *engine) {
+QScriptValue JavaScriptGlobalObject::newXMLHttpRequest(QScriptContext *context, QScriptEngine *engine) {
     XMLHttpRequest *request;
     
-    if (JavaScriptEnclosureRequestGlobalObject *obj =
-        qobject_cast<JavaScriptEnclosureRequestGlobalObject*>(engine->globalObject().toQObject())) {
+    if (JavaScriptGlobalObject *obj =
+        qobject_cast<JavaScriptGlobalObject*>(engine->globalObject().toQObject())) {
         request = new XMLHttpRequest(obj->networkAccessManager(), context->argument(0).toQObject());
     }
     else {
@@ -58,50 +58,50 @@ QScriptValue JavaScriptEnclosureRequestGlobalObject::newXMLHttpRequest(QScriptCo
     return engine->newQObject(request, QScriptEngine::ScriptOwnership);
 }
 
-QNetworkAccessManager* JavaScriptEnclosureRequestGlobalObject::networkAccessManager() {
+QNetworkAccessManager* JavaScriptGlobalObject::networkAccessManager() {
     return m_nam ? m_nam : m_nam = new QNetworkAccessManager(this);
 }
 
-QString JavaScriptEnclosureRequestGlobalObject::atob(const QString &ascii) const {
+QString JavaScriptGlobalObject::atob(const QString &ascii) const {
     return QString::fromUtf8(QByteArray::fromBase64(ascii.toUtf8()));
 }
 
-QString JavaScriptEnclosureRequestGlobalObject::btoa(const QString &binary) const {
+QString JavaScriptGlobalObject::btoa(const QString &binary) const {
     return QString::fromUtf8(binary.toUtf8().toBase64());
 }
 
-void JavaScriptEnclosureRequestGlobalObject::clearInterval(int timerId) {
+void JavaScriptGlobalObject::clearInterval(int timerId) {
     if (m_intervals.contains(timerId)) {
         m_intervals.remove(timerId);
         killTimer(timerId);
     }
 }
 
-void JavaScriptEnclosureRequestGlobalObject::clearTimeout(int timerId) {
+void JavaScriptGlobalObject::clearTimeout(int timerId) {
     if (m_timeouts.contains(timerId)) {
         m_timeouts.remove(timerId);
         killTimer(timerId);
     }
 }
 
-void JavaScriptEnclosureRequestGlobalObject::setInterval(const QScriptValue &function, int msecs) {
+void JavaScriptGlobalObject::setInterval(const QScriptValue &function, int msecs) {
     if ((function.isFunction()) || (function.isString())) {
         m_intervals[startTimer(msecs)] = function;
     }
 }
 
-void JavaScriptEnclosureRequestGlobalObject::setTimeout(const QScriptValue &function, int msecs) {
+void JavaScriptGlobalObject::setTimeout(const QScriptValue &function, int msecs) {
     if ((function.isFunction()) || (function.isString())) {
         m_timeouts[startTimer(msecs)] = function;
     }
 }
 
-bool JavaScriptEnclosureRequestGlobalObject::callFunction(QScriptValue function) const {
+bool JavaScriptGlobalObject::callFunction(QScriptValue function) const {
     if (function.isFunction()) {
         const QScriptValue result = function.call(QScriptValue());
 
         if (result.isError()) {
-            Logger::log("JavaScriptEnclosureRequestGlobalObject::callFunction(). Error: " + result.toString());
+            Logger::log("JavaScriptGlobalObject::callFunction(). Error: " + result.toString());
             return false;
         }
 
@@ -112,7 +112,7 @@ bool JavaScriptEnclosureRequestGlobalObject::callFunction(QScriptValue function)
         const QScriptValue result = m_engine->globalObject().property(function.toString()).call(QScriptValue());
 
         if (result.isError()) {
-            Logger::log("JavaScriptEnclosureRequestGlobalObject::callFunction(). Error: " + result.toString());
+            Logger::log("JavaScriptGlobalObject::callFunction(). Error: " + result.toString());
             return false;
         }
 
@@ -122,7 +122,7 @@ bool JavaScriptEnclosureRequestGlobalObject::callFunction(QScriptValue function)
     return false;
 }
 
-void JavaScriptEnclosureRequestGlobalObject::timerEvent(QTimerEvent *event) {
+void JavaScriptGlobalObject::timerEvent(QTimerEvent *event) {
     if (m_intervals.contains(event->timerId())) {
         if (!callFunction(m_intervals.value(event->timerId()))) {
             clearInterval(event->timerId());

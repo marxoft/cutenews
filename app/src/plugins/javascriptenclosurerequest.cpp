@@ -90,7 +90,7 @@ void JavaScriptEnclosureRequest::initEngine() {
         m_global = new JavaScriptEnclosureRequestGlobalObject(m_engine);
         
         connect(m_global, SIGNAL(error(QString)), this, SLOT(onRequestError(QString)));
-        connect(m_global, SIGNAL(finished(QVariantMap)), this, SLOT(onRequestFinished(QVariantMap)));
+        connect(m_global, SIGNAL(finished(Enclosure)), this, SLOT(onRequestFinished(Enclosure)));
         
         m_engine->installTranslatorFunctions();
     }
@@ -155,37 +155,177 @@ void JavaScriptEnclosureRequest::onRequestError(const QString &errorString) {
     emit finished(this);
 }
 
-void JavaScriptEnclosureRequest::onRequestFinished(const QVariantMap &result) {
+void JavaScriptEnclosureRequest::onRequestFinished(const Enclosure &result) {
     Logger::log("JavaScriptEnclosureRequest::onRequestFinished()", Logger::MediumVerbosity);
-    const QString fileName = result.value("fileName").toString();
-    const QVariantMap request = result.value("request").toMap();
-    const QUrl url = request.value("url").toString();
-
-    if ((!fileName.isEmpty()) && (!url.isEmpty())) {
-        QNetworkRequest req(url);
-        
-        if (request.contains("headers")) {
-            QMapIterator<QString, QVariant> iterator(request.value("headers").toMap());
-            
-            while (iterator.hasNext()) {
-                iterator.next();
-                req.setRawHeader(iterator.key().toUtf8(), iterator.value().toByteArray());
-            }
-        }
-
-        m_result.fileName = fileName;
-        m_result.request = req;
-        m_result.operation = result.value("operation", "GET").toByteArray();
-        m_result.data = result.value("data").toByteArray();
-
-        setErrorString(QString());
-        setStatus(Ready);
-    }
-    else {
-        setErrorString(tr("Filename or URL is empty"));
-        setResult(Enclosure());
-        setStatus(Error);
-    }
-    
+    setResult(result);
+    setErrorString(QString());
+    setStatus(Ready);
     emit finished(this);
 }
+
+JavaScriptEnclosureRequestGlobalObject::JavaScriptEnclosureRequestGlobalObject(QScriptEngine *engine) :
+    JavaScriptGlobalObject(engine)
+{
+    QScriptValue enclosure = engine->newQObject(new JavaScriptEnclosure(engine));
+    engine->setDefaultPrototype(qMetaTypeId<Enclosure>(), enclosure);
+    engine->setDefaultPrototype(qMetaTypeId<Enclosure*>(), enclosure);
+    engine->globalObject().setProperty("Enclosure", engine->newFunction(newEnclosure));
+    QScriptValue request = engine->newQObject(new JavaScriptNetworkRequest(engine));
+    engine->setDefaultPrototype(qMetaTypeId<QNetworkRequest>(), request);
+    engine->setDefaultPrototype(qMetaTypeId<QNetworkRequest*>(), request);
+    engine->globalObject().setProperty("NetworkRequest", engine->newFunction(newNetworkRequest));
+}
+
+QScriptValue JavaScriptEnclosureRequestGlobalObject::newEnclosure(QScriptContext *context, QScriptEngine *engine) {
+    switch (context->argumentCount()) {
+    case 0:
+        return engine->toScriptValue(Enclosure());
+    case 2:
+        return engine->toScriptValue(Enclosure(context->argument(0).toString(),
+                                               qscriptvalue_cast<QNetworkRequest>(context->argument(1))));
+    case 3:
+        return engine->toScriptValue(Enclosure(context->argument(0).toString(),
+                                               qscriptvalue_cast<QNetworkRequest>(context->argument(1)),
+                                               context->argument(2).toString().toUtf8()));
+    case 4:
+        return engine->toScriptValue(Enclosure(context->argument(0).toString(),
+                                               qscriptvalue_cast<QNetworkRequest>(context->argument(1)),
+                                               context->argument(2).toString().toUtf8(),
+                                               context->argument(3).toString().toUtf8()));
+    default:
+        return context->throwError(QScriptContext::SyntaxError,
+                                   QObject::tr("Enclosure constructor requires either 0, 2, 3 or 4 arguments."));
+    }
+}
+
+QScriptValue JavaScriptEnclosureRequestGlobalObject::newNetworkRequest(QScriptContext *context, QScriptEngine *engine) {
+    switch (context->argumentCount()) {
+    case 0:
+        return engine->toScriptValue(QNetworkRequest());
+    case 1:
+        return engine->toScriptValue(QNetworkRequest(context->argument(0).toString()));
+    default:
+        return context->throwError(QScriptContext::SyntaxError,
+                                   QObject::tr("NetworkRequest constructor requires either 0 or 1 arguments."));
+    }
+}
+
+JavaScriptEnclosure::JavaScriptEnclosure(QObject *parent) :
+    QObject(parent)
+{
+}
+
+QString JavaScriptEnclosure::fileName() const {
+    if (const Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+        return enclosure->fileName;
+    }
+    
+    return QString();
+}
+
+void JavaScriptEnclosure::setFileName(const QString &f) {
+    if (Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+        enclosure->fileName = f;
+    }
+}
+
+QNetworkRequest JavaScriptEnclosure::request() const {
+    if (const Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+        return enclosure->request;
+    }
+    
+    return QNetworkRequest();
+}
+
+void JavaScriptEnclosure::setRequest(const QNetworkRequest &r) {
+    if (Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+        enclosure->request = r;
+    }
+}
+
+QString JavaScriptEnclosure::operation() const {
+    if (const Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+        return QString::fromUtf8(enclosure->operation);
+    }
+    
+    return QString();
+}
+
+void JavaScriptEnclosure::setOperation(const QString &o) {
+    if (Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+        enclosure->operation = o.toUtf8();
+    }
+}
+
+QString JavaScriptEnclosure::data() const {
+    if (const Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+        return QString::fromUtf8(enclosure->data);
+    }
+    
+    return QString();
+}
+
+void JavaScriptEnclosure::setData(const QString &d) {
+    if (Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+        enclosure->data = d.toUtf8();
+    }
+}
+
+JavaScriptNetworkRequest::JavaScriptNetworkRequest(QObject *parent) :
+    QObject(parent)
+{
+}
+
+QString JavaScriptNetworkRequest::url() const {
+    if (const QNetworkRequest *request = qscriptvalue_cast<QNetworkRequest*>(thisObject())) {
+        return request->url().toString();
+    }
+    
+    return QString();
+}
+
+void JavaScriptNetworkRequest::setUrl(const QString &u) {
+    if (QNetworkRequest *request = qscriptvalue_cast<QNetworkRequest*>(thisObject())) {
+        request->setUrl(u);
+    }
+}
+
+QVariantMap JavaScriptNetworkRequest::headers() const {
+    if (const QNetworkRequest *request = qscriptvalue_cast<QNetworkRequest*>(thisObject())) {
+        QVariantMap h;
+        
+        foreach (const QByteArray &header, request->rawHeaderList()) {
+            h[QString::fromUtf8(header)] = QString::fromUtf8(request->rawHeader(header));
+        }
+        
+        return h;
+    }
+    
+    return QVariantMap();
+}
+
+void JavaScriptNetworkRequest::setHeaders(const QVariantMap &h) {
+    if (QNetworkRequest *request = qscriptvalue_cast<QNetworkRequest*>(thisObject())) {
+        QMapIterator<QString, QVariant> iterator(h);
+        
+        while (iterator.hasNext()) {
+            iterator.next();
+            request->setRawHeader(iterator.key().toUtf8(), iterator.value().toByteArray());
+        }
+    }
+}
+
+QVariant JavaScriptNetworkRequest::header(const QString &name) const {
+    if (const QNetworkRequest *request = qscriptvalue_cast<QNetworkRequest*>(thisObject())) {
+        return request->rawHeader(name.toUtf8());
+    }
+    
+    return QVariant();
+}
+
+void JavaScriptNetworkRequest::setHeader(const QString &name, const QVariant &value) {
+    if (QNetworkRequest *request = qscriptvalue_cast<QNetworkRequest*>(thisObject())) {
+        request->setRawHeader(name.toUtf8(), value.toByteArray());
+    }
+}
+

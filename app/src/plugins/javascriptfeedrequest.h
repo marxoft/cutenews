@@ -18,7 +18,7 @@
 #define JAVASCRIPTFEEDREQUEST_H
 
 #include "feedrequest.h"
-#include "javascriptfeedrequestglobalobject.h"
+#include "javascriptglobalobject.h"
 
 class QScriptEngine;
 
@@ -59,7 +59,7 @@ private:
     
     void initEngine();
     
-    JavaScriptFeedRequestGlobalObject *m_global;
+    JavaScriptGlobalObject *m_global;
     QScriptEngine *m_engine;
     
     QString m_fileName;
@@ -74,4 +74,16 @@ private:
     bool m_evaluated;
 };
 
-#endif // JAVASCRIPTFEEDPLUGIN_H
+class JavaScriptFeedRequestGlobalObject : public JavaScriptGlobalObject
+{
+    Q_OBJECT
+
+public:
+    explicit JavaScriptFeedRequestGlobalObject(QScriptEngine *engine);
+
+Q_SIGNALS:
+    void error(const QString &errorString);
+    void finished(const QString &result);
+};
+
+#endif // JAVASCRIPTFEEDREQUEST_H

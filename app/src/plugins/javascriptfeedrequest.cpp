@@ -161,3 +161,8 @@ void JavaScriptFeedRequest::onRequestFinished(const QString &result) {
     setStatus(Ready);
     emit finished(this);
 }
+
+JavaScriptFeedRequestGlobalObject::JavaScriptFeedRequestGlobalObject(QScriptEngine *engine) :
+    JavaScriptGlobalObject(engine)
+{
+}

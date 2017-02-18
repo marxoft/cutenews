@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef JAVASCRIPTFEEDREQUESTGLOBALOBJECT_H
-#define JAVASCRIPTFEEDREQUESTGLOBALOBJECT_H
+#ifndef JAVASCRIPTGLOBALOBJECT_H
+#define JAVASCRIPTGLOBALOBJECT_H
 
 #include <QObject>
 #include <QPointer>
@@ -23,12 +23,12 @@
 
 class QNetworkAccessManager;
 
-class JavaScriptFeedRequestGlobalObject : public QObject
+class JavaScriptGlobalObject : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit JavaScriptFeedRequestGlobalObject(QScriptEngine *engine);
+    explicit JavaScriptGlobalObject(QScriptEngine *engine);
 
 public Q_SLOTS:
     QString atob(const QString &ascii) const;
@@ -39,10 +39,6 @@ public Q_SLOTS:
 
     void setInterval(const QScriptValue &function, int msecs);
     void setTimeout(const QScriptValue &function, int msecs);
-
-Q_SIGNALS:
-    void error(const QString &errorString);
-    void finished(const QString &result);
 
 private:
     static QScriptValue newXMLHttpRequest(QScriptContext *context, QScriptEngine *engine);
@@ -61,4 +57,4 @@ private:
     QHash<int, QScriptValue> m_timeouts;
 };
 
-#endif // JAVASCRIPTFEEDREQUESTGLOBALOBJECT_H
+#endif // JAVASCRIPTGLOBALOBJECT_H
