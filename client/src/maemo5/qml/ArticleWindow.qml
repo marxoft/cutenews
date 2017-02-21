@@ -17,6 +17,7 @@
 import QtQuick 1.0
 import org.hildon.components 1.0
 import org.hildon.utils 1.0
+import org.hildon.webkit 1.0
 import cuteNews 1.0
 
 Window {
@@ -91,8 +92,8 @@ Window {
             dialog.url = article.url;
             dialog.open();
         }
-    }    
-    
+    }
+        
     Action {
         id: readAction
         
@@ -161,72 +162,28 @@ Window {
         anchors.fill: parent
         focus: true
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
-        contentHeight: column.height + platformStyle.paddingMedium * 2
+        contentHeight: view.height
+        pressDelay: 500
         
-        Column {
-            id: column
+        WebView {
+            id: view
             
-            anchors {
-                left: parent.left
-                right: parent.right
-                top: parent.top
-                margins: platformStyle.paddingMedium
+            preferredWidth: flickable.width
+            contextMenuPolicy: Qt.NoContextMenu
+            linkDelegationPolicy: WebPage.DelegateAllLinks
+            settings.userStyleSheetUrl: {
+                return "data:text/css;charset=utf-8;base64,"
+                + Qt.btoa("html { font-family: " + platformStyle.fontFamily + "; font-size: "
+                + platformStyle.fontSizeMedium + "pt; background-color: " + platformStyle.defaultBackgroundColor
+                + "; color: " + platformStyle.defaultTextColor
+                + "; } img { max-width: 100%; } iframe { max-width: 100%; } .title { font-size: "
+                + platformStyle.fontSizeLarge + "pt; } .separator { height: 1px; background-color: "
+                + platformStyle.secondaryTextColor + "; }");
             }
-            spacing: platformStyle.paddingMedium
-            
-            Label {
-                id: titleLabel
-                
-                width: parent.width
-                wrapMode: Text.Wrap
-                font.pointSize: platformStyle.fontSizeLarge
-            }
-            
-            Rectangle {                
-                width: parent.width
-                height: 1
-                color: platformStyle.secondaryTextColor
-            }
-            
-            Label {
-                id: authorLabel
-                
-                width: parent.width
-                wrapMode: Text.Wrap
-            }
-            
-            Label {
-                id: dateLabel
-                
-                width: parent.width
-                wrapMode: Text.Wrap
-            }
-            
-            Label {
-                id: categoriesLabel
-                
-                width: parent.width
-                wrapMode: Text.Wrap
-            }
-            
-            Rectangle {                
-                width: parent.width
-                height: 1
-                color: platformStyle.secondaryTextColor
-            }
-            
-            Label {
-                id: bodyLabel
-                
-                width: parent.width
-                wrapMode: Text.Wrap
-                textFormat: Text.RichText
-                clip: true
-                onLinkActivated: {
-                    var m = popups.load(urlMenu, root)
-                    m.url = link;
-                    m.popup();
-                }
+            onLinkClicked: {
+                var m = popups.load(urlMenu, root);
+                m.url = link;
+                m.popup();
             }
         }
     }
@@ -248,7 +205,7 @@ Window {
                 text: qsTr("Open externally")
                 onTriggered: urlopener.open(menu.url)
             }
-            
+
             MenuItem {
                 text: qsTr("Download")
                 onTriggered: {
@@ -287,12 +244,11 @@ Window {
         if (article) {
             flickable.contentY = 0;
             title = article.title ? article.title : qsTr("Article");
-            titleLabel.text = title;
-            authorLabel.text = qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown"));
-            dateLabel.text = qsTr("Date") + ": " + (article.dateString ? article.dateString : qsTr("Unknown"));
-            categoriesLabel.text = qsTr("Categories") + ": "
-            + (article.categories.length > 0 ? article.categories.join(", ") : qsTr("None"));
-            bodyLabel.text = article.body;
+            view.html = "<p class='title'>" + title + "</p><div class='separator'></div><p>"
+            + qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown")) + "</p><p>"
+            + qsTr("Date") + ": " + (article.dateString ? article.dateString : qsTr("Unknown")) + "</p><p>"
+            + qsTr("Categories") + ": " + (article.categories.length > 0 ? article.categories.join(", ") : qsTr("None"))
+            + "</p><div class='separator'></div><p>" + article.body + "</p>";
             
             if (!article.read) {
                 article.markRead(true);
