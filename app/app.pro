@@ -43,10 +43,9 @@ HEADERS += \
     src/plugins/feedpluginconfig.h \
     src/plugins/feedrequest.h \
     src/plugins/javascriptenclosurerequest.h \
-    src/plugins/javascriptenclosurerequestglobalobject.h \
     src/plugins/javascriptfeedplugin.h \
     src/plugins/javascriptfeedrequest.h \
-    src/plugins/javascriptfeedrequestglobalobject.h \
+    src/plugins/javascriptglobalobject.h \
     src/plugins/pluginconfigmodel.h \
     src/plugins/pluginmanager.h \
     src/plugins/pluginsettings.h \
@@ -78,10 +77,9 @@ SOURCES += \
     src/plugins/externalfeedrequest.cpp \
     src/plugins/feedpluginconfig.cpp \
     src/plugins/javascriptenclosurerequest.cpp \
-    src/plugins/javascriptenclosurerequestglobalobject.cpp \
     src/plugins/javascriptfeedplugin.cpp \
     src/plugins/javascriptfeedrequest.cpp \
-    src/plugins/javascriptfeedrequestglobalobject.cpp \
+    src/plugins/javascriptglobalobject.cpp \
     src/plugins/pluginconfigmodel.cpp \
     src/plugins/pluginmanager.cpp \
     src/plugins/pluginsettings.cpp \
