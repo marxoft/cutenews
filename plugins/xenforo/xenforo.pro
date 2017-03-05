@@ -13,7 +13,7 @@ SOURCES += \
 
 maemo5 {
     CONFIG += link_prl
-    LIBS += -L/usr/lib -lqhtmlparser
+    LIBS += -L/opt/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
@@ -35,11 +35,11 @@ maemo5 {
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser
-    INCLUDEPATH += ../src
+    INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
-        ../src/enclosurerequest.h \
-        ../src/feedplugin.h \
-        ../src/feedrequest.h
+        /usr/include/cutenews/enclosurerequest.h \
+        /usr/include/cutenews/feedplugin.h \
+        /usr/include/cutenews/feedrequest.h
     
     config.files = "$$TARGET".json
     config.path = /usr/share/cutenews/plugins

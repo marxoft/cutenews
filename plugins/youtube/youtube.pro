@@ -17,7 +17,7 @@ SOURCES += \
     youtubefeedrequest.cpp
 
 maemo5 {
-    LIBS += -L/usr/lib -lqyoutube
+    LIBS += -L/opt/lib -lqyoutube
     CONFIG += link_prl
     PKGCONFIG += libqyoutube
     
@@ -41,11 +41,11 @@ maemo5 {
     CONFIG += link_prl
     PKGCONFIG += libqyoutube
     
-    INCLUDEPATH += ../src
+    INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
-        ../src/enclosurerequest.h \
-        ../src/feedplugin.h \
-        ../src/feedrequest.h
+        /usr/include/cutenews/enclosurerequest.h \
+        /usr/include/cutenews/feedplugin.h \
+        /usr/include/cutenews/feedrequest.h
     
     config.files = "$$TARGET".json
     config.path = /usr/share/cutenews/plugins
