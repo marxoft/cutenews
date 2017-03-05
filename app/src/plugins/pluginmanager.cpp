@@ -142,7 +142,7 @@ FeedRequest* PluginManager::feedRequest(const QString &id, QObject *parent) cons
 }
 
 int PluginManager::load() {
-    Logger::log("PluginManager::load(): Loading plugins modified since "
+    Logger::log("PluginManager::load(): Loading plugins added since "
                 + m_lastLoaded.toString(Qt::ISODate), Logger::LowVerbosity);
     int count = 0;
     QDir dir;
@@ -151,7 +151,7 @@ int PluginManager::load() {
         dir.setPath(path);
         
         foreach (const QFileInfo &info, dir.entryInfoList(QStringList() << "*.json", QDir::Files, QDir::Time)) {
-            if (info.lastModified() > m_lastLoaded) {
+            if (info.created() > m_lastLoaded) {
                 FeedPluginConfig *config = getConfigForFilePath(info.absoluteFilePath());
                 
                 if (!config) {
