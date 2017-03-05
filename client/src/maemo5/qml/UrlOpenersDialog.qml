@@ -36,13 +36,8 @@ Dialog {
         }
         model: urlopener
         delegate: UrlOpenerDelegate {
-            onClicked: {
-                var dialog = popups.load(urlOpenerDialog, root);
-                dialog.regExp = urlopener.data(view.currentIndex, "name");
-                dialog.command = urlopener.data(view.currentIndex, "value");
-                dialog.open();
-            }
-            onPressAndHold: contextMenu.popup()
+            onClicked: popupManager.open(urlOpenerDialog, root, {regExp: name, command: value})
+            onPressAndHold: popupManager.open(contextMenu, root)
         }
     }
     
@@ -52,29 +47,7 @@ Dialog {
         color: platformStyle.disabledTextColor
         text: qsTr("No URL openers")
         visible: urlopener.count == 0
-    }
-        
-    Menu {
-        id: contextMenu
-        
-        MenuItem {
-            text: qsTr("Edit")
-            onTriggered: {
-                var dialog = popups.load(urlOpenerDialog, root);
-                dialog.regExp = urlopener.data(view.currentIndex, "name");
-                dialog.command = urlopener.data(view.currentIndex, "value");
-                dialog.open();
-            }
-        }
-        
-        MenuItem {
-            text: qsTr("Delete")
-            onTriggered: {
-                urlopener.remove(view.currentIndex);
-                urlopener.save();
-            }
-        }
-    }
+    }    
     
     Button {
         id: button
@@ -85,7 +58,46 @@ Dialog {
         }
         style: DialogButtonStyle {}
         text: qsTr("New")
-        onClicked: popups.open(urlOpenerDialog, root)
+        shortcut: settings.newContentShortcut
+        onClicked: popupManager.open(urlOpenerDialog, root)
+    }
+    
+    Action {
+        id: editAction
+        
+        text: qsTr("Edit")
+        autoRepeat: false
+        shortcut: settings.editShortcut
+        enabled: view.currentIndex >= 0
+        onTriggered: popupManager.open(urlOpenerDialog, root, {regExp: urlopener.data(view.currentIndex, "name"),
+        command: urlopener.data(view.currentIndex, "value")})
+    }
+    
+    Action {
+        id: removeAction
+        
+        text: qsTr("Remove")
+        autoRepeat: false
+        shortcut: settings.deleteShortcut
+        enabled: view.currentIndex >= 0
+        onTriggered: {
+            urlopener.remove(view.currentIndex);
+            urlopener.save();
+        }
+    }
+    
+    Component {
+        id: contextMenu
+        
+        Menu {        
+            MenuItem {
+                action: editAction
+            }
+            
+            MenuItem {
+                action: removeAction
+            }
+        }
     }
     
     Component {

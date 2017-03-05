@@ -38,13 +38,8 @@ Dialog {
             id: categoryModel
         }
         delegate: CategoryDelegate {
-            onClicked: {
-                var dialog = popups.load(categoryDialog, root);
-                dialog.name = name;
-                dialog.path = value;
-                dialog.open();
-            }
-            onPressAndHold: popups.open(contextMenu, root)
+            onClicked: popupManager.open(categoryDialog, root, {name: name, path: value})
+            onPressAndHold: popupManager.open(contextMenu, root)
         }
     }
     
@@ -65,7 +60,32 @@ Dialog {
         }
         style: DialogButtonStyle {}
         text: qsTr("New")
-        onClicked: popups.open(categoryDialog, root)
+        shortcut: settings.newContentShortcut
+        onClicked: popupManager.open(categoryDialog, root)
+    }
+    
+    Action {
+        id: editAction
+        
+        text: qsTr("Edit")
+        autoRepeat: false
+        shortcut: settings.editShortcut
+        enabled: view.currentIndex >= 0
+        onTriggered: popupManager.open(categoryDialog, root, {name: categoryModel.data(view.currentIndex, "name"),
+        path: categoryModel.data(view.currentIndex, "value")})
+    }
+    
+    Action {
+        id: removeAction
+        
+        text: qsTr("Remove")
+        autoRepeat: false
+        shortcut: settings.deleteShortcut
+        enabled: view.currentIndex >= 0
+        onTriggered: {
+            categoryModel.remove(view.currentIndex);
+            categoryModel.save();
+        }
     }
     
     Component {
@@ -73,21 +93,11 @@ Dialog {
         
         Menu {        
             MenuItem {
-                text: qsTr("Edit")
-                onTriggered: {
-                    var dialog = popups.load(categoryDialog, root);
-                    dialog.name = categoryModel.data(view.currentIndex, "name");
-                    dialog.path = categoryModel.data(view.currentIndex, "value");
-                    dialog.open();
-                }
+                action: editAction 
             }
             
             MenuItem {
-                text: qsTr("Remove")
-                onTriggered: {
-                    categoryModel.remove(view.currentIndex);
-                    categoryModel.save();
-                }
+                action: removeAction
             }
         }
     }

@@ -55,7 +55,7 @@ Dialog {
             
             text: qsTr("Browse")
             enabled: sourceType != Subscription.Url
-            onClicked: popupLoader.open(fileDialog, root);
+            onClicked: popupManager.open(fileDialog, root);
         }
         
         Label {
@@ -123,10 +123,6 @@ Dialog {
         }
     }
     
-    PopupLoader {
-        id: popupLoader
-    }
-    
     Component {
         id: fileDialog
         
@@ -152,8 +148,8 @@ Dialog {
         }
         
         if (subscriptionId) {
-            subscription.update(subscriptionId, {source: sourceField.text,
-                downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0, updateInterval: interval});
+            subscription.update({source: sourceField.text, downloadEnclosures: enclosuresCheckBox.checked ? 1 : 0,
+            updateInterval: interval});
         }
         else {
             subscriptions.create(sourceField.text, sourceType, enclosuresCheckBox.checked, interval);

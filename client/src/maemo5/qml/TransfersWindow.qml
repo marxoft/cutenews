@@ -28,11 +28,11 @@ Window {
         }
         
         MenuItem {
-            action: startAction
+            action: startAllAction
         }
         
         MenuItem {
-            action: pauseAction
+            action: pauseAllAction
         }
     }
     
@@ -41,26 +41,76 @@ Window {
         
         text: qsTr("Reload")
         autoRepeat: false
-        shortcut: qsTr("Ctrl+L")
+        shortcut: settings.reloadShortcut
         onTriggered: transfers.load()
+    }
+    
+    Action {
+        id: startAllAction
+        
+        text: qsTr("Start all downloads")
+        autoRepeat: false
+        shortcut: settings.startAllTransfersShortcut
+        onTriggered: transfers.start()
+    }
+    
+    Action {
+        id: pauseAllAction
+        
+        text: qsTr("Pause all downloads")
+        autoRepeat: false
+        shortcut: settings.pauseAllTransfersShortcut
+        onTriggered: transfers.pause()
     }
     
     Action {
         id: startAction
         
-        text: qsTr("Start all downloads")
+        text: qsTr("Start")
         autoRepeat: false
-        shortcut: qsTr("Ctrl+S")
-        onTriggered: transfers.start()
+        shortcut: settings.startTransferShortcut
+        enabled: (view.currentIndex >= 0) && (transferModel.data(view.currentIndex, "status") != Transfer.Downloading)
+        onTriggered: transfers.get(view.currentIndex).queue()
     }
     
     Action {
         id: pauseAction
         
-        text: qsTr("Pause all downloads")
+        text: qsTr("Pause")
         autoRepeat: false
-        shortcut: qsTr("Ctrl+P")
-        onTriggered: transfers.pause()
+        shortcut: settings.pauseTransferShortcut
+        enabled: (view.currentIndex >= 0) && (transferModel.data(view.currentIndex, "status") == Transfer.Downloading)
+        onTriggered: transfers.get(view.currentIndex).pause()
+    }
+    
+    Action {
+        id: categoryAction
+        
+        text: qsTr("Category")
+        autoRepeat: false
+        shortcut: settings.transferCategoryShortcut
+        enabled: view.currentIndex >= 0
+        onTriggered: popupManager.open(categoryDialog, root)
+    }
+    
+    Action {
+        id: priorityAction
+        
+        text: qsTr("Priority")
+        autoRepeat: false
+        shortcut: settings.transferPriorityShortcut
+        enabled: view.currentIndex >= 0
+        onTriggered: popupManager.open(priorityDialog, root)
+    }
+    
+    Action {
+        id: removeAction
+        
+        text: qsTr("Remove")
+        autoRepeat: false
+        shortcut: settings.deleteShortcut
+        enabled: view.currentIndex >= 0
+        onTriggered: popupManager.open(removeDialog, root)
     }
     
     ListView {
@@ -70,8 +120,8 @@ Window {
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
         model: transfers
         delegate: TransferDelegate {
-            onClicked: popups.open(contextMenu, root)
-            onPressAndHold: popups.open(contextMenu, root)
+            onClicked: popupManager.open(contextMenu, root)
+            onPressAndHold: popupManager.open(contextMenu, root)
         }
     }
     
@@ -90,25 +140,23 @@ Window {
         
         Menu {            
             MenuItem {
-                text: transfers.data(view.currentIndex, "status") == Transfer.Downloading ? qsTr("Pause")
-                : qsTr("Start")
-                onTriggered: transfers.data(view.currentIndex, "status") == Transfer.Downloading
-                ? transfers.get(view.currentIndex).pause() : transfers.get(view.currentIndex).queue()
+                action: startAction
             }
             
             MenuItem {
-                text: qsTr("Category")
-                onTriggered: popups.open(categoryDialog, root)
+                action: pauseAction
             }
             
             MenuItem {
-                text: qsTr("Priority")
-                onTriggered: popups.open(priorityDialog, root)
+                action: categoryAction
             }
             
             MenuItem {
-                text: qsTr("Remove")
-                onTriggered: transfers.get(view.currentIndex).cancel()
+                action: priorityAction
+            }
+            
+            MenuItem {
+                action: removeAction
             }
         }
     }
@@ -134,6 +182,15 @@ Window {
             textRole: "name"
             currentIndex: Math.max(0, model.match(0, "value", transfers.data(view.currentIndex, "priority")))
             onSelected: transfers.setData(view.currentIndex, model.data(currentIndex, "value"), "priority")
+        }
+    }
+    
+    Component {
+        id: removeDialog
+        
+        MessageBox {
+            text: qsTr("Do you want to remove") + "'" + transferModel.data(view.currentIndex, "name") + "'?"
+            onAccepted: transfers.get(view.currentIndex).cancel()
         }
     }
     

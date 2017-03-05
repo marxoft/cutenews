@@ -32,7 +32,7 @@ Dialog {
         
         text: qsTr("Copy URL")
         autoRepeat: false
-        shortcut: qsTr("c")
+        shortcut: settings.copyShortcut
         enabled: view.currentIndex >= 0
         onTriggered: clipboard.text = enclosures[view.currentIndex].url
     }
@@ -42,7 +42,7 @@ Dialog {
         
         text: qsTr("Open externally")
         autoRepeat: false
-        shortcut: qsTr("o")
+        shortcut: settings.openExternallyShortcut
         enabled: view.currentIndex >= 0
         onTriggered: urlopener.open(enclosures[view.currentIndex].url)
     }    
@@ -52,9 +52,9 @@ Dialog {
         
         text: qsTr("Download")
         autoRepeat: false
-        shortcut: qsTr("d")
+        shortcut: settings.downloadShortcut
         enabled: view.currentIndex >= 0
-        onTriggered: popups.open(downloadDialog, root)
+        onTriggered: popupManager.open(downloadDialog, root)
     }
     
     ListView {
@@ -65,7 +65,7 @@ Dialog {
         model: enclosures
         delegate: EnclosureDelegate {
             onClicked: urlopener.open(modelData.url)
-            onPressAndHold: popups.open(contextMenu, root)
+            onPressAndHold: popupManager.open(contextMenu, root)
         }
     }
     

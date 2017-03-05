@@ -125,21 +125,20 @@ maemo5 {
         src/maemo5/qml/DownloadDialog.qml \
         src/maemo5/qml/EnclosureDelegate.qml \
         src/maemo5/qml/EnclosuresDialog.qml \
-        src/maemo5/qml/FavouritesWindow.qml \
         src/maemo5/qml/ListSelectorButton.qml \
         src/maemo5/qml/LogDialog.qml \
         src/maemo5/qml/MainWindow.qml \
         src/maemo5/qml/NetworkProxyDialog.qml \
         src/maemo5/qml/OpenDialog.qml \
         src/maemo5/qml/PluginDialog.qml \
-        src/maemo5/qml/PopupLoader.qml \
+        src/maemo5/qml/PluginSettingsDialog.qml \
         src/maemo5/qml/SearchDialog.qml \
         src/maemo5/qml/SettingsDialog.qml \
+        src/maemo5/qml/ShortcutsDialog.qml \
         src/maemo5/qml/SubscriptionDelegate.qml \
         src/maemo5/qml/SubscriptionDialog.qml \
         src/maemo5/qml/TimeSelectorButton.qml \
         src/maemo5/qml/TransferDelegate.qml \
-        src/maemo5/qml/TransferPropertiesDialog.qml \
         src/maemo5/qml/TransfersWindow.qml \
         src/maemo5/qml/UrlOpenerDelegate.qml \
         src/maemo5/qml/UrlOpenerDialog.qml \

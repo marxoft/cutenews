@@ -47,13 +47,12 @@ ApplicationWindow {
         }
         
         MenuItem {
-            text: qsTr("Settings")
-            onTriggered: popups.open(settingsDialog, appWindow)
+            action: settingsAction
         }
         
         MenuItem {
             text: qsTr("About")
-            onTriggered: popups.open(aboutDialog, appWindow)
+            onTriggered: popupManager.open(Qt.resolvedUrl("AboutDialog.qml"), appWindow)
         }
     }
     
@@ -62,7 +61,7 @@ ApplicationWindow {
         
         text: qsTr("Reload")
         autoRepeat: false
-        shortcut: qsTr("Ctrl+L")
+        shortcut: settings.reloadShortcut
         onTriggered: {
             subscriptions.getStatus(Subscriptions.DefaultStatusInterval);
             serversettings.load();
@@ -76,7 +75,7 @@ ApplicationWindow {
         
         text: qsTr("Mark all as read")
         autoRepeat: false
-        shortcut: qsTr("Ctrl+R")
+        shortcut: settings.markAllSubscriptionsReadShortcut
         onTriggered: database.markAllSubscriptionsRead()
     }
     
@@ -85,8 +84,8 @@ ApplicationWindow {
         
         text: qsTr("Import from OPML")
         autoRepeat: false
-        shortcut: qsTr("Ctrl+O")
-        onTriggered: popups.open(importDialog, appWindow)
+        shortcut: settings.importSubscriptionsShortcut
+        onTriggered: popupManager.open(importDialog, appWindow)
     }
     
     Action {
@@ -94,8 +93,10 @@ ApplicationWindow {
         
         text: qsTr("Downloads")
         autoRepeat: false
-        shortcut: qsTr("Ctrl+D")
-        onTriggered: windowStack.push(Qt.resolvedUrl("TransfersWindow.qml"))
+        shortcut: settings.transfersShortcut
+        shortcutContext: Qt.ApplicationShortcut
+        onTriggered: if (windowStack.currentWindow.objectName != "TransfersWindow")
+        windowStack.push(Qt.resolvedUrl("TransfersWindow.qml"));
     }
     
     Action {
@@ -103,8 +104,17 @@ ApplicationWindow {
         
         text: qsTr("Search")
         autoRepeat: false
-        shortcut: qsTr("Ctrl+F")
-        onTriggered: popups.open(searchDialog, appWindow)
+        shortcut: settings.searchShortcut
+        onTriggered: popupManager.open(Qt.resolvedUrl("SearchDialog.qml"), appWindow)
+    }
+    
+    Action {
+        id: settingsAction
+        
+        text: qsTr("Settings")
+        autoRepeat: false
+        shortcut: settings.settingsShortcut
+        onTriggered: popupManager.open(Qt.resolvedUrl("SettingsDialog.qml"), appWindow)
     }
     
     Action {
@@ -112,7 +122,7 @@ ApplicationWindow {
         
         text: qsTr("Update")
         autoRepeat: false
-        shortcut: qsTr("u")
+        shortcut: settings.updateSubscriptionShortcut
         enabled: subscriptionView.currentIndex > 1
         onTriggered: subscriptions.update(subscriptionModel.data(subscriptionView.currentIndex, "id"))
     }
@@ -122,7 +132,7 @@ ApplicationWindow {
         
         text: qsTr("Mark as read")
         autoRepeat: false
-        shortcut: qsTr("r")
+        shortcut: settings.markSubscriptionReadShortcut
         enabled: subscriptionView.currentIndex > 1
         onTriggered: subscriptionModel.setData(subscriptionView.currentIndex, true, "read")
     }
@@ -132,25 +142,19 @@ ApplicationWindow {
         
         text: qsTr("Properties")
         autoRepeat: false
-        shortcut: qsTr("p")
+        shortcut: settings.editShortcut
         enabled: subscriptionView.currentIndex > 1
         onTriggered: {
             var subscription = subscriptionModel.itemData(subscriptionView.currentIndex);
             
             switch (subscription.sourceType) {
-                case Subscription.Plugin: {
-                    var dialog = popups.load(pluginDialog, appWindow);
-                    dialog.subscriptionId = subscription.id;
-                    dialog.open();
-                    break;
-                }
-                default: {
-                    var dialog = popups.load(subscriptionDialog, appWindow);
-                    dialog.subscriptionId = subscription.id;
-                    dialog.sourceType = subscription.sourceType;
-                    dialog.open();
-                    break;
-                }
+            case Subscription.Plugin:
+                popupManager.open(Qt.resolvedUrl("PluginDialog.qml"), appWindow, {subscriptionId: subscription.id});
+                break;
+            default:
+                popupManager.open(Qt.resolvedUrl("SubscriptionDialog.qml"), appWindow, {subscriptionId: subscription.id,
+                sourceType: subscription.sourceType});
+                break;
             }
         }
     }
@@ -160,9 +164,9 @@ ApplicationWindow {
         
         text: qsTr("Unsubscribe")
         autoRepeat: false
-        shortcut: qsTr("d")
+        shortcut: settings.deleteShortcut
         enabled: subscriptionView.currentIndex > 1
-        onTriggered: popups.open(unsubscribeDialog, appWindow)
+        onTriggered: popupManager.open(unsubscribeDialog, appWindow)
     }
     
     Button {
@@ -180,8 +184,8 @@ ApplicationWindow {
         autoRepeat: false
         text: qsTr("New subscription")
         iconName: "general_add"
-        shortcut: qsTr("Ctrl+N")
-        onClicked: popups.open(subscriptionTypeDialog, appWindow)
+        shortcut: settings.newContentShortcut
+        onClicked: popupManager.open(subscriptionTypeDialog, appWindow)
     }
     
     Button {
@@ -199,7 +203,7 @@ ApplicationWindow {
         autoRepeat: false
         text: subscriptions.status == Subscriptions.Active ? qsTr("Cancel updates") : qsTr("Update all")
         iconName: subscriptions.status == Subscriptions.Active ? "general_stop" : "general_refresh"
-        shortcut: qsTr("Ctrl+U")
+        shortcut: settings.updateAllSubscriptionsShortcut
         onClicked: subscriptions.status == Subscriptions.Active ? subscriptions.cancel() : subscriptions.updateAll()
     }
     
@@ -220,7 +224,7 @@ ApplicationWindow {
         }
         delegate: SubscriptionDelegate {
             onClicked: windowStack.push(Qt.resolvedUrl("ArticlesWindow.qml"), {title: title}).load(id)
-            onPressAndHold: if (index > 1) popups.open(contextMenu, appWindow);
+            onPressAndHold: if (index > 1) popupManager.open(contextMenu, appWindow);
         }
     }
     
@@ -248,11 +252,7 @@ ApplicationWindow {
             color: platformStyle.reversedTextColor
         }
     }
-    
-    PopupLoader {
-        id: popups
-    }
-    
+
     Component {
         id: contextMenu
         
@@ -295,24 +295,6 @@ ApplicationWindow {
     }
     
     Component {
-        id: searchDialog
-        
-        SearchDialog {}
-    }
-        
-    Component {
-        id: settingsDialog
-        
-        SettingsDialog {}
-    }
-    
-    Component {
-        id: aboutDialog
-        
-        AboutDialog {}
-    }
-    
-    Component {
         id: subscriptionTypeDialog
         
         ListPickSelector {
@@ -325,33 +307,15 @@ ApplicationWindow {
                 switch (value) {
                 case Subscription.Url:
                 case Subscription.LocalFile:
-                case Subscription.Command: {
-                    var dialog = popups.load(subscriptionDialog, appWindow);
-                    dialog.sourceType = value;
-                    dialog.open();
+                case Subscription.Command:
+                    popupManager.open(Qt.resolvedUrl("SubscriptionDialog.qml"), appWindow, {sourceType: value});
                     break;
-                }
-                default: {
-                    var dialog = popups.load(pluginDialog, appWindow);
-                    dialog.pluginId = value;
-                    dialog.open();
+                default:
+                    popupManager.open(Qt.resolvedUrl("PluginDialog.qml"), appWindow, {pluginId: value});
                     break;
-                }
                 }
             }
         }
-    }
-    
-    Component {
-        id: subscriptionDialog
-        
-        SubscriptionDialog {}
-    }
-    
-    Component {
-        id: pluginDialog
-        
-        PluginDialog {}
     }
 
     Connections {
@@ -395,7 +359,6 @@ ApplicationWindow {
     Connections {
         target: transfers
         onError: informationBox.information(errorString)
-        onTransferAdded: informationBox.information(qsTr("Enclosure added to downloads"))
     }
     
     Component.onCompleted: {

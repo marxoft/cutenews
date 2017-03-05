@@ -68,7 +68,7 @@ Window {
         
         text: qsTr("Copy URL")
         autoRepeat: false
-        shortcut: qsTr("c")
+        shortcut: settings.copyShortcut
         onTriggered: clipboard.text = article.url
     }
     
@@ -77,12 +77,8 @@ Window {
         
         text: qsTr("Open externally")
         autoRepeat: false
-        shortcut: qsTr("o")
-        onTriggered: {
-            var dialog = popups.load(openDialog, root);
-            dialog.url = article.url;
-            dialog.open();
-        }
+        shortcut: settings.openExternallyShortcut
+        onTriggered: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: article.url})
     }
     
     Action {
@@ -90,19 +86,15 @@ Window {
         
         text: qsTr("Download")
         autoRepeat: false
-        shortcut: qsTr("d")
-        onTriggered: {
-            var dialog = popups.load(downloadDialog, root);
-            dialog.url = article.url;
-            dialog.open();
-        }
+        shortcut: settings.downloadShortcut
+        onTriggered: popupManager.open(Qt.resolvedUrl("DownloadDialog.qml"), root, {url: article.url})
     }
         
     Action {
         id: readAction
         
         autoRepeat: false
-        shortcut: qsTr("r")
+        shortcut: settings.toggleArticleReadShortcut
         onTriggered: article.markRead(!article.read)
     }
     
@@ -110,7 +102,7 @@ Window {
         id: favouriteAction
         
         autoRepeat: false
-        shortcut: qsTr("f")
+        shortcut: settings.toggleArticleFavouriteShortcut
         onTriggered: article.markFavourite(!article.favourite)
     }
     
@@ -119,9 +111,9 @@ Window {
         
         text: qsTr("Enclosures")
         autoRepeat: false
-        shortcut: qsTr("e")
+        shortcut: settings.showArticleEnclosuresShortcut
         enabled: (article != null) && (article.hasEnclosures)
-        onTriggered: popups.open(enclosuresDialog, root)
+        onTriggered: popupManager.open(enclosuresDialog, root)
     }
     
     Action {
@@ -129,8 +121,8 @@ Window {
         
         text: qsTr("Delete")
         autoRepeat: false
-        shortcut: qsTr("Shift+D")
-        onTriggered: popups.open(deleteDialog, root)
+        shortcut: settings.deleteShortcut
+        onTriggered: popupManager.open(deleteDialog, root)
     }
     
     Action {
@@ -138,7 +130,7 @@ Window {
         
         text: qsTr("Next article")
         autoRepeat: false
-        shortcut: qsTr("Right")
+        shortcut: settings.nextArticleShortcut
         onTriggered: root.next()
     }
     
@@ -147,7 +139,7 @@ Window {
         
         text: qsTr("Next unread article")
         autoRepeat: false
-        shortcut: qsTr("Shift+Right")
+        shortcut: settings.nextUnreadArticleShortcut
         onTriggered: root.nextUnread()
     }
     
@@ -156,7 +148,7 @@ Window {
         
         text: qsTr("Previous article")
         autoRepeat: false
-        shortcut: qsTr("Left")
+        shortcut: settings.previousArticleShortcut
         onTriggered: root.previous()
     }
     
@@ -164,9 +156,9 @@ Window {
         id: flickable
         
         anchors.fill: parent
-        focus: true
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
         contentHeight: view.height
+        pressDelay: 100000
         
         WebView {
             id: view
@@ -183,11 +175,7 @@ Window {
                 + platformStyle.fontSizeLarge + "pt; } .separator { height: 1px; background-color: "
                 + platformStyle.secondaryTextColor + "; }");
             }
-            onLinkClicked: {
-                var m = popups.load(urlMenu, root);
-                m.url = link;
-                m.popup();
-            }
+            onLinkClicked: popupManager.open(urlMenu, root, {url: link})
         }
     }
     
@@ -206,20 +194,12 @@ Window {
             
             MenuItem {
                 text: qsTr("Open externally")
-                onTriggered: {
-                    var dialog = popups.load(openDialog, root);
-                    dialog.url = menu.url;
-                    dialog.open();
-                }
+                onTriggered: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: menu.url})
             }
 
             MenuItem {
                 text: qsTr("Download")
-                onTriggered: {
-                    var dialog = popups.load(downloadDialog, root);
-                    dialog.url = menu.url;
-                    dialog.open();
-                }
+                onTriggered: popupManager.open(Qt.resolvedUrl("DownloadDialog.qml"), root, {url: menu.url})
             }            
         }
     }
@@ -241,25 +221,13 @@ Window {
         }
     }
     
-    Component {
-        id: openDialog
-        
-        OpenDialog {}
-    }
-    
-    Component {
-        id: downloadDialog
-        
-        DownloadDialog {}
-    }
-    
     onArticleChanged: {
         if (article) {
             flickable.contentY = 0;
             title = article.title ? article.title : qsTr("Article");
             view.html = "<p class='title'>" + title + "</p><div class='separator'></div><p>"
-            + qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown")) + "</p><p>"
-            + qsTr("Date") + ": " + (article.dateString ? article.dateString : qsTr("Unknown")) + "</p><p>"
+            + qsTr("Author") + ": " + (article.author ? article.author : qsTr("Unknown")) + "</br>"
+            + qsTr("Date") + ": " + (article.dateString ? article.dateString : qsTr("Unknown")) + "</br>"
             + qsTr("Categories") + ": " + (article.categories.length > 0 ? article.categories.join(", ") : qsTr("None"))
             + "</p><div class='separator'></div><p>" + article.body + "</p>";
             

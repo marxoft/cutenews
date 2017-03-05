@@ -102,7 +102,7 @@ Dialog {
             Button {
                 width: parent.width
                 text: qsTr("Url openers")
-                onClicked: popups.open(urlOpenersDialog, root)
+                onClicked: popupManager.open(Qt.resolvedUrl("UrlOpenersDialog.qml"), root)
             }
             
             ListSelectorButton {
@@ -116,7 +116,13 @@ Dialog {
             Button {
                 width: parent.width
                 text: qsTr("View log")
-                onClicked: popups.open(logDialog, root)
+                onClicked: popupManager.open(Qt.resolvedUrl("LogDialog.qml"), root)
+            }
+            
+            Button {
+                width: parent.width
+                text: qsTr("Keyboard shortcuts")
+                onClicked: popupManager.open(Qt.resolvedUrl("ShortcutsDialog.qml"), root)
             }
             
             Label {
@@ -138,7 +144,7 @@ Dialog {
                 width: parent.width
                 text: qsTr("Delete read articles")
                 enabled: settings.serverAddress != ""
-                onClicked: popups.open(deleteDialog, root)
+                onClicked: popupManager.open(Qt.resolvedUrl("DeleteDialog.qml"), root)
             }
             
             ListSelectorButton {
@@ -156,7 +162,7 @@ Dialog {
                 enabled: settings.serverAddress != ""
                 checked: serversettings.startTransfersAutomatically
                 onClicked: serversettings.startTransfersAutomatically = checked
-            }            
+            }
         }
     }
     
@@ -170,24 +176,6 @@ Dialog {
         style: DialogButtonStyle {}
         text: qsTr("Done")
         onClicked: root.accept()
-    }
-    
-    Component {
-        id: deleteDialog
-        
-        DeleteDialog {}
-    }
-    
-    Component {
-        id: urlOpenersDialog
-        
-        UrlOpenersDialog {}
-    }
-    
-    Component {
-        id: logDialog
-        
-        LogDialog {}
     }
     
     onAccepted: {

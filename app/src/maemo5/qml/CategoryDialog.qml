@@ -53,7 +53,7 @@ Dialog {
             width: parent.width
             text: qsTr("Download path")
             valueText: qsTr("None chosen")
-            onClicked: popups.open(fileDialog, root)
+            onClicked: popupManager.open(fileDialog, root)
         }
     }
     

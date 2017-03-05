@@ -32,7 +32,7 @@ Dialog {
         
         text: qsTr("Copy URL")
         autoRepeat: false
-        shortcut: qsTr("c")
+        shortcut: settings.copyShortcut
         enabled: view.currentIndex >= 0
         onTriggered: clipboard.text = enclosures[view.currentIndex].url
     }
@@ -42,9 +42,9 @@ Dialog {
         
         text: qsTr("Open externally")
         autoRepeat: false
-        shortcut: qsTr("o")
+        shortcut: settings.openExternallyShortcut
         enabled: view.currentIndex >= 0
-        onTriggered: popups.open(openDialog, root)
+        onTriggered: popupManager.open(openDialog, root)
     }    
     
     Action {
@@ -52,9 +52,9 @@ Dialog {
         
         text: qsTr("Download")
         autoRepeat: false
-        shortcut: qsTr("d")
+        shortcut: settings.downloadShortcut
         enabled: view.currentIndex >= 0
-        onTriggered: popups.open(downloadDialog, root)
+        onTriggered: popupManager.open(downloadDialog, root)
     }
     
     ListView {
@@ -64,8 +64,8 @@ Dialog {
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
         model: enclosures
         delegate: EnclosureDelegate {
-            onClicked: if (!urlopener.open(modelData.url)) Qt.openUrlExternally(modelData.url);
-            onPressAndHold: popups.open(contextMenu, root)
+            onClicked: popupManager.open(openDialog, root)
+            onPressAndHold: popupManager.open(contextMenu, root)
         }
     }
     
@@ -79,11 +79,7 @@ Dialog {
             
             MenuItem {
                 action: openAction
-            }
-            
-            MenuItem {
-                action: pluginAction
-            }            
+            }           
             
             MenuItem {
                 action: downloadAction

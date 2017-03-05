@@ -46,7 +46,7 @@ Window {
         
         text: qsTr("Reload")
         autoRepeat: false
-        shortcut: qsTr("Ctrl+L")
+        shortcut: settings.reloadShortcut
         onTriggered: articleModel.reload()
     }
     
@@ -55,7 +55,7 @@ Window {
         
         text: qsTr("Mark as read")
         autoRepeat: false
-        shortcut: qsTr("Ctrl+R")
+        shortcut: settings.markAllArticlesReadShortcut
         enabled: (articleModel.subscriptionId != ALL_ARTICLES_SUBSCRIPTION_ID)
         && (articleModel.subscriptionId != FAVOURITES_SUBSCRIPTION_ID)
         onTriggered: database.markSubscriptionRead(articleModel.subscriptionId, true)
@@ -66,7 +66,7 @@ Window {
         
         text: qsTr("Copy URL")
         autoRepeat: false
-        shortcut: qsTr("c")
+        shortcut: settings.copyShortcut
         enabled: articleView.currentIndex >= 0
         onTriggered: clipboard.text = articleModel.data(articleView.currentIndex, "url")
     }
@@ -76,7 +76,7 @@ Window {
         
         text: qsTr("Open externally")
         autoRepeat: false
-        shortcut: qsTr("o")
+        shortcut: settings.openExternallyShortcut
         enabled: articleView.currentIndex >= 0
         onTriggered: urlopener.open(articleModel.data(articleView.currentIndex, "url"))
     }
@@ -86,16 +86,16 @@ Window {
         
         text: qsTr("Download")
         autoRepeat: false
-        shortcut: qsTr("d")
+        shortcut: settings.downloadShortcut
         enabled: articleView.currentIndex >= 0
-        onTriggered: popups.open(downloadDialog, root)
+        onTriggered: popupManager.open(downloadDialog, root)
     }
         
     Action {
         id: readAction
         
         autoRepeat: false
-        shortcut: qsTr("r")
+        shortcut: settings.toggleArticleReadShortcut
         enabled: articleView.currentIndex >= 0
         onTriggered: articleModel.setData(articleView.currentIndex,
         !articleModel.data(articleView.currentIndex, "read"), "read")
@@ -105,7 +105,7 @@ Window {
         id: favouriteAction
         
         autoRepeat: false
-        shortcut: qsTr("f")
+        shortcut: settings.toggleArticleFavouriteShortcut
         enabled: articleView.currentIndex >= 0
         onTriggered: articleModel.setData(articleView.currentIndex,
         !articleModel.data(articleView.currentIndex, "favourite"), "favourite")
@@ -116,10 +116,10 @@ Window {
         
         text: qsTr("Enclosures")
         autoRepeat: false
-        shortcut: qsTr("e")
+        shortcut: settings.showArticleEnclosuresShortcut
         enabled: (articleView.currentIndex >= 0)
         && (articleModel.data(articleView.currentIndex, "hasEnclosures") === true)
-        onTriggered: popups.open(enclosuresDialog, root)
+        onTriggered: popupManager.open(enclosuresDialog, root)
     }
     
     Action {
@@ -127,9 +127,9 @@ Window {
         
         text: qsTr("Delete")
         autoRepeat: false
-        shortcut: qsTr("Shift+D")
+        shortcut: settings.deleteShortcut
         enabled: articleView.currentIndex >= 0
-        onTriggered: popups.open(deleteDialog, root)
+        onTriggered: popupManager.open(deleteDialog, root)
     }
     
     ListView {
@@ -160,7 +160,7 @@ Window {
         }
         delegate: ArticleDelegate {
             onClicked: windowStack.push(articleWindow)
-            onPressAndHold: popups.open(contextMenu, root)
+            onPressAndHold: popupManager.open(contextMenu, root)
         }
     }
     

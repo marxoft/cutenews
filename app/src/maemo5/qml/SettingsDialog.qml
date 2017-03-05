@@ -51,7 +51,7 @@ Dialog {
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter
                 color: platformStyle.secondaryTextColor
-                text: qsTr("Subscriptions")
+                text: qsTr("General")
             }
             
             CheckBox {
@@ -71,7 +71,31 @@ Dialog {
             Button {
                 width: parent.width
                 text: qsTr("Delete read articles")
-                onClicked: popups.open(deleteDialog, root)
+                onClicked: popupManager.open(Qt.resolvedUrl("DeleteDialog.qml"), root)
+            }
+            
+            Button {
+                width: parent.width
+                text: qsTr("Network proxy")
+                onClicked: popupManager.open(Qt.resolvedUrl("NetworkProxyDialog.qml"), root)
+            }
+            
+            Button {
+                width: parent.width
+                text: qsTr("Keyboard shortcuts")
+                onClicked: popupManager.open(Qt.resolvedUrl("ShortcutsDialog.qml"), root)
+            }
+        
+            Button {
+                width: parent.width
+                text: qsTr("Url openers")
+                onClicked: popupManager.open(Qt.resolvedUrl("UrlOpenersDialog.qml"), root)
+            }
+            
+            Button {
+                width: parent.width
+                text: qsTr("Plugins")
+                onClicked: popupManager.open(pluginsDialog, root)
             }
             
             Label {
@@ -85,7 +109,7 @@ Dialog {
                 width: parent.width
                 text: qsTr("Download path")
                 valueText: settings.downloadPath
-                onClicked: popups.open(fileDialog, root)
+                onClicked: popupManager.open(fileDialog, root)
             }
             
             ListSelectorButton {
@@ -106,32 +130,14 @@ Dialog {
             Button {
                 width: parent.width
                 text: qsTr("Categories")
-                onClicked: popups.open(categoriesDialog, root)
+                onClicked: popupManager.open(Qt.resolvedUrl("CategoriesDialog.qml"), root)
             }
             
             Label {
                 width: parent.width
                 horizontalAlignment: Text.AlignHCenter
                 color: platformStyle.secondaryTextColor
-                text: qsTr("Other")
-            }
-        
-            Button {
-                width: parent.width
-                text: qsTr("Network proxy")
-                onClicked: popups.open(proxyDialog, root)
-            }
-        
-            Button {
-                width: parent.width
-                text: qsTr("Url openers")
-                onClicked: popups.open(urlOpenersDialog, root)
-            }
-            
-            Button {
-                width: parent.width
-                text: qsTr("Plugins")
-                onClicked: popups.open(pluginsDialog, root)
+                text: qsTr("Logging")
             }
             
             ListSelectorButton {
@@ -145,7 +151,7 @@ Dialog {
             Button {
                 width: parent.width
                 text: qsTr("View log")
-                onClicked: popups.open(logDialog, root)
+                onClicked: popupManager.open(Qt.resolvedUrl("LogDialog.qml"), root)
             }
         }
     }
@@ -163,12 +169,6 @@ Dialog {
     }
     
     Component {
-        id: deleteDialog
-        
-        DeleteDialog {}
-    }
-    
-    Component {
         id: fileDialog
         
         FileDialog {
@@ -179,55 +179,23 @@ Dialog {
     }
     
     Component {
-        id: categoriesDialog
-        
-        CategoriesDialog {}
-    }
-    
-    Component {
-        id: proxyDialog
-        
-        NetworkProxyDialog {}
-    }
-    
-    Component {
-        id: urlOpenersDialog
-        
-        UrlOpenersDialog {}
-    }
-    
-    Component {
         id: pluginsDialog
         
         ListPickSelector {
+            title: qsTr("Plugins")
             model: PluginConfigModel {}
             textRole: "displayName"
             onSelected: {
                 var plugin = model.itemData(currentIndex);
                 
                 if ((plugin.supportsEnclosures) && (plugin.enclosureSettings)) {
-                    var dialog = popups.load(pluginDialog, root);
-                    dialog.title = plugin.displayName;
-                    dialog.pluginId = plugin.id;
-                    dialog.pluginSettings = plugin.enclosureSettings;
-                    dialog.open();
+                    popupManager.open(Qt.resolvedUrl("PluginSettingsDialog.qml"), root, {title: plugin.displayName,
+                    pluginId: plugin.id, pluginSettings: plugin.enclosureSettings});
                 }
                 else {
                     informationBox.information(qsTr("No settings for this plugin"));
                 }
             }
         }
-    }
-    
-    Component {
-        id: pluginDialog
-        
-        PluginSettingsDialog {}
-    }
-    
-    Component {
-        id: logDialog
-        
-        LogDialog {}
     }
 }

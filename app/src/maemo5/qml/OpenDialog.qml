@@ -35,9 +35,7 @@ Dialog {
         }
         spacing: platformStyle.paddingMedium
         
-        Button {
-            id: openButton
-            
+        Button {            
             width: Math.floor((parent.width / 2) - (parent.spacing / 2))
             text: qsTr("Open directly")
             onClicked: {
@@ -46,9 +44,7 @@ Dialog {
             }
         }
         
-        Button {
-            id: openButton
-            
+        Button {            
             width: Math.floor((parent.width / 2) - (parent.spacing / 2))
             text: qsTr("Open with plugin")
             enabled: plugins.enclosureIsSupported(root.url)

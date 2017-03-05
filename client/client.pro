@@ -90,6 +90,7 @@ maemo5 {
         src/maemo5/qml/PopupLoader.qml \
         src/maemo5/qml/SearchDialog.qml \
         src/maemo5/qml/SettingsDialog.qml \
+        src/maemo5/qml/ShortcutsDialog.qml \
         src/maemo5/qml/SubscriptionDelegate.qml \
         src/maemo5/qml/SubscriptionDialog.qml \
         src/maemo5/qml/TimeSelectorButton.qml \

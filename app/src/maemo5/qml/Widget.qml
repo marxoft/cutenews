@@ -21,9 +21,7 @@ import cuteNews 1.0
 
 HomescreenWidget {
     id: root
-    
-    property Dialog settingsDialog
-    
+        
     width: 300
     height: 332
     pluginId: "cutenews.desktop-0"
@@ -127,9 +125,7 @@ HomescreenWidget {
                 anchors.fill: parent
                 onClicked: {
                     if (settings.openArticlesExternallyFromWidget) {
-                        if (!urlopener.open(url)) {
-                            Qt.openUrlExternally(url);
-                        }
+                        popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), null, {url: url});
                     }
                     else {
                         cutenews.showArticle(id);
@@ -211,10 +207,6 @@ HomescreenWidget {
         onTriggered: view.incrementCurrentIndex()
     }
     
-    PopupLoader {
-        id: popupLoader
-    }
-    
     Component {
         id: settingsDialog
         
@@ -264,5 +256,5 @@ HomescreenWidget {
         }
     }
     
-    onSettingsRequested: popupLoader.open(settingsDialog, null)
+    onSettingsRequested: popupManager.open(settingsDialog, null)
 }

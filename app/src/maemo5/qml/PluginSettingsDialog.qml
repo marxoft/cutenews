@@ -21,11 +21,11 @@ import cuteNews 1.0
 Dialog {
     id: root
     
-    property alias pluginId: plugin.id
+    property alias pluginId: plugin.pluginId
     property alias pluginSettings: repeater.model
         
     title: qsTr("Plugin settings")
-    height: 360
+    height: Math.min(360, column.height + platformStyle.paddingMedium)
     
     PluginSettings {
         id: plugin

@@ -75,7 +75,7 @@ ListItem {
         id: dateLabel
         
         Label {
-            width: parent.width
+            width: parent ? parent.width : undefined
             verticalAlignment: Text.AlignBottom
             elide: Text.ElideRight
             font.pointSize: platformStyle.fontSizeSmall

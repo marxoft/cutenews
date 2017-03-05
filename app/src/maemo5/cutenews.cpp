@@ -27,7 +27,9 @@
 #include "logger.h"
 #include "loggerverbositymodel.h"
 #include "networkproxytypemodel.h"
+#include "pluginconfigmodel.h"
 #include "pluginmanager.h"
+#include "pluginsettings.h"
 #include "settings.h"
 #include "subscription.h"
 #include "subscriptionmodel.h"
@@ -144,6 +146,8 @@ void CuteNews::initEngine() {
     qmlRegisterType<ConcurrentTransfersModel>("cuteNews", 1, 0, "ConcurrentTransfersModel");
     qmlRegisterType<LoggerVerbosityModel>("cuteNews", 1, 0, "LoggerVerbosityModel");
     qmlRegisterType<NetworkProxyTypeModel>("cuteNews", 1, 0, "NetworkProxyTypeModel");
+    qmlRegisterType<PluginConfigModel>("cuteNews", 1, 0, "PluginConfigModel");
+    qmlRegisterType<PluginSettings>("cuteNews", 1, 0, "PluginSettings");
     qmlRegisterType<SelectionModel>("cuteNews", 1, 0, "SelectionModel");
     qmlRegisterType<Subscription>("cuteNews", 1, 0, "Subscription");
     qmlRegisterType<SubscriptionModel>("cuteNews", 1, 0, "SubscriptionModel");
