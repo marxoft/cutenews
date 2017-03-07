@@ -65,6 +65,7 @@ Dialog {
             width: parent.width
             text: qsTr("Use plugin")
             enabled: plugins.enclosureIsSupported(root.url)
+            checked: enabled
         }
     }
     

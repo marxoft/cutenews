@@ -279,8 +279,8 @@ ApplicationWindow {
         id: unsubscribeDialog
         
         MessageBox {
-            text: qsTr("Unsubscribe from") + " '" + subscriptionModel.data(subscriptionView.currentIndex, "title")
-            + "'?"
+            text: qsTr("Do you want to unsubscribe from") + " '"
+            + subscriptionModel.data(subscriptionView.currentIndex, "title") + "'?"
             onAccepted: subscriptionModel.remove(subscriptionView.currentIndex)
         }
     }

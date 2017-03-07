@@ -57,7 +57,7 @@ Window {
         text: qsTr("Start")
         autoRepeat: false
         shortcut: settings.startTransferShortcut
-        enabled: (view.currentIndex >= 0) && (transferModel.data(view.currentIndex, "status") != Transfer.Downloading)
+        enabled: view.currentIndex >= 0
         onTriggered: transfers.get(view.currentIndex).queue()
     }
     
@@ -67,7 +67,7 @@ Window {
         text: qsTr("Pause")
         autoRepeat: false
         shortcut: settings.pauseTransferShortcut
-        enabled: (view.currentIndex >= 0) && (transferModel.data(view.currentIndex, "status") == Transfer.Downloading)
+        enabled: view.currentIndex >= 0
         onTriggered: transfers.get(view.currentIndex).pause()
     }
     
@@ -128,11 +128,9 @@ Window {
         
         Menu {            
             MenuItem {
-                action: startAction
-            }
-            
-            MenuItem {
-                action: pauseAction
+                text: transferModel.data(view.currentIndex, "status") >= Transfer.Queued ? qsTr("Pause") : qsTr("Start")
+                onTriggered: transferModel.data(view.currentIndex, "status") >= Transfer.Queued
+                ? transfers.get(view.currentIndex).pause() : transfers.get(view.currentIndex).queue()
             }
             
             MenuItem {
@@ -177,7 +175,7 @@ Window {
         id: removeDialog
         
         MessageBox {
-            text: qsTr("Do you want to remove") + "'" + transferModel.data(view.currentIndex, "name") + "'?"
+            text: qsTr("Do you want to remove") + " '" + transferModel.data(view.currentIndex, "name") + "'?"
             onAccepted: transfers.get(view.currentIndex).cancel()
         }
     }
