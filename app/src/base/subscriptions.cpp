@@ -273,7 +273,9 @@ void Subscriptions::update() {
         FeedRequest *request = feedRequest(source.value("pluginId").toString());
         
         if (request) {
-            request->getFeed(source.value("settings").toMap());
+            QVariantMap settings = source.value("settings").toMap();
+            settings["lastUpdated"] = subscription()->lastUpdated();
+            request->getFeed(settings);
         }
         else {
             next();
