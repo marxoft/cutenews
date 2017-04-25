@@ -150,12 +150,12 @@ void GuardianFeedRequest::checkFeed() {
         writeFeedTitle(m_parser.title());
         writeFeedUrl(m_parser.url());
 
-        if (m_parser.readNextArticle()) {
+        if ((m_parser.readNextArticle()) && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
             getPage(m_parser.url());
             return;
         }
 #ifdef GUARDIAN_DEBUG
-        qDebug() << "GuardianFeedRequest::checkFeed(). Parser error. Writing end of feed";
+        qDebug() << "GuardianFeedRequest::checkFeed(). Writing end of feed";
 #endif
         writeEndFeed();
     }
@@ -240,11 +240,10 @@ void GuardianFeedRequest::checkPage() {
     writeItemUrl(m_parser.url());
     writeEndItem();
     
-    if (m_results < max) {
-        if (m_parser.readNextArticle()) {
-            getPage(m_parser.url());
-            return;
-        }
+    if ((m_results < max) && (m_parser.readNextArticle())
+            && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
+        getPage(m_parser.url());
+        return;
     }
 #ifdef GUARDIAN_DEBUG
     qDebug() << "GuardianFeedRequest::checkPage(). Writing end of feed";

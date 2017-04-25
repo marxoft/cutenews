@@ -145,12 +145,12 @@ void NytimesFeedRequest::checkFeed() {
         writeFeedTitle(m_parser.title());
         writeFeedUrl(m_parser.url());
 
-        if (m_parser.readNextArticle()) {
+        if ((m_parser.readNextArticle()) && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
             getPage(m_parser.url().replace("www.nytimes.com", "mobile.nytimes.com"));
             return;
         }
 #ifdef NYTIMES_DEBUG
-        qDebug() << "NytimesFeedRequest::checkFeed(). Parser error. Writing end of feed";
+        qDebug() << "NytimesFeedRequest::checkFeed(). Writing end of feed";
 #endif
         writeEndFeed();
     }
@@ -235,11 +235,10 @@ void NytimesFeedRequest::checkPage() {
     writeItemUrl(m_parser.url());
     writeEndItem();
     
-    if (m_results < max) {
-        if (m_parser.readNextArticle()) {
-            getPage(m_parser.url().replace("www.nytimes.com", "mobile.nytimes.com"));
-            return;
-        }
+    if ((m_results < max) && (m_parser.readNextArticle())
+            && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
+        getPage(m_parser.url().replace("www.nytimes.com", "mobile.nytimes.com"));
+        return;
     }
 #ifdef NYTIMES_DEBUG
     qDebug() << "NytimesFeedRequest::checkPage(). Writing end of feed";
