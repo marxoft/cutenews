@@ -74,6 +74,7 @@ private:
     void writeItemBody(const QHtmlElement &element);
     void writeItemCategories(const QStringList &categories);
     void writeItemDate(const QDateTime &date);
+    void writeItemEnclosures(const QHtmlElement &element);
     void writeItemTitle(const QString &title);
     void writeItemUrl(const QString &url);
     

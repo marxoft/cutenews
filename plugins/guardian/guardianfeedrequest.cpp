@@ -107,7 +107,7 @@ void GuardianFeedRequest::checkFeed() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
         reply->deleteLater();
@@ -187,7 +187,7 @@ void GuardianFeedRequest::checkPage() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
         reply->deleteLater();
@@ -236,6 +236,7 @@ void GuardianFeedRequest::checkPage() {
     writeItemBody(html);
     writeItemCategories(m_parser.categories());
     writeItemDate(m_parser.date());
+    writeItemEnclosures(html);
     writeItemTitle(m_parser.title());
     writeItemUrl(m_parser.url());
     writeEndItem();
@@ -366,7 +367,7 @@ void GuardianFeedRequest::writeItemAuthor(const QString &author) {
 }
 
 void GuardianFeedRequest::writeItemBody(const QHtmlElement &element) {
-    QRegExp figure("(<figure .*</figure>|<aside .*</aside>|<div class=\"(block-|)share.*</div>|<button .*</button>)");
+    QRegExp figure("(<figure.*</figure>|<picture.*</picture>|<aside.*</aside>|<div class=\"(block-|)share.*</div>|<button.*</button>)");
     figure.setMinimal(true);
     QString body = element.firstElementByTagName("div", QHtmlAttributeMatches()
                                                  << QHtmlAttributeMatch("itemprop", "articleBody")
@@ -386,6 +387,26 @@ void GuardianFeedRequest::writeItemCategories(const QStringList &categories) {
 
 void GuardianFeedRequest::writeItemDate(const QDateTime &date) {
     m_writer.writeTextElement("dc:date", date.toString(Qt::ISODate));
+}
+
+void GuardianFeedRequest::writeItemEnclosures(const QHtmlElement &element) {
+    foreach (const QHtmlElement &video, element.elementsByTagName("video")) {
+        foreach (const QHtmlElement &source, video.elementsByTagName("source")) {
+            m_writer.writeStartElement("enclosure");
+            m_writer.writeAttribute("url", source.attribute("href"));
+            m_writer.writeAttribute("type", source.attribute("type"));
+            m_writer.writeEndElement();
+        }
+    }
+
+    foreach (const QHtmlElement &iframe, element.elementsByTagName("iframe",
+                QHtmlAttributeMatch("class", "youtube-media-atom__iframe"))) {
+        m_writer.writeStartElement("enclosure");
+        m_writer.writeAttribute("url", "https://www.youtube.com/watch?v="
+                + iframe.attribute("id").section("youtube-", -1));
+        m_writer.writeAttribute("type", "video/youtube");
+        m_writer.writeEndElement();
+    }
 }
 
 void GuardianFeedRequest::writeItemTitle(const QString &title) {
