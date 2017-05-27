@@ -393,7 +393,7 @@ void GuardianFeedRequest::writeItemEnclosures(const QHtmlElement &element) {
     foreach (const QHtmlElement &video, element.elementsByTagName("video")) {
         foreach (const QHtmlElement &source, video.elementsByTagName("source")) {
             m_writer.writeStartElement("enclosure");
-            m_writer.writeAttribute("url", source.attribute("href"));
+            m_writer.writeAttribute("url", source.attribute("src"));
             m_writer.writeAttribute("type", source.attribute("type"));
             m_writer.writeEndElement();
         }
