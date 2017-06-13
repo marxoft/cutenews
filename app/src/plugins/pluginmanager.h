@@ -40,10 +40,14 @@ class PluginManager : public QObject
 {
     Q_OBJECT
 
+    Q_PROPERTY(int count READ count NOTIFY loaded)
+
 public:
     ~PluginManager();
 
     static PluginManager* instance();
+
+    int count() const;
 
     FeedPluginList plugins() const;
 

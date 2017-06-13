@@ -44,6 +44,10 @@ PluginManager* PluginManager::instance() {
     return self ? self : self = new PluginManager;
 }
 
+int PluginManager::count() const {
+    return m_plugins.size();
+}
+
 FeedPluginList PluginManager::plugins() const {
     return m_plugins;
 }
