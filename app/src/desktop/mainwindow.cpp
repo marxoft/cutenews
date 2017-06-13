@@ -18,7 +18,7 @@
 #include "aboutdialog.h"
 #include "article.h"
 #include "articlemodel.h"
-#include "browser.h"
+#include "browserpage.h"
 #include "dbconnection.h"
 #include "dbnotify.h"
 #include "definitions.h"
@@ -45,7 +45,6 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
-#include <QProgressDialog>
 #include <QPushButton>
 #include <QSortFilterProxyModel>
 #include <QSplitter>
@@ -72,7 +71,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_viewMenu(new QMenu(tr("&View"), this)),
     m_toolsMenu(new QMenu(tr("&Tools"), this)),
     m_helpMenu(new QMenu(tr("&Help"), this)),
-    m_toolBar(new QToolBar(this)),
+    m_topToolBar(new QToolBar(this)),
+    m_bottomToolBar(new QToolBar(this)),
     m_updateAllSubscriptionsAction(new QAction(QIcon::fromTheme("view-refresh"), tr("&Update all"), this)),
     m_cancelSubscriptionUpdatesAction(new QAction(QIcon::fromTheme("process-stop"), tr("&Cancel updates"), this)),
     m_offlineModeAction(new QAction(QIcon::fromTheme("network-transmit-receive"), tr("Work &offline"), this)),
@@ -90,7 +90,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_toggleArticleReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Toggle &read status"), this)),
     m_toggleArticleFavouriteAction(new QAction(QIcon::fromTheme("mail-mark-important"), tr("Toggle &favourite status"), this)),
     m_deleteArticleAction(new QAction(QIcon::fromTheme("edit-delete"), tr("&Delete"), this)),
-    m_copyArticleUrlAction(new QAction(tr("&Copy URL"), this)),
+    m_copyArticleUrlAction(new QAction(tr("&Copy link"), this)),
     m_openArticleInTabAction(new QAction(tr("Open in &tab"), this)),
     m_openArticleInBrowserAction(new QAction(tr("Open in &browser"), this)),
     m_openArticleExternallyAction(new QAction(tr("Open &externally"), this)),
@@ -120,7 +120,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_enclosuresView(new QTreeView(this)),
     m_infoLabel(new QLabel(this)),
     m_enclosuresLabel(new QLabel(this)),
-    m_browser(new Browser(this)),
+    m_messageLabel(new QLabel(this)),
+    m_browser(new BrowserPage(this)),
     m_tabsContainer(new QWidget(this)),
     m_articleContainer(new QWidget(this)),
     m_tabsLayout(new QVBoxLayout(m_tabsContainer)),
@@ -130,7 +131,8 @@ MainWindow::MainWindow(QWidget *parent) :
     setWindowTitle("cuteNews");
     setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     setCentralWidget(m_horizontalSplitter);
-    addToolBar(Qt::TopToolBarArea, m_toolBar);
+    addToolBar(Qt::TopToolBarArea, m_topToolBar);
+    addToolBar(Qt::BottomToolBarArea, m_bottomToolBar);
     
     menuBar()->addMenu(m_subscriptionsMenu);
     menuBar()->addMenu(m_subscriptionMenu);
@@ -152,14 +154,19 @@ MainWindow::MainWindow(QWidget *parent) :
     m_subscriptionsMenu->addAction(m_importSubscriptionsAction);
     m_subscriptionsMenu->addAction(m_quitAction);
     
-    const FeedPluginList plugins = PluginManager::instance()->plugins();
-    
-    for (int i = 0; i < plugins.size(); i++) {
-        const FeedPluginConfig *config = plugins.at(i).config;
+    if (PluginManager::instance()->count() > 0) {
+        const FeedPluginList plugins = PluginManager::instance()->plugins();
+        
+        for (int i = 0; i < plugins.size(); i++) {
+            const FeedPluginConfig *config = plugins.at(i).config;
 
-        if (config->supportsFeeds()) {
-            m_newSubscriptionMenu->addAction(config->displayName())->setData(config->id());
+            if (config->supportsFeeds()) {
+                m_newSubscriptionMenu->addAction(config->displayName())->setData(config->id());
+            }
         }
+    }
+    else {
+        m_newSubscriptionMenu->setEnabled(false);
     }
     
     m_subscriptionMenu->addAction(m_updateSubscriptionAction);
@@ -213,26 +220,34 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_helpMenu->addAction(m_aboutAction);
 
-    m_toolBar->setObjectName("mainWindowToolBar");
-    m_toolBar->setWindowTitle(tr("Main toolbar"));
-    m_toolBar->setAllowedAreas(Qt::TopToolBarArea);
-    m_toolBar->setMovable(false);
-    m_toolBar->addAction(m_newSubscriptionAction);
-    m_toolBar->addAction(m_markSubscriptionReadAction);
-    m_toolBar->addAction(m_previousArticleAction);
-    m_toolBar->addAction(m_nextArticleAction);
-    m_toolBar->addAction(m_nextUnreadArticleAction);
-    m_toolBar->addAction(m_updateAllSubscriptionsAction);
-    m_toolBar->addAction(m_cancelSubscriptionUpdatesAction);
-    m_toolBar->addAction(m_offlineModeAction);
-    m_toolBar->addAction(m_searchAction);
+    m_topToolBar->setObjectName("mainWindowTopToolBar");
+    m_topToolBar->setWindowTitle(tr("Top toolbar"));
+    m_topToolBar->setAllowedAreas(Qt::TopToolBarArea);
+    m_topToolBar->setMovable(false);
+    m_topToolBar->addAction(m_newSubscriptionAction);
+    m_topToolBar->addAction(m_updateAllSubscriptionsAction);
+    m_topToolBar->addAction(m_cancelSubscriptionUpdatesAction);
+    m_topToolBar->addSeparator();
+    m_topToolBar->addAction(m_markSubscriptionReadAction);
+    m_topToolBar->addAction(m_previousArticleAction);
+    m_topToolBar->addAction(m_nextArticleAction);
+    m_topToolBar->addAction(m_nextUnreadArticleAction);
+    m_topToolBar->addSeparator();
+    m_topToolBar->addAction(m_searchAction);
+
+    m_bottomToolBar->setObjectName("mainWindowBottomToolBar");
+    m_bottomToolBar->setWindowTitle(tr("Bottom toolbar"));
+    m_bottomToolBar->setAllowedAreas(Qt::BottomToolBarArea);
+    m_bottomToolBar->setMovable(false);
+    m_bottomToolBar->addAction(m_offlineModeAction);
+    m_bottomToolBar->addWidget(m_messageLabel);
     
     m_updateAllSubscriptionsAction->setShortcut(QKeySequence(tr("Ctrl+U")));
     m_updateAllSubscriptionsAction->setToolTip(tr("Update all subscriptions"));
     m_cancelSubscriptionUpdatesAction->setShortcut(QKeySequence(tr("Ctrl+Shift+U")));
     m_cancelSubscriptionUpdatesAction->setToolTip(tr("Cancel all subscription updates"));
     m_offlineModeAction->setCheckable(true);
-    m_offlineModeAction->setToolTip(tr("Toggle offline mode"));
+    m_offlineModeAction->setPriority(QAction::LowPriority);
     m_newSubscriptionAction->setToolTip(tr("Add a new subscription"));
     m_importSubscriptionsAction->setShortcut(QKeySequence(tr("Ctrl+O")));
     m_quitAction->setShortcut(QKeySequence(tr("Ctrl+Q")));
@@ -336,6 +351,8 @@ MainWindow::MainWindow(QWidget *parent) :
     m_infoLabel->setWordWrap(true);
     
     m_enclosuresLabel->hide();
+
+    m_messageLabel->setMargin(6);
     
     m_tabsLayout->addWidget(m_tabs);
     m_tabsLayout->addWidget(m_stack);
@@ -351,8 +368,8 @@ MainWindow::MainWindow(QWidget *parent) :
     
     connect(Subscriptions::instance(), SIGNAL(statusChanged(Subscriptions::Status)),
             this, SLOT(onSubscriptionsStatusChanged(Subscriptions::Status)));
-    connect(Subscriptions::instance(), SIGNAL(statusTextChanged(QString)), statusBar(), SLOT(showMessage(QString)));
-    connect(DBNotify::instance(), SIGNAL(error(QString)), this, SLOT(onDatabaseError(QString)));
+    connect(Subscriptions::instance(), SIGNAL(statusTextChanged(QString)), this, SLOT(showMessage(QString)));
+    connect(DBNotify::instance(), SIGNAL(error(QString)), this, SLOT(showError(QString)));
     connect(DBNotify::instance(), SIGNAL(readArticlesDeleted(int)), this, SLOT(onReadArticlesDeleted(int)));
     connect(Settings::instance(), SIGNAL(offlineModeEnabledChanged(bool)),
             this, SLOT(onOfflineModeEnabledChanged(bool)));
@@ -420,11 +437,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_enclosuresView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showEnclosureContextMenu(QPoint)));
     connect(m_enclosuresView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openCurrentEnclosureInBrowser()));
     
-    connect(m_browser, SIGNAL(openUrlInTab(QString)), this, SLOT(openUrlInTab(QString)));
+    connect(m_browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(m_browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(m_browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
     connect(m_browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
     connect(m_browser, SIGNAL(downloadUrlWithPlugin(QString)), this, SLOT(downloadUrlWithPlugin(QString)));
+    connect(m_browser, SIGNAL(showHtmlInTab(QString, QString, QString)), this, SLOT(showHtmlInTab(QString, QString, QString)));
+    connect(m_browser, SIGNAL(showTextInTab(QString, QString, QString)), this, SLOT(showTextInTab(QString, QString, QString)));
+    connect(m_browser, SIGNAL(error(QString)), this, SLOT(showError(QString)));
+    connect(m_browser, SIGNAL(information(QString)), this, SLOT(showMessage(QString)));
     
     connect(m_tabs, SIGNAL(currentChanged(int)), this, SLOT(onCurrentTabChanged(int)));
     connect(m_tabs, SIGNAL(tabCloseRequested(int)), this, SLOT(closeTab(int)));
@@ -529,7 +550,7 @@ void MainWindow::nextUnreadArticle() {
         return;
     }
     
-    statusBar()->showMessage(tr("No unread articles"));
+    showMessage(tr("No unread articles"));
 }
 
 void MainWindow::nextArticle() {
@@ -567,7 +588,8 @@ void MainWindow::copyCurrentArticleUrl() {
 }
 
 void MainWindow::openCurrentArticleInTab() {
-    openUrlInTab(m_articlesView->currentIndex().data(Article::UrlRole).toString());
+    const QModelIndex index = m_articlesView->currentIndex();
+    openUrlInTab(index.data(Article::TitleRole).toString(), index.data(Article::UrlRole).toString());
 }
 
 void MainWindow::openCurrentArticleInBrowser() {
@@ -598,7 +620,7 @@ void MainWindow::copyCurrentEnclosureUrl() {
 
 void MainWindow::openCurrentEnclosureInTab() {
     if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
-        openUrlInTab(item->text());
+        openUrlInTab(item->text(), item->text());
     }
 }
 
@@ -687,7 +709,7 @@ void MainWindow::setCurrentArticle(const QModelIndex &index) {
     m_infoLabel->setText(tr("<b>Author:</b> %1<br><b>Categories:</b> %2")
                            .arg(author.isEmpty() ? tr("Unknown") : author)
                            .arg(categories.isEmpty() ? tr("None") : categories.join(", ")));
-    m_browser->setHtml(index.data(Article::BodyRole).toString(), QUrl("file://"));
+    m_browser->setHtml(index.data(Article::BodyRole).toString(), QString("file://"));
     m_enclosuresModel->clear();
     
     const QVariantList enclosures = index.data(Article::EnclosuresRole).toList();
@@ -734,13 +756,10 @@ void MainWindow::searchArticles(const QString &query) {
 }
 
 void MainWindow::deleteReadArticles(int expiryDate) {
-    QProgressDialog dialog(tr("Deleting read articles"), QString(), 0, 100, this);
+    showMessage(tr("Deleting read articles"));
     DBConnection *connection = DBConnection::connection();
-    connect(connection, SIGNAL(progressChanged(int)), &dialog, SLOT(setValue(int)));
-    connect(connection, SIGNAL(finished(DBConnection*)), &dialog, SLOT(close()));
     connect(connection, SIGNAL(finished(DBConnection*)), connection, SLOT(deleteLater()));
     connection->deleteReadArticles(expiryDate);
-    dialog.exec();
 }
 
 void MainWindow::showSubscriptionContextMenu(const QPoint &pos) {
@@ -765,17 +784,23 @@ void MainWindow::showEnclosureContextMenu(const QPoint &pos) {
     }
 }
 
-void MainWindow::openUrlInTab(const QString &url) {
-    Browser *browser = new Browser(url, m_stack);
+void MainWindow::openUrlInTab(const QString &title, const QString &url) {
+    BrowserPage *browser = new BrowserPage(url, m_stack);
     browser->setAttribute(Qt::WA_DeleteOnClose, true);
-    connect(browser, SIGNAL(openUrlInTab(QString)), this, SLOT(openUrlInTab(QString)));
+    connect(browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
     connect(browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
     connect(browser, SIGNAL(downloadUrlWithPlugin(QString)), this, SLOT(downloadUrlWithPlugin(QString)));
+    connect(browser, SIGNAL(showHtmlInTab(QString, QString, QString)),
+            this, SLOT(showHtmlInTab(QString, QString, QString)));
+    connect(browser, SIGNAL(showTextInTab(QString, QString, QString)),
+            this, SLOT(showTextInTab(QString, QString, QString)));
+    connect(browser, SIGNAL(error(QString)), this, SLOT(showError(QString)));
+    connect(browser, SIGNAL(information(QString)), this, SLOT(showMessage(QString)));
     connect(browser, SIGNAL(titleChanged(QString)), this, SLOT(updateTabText(QString)));
     m_stack->addWidget(browser);
-    m_tabs->addTab(url);
+    m_tabs->addTab(title);
     m_tabs->show();
 }
 
@@ -795,9 +820,51 @@ void MainWindow::downloadUrlWithPlugin(const QString &url) {
     Transfers::instance()->addEnclosureDownload(url, true);
 }
 
+void MainWindow::showHtmlInTab(const QString &title, const QString &html, const QString &baseUrl) {
+    BrowserPage *browser = new BrowserPage(m_stack);
+    browser->setAttribute(Qt::WA_DeleteOnClose, true);
+    browser->setHtml(html, baseUrl);
+    connect(browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
+    connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
+    connect(browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
+    connect(browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
+    connect(browser, SIGNAL(downloadUrlWithPlugin(QString)), this, SLOT(downloadUrlWithPlugin(QString)));
+    connect(browser, SIGNAL(showHtmlInTab(QString, QString, QString)),
+            this, SLOT(showHtmlInTab(QString, QString, QString)));
+    connect(browser, SIGNAL(showTextInTab(QString, QString, QString)),
+            this, SLOT(showTextInTab(QString, QString, QString)));
+    connect(browser, SIGNAL(error(QString)), this, SLOT(showError(QString)));
+    connect(browser, SIGNAL(information(QString)), this, SLOT(showMessage(QString)));
+    connect(browser, SIGNAL(titleChanged(QString)), this, SLOT(updateTabText(QString)));
+    m_stack->addWidget(browser);
+    m_tabs->addTab(title);
+    m_tabs->show();
+}
+
+void MainWindow::showTextInTab(const QString &title, const QString &text, const QString &baseUrl) {
+    BrowserPage *browser = new BrowserPage(m_stack);
+    browser->setAttribute(Qt::WA_DeleteOnClose, true);
+    browser->setText(text, baseUrl);
+    connect(browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
+    connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
+    connect(browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
+    connect(browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
+    connect(browser, SIGNAL(downloadUrlWithPlugin(QString)), this, SLOT(downloadUrlWithPlugin(QString)));
+    connect(browser, SIGNAL(showHtmlInTab(QString, QString, QString)),
+            this, SLOT(showHtmlInTab(QString, QString, QString)));
+    connect(browser, SIGNAL(showTextInTab(QString, QString, QString)),
+            this, SLOT(showTextInTab(QString, QString, QString)));
+    connect(browser, SIGNAL(error(QString)), this, SLOT(showError(QString)));
+    connect(browser, SIGNAL(information(QString)), this, SLOT(showMessage(QString)));
+    connect(browser, SIGNAL(titleChanged(QString)), this, SLOT(updateTabText(QString)));
+    m_stack->addWidget(browser);
+    m_tabs->addTab(title);
+    m_tabs->show();
+}
+
 void MainWindow::updateTabText(const QString &text) {
-    if (Browser *browser = qobject_cast<Browser*>(sender())) {
-        m_tabs->setTabText(m_stack->indexOf(browser), text);
+    if (QWidget* widget = qobject_cast<QWidget*>(sender())) {
+        m_tabs->setTabText(m_stack->indexOf(widget), text);
     }
 }
 
@@ -866,11 +933,20 @@ void MainWindow::showAboutDialog() {
     AboutDialog(this).exec();
 }
 
+void MainWindow::showMessage(const QString &message) {
+    m_messageLabel->setText(message);
+}
+
+void MainWindow::showError(const QString &errorString) {
+    QMessageBox::critical(this, tr("Error"), errorString);
+}
+
 void MainWindow::loadPlugins() {
     const int count = PluginManager::instance()->load();
     
     if (count > 0) {
         m_newSubscriptionMenu->clear();
+        m_newSubscriptionMenu->setEnabled(true);
         const FeedPluginList plugins = PluginManager::instance()->plugins();
     
         for (int i = 0; i < plugins.size(); i++) {
@@ -881,10 +957,10 @@ void MainWindow::loadPlugins() {
             }
         }
         
-        QMessageBox::information(this, tr("Load plugins"), tr("%1 new plugins loaded").arg(count));
+        showMessage(tr("%1 new plugins loaded").arg(count));
     }
     else {
-        QMessageBox::information(this, tr("Load plugins"), tr("No new plugins loaded"));
+        showMessage(tr("No new plugins loaded"));
     }
 }
 
@@ -921,7 +997,12 @@ void MainWindow::onArticlesCountChanged(int count) {
 }
 
 void MainWindow::onReadArticlesDeleted(int count) {
-    QMessageBox::information(this, tr("Delete read articles"), tr("%1 read articles deleted").arg(count));
+    if (count > 0) {
+        showMessage(tr("%1 read articles deleted").arg(count));
+    }
+    else {
+        showMessage(tr("No read articles deleted"));
+    }
 }
 
 void MainWindow::onCurrentTabChanged(int index) {
@@ -929,12 +1010,17 @@ void MainWindow::onCurrentTabChanged(int index) {
     m_closeTabAction->setEnabled(index > 0);
 }
 
-void MainWindow::onDatabaseError(const QString &errorString) {
-    QMessageBox::critical(this, tr("Database error"), errorString);
-}
-
 void MainWindow::onOfflineModeEnabledChanged(bool enabled) {
     m_offlineModeAction->setChecked(enabled);
-    m_offlineModeAction->setIcon(enabled ? QIcon::fromTheme("network-offline")
-                                         : QIcon::fromTheme("network-transmit-receive"));
+
+    if (enabled) {
+        m_offlineModeAction->setIcon(QIcon::fromTheme("network-offline"));
+        m_offlineModeAction->setText(tr("Work &online"));
+        m_offlineModeAction->setToolTip(tr("Work online"));
+    }
+    else {
+        m_offlineModeAction->setIcon(QIcon::fromTheme("network-transmit-receive"));
+        m_offlineModeAction->setText(tr("Work &offline"));
+        m_offlineModeAction->setToolTip(tr("Work offline"));
+    }
 }

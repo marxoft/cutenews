@@ -23,7 +23,7 @@
 
 class Article;
 class ArticleModel;
-class Browser;
+class BrowserPage;
 class SubscriptionModel;
 class TransfersPage;
 class QLabel;
@@ -90,11 +90,13 @@ private Q_SLOTS:
     void showArticleContextMenu(const QPoint &pos);
     void showEnclosureContextMenu(const QPoint &pos);
     
-    void openUrlInTab(const QString &url);
+    void openUrlInTab(const QString &title, const QString &url);
     void openUrlExternally(const QString &url);
     void openUrlWithPlugin(const QString &url);
     void downloadUrl(const QString &url);
     void downloadUrlWithPlugin(const QString &url);
+    void showHtmlInTab(const QString &title, const QString &html, const QString &baseUrl = QString());
+    void showTextInTab(const QString &title, const QString &text, const QString &baseUrl = QString());
 
     void updateTabText(const QString &text);
     void closeTab(int index);
@@ -106,6 +108,9 @@ private Q_SLOTS:
     void showDeleteDialog();
     void showSettingsDialog();
     void showAboutDialog();
+
+    void showMessage(const QString &message);
+    void showError(const QString &errorString);
     
     void loadPlugins();
         
@@ -116,8 +121,6 @@ private Q_SLOTS:
     
     void onCurrentTabChanged(int index);
 
-    void onDatabaseError(const QString &errorString);
-    
     void onOfflineModeEnabledChanged(bool enabled);
 
 private:    
@@ -136,7 +139,8 @@ private:
     QMenu *m_toolsMenu;
     QMenu *m_helpMenu;
         
-    QToolBar *m_toolBar;
+    QToolBar *m_topToolBar;
+    QToolBar *m_bottomToolBar;
     
     QAction *m_updateAllSubscriptionsAction;
     QAction *m_cancelSubscriptionUpdatesAction;
@@ -196,8 +200,9 @@ private:
     
     QLabel *m_infoLabel;
     QLabel *m_enclosuresLabel;
+    QLabel *m_messageLabel;
     
-    Browser *m_browser;
+    BrowserPage *m_browser;
         
     QWidget *m_tabsContainer;
     QWidget *m_articleContainer;

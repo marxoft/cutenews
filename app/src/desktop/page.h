@@ -25,6 +25,10 @@ class Page : public QWidget
 
 public:
     explicit Page(QWidget *parent = 0);
+
+Q_SIGNALS:
+    void error(const QString &errorString);
+    void information(const QString &message);
 };
 
 #endif // PAGE_H
