@@ -25,6 +25,7 @@ XMLHttpRequest::XMLHttpRequest(QObject *parent) :
     QObject(parent),
     m_nam(0),
     m_reply(0),
+    m_followRedirects(true),
     m_readyState(UNSENT),
     m_status(0),
     m_redirects(0)
@@ -35,6 +36,7 @@ XMLHttpRequest::XMLHttpRequest(QNetworkAccessManager *manager, QObject *parent) 
     QObject(parent),
     m_nam(manager),
     m_reply(0),
+    m_followRedirects(true),
     m_readyState(UNSENT),
     m_status(0),
     m_redirects(0)
@@ -45,12 +47,20 @@ QNetworkAccessManager* XMLHttpRequest::networkAccessManager() {
     return m_nam ? m_nam : m_nam = new QNetworkAccessManager(this);
 }
 
+bool XMLHttpRequest::followRedirects() const {
+    return m_followRedirects;
+}
+
+void XMLHttpRequest::setFollowRedirects(bool enabled) {
+    m_followRedirects = enabled;
+}
+
 int XMLHttpRequest::readyState() const {
     return m_readyState;
 }
 
 void XMLHttpRequest::setReadyState(int state) {
-    Logger::log("XMLHttpRequest::setReadyState(): readyState: " + QString::number(state), Logger::MediumVerbosity);
+    Logger::log("XMLHttpRequest::setReadyState(): readyState: " + QString::number(state), Logger::LowVerbosity);
     
     if (state != readyState()) {
         m_readyState = state;
@@ -118,7 +128,7 @@ QString XMLHttpRequest::getAllResponseHeaders() const {
 }
 
 void XMLHttpRequest::open(const QString &method, const QString &url, const QString &username, const QString &password) {
-    Logger::log(QString("XMLHttpRequest::open(). Method: %1, URL: %2").arg(method).arg(url), Logger::MediumVerbosity);
+    Logger::log(QString("XMLHttpRequest::open(). Method: %1, URL: %2").arg(method).arg(url), Logger::LowVerbosity);
     
     switch (readyState()) {
     case OPENED:
@@ -141,7 +151,7 @@ void XMLHttpRequest::open(const QString &method, const QString &url, const QStri
 }
 
 void XMLHttpRequest::send(const QString &body) {
-    Logger::log("XMLHttpRequest::send(): Body: " + body, Logger::MediumVerbosity);
+    Logger::log("XMLHttpRequest::send(): Body: " + body, Logger::LowVerbosity);
     
     switch (readyState()) {
     case HEADERS_RECEIVED:
@@ -163,7 +173,7 @@ void XMLHttpRequest::send(const QString &body) {
 }
 
 void XMLHttpRequest::abort() {
-    Logger::log("XMLHttpRequest::abort()", Logger::MediumVerbosity);
+    Logger::log("XMLHttpRequest::abort()", Logger::LowVerbosity);
     
     if ((m_reply) && (m_reply->isRunning())) {
         m_reply->abort();
@@ -171,13 +181,13 @@ void XMLHttpRequest::abort() {
 }
 
 void XMLHttpRequest::followRedirect(const QUrl &url) {
-    Logger::log("XMLHttpRequest::followRedirect(): URL: " + url.toString(), Logger::MediumVerbosity);
+    Logger::log("XMLHttpRequest::followRedirect(): URL: " + url.toString(), Logger::LowVerbosity);
     m_redirects++;
     m_response = QByteArray();
     QNetworkRequest request(m_request);
     request.setUrl(url);
-    m_reply = networkAccessManager()->get(request);
     setReadyState(OPENED);
+    m_reply = networkAccessManager()->get(request);
     connect(m_reply, SIGNAL(metaDataChanged()), this, SLOT(onReplyMetaDataChanged()));
     connect(m_reply, SIGNAL(readyRead()), this, SLOT(onReplyReadyRead()));
     connect(m_reply, SIGNAL(finished()), this, SLOT(onReplyFinished()));
@@ -211,26 +221,28 @@ void XMLHttpRequest::onReplyReadyRead() {
 }
 
 void XMLHttpRequest::onReplyFinished() {
-    const QString redirect = QString::fromUtf8(m_reply->rawHeader("Location"));
-    
-    if (!redirect.isEmpty()) {
-        Logger::log("XMLHttpRequest::onReplyFinished(): Redirect: " + redirect, Logger::MediumVerbosity);
+    if (followRedirects()) {
+        const QString redirect = QString::fromUtf8(m_reply->rawHeader("Location"));
         
-        if (m_redirects < MAX_REDIRECTS) {
-            QUrl url(redirect);
+        if (!redirect.isEmpty()) {
+            Logger::log("XMLHttpRequest::onReplyFinished(): Redirect: " + redirect, Logger::LowVerbosity);
             
-            if (url.scheme().isEmpty()) {
-                url.setScheme(m_reply->url().scheme());
+            if (m_redirects < MAX_REDIRECTS) {
+                QUrl url(redirect);
+                
+                if (url.scheme().isEmpty()) {
+                    url.setScheme(m_reply->url().scheme());
+                }
+                
+                if (url.authority().isEmpty()) {
+                    url.setAuthority(m_reply->url().authority());
+                }
+                
+                m_reply->deleteLater();
+                m_reply = 0;
+                followRedirect(url);
+                return;
             }
-            
-            if (url.authority().isEmpty()) {
-                url.setAuthority(m_reply->url().authority());
-            }
-            
-            m_reply->deleteLater();
-            m_reply = 0;
-            followRedirect(url);
-            return;
         }
     }
     
