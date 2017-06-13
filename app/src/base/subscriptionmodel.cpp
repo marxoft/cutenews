@@ -230,6 +230,11 @@ void SubscriptionModel::clear() {
 }
 
 void SubscriptionModel::load() {
+    if (status() == Active) {
+        return;
+    }
+
+    setStatus(Active);
     clear();
     beginInsertRows(QModelIndex(), 0, 1);
     m_list << new Subscription(ALL_ARTICLES_SUBSCRIPTION_ID, tr("All articles"), false, QString(), QDateTime(),
@@ -238,7 +243,6 @@ void SubscriptionModel::load() {
                                QString(), Subscription::None, tr("Favourites"), 0, QString(), 0, this);
     endInsertRows();
     emit countChanged(rowCount());
-    setStatus(Active);
     DBConnection::connection(this, SLOT(onSubscriptionsFetched(DBConnection*)))->fetchSubscriptions();
 }
 
