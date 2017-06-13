@@ -339,7 +339,7 @@ maemo5 {
     
     HEADERS += \
         src/desktop/aboutdialog.h \
-        src/desktop/browser.h \
+        src/desktop/browserpage.h \
         src/desktop/cachingnetworkaccessmanager.h \
         src/desktop/categorysettingspage.h \
         src/desktop/customcommanddialog.h \
@@ -365,7 +365,7 @@ maemo5 {
     
     SOURCES += \
         src/desktop/aboutdialog.cpp \
-        src/desktop/browser.cpp \
+        src/desktop/browserpage.cpp \
         src/desktop/cachingnetworkaccessmanager.cpp \
         src/desktop/categorysettingspage.cpp \
         src/desktop/customcommanddialog.cpp \
