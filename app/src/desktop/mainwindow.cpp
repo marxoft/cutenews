@@ -90,7 +90,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_toggleArticleReadAction(new QAction(QIcon::fromTheme("mail-mark-read"), tr("Toggle &read status"), this)),
     m_toggleArticleFavouriteAction(new QAction(QIcon::fromTheme("mail-mark-important"), tr("Toggle &favourite status"), this)),
     m_deleteArticleAction(new QAction(QIcon::fromTheme("edit-delete"), tr("&Delete"), this)),
-    m_copyArticleUrlAction(new QAction(tr("&Copy link"), this)),
+    m_copyArticleUrlAction(new QAction(tr("&Copy URL"), this)),
     m_openArticleInTabAction(new QAction(tr("Open in &tab"), this)),
     m_openArticleInBrowserAction(new QAction(tr("Open in &browser"), this)),
     m_openArticleExternallyAction(new QAction(tr("Open &externally"), this)),
@@ -442,8 +442,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
     connect(m_browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
     connect(m_browser, SIGNAL(downloadUrlWithPlugin(QString)), this, SLOT(downloadUrlWithPlugin(QString)));
-    connect(m_browser, SIGNAL(showHtmlInTab(QString, QString, QString)), this, SLOT(showHtmlInTab(QString, QString, QString)));
-    connect(m_browser, SIGNAL(showTextInTab(QString, QString, QString)), this, SLOT(showTextInTab(QString, QString, QString)));
+    connect(m_browser, SIGNAL(showHtmlInTab(QString, QString, QString)),
+            this, SLOT(showHtmlInTab(QString, QString, QString)));
+    connect(m_browser, SIGNAL(showTextInTab(QString, QString, QString)),
+            this, SLOT(showTextInTab(QString, QString, QString)));
     connect(m_browser, SIGNAL(error(QString)), this, SLOT(showError(QString)));
     connect(m_browser, SIGNAL(information(QString)), this, SLOT(showMessage(QString)));
     

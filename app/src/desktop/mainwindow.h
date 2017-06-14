@@ -211,6 +211,6 @@ private:
     QVBoxLayout *m_articleLayout;
     
     QPointer<TransfersPage> m_transfersPage;
-};  
-    
+};
+
 #endif // MAINWINDOW_H
