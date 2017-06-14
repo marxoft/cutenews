@@ -14,61 +14,62 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BROWSER_H
-#define BROWSER_H
+#ifndef BROWSERPAGE_H
+#define BROWSERPAGE_H
 
-#include <QWidget>
-#include <QUrl>
+#include "page.h"
 
-class QAction;
 class QLineEdit;
-class QMenu;
 class QToolBar;
 class QVBoxLayout;
 class QWebView;
 
-class Browser : public QWidget
+class BrowserPage : public Page
 {
     Q_OBJECT
     
     Q_PROPERTY(QString html READ toHtml WRITE setHtml)
+    Q_PROPERTY(QString text READ toPlainText WRITE setText)
     Q_PROPERTY(QString title READ title)
-    Q_PROPERTY(QUrl url READ url WRITE setUrl)
+    Q_PROPERTY(QString url READ url WRITE setUrl)
 
 public:
-    explicit Browser(QWidget *parent = 0);
-    explicit Browser(const QUrl &url, QWidget *parent = 0);
+    explicit BrowserPage(QWidget *parent = 0);
+    explicit BrowserPage(const QString &url, QWidget *parent = 0);
     
     QString toHtml() const;
-    void setHtml(const QString &h, const QUrl &baseUrl = QUrl());
+    QString toPlainText() const;
 
     QString title() const;
     
-    QUrl url() const;
-    void setUrl(const QUrl &u);
+    QString url() const;
+
+public Q_SLOTS:
+    void setHtml(const QString &html, const QString &baseUrl = QString());
+    void setText(const QString &text, const QString &baseUrl = QString());
+
+    void setUrl(const QString &u);
 
 private Q_SLOTS:
-    void onLinkClicked(const QUrl &u);
+    void setUrl(const QUrl &u);
+
     void onUrlChanged(const QUrl &u);
 
     void showContextMenu(const QPoint &pos);
 
-    void copyUrl();
-    void openUrlInBrowser();
-    void openUrlInTab();
-    void openUrlExternally();
-    void downloadUrl();
-    void downloadUrlWithPlugin();
-
 Q_SIGNALS:
-    void openUrlInTab(const QString &url);
+    void openUrlInTab(const QString &title, const QString &url);
     void openUrlExternally(const QString &url);
     void downloadUrl(const QString &url);
     void downloadUrlWithPlugin(const QString &url);
+    void showHtmlInTab(const QString &title, const QString &html, const QString &baseUrl = QString());
+    void showTextInTab(const QString &title, const QString &text, const QString &baseUrl = QString());
     void titleChanged(const QString &title);
-    void urlChanged(const QUrl &url);
+    void urlChanged(const QString &url);
     
-private:    
+private:
+    static const QByteArray STYLE_SHEET;
+    
     QLineEdit *m_urlEdit;
     
     QToolBar *m_toolBar;
@@ -76,17 +77,6 @@ private:
     QVBoxLayout *m_layout;
     
     QWebView *m_webView;
-
-    QMenu *m_menu;
-
-    QAction *m_copyAction;
-    QAction *m_tabAction;
-    QAction *m_browserAction;
-    QAction *m_externalAction;
-    QAction *m_downloadAction;
-    QAction *m_downloadPluginAction;
-    
-    QUrl m_url;
 };
 
-#endif // BROWSER_H
+#endif // BROWSERPAGE_H

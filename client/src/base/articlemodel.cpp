@@ -156,6 +156,8 @@ QVariant ArticleModel::data(const QModelIndex &index, int role) const {
             default:
                 break;
             }
+
+            break;
         case 2:
             switch (role) {
             case Qt::DisplayRole:
@@ -171,6 +173,8 @@ QVariant ArticleModel::data(const QModelIndex &index, int role) const {
             default:
                 break;
             }
+
+            break;
         default:
             break;
         }
@@ -294,7 +298,8 @@ void ArticleModel::load(const QString &subscriptionId) {
     if (status() == Active) {
         return;
     }
-    
+
+    setStatus(Active);    
     m_subscriptionId = subscriptionId;
     m_query = QString();
     emit queryChanged(m_query);
@@ -309,6 +314,7 @@ void ArticleModel::search(const QString &query) {
         return;
     }
     
+    setStatus(Active);
     m_query = query;
     m_subscriptionId = ALL_ARTICLES_SUBSCRIPTION_ID;
     emit queryChanged(m_query);

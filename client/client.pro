@@ -247,7 +247,7 @@ maemo5 {
     
     HEADERS += \
         src/desktop/aboutdialog.h \
-        src/desktop/browser.h \
+        src/desktop/browserpage.h \
         src/desktop/clientsettingspage.h \
         src/desktop/customcommanddialog.h \
         src/desktop/definitions.h \
@@ -267,7 +267,7 @@ maemo5 {
     
     SOURCES += \
         src/desktop/aboutdialog.cpp \
-        src/desktop/browser.cpp \
+        src/desktop/browserpage.cpp \
         src/desktop/clientsettingspage.cpp \
         src/desktop/customcommanddialog.cpp \
         src/desktop/logger.cpp \
