@@ -1,0 +1,349 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "BBC",
+    "supportsFeeds": true,
+    "feedSettings": [
+        {
+            "type": "list",
+            "key": "section",
+            "label": "Section",
+            "value": "news",
+            "options": [
+                {
+                    "label": "News - All",
+                    "value": "news"
+                },
+
+                {
+                    "label": "News - Also in the news",
+                    "value": "news/also_in_the_news"
+                },
+
+                {
+                    "label": "News - Business",
+                    "value": "news/business"
+                },
+
+                {
+                    "label": "News - Disability",
+                    "value": "news/disability"
+                },
+
+                {
+                    "label": "News - Education",
+                    "value": "news/education"
+                },
+
+                {
+                    "label": "News - Entertainment & arts",
+                    "value": "news/entertainment_and_arts"
+                },
+
+                {
+                    "label": "News - Explainers",
+                    "value": "news/explainers"
+                },
+
+                {
+                    "label": "News - Have your say",
+                    "value": "news/have_your_say"
+                },
+
+                {
+                    "label": "News - Health",
+                    "value": "news/health"
+                },
+
+                {
+                    "label": "News - In pictures",
+                    "value": "news/in_pictures"
+                },
+
+                {
+                    "label": "News - Magazine",
+                    "value": "news/magazine"
+                },
+
+                {
+                    "label": "News - Politics",
+                    "value": "news/politics"
+                },
+
+                {
+                    "label": "News - Science",
+                    "value": "news/science_and_environment"
+                },
+
+                {
+                    "label": "News - Special reports",
+                    "value": "news/special_reports"
+                },
+
+                {
+                    "label": "News - The reporters",
+                    "value": "news/the_reporters"
+                },
+
+                {
+                    "label": "News - UK",
+                    "value": "news/uk"
+                },
+
+                {
+                    "label": "News - World",
+                    "value": "news/world"
+                },
+
+                {
+                    "label": "Sport - All",
+                    "value": "sport"
+                },
+
+                {
+                    "label": "Sport - American football",
+                    "value": "sport/american-football"
+                },
+
+                {
+                    "label": "Sport - Archery",
+                    "value": "sport/archery"
+                },
+
+                {
+                    "label": "Sport - Athletics",
+                    "value": "sport/athletics"
+                },
+
+                {
+                    "label": "Sport - Badminton",
+                    "value": "sport/badminton"
+                },
+
+                {
+                    "label": "Sport - Baseball",
+                    "value": "sport/baseball"
+                },
+
+                {
+                    "label": "Sport - Basketball",
+                    "value": "sport/basketball"
+                },
+
+                {
+                    "label": "Sport - Bowls",
+                    "value": "sport/bowls"
+                },
+
+                {
+                    "label": "Sport - Boxing",
+                    "value": "sport/boxing"
+                },
+
+                {
+                    "label": "Sport - Canoeing",
+                    "value": "sport/canoeing"
+                },
+
+                {
+                    "label": "Sport - Cricket",
+                    "value": "sport/cricket"
+                },
+
+                {
+                    "label": "Sport - Curling",
+                    "value": "sport/curling"
+                },
+
+                {
+                    "label": "Sport - Cycling",
+                    "value": "sport/cycling"
+                },
+
+                {
+                    "label": "Sport - Darts",
+                    "value": "sport/darts"
+                },
+
+                {
+                    "label": "Sport - Disability sport",
+                    "value": "sport/disability-sport"
+                },
+
+                {
+                    "label": "Sport - Diving",
+                    "value": "sport/diving"
+                },
+
+                {
+                    "label": "Sport - Equestrian",
+                    "value": "sport/equestrian"
+                },
+
+                {
+                    "label": "Sport - Fencing",
+                    "value": "sport/fencing"
+                },
+
+                {
+                    "label": "Sport - Football",
+                    "value": "sport/football"
+                },
+
+                {
+                    "label": "Sport - Formula 1",
+                    "value": "sport/formula1"
+                },
+
+                {
+                    "label": "Sport - Gaelic games",
+                    "value": "sport/northern-ireland/gaelic-games"
+                },
+
+                {
+                    "label": "Sport - Golf",
+                    "value": "sport/golf"
+                },
+
+                {
+                    "label": "Sport - Gymnastics",
+                    "value": "sport/gymnastics"
+                },
+
+                {
+                    "label": "Sport - Handball",
+                    "value": "sport/handball"
+                },
+
+                {
+                    "label": "Sport - Hockey",
+                    "value": "sport/hockey"
+                },
+
+                {
+                    "label": "Sport - Horse racing",
+                    "value": "sport/horse-racing"
+                },
+
+                {
+                    "label": "Sport - Ice hockey",
+                    "value": "sport/ice-hockey"
+                },
+
+                {
+                    "label": "Sport - Judo",
+                    "value": "sport/judo"
+                },
+
+                {
+                    "label": "Sport - Modern pentathlon",
+                    "value": "sport/modern-pentathlon"
+                },
+
+                {
+                    "label": "Sport - Motorsport",
+                    "value": "sport/motorsport"
+                },
+
+                {
+                    "label": "Sport - Netball",
+                    "value": "sport/netball"
+                },
+
+                {
+                    "label": "Sport - Olympic sports",
+                    "value": "sport/olympics"
+                },
+
+                {
+                    "label": "Sport - Rowing",
+                    "value": "sport/rowing"
+                },
+
+                {
+                    "label": "Sport - Rugby league",
+                    "value": "sport/rugby-league"
+                },
+
+                {
+                    "label": "Sport - Rugby union",
+                    "value": "sport/rugby-union"
+                },
+
+                {
+                    "label": "Sport - Sailing",
+                    "value": "sport/sailing"
+                },
+
+                {
+                    "label": "Sport - Shooting",
+                    "value": "sport/shooting"
+                },
+
+                {
+                    "label": "Sport - Snooker",
+                    "value": "sport/snooker"
+                },
+
+                {
+                    "label": "Sport - Squash",
+                    "value": "sport/squash"
+                },
+
+                {
+                    "label": "Sport - Swimming",
+                    "value": "sport/swimming"
+                },
+
+                {
+                    "label": "Sport - Table tennis",
+                    "value": "sport/table-tennis"
+                },
+
+                {
+                    "label": "Sport - Taekwondo",
+                    "value": "sport/taekwondo"
+                },
+
+                {
+                    "label": "Sport - Tennis",
+                    "value": "sport/tennis"
+                },
+
+                {
+                    "label": "Sport - Triathlon",
+                    "value": "sport/triathlon"
+                },
+
+                {
+                    "label": "Sport - Volleyball",
+                    "value": "sport/volleyball"
+                },
+
+                {
+                    "label": "Sport - Weightlifting",
+                    "value": "sport/weightlifting"
+                },
+
+                {
+                    "label": "Sport - Winter sports",
+                    "value": "sport/winter-sports"
+                },
+
+                {
+                    "label": "Sport - Wrestling",
+                    "value": "sport/wrestling"
+                }
+            ]
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        }
+    ]
+}
