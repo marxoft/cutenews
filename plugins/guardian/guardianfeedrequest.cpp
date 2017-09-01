@@ -367,15 +367,18 @@ void GuardianFeedRequest::writeItemAuthor(const QString &author) {
 }
 
 void GuardianFeedRequest::writeItemBody(const QHtmlElement &element) {
+    QHtmlElement body = element.firstElementByTagName("div", QHtmlAttributeMatches()
+            << QHtmlAttributeMatch("itemprop", "articleBody")
+            << QHtmlAttributeMatch("data-test-id", "article-review-body"), QHtmlParser::MatchAny);
+
+    if (body.isNull()) {
+        body = element.firstElementByTagName("div", QHtmlAttributeMatch("data-link-name", "standfirst"));
+    }
+
     QRegExp figure("(<figure.*</figure>|<picture.*</picture>|<aside.*</aside>|<div class=\"(block-|)share.*</div>|<button.*</button>)");
     figure.setMinimal(true);
-    QString body = element.firstElementByTagName("div", QHtmlAttributeMatches()
-                                                 << QHtmlAttributeMatch("itemprop", "articleBody")
-                                                 << QHtmlAttributeMatch("data-test-id", "article-review-body"),
-                                                 QHtmlParser::MatchAny).toString();
-    body.remove(figure);
     m_writer.writeStartElement("content:encoded");
-    m_writer.writeCDATA(body);
+    m_writer.writeCDATA(body.toString().remove(figure));
     m_writer.writeEndElement();
 }
 
@@ -392,6 +395,15 @@ void GuardianFeedRequest::writeItemDate(const QDateTime &date) {
 void GuardianFeedRequest::writeItemEnclosures(const QHtmlElement &element) {
     foreach (const QHtmlElement &video, element.elementsByTagName("video")) {
         foreach (const QHtmlElement &source, video.elementsByTagName("source")) {
+            m_writer.writeStartElement("enclosure");
+            m_writer.writeAttribute("url", source.attribute("src"));
+            m_writer.writeAttribute("type", source.attribute("type"));
+            m_writer.writeEndElement();
+        }
+    }
+
+    foreach (const QHtmlElement &audio, element.elementsByTagName("audio")) {
+        foreach (const QHtmlElement &source, audio.elementsByTagName("source")) {
             m_writer.writeStartElement("enclosure");
             m_writer.writeAttribute("url", source.attribute("src"));
             m_writer.writeAttribute("type", source.attribute("type"));
