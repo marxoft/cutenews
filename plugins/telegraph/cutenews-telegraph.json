@@ -1,0 +1,224 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "The Telegraph",
+    "supportsFeeds": true,
+    "feedSettings": [
+        {
+            "type": "list",
+            "key": "section",
+            "label": "Section",
+            "value": "news",
+            "options": [
+                {
+                    "label": "Culture - All",
+                    "value": "culture"
+                },
+
+                {
+                    "label": "Culture - Art",
+                    "value": "art"
+                },
+
+                {
+                    "label": "Culture - Books",
+                    "value": "books"
+                },
+
+                {
+                    "label": "Culture - Film",
+                    "value": "film"
+                },
+
+                {
+                    "label": "Culture - Music",
+                    "value": "music"
+                },
+
+                {
+                    "label": "Culture - Opera",
+                    "value": "opera"
+                },
+
+                {
+                    "label": "Culture - Theatre",
+                    "value": "theatre"
+                },
+
+                {
+                    "label": "Culture - TV",
+                    "value": "tv"
+                },
+
+                {
+                    "label": "Lifestyle - All",
+                    "value": "lifestyle"
+                },
+
+                {
+                    "label": "Lifestyle - Beauty",
+                    "value": "beauty"
+                },
+
+                {
+                    "label": "Lifestyle - Cars",
+                    "value": "motoring"
+                },
+
+                {
+                    "label": "Lifestyle - Fashion",
+                    "value": "fashion"
+                },
+
+                {
+                    "label": "Lifestyle - Food and drink",
+                    "value": "food-and-drink"
+                },
+
+                {
+                    "label": "Lifestyle - Gardening",
+                    "value": "gardening"
+                },
+
+                {
+                    "label": "Lifestyle - Luxury",
+                    "value": "luxury"
+                },
+
+                {
+                    "label": "Lifestyle - Men",
+                    "value": "men"
+                },
+
+                {
+                    "label": "Lifestyle - Wellbeing",
+                    "value": "wellbeing"
+                },
+
+                {
+                    "label": "Lifestyle - Women",
+                    "value": "women"
+                },
+
+                {
+                    "label": "Money - All",
+                    "value": "money"
+                },
+
+                {
+                    "label": "Money - Banking",
+                    "value": "personal-banking"
+                },
+
+                {
+                    "label": "Money - Bills",
+                    "value": "bills-and-utilities"
+                },
+
+                {
+                    "label": "Money - Insurance",
+                    "value": "insurance"
+                },
+
+                {
+                    "label": "Money - Investing",
+                    "value": "investing"
+                },
+
+                {
+                    "label": "Money - Pensions",
+                    "value": "pensions"
+                },
+
+                {
+                    "label": "Money - Property",
+                    "value": "property"
+                },
+
+                {
+                    "label": "Money - Tax",
+                    "value": "tax"
+                },
+
+                {
+                    "label": "News - All",
+                    "value": "news"
+                },
+
+                {
+                    "label": "News - Business",
+                    "value": "business"
+                },
+
+                {
+                    "label": "News - Science",
+                    "value": "science"
+                },
+
+                {
+                    "label": "News - Technology",
+                    "value": "technology"
+                },
+
+                {
+                    "label": "Sport - All",
+                    "value": "sport"
+                },
+
+                {
+                    "label": "Sport - Boxing",
+                    "value": "boxing"
+                },
+
+                {
+                    "label": "Sport - Cricket",
+                    "value": "cricket"
+                },
+
+                {
+                    "label": "Sport - Cycling",
+                    "value": "cycling"
+                },
+
+                {
+                    "label": "Sport - Football",
+                    "value": "football"
+                },
+
+                {
+                    "label": "Sport - Formula 1",
+                    "value": "formula-1"
+                },
+
+                {
+                    "label": "Sport - Golf",
+                    "value": "golf"
+                },
+
+                {
+                    "label": "Sport - Rugby league",
+                    "value": "rugby-league"
+                },
+
+                {
+                    "label": "Sport - Rugby union",
+                    "value": "rugby-union"
+                },
+
+                {
+                    "label": "Sport - Tennis",
+                    "value": "tennis"
+                }
+            ]
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        }
+    ]
+}
