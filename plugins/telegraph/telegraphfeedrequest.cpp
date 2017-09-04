@@ -242,11 +242,10 @@ void TelegraphFeedRequest::checkPage() {
     writeItemUrl(m_parser.url());
     writeEndItem();
     
-    if (m_results < max) {
-        if (m_parser.readNextArticle()) {
-            getPage(m_parser.url());
-            return;
-        }
+   if ((m_results < max) && (m_parser.readNextArticle())
+            && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
+        getPage(m_parser.url());
+        return;
     }
 #ifdef TELEGRAPH_DEBUG
     qDebug() << "TelegraphFeedRequest::checkPage(). Writing end of feed";
