@@ -20,7 +20,6 @@
 #include "feedrequest.h"
 #include <qhtmlparser/qhtmlparser.h>
 #include <QBuffer>
-#include <QStringList>
 #include <QVariantMap>
 #include <QXmlStreamWriter>
 
@@ -50,6 +49,8 @@ private Q_SLOTS:
 
 private:
     void setErrorString(const QString &e);
+
+    void setResult(const QByteArray &r);
     
     void setStatus(Status s);
 

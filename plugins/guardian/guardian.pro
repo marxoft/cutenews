@@ -6,11 +6,13 @@ TEMPLATE = lib
 
 HEADERS += \
     feedparser.h \
+    guardianarticlerequest.h \
     guardianfeedplugin.h \
     guardianfeedrequest.h
 
 SOURCES += \
     feedparser.cpp \
+    guardianarticlerequest.cpp \
     guardianfeedrequest.cpp
 
 maemo5 {
@@ -19,7 +21,7 @@ maemo5 {
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
-        /usr/include/cutenews/enclosurerequest.h \
+        /usr/include/cutenews/articlerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h
     
@@ -33,13 +35,12 @@ maemo5 {
         config
 
 } else:unix {
-    DEFINES += GUARDIAN_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
-        /usr/include/cutenews/enclosurerequest.h \
+        /usr/include/cutenews/articlerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h
     

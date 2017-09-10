@@ -2,6 +2,16 @@
     "type": "qt",
     "version": 1,
     "name": "The Independent",
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(www\\.|)independent\\.co\\.uk/[\\w-]+",
+    "articleSettings": [
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
+        }
+    ],
     "supportsFeeds": true,
     "feedSettings": [
         {
@@ -225,6 +235,13 @@
                     "value": "voices/letters"
                 }
             ]
+        },
+
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
         },
 
         {

@@ -45,11 +45,11 @@ void JavaScriptEnclosureRequest::setErrorString(const QString &e) {
     m_errorString = e;
 }
 
-Enclosure JavaScriptEnclosureRequest::result() const {
+EnclosureResult JavaScriptEnclosureRequest::result() const {
     return m_result;
 }
 
-void JavaScriptEnclosureRequest::setResult(const Enclosure &r) {
+void JavaScriptEnclosureRequest::setResult(const EnclosureResult &r) {
     m_result = r;
 }
 
@@ -90,7 +90,7 @@ void JavaScriptEnclosureRequest::initEngine() {
         m_global = new JavaScriptEnclosureRequestGlobalObject(m_engine);
         
         connect(m_global, SIGNAL(error(QString)), this, SLOT(onRequestError(QString)));
-        connect(m_global, SIGNAL(finished(Enclosure)), this, SLOT(onRequestFinished(Enclosure)));
+        connect(m_global, SIGNAL(finished(EnclosureResult)), this, SLOT(onRequestFinished(EnclosureResult)));
         
         m_engine->installTranslatorFunctions();
     }
@@ -124,7 +124,7 @@ bool JavaScriptEnclosureRequest::getEnclosure(const QString &url, const QVariant
             const QString errorString = result.toString();
             Logger::log("JavaScriptEnclosureRequest::getEnclosure(). Error calling getEnclosure(): " + errorString);
             setErrorString(errorString);
-            setResult(Enclosure());
+            setResult(EnclosureResult());
             setStatus(Error);
             emit finished(this);
             return false;
@@ -139,7 +139,7 @@ bool JavaScriptEnclosureRequest::getEnclosure(const QString &url, const QVariant
     else {
         Logger::log("JavaScriptEnclosureRequest::getEnclosure(). getEnclosure() function not defined");
         setErrorString(tr("getEnclosure() function not defined"));
-        setResult(Enclosure());
+        setResult(EnclosureResult());
         setStatus(Error);
         emit finished(this);
     }
@@ -150,12 +150,12 @@ bool JavaScriptEnclosureRequest::getEnclosure(const QString &url, const QVariant
 void JavaScriptEnclosureRequest::onRequestError(const QString &errorString) {
     Logger::log("JavaScriptEnclosureRequest::onRequestError(): " + errorString);
     setErrorString(errorString);
-    setResult(Enclosure());
+    setResult(EnclosureResult());
     setStatus(Error);
     emit finished(this);
 }
 
-void JavaScriptEnclosureRequest::onRequestFinished(const Enclosure &result) {
+void JavaScriptEnclosureRequest::onRequestFinished(const EnclosureResult &result) {
     Logger::log("JavaScriptEnclosureRequest::onRequestFinished()", Logger::MediumVerbosity);
     setResult(result);
     setErrorString(QString());
@@ -166,35 +166,35 @@ void JavaScriptEnclosureRequest::onRequestFinished(const Enclosure &result) {
 JavaScriptEnclosureRequestGlobalObject::JavaScriptEnclosureRequestGlobalObject(QScriptEngine *engine) :
     JavaScriptGlobalObject(engine)
 {
-    QScriptValue enclosure = engine->newQObject(new JavaScriptEnclosure(engine));
-    engine->setDefaultPrototype(qMetaTypeId<Enclosure>(), enclosure);
-    engine->setDefaultPrototype(qMetaTypeId<Enclosure*>(), enclosure);
-    engine->globalObject().setProperty("Enclosure", engine->newFunction(newEnclosure));
+    QScriptValue enclosure = engine->newQObject(new JavaScriptEnclosureResult(engine));
+    engine->setDefaultPrototype(qMetaTypeId<EnclosureResult>(), enclosure);
+    engine->setDefaultPrototype(qMetaTypeId<EnclosureResult*>(), enclosure);
+    engine->globalObject().setProperty("EnclosureResult", engine->newFunction(newEnclosureResult));
     QScriptValue request = engine->newQObject(new JavaScriptNetworkRequest(engine));
     engine->setDefaultPrototype(qMetaTypeId<QNetworkRequest>(), request);
     engine->setDefaultPrototype(qMetaTypeId<QNetworkRequest*>(), request);
     engine->globalObject().setProperty("NetworkRequest", engine->newFunction(newNetworkRequest));
 }
 
-QScriptValue JavaScriptEnclosureRequestGlobalObject::newEnclosure(QScriptContext *context, QScriptEngine *engine) {
+QScriptValue JavaScriptEnclosureRequestGlobalObject::newEnclosureResult(QScriptContext *context,
+        QScriptEngine *engine) {
     switch (context->argumentCount()) {
     case 0:
-        return engine->toScriptValue(Enclosure());
+        return engine->toScriptValue(EnclosureResult());
     case 2:
-        return engine->toScriptValue(Enclosure(context->argument(0).toString(),
-                                               qscriptvalue_cast<QNetworkRequest>(context->argument(1))));
+        return engine->toScriptValue(EnclosureResult(context->argument(0).toString(),
+                    qscriptvalue_cast<QNetworkRequest>(context->argument(1))));
     case 3:
-        return engine->toScriptValue(Enclosure(context->argument(0).toString(),
-                                               qscriptvalue_cast<QNetworkRequest>(context->argument(1)),
-                                               context->argument(2).toString().toUtf8()));
+        return engine->toScriptValue(EnclosureResult(context->argument(0).toString(),
+                    qscriptvalue_cast<QNetworkRequest>(context->argument(1)),
+                    context->argument(2).toString().toUtf8()));
     case 4:
-        return engine->toScriptValue(Enclosure(context->argument(0).toString(),
-                                               qscriptvalue_cast<QNetworkRequest>(context->argument(1)),
-                                               context->argument(2).toString().toUtf8(),
-                                               context->argument(3).toString().toUtf8()));
+        return engine->toScriptValue(EnclosureResult(context->argument(0).toString(),
+                    qscriptvalue_cast<QNetworkRequest>(context->argument(1)),
+                    context->argument(2).toString().toUtf8(), context->argument(3).toString().toUtf8()));
     default:
         return context->throwError(QScriptContext::SyntaxError,
-                                   QObject::tr("Enclosure constructor requires either 0, 2, 3 or 4 arguments."));
+                                   QObject::tr("EnclosureResult constructor requires either 0, 2, 3 or 4 arguments."));
     }
 }
 
@@ -210,63 +210,63 @@ QScriptValue JavaScriptEnclosureRequestGlobalObject::newNetworkRequest(QScriptCo
     }
 }
 
-JavaScriptEnclosure::JavaScriptEnclosure(QObject *parent) :
+JavaScriptEnclosureResult::JavaScriptEnclosureResult(QObject *parent) :
     QObject(parent)
 {
 }
 
-QString JavaScriptEnclosure::fileName() const {
-    if (const Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+QString JavaScriptEnclosureResult::fileName() const {
+    if (const EnclosureResult *enclosure = qscriptvalue_cast<EnclosureResult*>(thisObject())) {
         return enclosure->fileName;
     }
     
     return QString();
 }
 
-void JavaScriptEnclosure::setFileName(const QString &f) {
-    if (Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+void JavaScriptEnclosureResult::setFileName(const QString &f) {
+    if (EnclosureResult *enclosure = qscriptvalue_cast<EnclosureResult*>(thisObject())) {
         enclosure->fileName = f;
     }
 }
 
-QNetworkRequest JavaScriptEnclosure::request() const {
-    if (const Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+QNetworkRequest JavaScriptEnclosureResult::request() const {
+    if (const EnclosureResult *enclosure = qscriptvalue_cast<EnclosureResult*>(thisObject())) {
         return enclosure->request;
     }
     
     return QNetworkRequest();
 }
 
-void JavaScriptEnclosure::setRequest(const QNetworkRequest &r) {
-    if (Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+void JavaScriptEnclosureResult::setRequest(const QNetworkRequest &r) {
+    if (EnclosureResult *enclosure = qscriptvalue_cast<EnclosureResult*>(thisObject())) {
         enclosure->request = r;
     }
 }
 
-QString JavaScriptEnclosure::operation() const {
-    if (const Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+QString JavaScriptEnclosureResult::operation() const {
+    if (const EnclosureResult *enclosure = qscriptvalue_cast<EnclosureResult*>(thisObject())) {
         return QString::fromUtf8(enclosure->operation);
     }
     
     return QString();
 }
 
-void JavaScriptEnclosure::setOperation(const QString &o) {
-    if (Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+void JavaScriptEnclosureResult::setOperation(const QString &o) {
+    if (EnclosureResult *enclosure = qscriptvalue_cast<EnclosureResult*>(thisObject())) {
         enclosure->operation = o.toUtf8();
     }
 }
 
-QString JavaScriptEnclosure::data() const {
-    if (const Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+QString JavaScriptEnclosureResult::data() const {
+    if (const EnclosureResult *enclosure = qscriptvalue_cast<EnclosureResult*>(thisObject())) {
         return QString::fromUtf8(enclosure->data);
     }
     
     return QString();
 }
 
-void JavaScriptEnclosure::setData(const QString &d) {
-    if (Enclosure *enclosure = qscriptvalue_cast<Enclosure*>(thisObject())) {
+void JavaScriptEnclosureResult::setData(const QString &d) {
+    if (EnclosureResult *enclosure = qscriptvalue_cast<EnclosureResult*>(thisObject())) {
         enclosure->data = d.toUtf8();
     }
 }

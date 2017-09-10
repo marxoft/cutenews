@@ -64,6 +64,19 @@ FeedPluginConfig* PluginManager::getConfig(const QString &id) const {
     return 0;
 }
 
+FeedPluginConfig* PluginManager::getConfigForArticle(const QString &url) const {
+    foreach (const FeedPluginPair &pair, m_plugins) {
+        if (pair.config->articleIsSupported(url)) {
+            Logger::log("PluginManager::getConfigForArticle(). Plugin found for article: " + url,
+                        Logger::HighVerbosity);
+            return pair.config;
+        }
+    }
+    
+    Logger::log("PluginManager::getConfigForArticle(). No Plugin found for article " + url, Logger::HighVerbosity);
+    return 0;
+}
+
 FeedPluginConfig* PluginManager::getConfigForEnclosure(const QString &url) const {
     foreach (const FeedPluginPair &pair, m_plugins) {
         if (pair.config->enclosureIsSupported(url)) {
@@ -103,6 +116,19 @@ FeedPlugin* PluginManager::getPlugin(const QString &id) const {
     return 0;
 }
 
+FeedPlugin* PluginManager::getPluginForArticle(const QString &url) const {
+    foreach (const FeedPluginPair &pair, m_plugins) {
+        if (pair.config->articleIsSupported(url)) {
+            Logger::log("PluginManager::getPluginForArticle(). Plugin found for article: " + url,
+                        Logger::HighVerbosity);
+            return pair.plugin;
+        }
+    }
+    
+    Logger::log("PluginManager::getPluginForArticle(). No Plugin found for article " + url, Logger::HighVerbosity);
+    return 0;
+}
+
 FeedPlugin* PluginManager::getPluginForEnclosure(const QString &url) const {
     foreach (const FeedPluginPair &pair, m_plugins) {
         if (pair.config->enclosureIsSupported(url)) {
@@ -113,6 +139,27 @@ FeedPlugin* PluginManager::getPluginForEnclosure(const QString &url) const {
     }
     
     Logger::log("PluginManager::getPluginForEnclosure(). No Plugin found for enclosure " + url, Logger::HighVerbosity);
+    return 0;
+}
+
+bool PluginManager::articleIsSupported(const QString &url) const {
+    foreach (const FeedPluginPair &pair, m_plugins) {
+        if (pair.config->articleIsSupported(url)) {
+            Logger::log("PluginManager::articleIsSupported(). Plugin found for article " + url,
+                        Logger::HighVerbosity);
+            return true;
+        }
+    }
+    
+    Logger::log("PluginManager::articleIsSupported(). No Plugin found for article " + url, Logger::HighVerbosity);
+    return false;
+}
+
+ArticleRequest* PluginManager::articleRequest(const QString &url, QObject *parent) const {
+    if (FeedPlugin *plugin = getPluginForArticle(url)) {
+        return plugin->articleRequest(parent);
+    }
+
     return 0;
 }
 

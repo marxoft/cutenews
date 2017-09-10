@@ -23,6 +23,7 @@
 
 class Article;
 class ArticleModel;
+class ArticleRequest;
 class BrowserPage;
 class SubscriptionModel;
 class TransfersPage;
@@ -90,6 +91,7 @@ private Q_SLOTS:
     void showArticleContextMenu(const QPoint &pos);
     void showEnclosureContextMenu(const QPoint &pos);
     
+    void openArticleInTab(const QString &title, const QString &url);
     void openUrlInTab(const QString &title, const QString &url);
     void openUrlExternally(const QString &url);
     void openUrlWithPlugin(const QString &url);
@@ -113,9 +115,10 @@ private Q_SLOTS:
     void showError(const QString &errorString);
     
     void loadPlugins();
-        
+
     void onSubscriptionsCountChanged(int count);
     void onSubscriptionsStatusChanged(Subscriptions::Status status);
+    void onArticleRequestFinished(ArticleRequest *request);
     void onArticlesCountChanged(int count);
     void onReadArticlesDeleted(int count);
     

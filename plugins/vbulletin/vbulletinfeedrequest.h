@@ -49,6 +49,8 @@ private Q_SLOTS:
 
 private:
     void setErrorString(const QString &e);
+
+    void setResult(const QByteArray &r);
     
     void setStatus(Status s);
     

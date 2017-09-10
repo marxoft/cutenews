@@ -18,12 +18,14 @@
 #include "aboutdialog.h"
 #include "article.h"
 #include "articlemodel.h"
+#include "articlerequest.h"
 #include "browserpage.h"
 #include "dbconnection.h"
 #include "dbnotify.h"
 #include "definitions.h"
 #include "plugindialog.h"
 #include "pluginmanager.h"
+#include "pluginsettings.h"
 #include "qdatetimedialog.h"
 #include "settings.h"
 #include "settingsdialog.h"
@@ -437,6 +439,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_enclosuresView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showEnclosureContextMenu(QPoint)));
     connect(m_enclosuresView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openCurrentEnclosureInBrowser()));
     
+    connect(m_browser, SIGNAL(openArticleInTab(QString, QString)), this, SLOT(openArticleInTab(QString, QString)));
     connect(m_browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(m_browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(m_browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
@@ -786,9 +789,27 @@ void MainWindow::showEnclosureContextMenu(const QPoint &pos) {
     }
 }
 
+void MainWindow::openArticleInTab(const QString &, const QString &url) {
+    if (ArticleRequest *request = PluginManager::instance()->articleRequest(url)) {
+        showMessage(tr("Retrieving article from %1").arg(url));
+        connect(request, SIGNAL(finished(ArticleRequest*)), this, SLOT(onArticleRequestFinished(ArticleRequest*)));
+
+        if (const FeedPluginConfig *config = PluginManager::instance()->getConfigForArticle(url)) {
+            PluginSettings settings(config->id());
+            request->getArticle(url, settings.values());
+        }
+        else {
+            request->getArticle(url, QVariantMap());
+        }
+    }
+    else {
+        showError(tr("No plugin found for article URL %1").arg(url));
+    }
+}
 void MainWindow::openUrlInTab(const QString &title, const QString &url) {
     BrowserPage *browser = new BrowserPage(url, m_stack);
     browser->setAttribute(Qt::WA_DeleteOnClose, true);
+    connect(browser, SIGNAL(openArticleInTab(QString, QString)), this, SLOT(openArticleInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
@@ -826,6 +847,7 @@ void MainWindow::showHtmlInTab(const QString &title, const QString &html, const 
     BrowserPage *browser = new BrowserPage(m_stack);
     browser->setAttribute(Qt::WA_DeleteOnClose, true);
     browser->setHtml(html, baseUrl);
+    connect(browser, SIGNAL(openArticleInTab(QString, QString)), this, SLOT(openArticleInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
@@ -847,6 +869,7 @@ void MainWindow::showTextInTab(const QString &title, const QString &text, const 
     BrowserPage *browser = new BrowserPage(m_stack);
     browser->setAttribute(Qt::WA_DeleteOnClose, true);
     browser->setText(text, baseUrl);
+    connect(browser, SIGNAL(openArticleInTab(QString, QString)), this, SLOT(openArticleInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
@@ -980,6 +1003,23 @@ void MainWindow::onSubscriptionsStatusChanged(Subscriptions::Status status) {
     const bool active = (status == Subscriptions::Active);    
     m_updateAllSubscriptionsAction->setVisible(!active);
     m_cancelSubscriptionUpdatesAction->setVisible(active);
+}
+
+void MainWindow::onArticleRequestFinished(ArticleRequest *request) {
+    switch (request->status()) {
+    case ArticleRequest::Ready:
+        showMessage(tr("Article retrieved"));
+        showHtmlInTab(request->resultTitle(), request->resultBody());
+        break;
+    case ArticleRequest::Error:
+        showMessage(tr("Error retrieving article"));
+        showError(request->errorString());
+        break;
+    default:
+        break;
+    }
+
+    request->deleteLater();
 }
 
 void MainWindow::onArticlesCountChanged(int count) {

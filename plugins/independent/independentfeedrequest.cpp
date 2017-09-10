@@ -15,10 +15,9 @@
  */
 
 #include "independentfeedrequest.h"
-#include <QDateTime>
+#include "independentarticlerequest.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QRegExp>
 #ifdef INDEPENDENT_DEBUG
 #include <QDebug>
 #endif
@@ -32,6 +31,7 @@ const QByteArray IndependentFeedRequest::USER_AGENT("Wget/1.13.4 (linux-gnu)");
 
 IndependentFeedRequest::IndependentFeedRequest(QObject *parent) :
     FeedRequest(parent),
+    m_request(0),
     m_nam(0),
     m_status(Idle),
     m_results(0),
@@ -45,17 +45,28 @@ QString IndependentFeedRequest::errorString() const {
 
 void IndependentFeedRequest::setErrorString(const QString &e) {
     m_errorString = e;
+#ifdef INDEPENDENT_DEBUG
+    if (!e.isEmpty()) {
+        qDebug() << "IndependentFeedRequest::error." << e;
+    }
+#endif
 }
 
 QByteArray IndependentFeedRequest::result() const {
     return m_buffer.data();
 }
 
-IndependentFeedRequest::Status IndependentFeedRequest::status() const {
+void IndependentFeedRequest::setResult(const QByteArray &r) {
+    m_buffer.open(QBuffer::WriteOnly);
+    m_buffer.write(r);
+    m_buffer.close();
+}
+
+FeedRequest::Status IndependentFeedRequest::status() const {
     return m_status;
 }
 
-void IndependentFeedRequest::setStatus(IndependentFeedRequest::Status s) {
+void IndependentFeedRequest::setStatus(FeedRequest::Status s) {
     if (s != status()) {
         m_status = s;
         emit statusChanged(s);
@@ -64,8 +75,13 @@ void IndependentFeedRequest::setStatus(IndependentFeedRequest::Status s) {
 
 bool IndependentFeedRequest::cancel() {
     if (status() == Active) {
-        setStatus(Canceled);
-        emit finished(this);
+        if ((m_request) && (m_request->status() == ArticleRequest::Active)) {
+            m_request->cancel();
+        }
+        else {
+            setStatus(Canceled);
+            emit finished(this);
+        }
     }
 
     return true;
@@ -77,6 +93,8 @@ bool IndependentFeedRequest::getFeed(const QVariantMap &settings) {
     }
 
     setStatus(Active);
+    setResult(QByteArray());
+    setErrorString(QString());
     m_settings = settings;
     m_results = 0;
     m_redirects = 0;
@@ -110,12 +128,11 @@ void IndependentFeedRequest::checkFeed() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkFeed()));
         }
         else {
@@ -131,7 +148,6 @@ void IndependentFeedRequest::checkFeed() {
     case QNetworkReply::NoError:
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         return;
@@ -141,25 +157,31 @@ void IndependentFeedRequest::checkFeed() {
         emit finished(this);
         return;
     }
-    
+
     m_parser.setContent(reply->readAll());
-    reply->deleteLater();
 
     if (m_parser.readChannel()) {
-#ifdef INDEPENDENT_DEBUG
-        qDebug() << "IndependentFeedRequest::checkFeed(). Writing start of feed";
-#endif
         writeStartFeed();
         writeFeedTitle(m_parser.title());
         writeFeedUrl(m_parser.url());
 
-        if ((m_parser.readNextArticle()) && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
-            getPage(m_parser.url());
+        if (m_parser.readNextArticle()) {
+            if (m_parser.date() > m_settings.value("lastUpdated").toDateTime()) {
+                reply->deleteLater();
+                getArticle(m_parser.url());
+            }
+            else {
+#ifdef INDEPENDENT_DEBUG
+                qDebug() << "IndependentFeedRequest::checkFeed(). No new articles";
+#endif
+                writeEndFeed();
+                setStatus(Ready);
+                emit finished(this);
+            }
+
             return;
         }
-#ifdef INDEPENDENT_DEBUG
-        qDebug() << "IndependentFeedRequest::checkFeed(). Writing end of feed";
-#endif
+
         writeEndFeed();
     }
     
@@ -168,90 +190,58 @@ void IndependentFeedRequest::checkFeed() {
     emit finished(this);
 }
 
-void IndependentFeedRequest::getPage(const QString &url) {
+void IndependentFeedRequest::getArticle(const QString &url) {
 #ifdef INDEPENDENT_DEBUG
-    qDebug() << "IndependentFeedRequest::getPage(). URL:" << url;
+    qDebug() << "IndependentFeedRequest::getArticle(). URL:" << url;
 #endif
-    m_redirects = 0;
-    QNetworkRequest request(url);
-    request.setRawHeader("User-Agent", USER_AGENT);
-    QNetworkReply *reply = networkAccessManager()->get(request);
-    connect(reply, SIGNAL(finished()), this, SLOT(checkPage()));
-    connect(this, SIGNAL(finished(FeedRequest*)), reply, SLOT(deleteLater()));
+    articleRequest()->getArticle(url, m_settings);
 }
 
-void IndependentFeedRequest::checkPage() {
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-
-    if (!reply) {
-        setErrorString(tr("Network error"));
-        setStatus(Error);
-        emit finished(this);
-        return;
-    }
-
-    QString redirect = getRedirect(reply);
-
-    if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
-        if (m_redirects < MAX_REDIRECTS) {
-            followRedirect(redirect, SLOT(checkPage()));
-        }
-        else {
-            setErrorString(tr("Maximum redirects reached"));
-            setStatus(Error);
-            emit finished(this);
-        }
-        
-        return;
-    }
-
-    switch (reply->error()) {
-    case QNetworkReply::NoError:
-        break;
-    case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
+void IndependentFeedRequest::checkArticle(ArticleRequest *request) {
+    if (request->status() == ArticleRequest::Canceled) {
         setStatus(Canceled);
         emit finished(this);
         return;
-    default:
-        setErrorString(reply->errorString());
-        setStatus(Error);
-        emit finished(this);
-        return;
     }
 
-    const QUrl url = reply->url();
-    const QString baseUrl = url.scheme() + "://" + url.authority();
-    QString page = QString::fromUtf8(reply->readAll());
-    reply->deleteLater();
-    fixRelativeUrls(page, baseUrl);
-    const int max = m_settings.value("maxResults", 20).toInt();
     ++m_results;
-#ifdef INDEPENDENT_DEBUG
-    qDebug() << "IndependentFeedRequest::checkPage(). Writing item" << m_results << "of" << max;
-#endif
-    const QHtmlDocument document(page);
-    const QHtmlElement html = document.htmlElement();
-    writeStartItem();
-    writeItemAuthor(m_parser.author());
-    writeItemBody(html);
-    writeItemDate(m_parser.date());
-    writeItemTitle(m_parser.title());
-    writeItemUrl(m_parser.url());
-    writeEndItem();
-    
-    if ((m_results < max) && (m_parser.readNextArticle())
-            && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
-        getPage(m_parser.url());
-        return;
+
+    if (request->status() == ArticleRequest::Ready) {
+        const ArticleResult article = request->result();
+        writeStartItem();
+        writeItemAuthor(article.author.isEmpty() ? m_parser.author() : article.author);
+        writeItemBody(article.body.isEmpty() ? m_parser.description() : article.body);
+        writeItemCategories(article.categories.isEmpty() ? m_parser.categories() : article.categories);
+        writeItemDate(article.date.isNull() ? m_parser.date() : article.date);
+        writeItemEnclosures(article.enclosures.isEmpty() ? m_parser.enclosures() : article.enclosures);
+        writeItemTitle(article.title.isEmpty() ? m_parser.title() : article.title);
+        writeItemUrl(article.url.isEmpty() ? m_parser.url() : article.url);
+        writeEndItem();
     }
 #ifdef INDEPENDENT_DEBUG
-    qDebug() << "IndependentFeedRequest::checkPage(). Writing end of feed";
+    else {
+        qDebug() << "IndependentFeedRequest::checkArticle(). Error:" << request->errorString();
+    }
 #endif
+    if (m_results < m_settings.value("maxResults", 20).toInt()) {
+        if (!m_parser.readNextArticle()) {
+            writeEndFeed();
+            setErrorString(m_parser.errorString());
+            setStatus(Error);
+            emit finished(this);
+            return;
+        }
+
+        if (m_parser.date() > m_settings.value("lastUpdated").toDateTime()) {
+            getArticle(m_parser.url());
+            return;
+        }
+#ifdef INDEPENDENT_DEBUG
+        qDebug() << "IndependentFeedRequest::checkArticle(). No more new articles";
+#endif
+    }
+
     writeEndFeed();
-    setErrorString(QString());
     setStatus(Ready);
     emit finished(this);
 }
@@ -260,38 +250,12 @@ void IndependentFeedRequest::followRedirect(const QString &url, const char *slot
 #ifdef INDEPENDENT_DEBUG
     qDebug() << "IndependentFeedRequest::followRedirect(). URL:" << url;
 #endif
-    m_redirects++;
+    ++m_redirects;
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", USER_AGENT);
     QNetworkReply *reply = networkAccessManager()->get(request);
     connect(reply, SIGNAL(finished()), this, slot);
     connect(this, SIGNAL(finished(FeedRequest*)), reply, SLOT(deleteLater()));
-}
-
-void IndependentFeedRequest::fixRelativeUrls(QString &page, const QString &baseUrl) {
-    const QString scheme = baseUrl.left(baseUrl.indexOf("/"));
-    const QRegExp re("( href=| src=)('|\")(?!http)");
-    int pos = 0;
-    
-    while ((pos = re.indexIn(page, pos)) != -1) {
-        const int i = re.pos(2) + 1;
-        const QString u = page.mid(i, 2);
-
-        if (u == "//") {
-            page.insert(i, scheme);
-            pos += scheme.size();
-        }
-        else if (u.startsWith("/")) {
-            page.insert(i, baseUrl);
-            pos += baseUrl.size();
-        }
-        else {
-            page.insert(i, baseUrl + "/");
-            pos += baseUrl.size() + 1;
-        }
-
-        pos += re.matchedLength();
-    }
 }
 
 QString IndependentFeedRequest::getRedirect(const QNetworkReply *reply) {
@@ -322,10 +286,11 @@ QString IndependentFeedRequest::unescape(const QString &text) {
 }
 
 void IndependentFeedRequest::writeStartFeed() {
-    m_buffer.close();
+#ifdef INDEPENDENT_DEBUG
+    qDebug() << "IndependentFeedRequest::writeStartFeed()";
+#endif
     m_buffer.open(QBuffer::WriteOnly);
     m_writer.setDevice(&m_buffer);
-    m_writer.setAutoFormatting(true);
     m_writer.writeStartDocument();
     m_writer.writeStartElement("rss");
     m_writer.writeAttribute("version", "2.0");
@@ -336,9 +301,14 @@ void IndependentFeedRequest::writeStartFeed() {
     m_writer.writeStartElement("image");
     m_writer.writeTextElement("url", ICON_URL);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void IndependentFeedRequest::writeEndFeed() {
+#ifdef INDEPENDENT_DEBUG
+    qDebug() << "IndependentFeedRequest::writeEndFeed()";
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
     m_writer.writeEndElement();
     m_writer.writeEndDocument();
@@ -346,63 +316,104 @@ void IndependentFeedRequest::writeEndFeed() {
 }
 
 void IndependentFeedRequest::writeFeedTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void IndependentFeedRequest::writeFeedUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
 }
 
 void IndependentFeedRequest::writeStartItem() {
+#ifdef INDEPENDENT_DEBUG
+    qDebug() << "IndependentFeedRequest::writeStartItem(). Item" << m_results << "of"
+        << m_settings.value("maxResults", 20).toInt();
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("item");
+    m_buffer.close();
 }
 
 void IndependentFeedRequest::writeEndItem() {
+#ifdef INDEPENDENT_DEBUG
+    qDebug() << "IndependentFeedRequest::writeEndItem(). Item" << m_results << "of"
+        << m_settings.value("maxResults", 20).toInt();
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void IndependentFeedRequest::writeItemAuthor(const QString &author) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:creator", author);
+    m_buffer.close();
 }
 
-void IndependentFeedRequest::writeItemBody(const QHtmlElement &element) {
-    const QHtmlElement bodyElement = element.firstElementByTagName("div",
-                                                                   QHtmlAttributeMatch("itemprop", "articleBody"));
-    QString body = bodyElement.toString();
-    
-    foreach (const QHtmlElement &child, bodyElement.childElements()) {
-        if (child.tagName() == "div") {
-            body.remove(child.toString());
-        }
-    }
-
-    foreach (const QHtmlElement &figure, bodyElement.elementsByTagName("figure")) {
-        body.remove(figure.toString());
-    }
-
-    foreach (const QHtmlElement &image, bodyElement.elementsByTagName("img")) {
-        body.remove(image.toString());
-    }
-    
+void IndependentFeedRequest::writeItemBody(const QString &body) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("content:encoded");
     m_writer.writeCDATA(body);
     m_writer.writeEndElement();
+    m_buffer.close();
+}
+
+void IndependentFeedRequest::writeItemCategories(const QStringList &categories) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+
+    foreach (const QString &category, categories) {
+        m_writer.writeTextElement("category", category);
+    }
+
+    m_buffer.close();
 }
 
 void IndependentFeedRequest::writeItemDate(const QDateTime &date) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:date", date.toString(Qt::ISODate));
+    m_buffer.close();
+}
+
+void IndependentFeedRequest::writeItemEnclosures(const QVariantList &enclosures) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+
+    foreach (const QVariant &e, enclosures) {
+        const QVariantMap enclosure = e.toMap();
+        m_writer.writeStartElement("enclosure");
+        m_writer.writeAttribute("url", enclosure.value("url").toString());
+        m_writer.writeAttribute("type", enclosure.value("type").toString());
+        m_writer.writeEndElement();
+    }
+
+    m_buffer.close();
 }
 
 void IndependentFeedRequest::writeItemTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void IndependentFeedRequest::writeItemUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
+}
+
+IndependentArticleRequest* IndependentFeedRequest::articleRequest() {
+    if (!m_request) {
+        m_request = new IndependentArticleRequest(this);
+        connect(m_request, SIGNAL(finished(ArticleRequest*)), this, SLOT(checkArticle(ArticleRequest*)));
+    }
+
+    return m_request;
 }
 
 QNetworkAccessManager* IndependentFeedRequest::networkAccessManager() {

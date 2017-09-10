@@ -24,6 +24,8 @@
 #include <QVariantMap>
 #include <QXmlStreamWriter>
 
+class ArticleRequest;
+class IndependentArticleRequest;
 class QNetworkAccessManager;
 class QNetworkReply;
 
@@ -46,18 +48,18 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void checkFeed();
-    void checkPage();
+    void checkArticle(ArticleRequest *request);
 
 private:
     void setErrorString(const QString &e);
+
+    void setResult(const QByteArray &r);
     
     void setStatus(Status s);
 
-    void getPage(const QString &url);
+    void getArticle(const QString &url);
 
     void followRedirect(const QString &url, const char *slot);
-
-    static void fixRelativeUrls(QString &page, const QString &baseUrl);
 
     static QString getRedirect(const QNetworkReply *reply);
     
@@ -71,11 +73,14 @@ private:
     void writeStartItem();
     void writeEndItem();
     void writeItemAuthor(const QString &author);
-    void writeItemBody(const QHtmlElement &element);
+    void writeItemBody(const QString &body);
+    void writeItemCategories(const QStringList &categories);
     void writeItemDate(const QDateTime &date);
+    void writeItemEnclosures(const QVariantList &enclosures);
     void writeItemTitle(const QString &title);
     void writeItemUrl(const QString &url);
     
+    IndependentArticleRequest* articleRequest();
     QNetworkAccessManager* networkAccessManager();
 
     static const int MAX_REDIRECTS;
@@ -85,6 +90,7 @@ private:
 
     static const QByteArray USER_AGENT;
 
+    IndependentArticleRequest *m_request;
     QNetworkAccessManager *m_nam;
 
     FeedParser m_parser;

@@ -18,6 +18,7 @@
 #define GUARDIANFEEDPLUGIN_H
 
 #include "feedplugin.h"
+#include "guardianarticlerequest.h"
 #include "guardianfeedrequest.h"
 #if QT_VERSION < 0x050000
 #include <QtPlugin>
@@ -32,7 +33,7 @@ class GuardianFeedPlugin : public QObject, public FeedPlugin
 #endif
 
 public:
-    virtual EnclosureRequest* enclosureRequest(QObject *) { return 0; }
+    virtual ArticleRequest* articleRequest(QObject *parent = 0) { return new GuardianArticleRequest(parent); }
     virtual FeedRequest* feedRequest(QObject *parent = 0) { return new GuardianFeedRequest(parent); }
 };
 

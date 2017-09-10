@@ -27,7 +27,7 @@ function getEnclosure(url, settings) {
             try {
                 var imageUrl = /src=['"](http(s|):\/\/s\d+\.depic\.me\/[^'"]+)/.exec(response)[1];
                 var fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-                finished(new Enclosure(fileName, new NetworkRequest(imageUrl)));
+                finished(new EnclosureResult(fileName, new NetworkRequest(imageUrl)));
             }
             catch(err) {
                 error(err);

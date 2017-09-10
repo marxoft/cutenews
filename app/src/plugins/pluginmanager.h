@@ -20,7 +20,6 @@
 
 #include "feedplugin.h"
 #include "feedpluginconfig.h"
-#include <QDateTime>
 
 struct FeedPluginPair
 {
@@ -52,10 +51,14 @@ public:
     FeedPluginList plugins() const;
 
     Q_INVOKABLE FeedPluginConfig* getConfig(const QString &id) const;
+    Q_INVOKABLE FeedPluginConfig* getConfigForArticle(const QString &url) const;
     Q_INVOKABLE FeedPluginConfig* getConfigForEnclosure(const QString &url) const;
     Q_INVOKABLE FeedPlugin* getPlugin(const QString &id) const;
+    Q_INVOKABLE FeedPlugin* getPluginForArticle(const QString &url) const;
     Q_INVOKABLE FeedPlugin* getPluginForEnclosure(const QString &url) const;
-    
+
+    Q_INVOKABLE bool articleIsSupported(const QString &url) const;
+    Q_INVOKABLE ArticleRequest* articleRequest(const QString &url, QObject *parent = 0) const;
     Q_INVOKABLE bool enclosureIsSupported(const QString &url) const;
     Q_INVOKABLE EnclosureRequest* enclosureRequest(const QString &url, QObject *parent = 0) const;
     Q_INVOKABLE FeedRequest* feedRequest(const QString &id, QObject *parent = 0) const;

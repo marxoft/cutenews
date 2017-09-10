@@ -27,7 +27,7 @@ function getEnclosure(url, settings) {
             try {
                 var imageUrl = /http(s|):\/\/img\d+\.pixroute\.com\/\w\/\d+\/\w+\.\w+/.exec(response)[0];
                 var fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-                finished(new Enclosure(fileName, new NetworkRequest(imageUrl)));
+                finished(new EnclosureResult(fileName, new NetworkRequest(imageUrl)));
             }
             catch(err) {
                 error(err);

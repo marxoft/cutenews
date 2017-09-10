@@ -15,7 +15,6 @@
  */
 
 #include "wordpressfeedrequest.h"
-#include <QDateTime>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegExp>
@@ -42,17 +41,28 @@ QString WordpressFeedRequest::errorString() const {
 
 void WordpressFeedRequest::setErrorString(const QString &e) {
     m_errorString = e;
+#ifdef WORDPRESS_DEBUG
+    if (!e.isEmpty()) {
+        qDebug() << "WordpressDebug::error." << e;
+    }
+#endif
 }
 
 QByteArray WordpressFeedRequest::result() const {
     return m_buffer.data();
 }
 
-WordpressFeedRequest::Status WordpressFeedRequest::status() const {
+void WordpressFeedRequest::setResult(const QByteArray &r) {
+    m_buffer.open(QBuffer::WriteOnly);
+    m_buffer.write(r);
+    m_buffer.close();
+}
+
+FeedRequest::Status WordpressFeedRequest::status() const {
     return m_status;
 }
 
-void WordpressFeedRequest::setStatus(WordpressFeedRequest::Status s) {
+void WordpressFeedRequest::setStatus(FeedRequest::Status s) {
     if (s != status()) {
         m_status = s;
         emit statusChanged(s);
@@ -74,6 +84,8 @@ bool WordpressFeedRequest::getFeed(const QVariantMap &settings) {
     }
 
     setStatus(Active);
+    setErrorString(QString());
+    setResult(QByteArray());
     m_settings = settings;
     m_results = 0;
     getPage(settings.value("url").toString());
@@ -102,12 +114,11 @@ void WordpressFeedRequest::checkPage() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkPage()));
         }
         else {
@@ -123,7 +134,6 @@ void WordpressFeedRequest::checkPage() {
     case QNetworkReply::NoError:
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         return;
@@ -143,7 +153,7 @@ void WordpressFeedRequest::checkPage() {
     const QHtmlElement html = document.htmlElement();
     
     if (m_results == 0) {
-        QString redirect = getLatestPageUrl(html);
+        const QString redirect = getLatestPageUrl(html);
 
         if (!redirect.isEmpty()) {
             if (m_redirects < MAX_REDIRECTS) {
@@ -172,7 +182,6 @@ void WordpressFeedRequest::checkPage() {
         qDebug() << "WordpressFeedRequest::checkPage(). No items found. Writing end of feed";
 #endif
         writeEndFeed();
-        setErrorString(QString());
         setStatus(Ready);
         emit finished(this);
         return;
@@ -232,10 +241,8 @@ void WordpressFeedRequest::checkPage() {
     else {
         writeEndFeed();
 #ifdef WORDPRESS_DEBUG
-        qDebug() << "WordpressFeedRequest::checkPage(). Writing end of feed. Result:";
-        qDebug() << result();
+        qDebug() << "WordpressFeedRequest::checkPage(). Writing end of feed";
 #endif
-        setErrorString(QString());
         setStatus(Ready);
         emit finished(this);
     }
@@ -263,12 +270,11 @@ void WordpressFeedRequest::checkArticle() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkArticle()));
         }
         else {
@@ -284,7 +290,6 @@ void WordpressFeedRequest::checkArticle() {
     case QNetworkReply::NoError:
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         return;
@@ -332,10 +337,8 @@ void WordpressFeedRequest::checkArticle() {
     else {
         writeEndFeed();
 #ifdef WORDPRESS_DEBUG
-        qDebug() << "WordpressFeedRequest::checkArticle(). Writing end of feed. Result:";
-        qDebug() << result();
+        qDebug() << "WordpressFeedRequest::checkArticle(). Writing end of feed";
 #endif
-        setErrorString(QString());
         setStatus(Ready);
         emit finished(this);
     }
@@ -345,7 +348,7 @@ void WordpressFeedRequest::followRedirect(const QString &url, const char *slot) 
 #ifdef WORDPRESS_DEBUG
     qDebug() << "WordpressFeedRequest::followRedirect(). URL:" << url;
 #endif
-    m_redirects++;
+    ++m_redirects;
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", USER_AGENT);
     QNetworkReply *reply = networkAccessManager()->get(request);
@@ -459,7 +462,6 @@ QString WordpressFeedRequest::unescape(const QString &text) {
 }
 
 void WordpressFeedRequest::writeStartFeed() {
-    m_buffer.close();
     m_buffer.open(QBuffer::WriteOnly);
     m_writer.setDevice(&m_buffer);
     m_writer.setAutoFormatting(true);
@@ -470,9 +472,11 @@ void WordpressFeedRequest::writeStartFeed() {
     m_writer.writeAttribute("xmlns:content", "http://purl.org/rss/1.0/modules/content/");
     m_writer.writeStartElement("channel");
     m_writer.writeTextElement("description", tr("WordPress blog posts"));
+    m_buffer.close();
 }
 
 void WordpressFeedRequest::writeEndFeed() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
     m_writer.writeEndElement();
     m_writer.writeEndDocument();
@@ -480,48 +484,66 @@ void WordpressFeedRequest::writeEndFeed() {
 }
 
 void WordpressFeedRequest::writeFeedTitle(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(element.firstElementByTagName("title").text()));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void WordpressFeedRequest::writeFeedUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
 }
 
 void WordpressFeedRequest::writeStartItem() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("item");
+    m_buffer.close();
 }
 
 void WordpressFeedRequest::writeEndItem() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void WordpressFeedRequest::writeItemAuthor(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:creator", element.firstElementByTagName("span", QHtmlAttributeMatch("class", "author",
                               QHtmlParser::MatchStartsWith)).firstElementByTagName("a").text());
+    m_buffer.close();
 }
 
 void WordpressFeedRequest::writeItemBody(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("content:encoded");
     m_writer.writeCDATA(element.firstElementByTagName("div", QHtmlAttributeMatch("class", "entry-(content|summary)",
                         QHtmlParser::MatchRegExp)).toString());
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void WordpressFeedRequest::writeItemCategories(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+
     foreach (const QHtmlElement &category, element.elementsByTagName("a", QHtmlAttributeMatch("rel", "^(category |)tag",
                                                                      QHtmlParser::MatchRegExp))) {
         m_writer.writeTextElement("category", category.text());
     }
+
+    m_buffer.close();
 }
 
 void WordpressFeedRequest::writeItemDate(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     QHtmlElement date = element.firstElementByTagName("time", QHtmlAttributeMatch("class", "entry-date",
                                                       QHtmlParser::MatchStartsWith));
 
     if (!date.isNull()) {
         m_writer.writeTextElement("dc:date", date.attribute("datetime"));
+        m_buffer.close();
         return;
     }
     
@@ -529,6 +551,7 @@ void WordpressFeedRequest::writeItemDate(const QHtmlElement &element) {
     
     if (!date.isNull()) {
         m_writer.writeTextElement("dc:date", date.attribute("title"));
+        m_buffer.close();
         return;
     }
     
@@ -548,6 +571,7 @@ void WordpressFeedRequest::writeItemDate(const QHtmlElement &element) {
                                                                       .toString(Qt::ISODate));
         }
         
+        m_buffer.close();
         return;
     }
     
@@ -556,10 +580,12 @@ void WordpressFeedRequest::writeItemDate(const QHtmlElement &element) {
     if (!date.isNull()) {
         m_writer.writeTextElement("dc:date", QDateTime::fromString(date.text(true).simplified(), "MMM ddyyyy")
                                                                        .toString(Qt::ISODate));
+        m_buffer.close();
         return;
     }
     
     m_writer.writeTextElement("dc:date", QDateTime::currentDateTime().toString(Qt::ISODate));
+    m_buffer.close();
 }
 
 void WordpressFeedRequest::writeItemTitle(const QHtmlElement &element) {
@@ -569,18 +595,24 @@ void WordpressFeedRequest::writeItemTitle(const QHtmlElement &element) {
         title = element.firstElementByTagName("h2", QHtmlAttributeMatch("class", "entry-title"));
     }
 
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title.text(true)));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void WordpressFeedRequest::writeItemUrl(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", element.firstElementByTagName("a", QHtmlAttributeMatch("rel", "bookmark"))
                                              .attribute("href"));
+    m_buffer.close();
 }
 
 void WordpressFeedRequest::writeItemUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
 }
 
 QNetworkAccessManager* WordpressFeedRequest::networkAccessManager() {

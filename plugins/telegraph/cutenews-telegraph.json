@@ -2,6 +2,16 @@
     "type": "qt",
     "version": 1,
     "name": "The Telegraph",
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(www\\.|)telegraph\\.co\\.uk/[\\w-]+",
+    "articleSettings": [
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
+        }
+    ],
     "supportsFeeds": true,
     "feedSettings": [
         {
@@ -210,6 +220,13 @@
                     "value": "tennis"
                 }
             ]
+        },
+
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
         },
 
         {

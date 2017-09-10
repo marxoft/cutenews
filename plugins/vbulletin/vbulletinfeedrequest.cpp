@@ -15,11 +15,9 @@
  */
 
 #include "vbulletinfeedrequest.h"
-#include <QDateTime>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegExp>
-#include <QStringList>
 #ifdef VBULLETIN_DEBUG
 #include <QDebug>
 #endif
@@ -42,21 +40,29 @@ QString VbulletinFeedRequest::errorString() const {
 }
 
 void VbulletinFeedRequest::setErrorString(const QString &e) {
-#ifdef VBULLETIN_DEBUG
-    qDebug() << "VbulletinFeedRequest::setErrorString()." << e;
-#endif
     m_errorString = e;
+#ifdef VBULLETIN_DEBUG
+    if (!e.isEmpty()) {
+        qDebug() << "VbulletinFeedRequest::error." << e;
+    }
+#endif
 }
 
 QByteArray VbulletinFeedRequest::result() const {
     return m_buffer.data();
 }
 
-VbulletinFeedRequest::Status VbulletinFeedRequest::status() const {
+void VbulletinFeedRequest::setResult(const QByteArray &r) {
+    m_buffer.open(QBuffer::WriteOnly);
+    m_buffer.write(r);
+    m_buffer.close();
+}
+
+FeedRequest::Status VbulletinFeedRequest::status() const {
     return m_status;
 }
 
-void VbulletinFeedRequest::setStatus(VbulletinFeedRequest::Status s) {
+void VbulletinFeedRequest::setStatus(FeedRequest::Status s) {
     if (s != status()) {
         m_status = s;
         emit statusChanged(s);
@@ -78,6 +84,8 @@ bool VbulletinFeedRequest::getFeed(const QVariantMap &settings) {
     }
 
     setStatus(Active);
+    setErrorString(QString());
+    setResult(QByteArray());
     m_settings = settings;
     m_results = 0;
     
@@ -99,7 +107,7 @@ bool VbulletinFeedRequest::getFeed(const QVariantMap &settings) {
 
 void VbulletinFeedRequest::login(const QUrl &url, const QString &username, const QString &password) {
 #ifdef VBULLETIN_DEBUG
-    qDebug() << "VbulletinFeedRequest::login(). URL:" << url << "Username:" << username << "Password:" << password;
+    qDebug() << "VbulletinFeedRequest::login(). URL:" << url;
 #endif
     const QString data = QString("vb_login_username=%1&vb_login_password=%2&s=&securitytoken=guest&do=login&vb_login_md5password=&vb_login_md5password_utf=").arg(username).arg(password);
     QNetworkRequest request(url);
@@ -120,12 +128,11 @@ void VbulletinFeedRequest::checkLogin() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkLogin()));
         }
         else {
@@ -146,7 +153,6 @@ void VbulletinFeedRequest::checkLogin() {
         reply->deleteLater();
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         break;
@@ -183,12 +189,11 @@ void VbulletinFeedRequest::checkPage() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkPage()));
         }
         else {
@@ -204,7 +209,6 @@ void VbulletinFeedRequest::checkPage() {
     case QNetworkReply::NoError:
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         return;
@@ -225,7 +229,7 @@ void VbulletinFeedRequest::checkPage() {
     const QString title = html.firstElementByTagName("title").text().section("- Page", 0, 0).trimmed();
     
     if (m_results == 0) {
-        QString redirect = getLatestPageUrl(html);
+        const QString redirect = getLatestPageUrl(html);
 
         if (!redirect.isEmpty()) {
             if (m_redirects < MAX_REDIRECTS) {
@@ -254,7 +258,6 @@ void VbulletinFeedRequest::checkPage() {
         qDebug() << "VbulletinFeedRequest::checkPage(). No items found. Writing end of feed";
 #endif
         writeEndFeed();
-        setErrorString(QString());
         setStatus(Ready);
         emit finished(this);
         return;
@@ -292,10 +295,8 @@ void VbulletinFeedRequest::checkPage() {
     
     writeEndFeed();
 #ifdef VBULLETIN_DEBUG
-    qDebug() << "VbulletinFeedRequest::checkPage(). Writing end of feed. Result:";
-    qDebug() << result();
+    qDebug() << "VbulletinFeedRequest::checkPage(). Writing end of feed";
 #endif
-    setErrorString(QString());
     setStatus(Ready);
     emit finished(this);
 }
@@ -304,7 +305,7 @@ void VbulletinFeedRequest::followRedirect(const QUrl &url, const char *slot) {
 #ifdef VBULLETIN_DEBUG
     qDebug() << "VbulletinFeedRequest::followRedirect(). URL:" << url;
 #endif
-    m_redirects++;
+    ++m_redirects;
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", USER_AGENT);
     QNetworkReply *reply = networkAccessManager()->get(request);
@@ -439,7 +440,6 @@ QString VbulletinFeedRequest::unescape(const QString &text) {
 }
 
 void VbulletinFeedRequest::writeStartFeed() {
-    m_buffer.close();
     m_buffer.open(QBuffer::WriteOnly);
     m_writer.setDevice(&m_buffer);
     m_writer.setAutoFormatting(true);
@@ -450,9 +450,11 @@ void VbulletinFeedRequest::writeStartFeed() {
     m_writer.writeAttribute("xmlns:content", "http://purl.org/rss/1.0/modules/content/");
     m_writer.writeStartElement("channel");
     m_writer.writeTextElement("description", tr("vBulletin thread posts"));
+    m_buffer.close();
 }
 
 void VbulletinFeedRequest::writeEndFeed() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
     m_writer.writeEndElement();
     m_writer.writeEndDocument();
@@ -460,24 +462,33 @@ void VbulletinFeedRequest::writeEndFeed() {
 }
 
 void VbulletinFeedRequest::writeFeedTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void VbulletinFeedRequest::writeFeedUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
 }
 
 void VbulletinFeedRequest::writeStartItem() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("item");
+    m_buffer.close();
 }
 
 void VbulletinFeedRequest::writeEndItem() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void VbulletinFeedRequest::writeItemAuthor(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     QHtmlElement author = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "username"));
 
     if (!author.isNull()) {
@@ -497,9 +508,12 @@ void VbulletinFeedRequest::writeItemAuthor(const QHtmlElement &element) {
             }
         }
     }
+
+    m_buffer.close();
 }
 
 void VbulletinFeedRequest::writeItemBody(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("content:encoded");
     QHtmlElement post = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "postdetails"));
     
@@ -523,15 +537,21 @@ void VbulletinFeedRequest::writeItemBody(const QHtmlElement &element) {
     }
     
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void VbulletinFeedRequest::writeItemCategories(const QStringList &categories) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+
     foreach (const QString &category, categories) {
         m_writer.writeTextElement("category", category);
     }
+
+    m_buffer.close();
 }
 
 void VbulletinFeedRequest::writeItemDate(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     QString dateString = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "postdate")).text().trimmed();
     QString format("yyyy-MM-dd");
     
@@ -602,15 +622,20 @@ void VbulletinFeedRequest::writeItemDate(const QHtmlElement &element) {
             }
         }
     }
+
+    m_buffer.close();
 }
 
 void VbulletinFeedRequest::writeItemTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void VbulletinFeedRequest::writeItemUrl(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     const QHtmlElement report = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "reportthis"));
 
     if (!report.isNull()) {
@@ -620,6 +645,8 @@ void VbulletinFeedRequest::writeItemUrl(const QHtmlElement &element) {
         m_writer.writeTextElement("link", element.firstElementByTagName("a",
                                   QHtmlAttributeMatch("href", "http", QHtmlParser::MatchStartsWith)).attribute("href"));
     }
+
+    m_buffer.close();
 }
 
 QNetworkAccessManager* VbulletinFeedRequest::networkAccessManager() {

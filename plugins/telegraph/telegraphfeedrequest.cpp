@@ -15,10 +15,9 @@
  */
 
 #include "telegraphfeedrequest.h"
-#include <QDateTime>
+#include "telegrapharticlerequest.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QRegExp>
 #ifdef TELEGRAPH_DEBUG
 #include <QDebug>
 #endif
@@ -32,6 +31,7 @@ const QByteArray TelegraphFeedRequest::USER_AGENT("Wget/1.13.4 (linux-gnu)");
 
 TelegraphFeedRequest::TelegraphFeedRequest(QObject *parent) :
     FeedRequest(parent),
+    m_request(0),
     m_nam(0),
     m_status(Idle),
     m_results(0),
@@ -45,17 +45,28 @@ QString TelegraphFeedRequest::errorString() const {
 
 void TelegraphFeedRequest::setErrorString(const QString &e) {
     m_errorString = e;
+#ifdef TELEGRAPH_DEBUG
+    if (!e.isEmpty()) {
+        qDebug() << "TelegraphFeedRequest::error." << e;
+    }
+#endif
 }
 
 QByteArray TelegraphFeedRequest::result() const {
     return m_buffer.data();
 }
 
-TelegraphFeedRequest::Status TelegraphFeedRequest::status() const {
+void TelegraphFeedRequest::setResult(const QByteArray &r) {
+    m_buffer.open(QBuffer::WriteOnly);
+    m_buffer.write(r);
+    m_buffer.close();
+}
+
+FeedRequest::Status TelegraphFeedRequest::status() const {
     return m_status;
 }
 
-void TelegraphFeedRequest::setStatus(TelegraphFeedRequest::Status s) {
+void TelegraphFeedRequest::setStatus(FeedRequest::Status s) {
     if (s != status()) {
         m_status = s;
         emit statusChanged(s);
@@ -64,8 +75,13 @@ void TelegraphFeedRequest::setStatus(TelegraphFeedRequest::Status s) {
 
 bool TelegraphFeedRequest::cancel() {
     if (status() == Active) {
-        setStatus(Canceled);
-        emit finished(this);
+        if ((m_request) && (m_request->status() == ArticleRequest::Active)) {
+            m_request->cancel();
+        }
+        else {
+            setStatus(Canceled);
+            emit finished(this);
+        }
     }
 
     return true;
@@ -77,6 +93,8 @@ bool TelegraphFeedRequest::getFeed(const QVariantMap &settings) {
     }
 
     setStatus(Active);
+    setResult(QByteArray());
+    setErrorString(QString());
     m_settings = settings;
     m_results = 0;
     m_redirects = 0;
@@ -110,12 +128,11 @@ void TelegraphFeedRequest::checkFeed() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkFeed()));
         }
         else {
@@ -131,7 +148,6 @@ void TelegraphFeedRequest::checkFeed() {
     case QNetworkReply::NoError:
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         return;
@@ -141,25 +157,31 @@ void TelegraphFeedRequest::checkFeed() {
         emit finished(this);
         return;
     }
-    
+
     m_parser.setContent(reply->readAll());
-    reply->deleteLater();
 
     if (m_parser.readChannel()) {
-#ifdef TELEGRAPH_DEBUG
-        qDebug() << "TelegraphFeedRequest::checkFeed(). Writing start of feed";
-#endif
         writeStartFeed();
         writeFeedTitle(tr("The Telegraph - %1").arg(m_parser.title()));
         writeFeedUrl(m_parser.url());
 
-        if ((m_parser.readNextArticle()) && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
-            getPage(m_parser.url());
+        if (m_parser.readNextArticle()) {
+            if (m_parser.date() > m_settings.value("lastUpdated").toDateTime()) {
+                reply->deleteLater();
+                getArticle(m_parser.url());
+            }
+            else {
+#ifdef TELEGRAPH_DEBUG
+                qDebug() << "TelegraphFeedRequest::checkFeed(). No new articles";
+#endif
+                writeEndFeed();
+                setStatus(Ready);
+                emit finished(this);
+            }
+
             return;
         }
-#ifdef TELEGRAPH_DEBUG
-        qDebug() << "TelegraphFeedRequest::checkFeed(). Writing end of feed";
-#endif
+
         writeEndFeed();
     }
     
@@ -168,90 +190,58 @@ void TelegraphFeedRequest::checkFeed() {
     emit finished(this);
 }
 
-void TelegraphFeedRequest::getPage(const QString &url) {
+void TelegraphFeedRequest::getArticle(const QString &url) {
 #ifdef TELEGRAPH_DEBUG
-    qDebug() << "TelegraphFeedRequest::getPage(). URL:" << url;
+    qDebug() << "TelegraphFeedRequest::getArticle(). URL:" << url;
 #endif
-    m_redirects = 0;
-    QNetworkRequest request(url);
-    request.setRawHeader("User-Agent", USER_AGENT);
-    QNetworkReply *reply = networkAccessManager()->get(request);
-    connect(reply, SIGNAL(finished()), this, SLOT(checkPage()));
-    connect(this, SIGNAL(finished(FeedRequest*)), reply, SLOT(deleteLater()));
+    articleRequest()->getArticle(url, m_settings);
 }
 
-void TelegraphFeedRequest::checkPage() {
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-
-    if (!reply) {
-        setErrorString(tr("Network error"));
-        setStatus(Error);
-        emit finished(this);
-        return;
-    }
-
-    QString redirect = getRedirect(reply);
-
-    if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
-        if (m_redirects < MAX_REDIRECTS) {
-            followRedirect(redirect, SLOT(checkPage()));
-        }
-        else {
-            setErrorString(tr("Maximum redirects reached"));
-            setStatus(Error);
-            emit finished(this);
-        }
-        
-        return;
-    }
-
-    switch (reply->error()) {
-    case QNetworkReply::NoError:
-        break;
-    case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
+void TelegraphFeedRequest::checkArticle(ArticleRequest *request) {
+    if (request->status() == ArticleRequest::Canceled) {
         setStatus(Canceled);
         emit finished(this);
         return;
-    default:
-        setErrorString(reply->errorString());
-        setStatus(Error);
-        emit finished(this);
-        return;
     }
 
-    const QUrl url = reply->url();
-    const QString baseUrl = url.scheme() + "://" + url.authority();
-    QString page = QString::fromUtf8(reply->readAll());
-    reply->deleteLater();
-    fixRelativeUrls(page, baseUrl);
-    const int max = m_settings.value("maxResults", 20).toInt();
     ++m_results;
-#ifdef TELEGRAPH_DEBUG
-    qDebug() << "TelegraphFeedRequest::checkPage(). Writing item" << m_results << "of" << max;
-#endif
-    const QHtmlDocument document(page);
-    const QHtmlElement html = document.htmlElement();
-    writeStartItem();
-    writeItemAuthor(m_parser.author());
-    writeItemBody(html);
-    writeItemDate(m_parser.date());
-    writeItemTitle(m_parser.title());
-    writeItemUrl(m_parser.url());
-    writeEndItem();
-    
-   if ((m_results < max) && (m_parser.readNextArticle())
-            && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
-        getPage(m_parser.url());
-        return;
+
+    if (request->status() == ArticleRequest::Ready) {
+        const ArticleResult article = request->result();
+        writeStartItem();
+        writeItemAuthor(article.author.isEmpty() ? m_parser.author() : article.author);
+        writeItemBody(article.body.isEmpty() ? m_parser.description() : article.body);
+        writeItemCategories(article.categories.isEmpty() ? m_parser.categories() : article.categories);
+        writeItemDate(article.date.isNull() ? m_parser.date() : article.date);
+        writeItemEnclosures(article.enclosures.isEmpty() ? m_parser.enclosures() : article.enclosures);
+        writeItemTitle(article.title.isEmpty() ? m_parser.title() : article.title);
+        writeItemUrl(article.url.isEmpty() ? m_parser.url() : article.url);
+        writeEndItem();
     }
 #ifdef TELEGRAPH_DEBUG
-    qDebug() << "TelegraphFeedRequest::checkPage(). Writing end of feed";
+    else {
+        qDebug() << "TelegraphFeedRequest::checkArticle(). Error:" << request->errorString();
+    }
 #endif
+    if (m_results < m_settings.value("maxResults", 20).toInt()) {
+        if (!m_parser.readNextArticle()) {
+            writeEndFeed();
+            setErrorString(m_parser.errorString());
+            setStatus(Error);
+            emit finished(this);
+            return;
+        }
+
+        if (m_parser.date() > m_settings.value("lastUpdated").toDateTime()) {
+            getArticle(m_parser.url());
+            return;
+        }
+#ifdef TELEGRAPH_DEBUG
+        qDebug() << "TelegraphFeedRequest::checkArticle(). No more new articles";
+#endif
+    }
+
     writeEndFeed();
-    setErrorString(QString());
     setStatus(Ready);
     emit finished(this);
 }
@@ -260,38 +250,12 @@ void TelegraphFeedRequest::followRedirect(const QString &url, const char *slot) 
 #ifdef TELEGRAPH_DEBUG
     qDebug() << "TelegraphFeedRequest::followRedirect(). URL:" << url;
 #endif
-    m_redirects++;
+    ++m_redirects;
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", USER_AGENT);
     QNetworkReply *reply = networkAccessManager()->get(request);
     connect(reply, SIGNAL(finished()), this, slot);
     connect(this, SIGNAL(finished(FeedRequest*)), reply, SLOT(deleteLater()));
-}
-
-void TelegraphFeedRequest::fixRelativeUrls(QString &page, const QString &baseUrl) {
-    const QString scheme = baseUrl.left(baseUrl.indexOf("/"));
-    const QRegExp re("( href=| src=)('|\")(?!http)");
-    int pos = 0;
-    
-    while ((pos = re.indexIn(page, pos)) != -1) {
-        const int i = re.pos(2) + 1;
-        const QString u = page.mid(i, 2);
-
-        if (u == "//") {
-            page.insert(i, scheme);
-            pos += scheme.size();
-        }
-        else if (u.startsWith("/")) {
-            page.insert(i, baseUrl);
-            pos += baseUrl.size();
-        }
-        else {
-            page.insert(i, baseUrl + "/");
-            pos += baseUrl.size() + 1;
-        }
-
-        pos += re.matchedLength();
-    }
 }
 
 QString TelegraphFeedRequest::getRedirect(const QNetworkReply *reply) {
@@ -322,10 +286,11 @@ QString TelegraphFeedRequest::unescape(const QString &text) {
 }
 
 void TelegraphFeedRequest::writeStartFeed() {
-    m_buffer.close();
+#ifdef TELEGRAPH_DEBUG
+    qDebug() << "TelegraphFeedRequest::writeStartFeed()";
+#endif
     m_buffer.open(QBuffer::WriteOnly);
     m_writer.setDevice(&m_buffer);
-    m_writer.setAutoFormatting(true);
     m_writer.writeStartDocument();
     m_writer.writeStartElement("rss");
     m_writer.writeAttribute("version", "2.0");
@@ -336,9 +301,14 @@ void TelegraphFeedRequest::writeStartFeed() {
     m_writer.writeStartElement("image");
     m_writer.writeTextElement("url", ICON_URL);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void TelegraphFeedRequest::writeEndFeed() {
+#ifdef TELEGRAPH_DEBUG
+    qDebug() << "TelegraphFeedRequest::writeEndFeed()";
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
     m_writer.writeEndElement();
     m_writer.writeEndDocument();
@@ -346,59 +316,104 @@ void TelegraphFeedRequest::writeEndFeed() {
 }
 
 void TelegraphFeedRequest::writeFeedTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void TelegraphFeedRequest::writeFeedUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
 }
 
 void TelegraphFeedRequest::writeStartItem() {
+#ifdef TELEGRAPH_DEBUG
+    qDebug() << "TelegraphFeedRequest::writeStartItem(). Item" << m_results << "of"
+        << m_settings.value("maxResults", 20).toInt();
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("item");
+    m_buffer.close();
 }
 
 void TelegraphFeedRequest::writeEndItem() {
+#ifdef TELEGRAPH_DEBUG
+    qDebug() << "TelegraphFeedRequest::writeEndItem(). Item" << m_results << "of"
+        << m_settings.value("maxResults", 20).toInt();
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void TelegraphFeedRequest::writeItemAuthor(const QString &author) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:creator", author);
+    m_buffer.close();
 }
 
-void TelegraphFeedRequest::writeItemBody(const QHtmlElement &element) {
-    const QHtmlElement bodyEl =
-        element.firstElementByTagName("article", QHtmlAttributeMatch("itemprop", "articleBody"));
-    QString body = bodyEl.toString();
-
-    foreach (const QHtmlElement &el, bodyEl.elementsByTagName("div", QHtmlAttributeMatches()
-                << QHtmlAttributeMatch("class", "videoPlayer", QHtmlParser::MatchContains)
-                << QHtmlAttributeMatch("class", "advert", QHtmlParser::MatchContains)
-                << QHtmlAttributeMatch("class", "apester-media"), QHtmlParser::MatchAny)) {
-        body.remove(el.toString());
-    }
-
-    QRegExp re("(<figure.*</figure>|<picture.*</picture>|<aside.*</aside>|<script.*</script>)");
-    re.setMinimal(true);
-    body.remove(re);
+void TelegraphFeedRequest::writeItemBody(const QString &body) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("content:encoded");
     m_writer.writeCDATA(body);
     m_writer.writeEndElement();
+    m_buffer.close();
+}
+
+void TelegraphFeedRequest::writeItemCategories(const QStringList &categories) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+
+    foreach (const QString &category, categories) {
+        m_writer.writeTextElement("category", category);
+    }
+
+    m_buffer.close();
 }
 
 void TelegraphFeedRequest::writeItemDate(const QDateTime &date) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:date", date.toString(Qt::ISODate));
+    m_buffer.close();
+}
+
+void TelegraphFeedRequest::writeItemEnclosures(const QVariantList &enclosures) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+
+    foreach (const QVariant &e, enclosures) {
+        const QVariantMap enclosure = e.toMap();
+        m_writer.writeStartElement("enclosure");
+        m_writer.writeAttribute("url", enclosure.value("url").toString());
+        m_writer.writeAttribute("type", enclosure.value("type").toString());
+        m_writer.writeEndElement();
+    }
+
+    m_buffer.close();
 }
 
 void TelegraphFeedRequest::writeItemTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void TelegraphFeedRequest::writeItemUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
+}
+
+TelegraphArticleRequest* TelegraphFeedRequest::articleRequest() {
+    if (!m_request) {
+        m_request = new TelegraphArticleRequest(this);
+        connect(m_request, SIGNAL(finished(ArticleRequest*)), this, SLOT(checkArticle(ArticleRequest*)));
+    }
+
+    return m_request;
 }
 
 QNetworkAccessManager* TelegraphFeedRequest::networkAccessManager() {

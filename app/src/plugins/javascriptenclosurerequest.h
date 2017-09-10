@@ -40,7 +40,7 @@ public:
 
     virtual QString errorString() const;
 
-    virtual Enclosure result() const;
+    virtual EnclosureResult result() const;
 
     virtual Status status() const;
 
@@ -50,12 +50,12 @@ public Q_SLOTS:
 
 private Q_SLOTS:
     void onRequestError(const QString &errorString);
-    void onRequestFinished(const Enclosure &result);
+    void onRequestFinished(const EnclosureResult &result);
 
 private:
     void setErrorString(const QString &e);
     
-    void setResult(const Enclosure &r);
+    void setResult(const EnclosureResult &r);
     
     void setStatus(Status s);
     
@@ -69,7 +69,7 @@ private:
 
     QString m_errorString;
 
-    Enclosure m_result;
+    EnclosureResult m_result;
 
     Status m_status;
     
@@ -85,14 +85,14 @@ public:
 
 Q_SIGNALS:
     void error(const QString &errorString);
-    void finished(const Enclosure &result);
+    void finished(const EnclosureResult &result);
 
 private:
-    static QScriptValue newEnclosure(QScriptContext *context, QScriptEngine *engine);
+    static QScriptValue newEnclosureResult(QScriptContext *context, QScriptEngine *engine);
     static QScriptValue newNetworkRequest(QScriptContext *context, QScriptEngine *engine);
 };
 
-class JavaScriptEnclosure : public QObject, public QScriptable
+class JavaScriptEnclosureResult : public QObject, public QScriptable
 {
     Q_OBJECT
     
@@ -102,7 +102,7 @@ class JavaScriptEnclosure : public QObject, public QScriptable
     Q_PROPERTY(QString data READ data WRITE setData)
 
 public:
-    explicit JavaScriptEnclosure(QObject *parent = 0);
+    explicit JavaScriptEnclosureResult(QObject *parent = 0);
     
     QString fileName() const;
     void setFileName(const QString &f);
@@ -138,7 +138,7 @@ public Q_SLOTS:
     void setHeader(const QString &name, const QVariant &value);
 };
 
-Q_DECLARE_METATYPE(Enclosure*)
+Q_DECLARE_METATYPE(EnclosureResult*)
 Q_DECLARE_METATYPE(QNetworkRequest*)
 
 #endif // JAVASCRIPTENCLOSUREREQUEST_H

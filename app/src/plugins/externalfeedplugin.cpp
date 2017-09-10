@@ -16,6 +16,7 @@
  */
 
 #include "externalfeedplugin.h"
+#include "externalarticlerequest.h"
 #include "externalenclosurerequest.h"
 #include "externalfeedrequest.h"
 
@@ -47,6 +48,10 @@ QString ExternalFeedPlugin::id() const {
 
 void ExternalFeedPlugin::setId(const QString &id) {
     m_id = id;
+}
+
+ArticleRequest* ExternalFeedPlugin::articleRequest(QObject *parent) {
+    return new ExternalArticleRequest(id(), fileName(), parent);
 }
 
 EnclosureRequest* ExternalFeedPlugin::enclosureRequest(QObject *parent) {

@@ -43,11 +43,11 @@ void ExternalEnclosureRequest::setErrorString(const QString &e) {
     m_errorString = e;
 }
 
-Enclosure ExternalEnclosureRequest::result() const {
+EnclosureResult ExternalEnclosureRequest::result() const {
     return m_result;
 }
 
-void ExternalEnclosureRequest::setResult(const Enclosure &r) {
+void ExternalEnclosureRequest::setResult(const EnclosureResult &r) {
     m_result = r;
 }
 
@@ -113,7 +113,7 @@ void ExternalEnclosureRequest::onRequestError() {
     const QString errorString = m_process->errorString();
     Logger::log("ExternalEnclosureRequest::onRequestError(): " + errorString);
     setErrorString(errorString);
-    setResult(Enclosure());
+    setResult(EnclosureResult());
     setStatus(Error);
     emit finished(this);
 }
@@ -150,13 +150,13 @@ void ExternalEnclosureRequest::onRequestFinished(int exitCode) {
             }
             else {
                 setErrorString(tr("Filename or URL is empty"));
-                setResult(Enclosure());
+                setResult(EnclosureResult());
                 setStatus(Error);
             }
         }
         else {
             setErrorString(tr("Invalid response"));
-            setResult(Enclosure());
+            setResult(EnclosureResult());
             setStatus(Error);
         }        
     }
@@ -164,7 +164,7 @@ void ExternalEnclosureRequest::onRequestFinished(int exitCode) {
         setErrorString(m_process->errorString());        
         Logger::log(QString("ExternalEnclosureRequest::onRequestFinished(). Exit code: %1, Error: %2")
                            .arg(exitCode).arg(errorString()));
-        setResult(Enclosure());
+        setResult(EnclosureResult());
         setStatus(Error);
     }
     

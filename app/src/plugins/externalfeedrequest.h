@@ -70,4 +70,4 @@ private:
     Status m_status;    
 };
 
-#endif // EXTERNALSERVICEPLUGIN_H
+#endif // EXTERNALFEEDREQUEST_H

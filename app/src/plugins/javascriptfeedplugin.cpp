@@ -16,6 +16,7 @@
  */
 
 #include "javascriptfeedplugin.h"
+#include "javascriptarticlerequest.h"
 #include "javascriptenclosurerequest.h"
 #include "javascriptfeedrequest.h"
 
@@ -47,6 +48,10 @@ QString JavaScriptFeedPlugin::id() const {
 
 void JavaScriptFeedPlugin::setId(const QString &id) {
     m_id = id;
+}
+
+ArticleRequest* JavaScriptFeedPlugin::articleRequest(QObject *parent) {
+    return new JavaScriptArticleRequest(id(), fileName(), parent);
 }
 
 EnclosureRequest* JavaScriptFeedPlugin::enclosureRequest(QObject *parent) {

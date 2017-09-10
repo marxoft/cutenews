@@ -64,7 +64,7 @@ function getEnclosure(url, settings) {
                             if (quality[i].type === "video/mp4") {
                                 var fileName = config.metadata.title + ".mp4";
                                 var videoUrl = quality[i].url;
-                                finished(new Enclosure(fileName, new NetworkRequest(videoUrl)));
+                                finished(new EnclosureResult(fileName, new NetworkRequest(videoUrl)));
                                 return;
                             }
                         }

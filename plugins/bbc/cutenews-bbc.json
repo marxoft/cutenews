@@ -2,6 +2,16 @@
     "type": "qt",
     "version": 1,
     "name": "BBC",
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(www\\.|)bbc\\.co\\.uk/[\\w-]+",
+    "articleSettings": [
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
+        }
+    ],
     "supportsFeeds": true,
     "feedSettings": [
         {
@@ -335,6 +345,13 @@
                     "value": "sport/wrestling"
                 }
             ]
+        },
+
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
         },
 
         {

@@ -40,11 +40,11 @@ void YouTubeEnclosureRequest::setErrorString(const QString &e) {
     m_errorString = e;
 }
 
-Enclosure YouTubeEnclosureRequest::result() const {
+EnclosureResult YouTubeEnclosureRequest::result() const {
     return m_result;
 }
 
-void YouTubeEnclosureRequest::setResult(const Enclosure &r) {
+void YouTubeEnclosureRequest::setResult(const EnclosureResult &r) {
     m_result = r;
 }
 
@@ -86,7 +86,7 @@ bool YouTubeEnclosureRequest::getEnclosure(const QString &url, const QVariantMap
     
     if (videoId.isEmpty()) {
         setErrorString(tr("Cannot extract video ID from URL"));
-        setResult(Enclosure());
+        setResult(EnclosureResult());
         setStatus(Error);
         emit finished(this);
         return false;
@@ -140,13 +140,13 @@ void YouTubeEnclosureRequest::checkStreams() {
         }
 
         setErrorString(tr("No video streams found"));
-        setResult(Enclosure());
+        setResult(EnclosureResult());
         setStatus(Error);
         emit finished(this);
     }
     else if (m_streamsRequest->status() == QYouTube::StreamsRequest::Failed) {
         setErrorString(m_streamsRequest->errorString());
-        setResult(Enclosure());
+        setResult(EnclosureResult());
         setStatus(Error);
         emit finished(this);
     }
@@ -169,7 +169,7 @@ void YouTubeEnclosureRequest::checkVideo() {
         }
         else {
             setErrorString(tr("No video found"));
-            setResult(Enclosure());
+            setResult(EnclosureResult());
             setStatus(Error);
         }
 
@@ -177,7 +177,7 @@ void YouTubeEnclosureRequest::checkVideo() {
     }
     else if (m_videoRequest->status() == QYouTube::ResourcesRequest::Failed) {
         setErrorString(m_videoRequest->errorString());
-        setResult(Enclosure());
+        setResult(EnclosureResult());
         setStatus(Error);
         emit finished(this);
     }

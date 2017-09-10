@@ -149,20 +149,25 @@ void BrowserPage::showContextMenu(const QPoint &pos) {
     QMenu menu(this);
     
     if (!url.isEmpty()) {
-        const bool plugin = PluginManager::instance()->enclosureIsSupported(url);
+        const bool article = PluginManager::instance()->articleIsSupported(url);
+        const bool enclosure = PluginManager::instance()->enclosureIsSupported(url);
         menu.addAction(m_webView->pageAction(QWebPage::CopyLinkToClipboard));
+        QAction *articleAction = article ? menu.addAction(tr("Open Article in New Tab")) : 0;
         QAction *tabAction = menu.addAction(tr("Open Link in New Tab"));
         QAction *externalAction = menu.addAction(tr("Open Link Externally"));
-        QAction *pluginAction = plugin ? menu.addAction(tr("Open Link Externally Using Plugin")) : 0;
+        QAction *pluginAction = enclosure ? menu.addAction(tr("Open Link Externally Using Plugin")) : 0;
         QAction *downloadAction = menu.addAction(tr("Download Link"));
-        QAction *downloadPluginAction = plugin ? menu.addAction(tr("Download Link Using Plugin")) : 0;
+        QAction *downloadPluginAction = enclosure ? menu.addAction(tr("Download Link Using Plugin")) : 0;
         QAction *action = menu.exec(m_webView->mapToGlobal(pos));
 
         if (!action) {
             return;
         }
 
-        if (action == tabAction) {
+        if (action == articleAction) {
+            emit openArticleInTab(result.linkText(), url);
+        }
+        else if (action == tabAction) {
             emit openUrlInTab(result.linkText(), url);
         }
         else if (action == externalAction) {

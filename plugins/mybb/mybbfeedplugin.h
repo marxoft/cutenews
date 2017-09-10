@@ -32,7 +32,6 @@ class MybbFeedPlugin : public QObject, public FeedPlugin
 #endif
 
 public:
-    virtual EnclosureRequest* enclosureRequest(QObject *) { return 0; }
     virtual FeedRequest* feedRequest(QObject *parent = 0) { return new MybbFeedRequest(parent); }
 };
 

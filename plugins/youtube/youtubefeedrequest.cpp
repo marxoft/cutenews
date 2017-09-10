@@ -18,7 +18,6 @@
 #include <qyoutube/resourcesrequest.h>
 #include <QXmlStreamWriter>
 #include <QSettings>
-#include <QStringList>
 #if QT_VERSION >= 0x050000
 #include <QStandardPaths>
 #else
@@ -88,6 +87,8 @@ bool YouTubeFeedRequest::getFeed(const QVariantMap &settings) {
     }
 
     setStatus(Active);
+    setErrorString(QString());
+    setResult(QByteArray());
     m_settings = settings;
     
     if (settings.value("type") == "channel") {
@@ -166,13 +167,11 @@ void YouTubeFeedRequest::checkChannels() {
         }
 
         setErrorString(tr("Channel not found"));
-        setResult(QByteArray());
         setStatus(Error);
         emit finished(this);
     }
     else if (m_request->status() == QYouTube::ResourcesRequest::Failed) {
         setErrorString(m_request->errorString());
-        setResult(QByteArray());
         setStatus(Error);
         emit finished(this);
     }
@@ -251,14 +250,12 @@ void YouTubeFeedRequest::checkVideos() {
         writer.writeEndElement(); // rss
         writer.writeEndDocument();
         
-        setErrorString(QString());
         setResult(ba);
         setStatus(Ready);
         emit finished(this);
     }
     else if (m_request->status() == QYouTube::ResourcesRequest::Failed) {
         setErrorString(m_request->errorString());
-        setResult(QByteArray());
         setStatus(Error);
         emit finished(this);
     }

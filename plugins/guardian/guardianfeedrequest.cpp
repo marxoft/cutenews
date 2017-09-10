@@ -15,10 +15,9 @@
  */
 
 #include "guardianfeedrequest.h"
-#include <QDateTime>
+#include "guardianarticlerequest.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QRegExp>
 #ifdef GUARDIAN_DEBUG
 #include <QDebug>
 #endif
@@ -32,6 +31,7 @@ const QByteArray GuardianFeedRequest::USER_AGENT("Wget/1.13.4 (linux-gnu)");
 
 GuardianFeedRequest::GuardianFeedRequest(QObject *parent) :
     FeedRequest(parent),
+    m_request(0),
     m_nam(0),
     m_status(Idle),
     m_results(0),
@@ -45,17 +45,28 @@ QString GuardianFeedRequest::errorString() const {
 
 void GuardianFeedRequest::setErrorString(const QString &e) {
     m_errorString = e;
+#ifdef GUARDIAN_DEBUG
+    if (!e.isEmpty()) {
+        qDebug() << "GuardianFeedRequest::error." << e;
+    }
+#endif
 }
 
 QByteArray GuardianFeedRequest::result() const {
     return m_buffer.data();
 }
 
-GuardianFeedRequest::Status GuardianFeedRequest::status() const {
+void GuardianFeedRequest::setResult(const QByteArray &r) {
+    m_buffer.open(QBuffer::WriteOnly);
+    m_buffer.write(r);
+    m_buffer.close();
+}
+
+FeedRequest::Status GuardianFeedRequest::status() const {
     return m_status;
 }
 
-void GuardianFeedRequest::setStatus(GuardianFeedRequest::Status s) {
+void GuardianFeedRequest::setStatus(FeedRequest::Status s) {
     if (s != status()) {
         m_status = s;
         emit statusChanged(s);
@@ -64,8 +75,13 @@ void GuardianFeedRequest::setStatus(GuardianFeedRequest::Status s) {
 
 bool GuardianFeedRequest::cancel() {
     if (status() == Active) {
-        setStatus(Canceled);
-        emit finished(this);
+        if ((m_request) && (m_request->status() == ArticleRequest::Active)) {
+            m_request->cancel();
+        }
+        else {
+            setStatus(Canceled);
+            emit finished(this);
+        }
     }
 
     return true;
@@ -77,6 +93,8 @@ bool GuardianFeedRequest::getFeed(const QVariantMap &settings) {
     }
 
     setStatus(Active);
+    setResult(QByteArray());
+    setErrorString(QString());
     m_settings = settings;
     m_results = 0;
     m_redirects = 0;
@@ -89,6 +107,9 @@ bool GuardianFeedRequest::getFeed(const QVariantMap &settings) {
     }
 
     url.append("/rss");
+#ifdef GUARDIAN_DEBUG
+    qDebug() << "GuardianFeedRequest::getFeed(). URL:" << url;
+#endif
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", USER_AGENT);
     QNetworkReply *reply = networkAccessManager()->get(request);
@@ -110,9 +131,8 @@ void GuardianFeedRequest::checkFeed() {
     const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkFeed()));
         }
         else {
@@ -128,7 +148,6 @@ void GuardianFeedRequest::checkFeed() {
     case QNetworkReply::NoError:
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         return;
@@ -138,25 +157,31 @@ void GuardianFeedRequest::checkFeed() {
         emit finished(this);
         return;
     }
-    
+
     m_parser.setContent(reply->readAll());
-    reply->deleteLater();
 
     if (m_parser.readChannel()) {
-#ifdef GUARDIAN_DEBUG
-        qDebug() << "GuardianFeedRequest::checkFeed(). Writing start of feed";
-#endif
         writeStartFeed();
         writeFeedTitle(m_parser.title());
         writeFeedUrl(m_parser.url());
 
-        if ((m_parser.readNextArticle()) && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
-            getPage(m_parser.url());
+        if (m_parser.readNextArticle()) {
+            if (m_parser.date() > m_settings.value("lastUpdated").toDateTime()) {
+                reply->deleteLater();
+                getArticle(m_parser.url());
+            }
+            else {
+#ifdef GUARDIAN_DEBUG
+                qDebug() << "GuardianFeedRequest::checkFeed(). No new articles";
+#endif
+                writeEndFeed();
+                setStatus(Ready);
+                emit finished(this);
+            }
+
             return;
         }
-#ifdef GUARDIAN_DEBUG
-        qDebug() << "GuardianFeedRequest::checkFeed(). Writing end of feed";
-#endif
+
         writeEndFeed();
     }
     
@@ -165,92 +190,58 @@ void GuardianFeedRequest::checkFeed() {
     emit finished(this);
 }
 
-void GuardianFeedRequest::getPage(const QString &url) {
+void GuardianFeedRequest::getArticle(const QString &url) {
 #ifdef GUARDIAN_DEBUG
-    qDebug() << "GuardianFeedRequest::getPage(). URL:" << url;
+    qDebug() << "GuardianFeedRequest::getArticle(). URL:" << url;
 #endif
-    m_redirects = 0;
-    QNetworkRequest request(url);
-    request.setRawHeader("User-Agent", USER_AGENT);
-    QNetworkReply *reply = networkAccessManager()->get(request);
-    connect(reply, SIGNAL(finished()), this, SLOT(checkPage()));
-    connect(this, SIGNAL(finished(FeedRequest*)), reply, SLOT(deleteLater()));
+    articleRequest()->getArticle(url, m_settings);
 }
 
-void GuardianFeedRequest::checkPage() {
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-
-    if (!reply) {
-        setErrorString(tr("Network error"));
-        setStatus(Error);
-        emit finished(this);
-        return;
-    }
-
-    const QString redirect = getRedirect(reply);
-
-    if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
-        if (m_redirects < MAX_REDIRECTS) {
-            followRedirect(redirect, SLOT(checkPage()));
-        }
-        else {
-            setErrorString(tr("Maximum redirects reached"));
-            setStatus(Error);
-            emit finished(this);
-        }
-        
-        return;
-    }
-
-    switch (reply->error()) {
-    case QNetworkReply::NoError:
-        break;
-    case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
+void GuardianFeedRequest::checkArticle(ArticleRequest *request) {
+    if (request->status() == ArticleRequest::Canceled) {
         setStatus(Canceled);
         emit finished(this);
         return;
-    default:
-        setErrorString(reply->errorString());
-        setStatus(Error);
-        emit finished(this);
-        return;
     }
 
-    const QUrl url = reply->url();
-    const QString baseUrl = url.scheme() + "://" + url.authority();
-    QString page = QString::fromUtf8(reply->readAll());
-    reply->deleteLater();
-    fixRelativeUrls(page, baseUrl);
-    const int max = m_settings.value("maxResults", 20).toInt();
     ++m_results;
-#ifdef GUARDIAN_DEBUG
-    qDebug() << "GuardianFeedRequest::checkPage(). Writing item" << m_results << "of" << max;
-#endif
-    const QHtmlDocument document(page);
-    const QHtmlElement html = document.htmlElement();
-    writeStartItem();
-    writeItemAuthor(m_parser.author());
-    writeItemBody(html);
-    writeItemCategories(m_parser.categories());
-    writeItemDate(m_parser.date());
-    writeItemEnclosures(html);
-    writeItemTitle(m_parser.title());
-    writeItemUrl(m_parser.url());
-    writeEndItem();
-    
-    if ((m_results < max) && (m_parser.readNextArticle())
-            && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
-        getPage(m_parser.url());
-        return;
+
+    if (request->status() == ArticleRequest::Ready) {
+        const ArticleResult article = request->result();
+        writeStartItem();
+        writeItemAuthor(article.author.isEmpty() ? m_parser.author() : article.author);
+        writeItemBody(article.body.isEmpty() ? m_parser.description() : article.body);
+        writeItemCategories(article.categories.isEmpty() ? m_parser.categories() : article.categories);
+        writeItemDate(article.date.isNull() ? m_parser.date() : article.date);
+        writeItemEnclosures(article.enclosures.isEmpty() ? m_parser.enclosures() : article.enclosures);
+        writeItemTitle(article.title.isEmpty() ? m_parser.title() : article.title);
+        writeItemUrl(article.url.isEmpty() ? m_parser.url() : article.url);
+        writeEndItem();
     }
 #ifdef GUARDIAN_DEBUG
-    qDebug() << "GuardianFeedRequest::checkPage(). Writing end of feed";
+    else {
+        qDebug() << "GuardianFeedRequest::checkArticle(). Error:" << request->errorString();
+    }
 #endif
+    if (m_results < m_settings.value("maxResults", 20).toInt()) {
+        if (!m_parser.readNextArticle()) {
+            writeEndFeed();
+            setErrorString(m_parser.errorString());
+            setStatus(Error);
+            emit finished(this);
+            return;
+        }
+
+        if (m_parser.date() > m_settings.value("lastUpdated").toDateTime()) {
+            getArticle(m_parser.url());
+            return;
+        }
+#ifdef GUARDIAN_DEBUG
+        qDebug() << "GuardianFeedRequest::checkArticle(). No more new articles";
+#endif
+    }
+
     writeEndFeed();
-    setErrorString(QString());
     setStatus(Ready);
     emit finished(this);
 }
@@ -259,38 +250,12 @@ void GuardianFeedRequest::followRedirect(const QString &url, const char *slot) {
 #ifdef GUARDIAN_DEBUG
     qDebug() << "GuardianFeedRequest::followRedirect(). URL:" << url;
 #endif
-    m_redirects++;
+    ++m_redirects;
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", USER_AGENT);
     QNetworkReply *reply = networkAccessManager()->get(request);
     connect(reply, SIGNAL(finished()), this, slot);
     connect(this, SIGNAL(finished(FeedRequest*)), reply, SLOT(deleteLater()));
-}
-
-void GuardianFeedRequest::fixRelativeUrls(QString &page, const QString &baseUrl) {
-    const QString scheme = baseUrl.left(baseUrl.indexOf("/"));
-    const QRegExp re("( href=| src=)('|\")(?!http)");
-    int pos = 0;
-    
-    while ((pos = re.indexIn(page, pos)) != -1) {
-        const int i = re.pos(2) + 1;
-        const QString u = page.mid(i, 2);
-
-        if (u == "//") {
-            page.insert(i, scheme);
-            pos += scheme.size();
-        }
-        else if (u.startsWith("/")) {
-            page.insert(i, baseUrl);
-            pos += baseUrl.size();
-        }
-        else {
-            page.insert(i, baseUrl + "/");
-            pos += baseUrl.size() + 1;
-        }
-
-        pos += re.matchedLength();
-    }
 }
 
 QString GuardianFeedRequest::getRedirect(const QNetworkReply *reply) {
@@ -321,10 +286,11 @@ QString GuardianFeedRequest::unescape(const QString &text) {
 }
 
 void GuardianFeedRequest::writeStartFeed() {
-    m_buffer.close();
+#ifdef GUARDIAN_DEBUG
+    qDebug() << "GuardianFeedRequest::writeStartFeed()";
+#endif
     m_buffer.open(QBuffer::WriteOnly);
     m_writer.setDevice(&m_buffer);
-    m_writer.setAutoFormatting(true);
     m_writer.writeStartDocument();
     m_writer.writeStartElement("rss");
     m_writer.writeAttribute("version", "2.0");
@@ -335,9 +301,14 @@ void GuardianFeedRequest::writeStartFeed() {
     m_writer.writeStartElement("image");
     m_writer.writeTextElement("url", ICON_URL);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void GuardianFeedRequest::writeEndFeed() {
+#ifdef GUARDIAN_DEBUG
+    qDebug() << "GuardianFeedRequest::writeEndFeed()";
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
     m_writer.writeEndElement();
     m_writer.writeEndDocument();
@@ -345,90 +316,104 @@ void GuardianFeedRequest::writeEndFeed() {
 }
 
 void GuardianFeedRequest::writeFeedTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void GuardianFeedRequest::writeFeedUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
 }
 
 void GuardianFeedRequest::writeStartItem() {
+#ifdef GUARDIAN_DEBUG
+    qDebug() << "GuardianFeedRequest::writeStartItem(). Item" << m_results << "of"
+        << m_settings.value("maxResults", 20).toInt();
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("item");
+    m_buffer.close();
 }
 
 void GuardianFeedRequest::writeEndItem() {
+#ifdef GUARDIAN_DEBUG
+    qDebug() << "GuardianFeedRequest::writeEndItem(). Item" << m_results << "of"
+        << m_settings.value("maxResults", 20).toInt();
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void GuardianFeedRequest::writeItemAuthor(const QString &author) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:creator", author);
+    m_buffer.close();
 }
 
-void GuardianFeedRequest::writeItemBody(const QHtmlElement &element) {
-    QHtmlElement body = element.firstElementByTagName("div", QHtmlAttributeMatches()
-            << QHtmlAttributeMatch("itemprop", "articleBody")
-            << QHtmlAttributeMatch("data-test-id", "article-review-body"), QHtmlParser::MatchAny);
-
-    if (body.isNull()) {
-        body = element.firstElementByTagName("div", QHtmlAttributeMatch("data-link-name", "standfirst"));
-    }
-
-    QRegExp figure("(<figure.*</figure>|<picture.*</picture>|<aside.*</aside>|<div class=\"(block-|)share.*</div>|<button.*</button>)");
-    figure.setMinimal(true);
+void GuardianFeedRequest::writeItemBody(const QString &body) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("content:encoded");
-    m_writer.writeCDATA(body.toString().remove(figure));
+    m_writer.writeCDATA(body);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void GuardianFeedRequest::writeItemCategories(const QStringList &categories) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+
     foreach (const QString &category, categories) {
         m_writer.writeTextElement("category", category);
     }
+
+    m_buffer.close();
 }
 
 void GuardianFeedRequest::writeItemDate(const QDateTime &date) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:date", date.toString(Qt::ISODate));
+    m_buffer.close();
 }
 
-void GuardianFeedRequest::writeItemEnclosures(const QHtmlElement &element) {
-    foreach (const QHtmlElement &video, element.elementsByTagName("video")) {
-        foreach (const QHtmlElement &source, video.elementsByTagName("source")) {
-            m_writer.writeStartElement("enclosure");
-            m_writer.writeAttribute("url", source.attribute("src"));
-            m_writer.writeAttribute("type", source.attribute("type"));
-            m_writer.writeEndElement();
-        }
-    }
+void GuardianFeedRequest::writeItemEnclosures(const QVariantList &enclosures) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
 
-    foreach (const QHtmlElement &audio, element.elementsByTagName("audio")) {
-        foreach (const QHtmlElement &source, audio.elementsByTagName("source")) {
-            m_writer.writeStartElement("enclosure");
-            m_writer.writeAttribute("url", source.attribute("src"));
-            m_writer.writeAttribute("type", source.attribute("type"));
-            m_writer.writeEndElement();
-        }
-    }
-
-    foreach (const QHtmlElement &iframe, element.elementsByTagName("iframe",
-                QHtmlAttributeMatch("class", "youtube-media-atom__iframe"))) {
+    foreach (const QVariant &e, enclosures) {
+        const QVariantMap enclosure = e.toMap();
         m_writer.writeStartElement("enclosure");
-        m_writer.writeAttribute("url", "https://www.youtube.com/watch?v="
-                + iframe.attribute("id").section("youtube-", -1));
-        m_writer.writeAttribute("type", "video/youtube");
+        m_writer.writeAttribute("url", enclosure.value("url").toString());
+        m_writer.writeAttribute("type", enclosure.value("type").toString());
         m_writer.writeEndElement();
     }
+
+    m_buffer.close();
 }
 
 void GuardianFeedRequest::writeItemTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void GuardianFeedRequest::writeItemUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
+}
+
+GuardianArticleRequest* GuardianFeedRequest::articleRequest() {
+    if (!m_request) {
+        m_request = new GuardianArticleRequest(this);
+        connect(m_request, SIGNAL(finished(ArticleRequest*)), this, SLOT(checkArticle(ArticleRequest*)));
+    }
+
+    return m_request;
 }
 
 QNetworkAccessManager* GuardianFeedRequest::networkAccessManager() {

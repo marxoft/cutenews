@@ -15,7 +15,6 @@
  */
 
 #include "phpbbfeedrequest.h"
-#include <QDateTime>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegExp>
@@ -42,17 +41,28 @@ QString PhpbbFeedRequest::errorString() const {
 
 void PhpbbFeedRequest::setErrorString(const QString &e) {
     m_errorString = e;
+#ifdef PHPBB_DEBUG
+    if (!e.isEmpty()) {
+        qDebug() << "PhpbbFeedRequest::error." << e;
+    }
+#endif
 }
 
 QByteArray PhpbbFeedRequest::result() const {
     return m_buffer.data();
 }
 
-PhpbbFeedRequest::Status PhpbbFeedRequest::status() const {
+void PhpbbFeedRequest::setResult(const QByteArray &r) {
+    m_buffer.open(QBuffer::WriteOnly);
+    m_buffer.write(r);
+    m_buffer.close();
+}
+
+FeedRequest::Status PhpbbFeedRequest::status() const {
     return m_status;
 }
 
-void PhpbbFeedRequest::setStatus(PhpbbFeedRequest::Status s) {
+void PhpbbFeedRequest::setStatus(FeedRequest::Status s) {
     if (s != status()) {
         m_status = s;
         emit statusChanged(s);
@@ -74,6 +84,8 @@ bool PhpbbFeedRequest::getFeed(const QVariantMap &settings) {
     }
 
     setStatus(Active);
+    setErrorString(QString());
+    setResult(QByteArray());
     m_settings = settings;
     m_results = 0;
     
@@ -95,7 +107,7 @@ bool PhpbbFeedRequest::getFeed(const QVariantMap &settings) {
 
 void PhpbbFeedRequest::login(const QUrl &url, const QString &username, const QString &password) {
 #ifdef PHPBB_DEBUG
-    qDebug() << "PhpbbFeedRequest::login(). URL:" << url << "Username:" << username << "Password:" << password;
+    qDebug() << "PhpbbFeedRequest::login(). URL:" << url;
 #endif
     const QString data = QString("username=%1&password=%2&login=Log+in").arg(username).arg(password);
     QNetworkRequest request(url);
@@ -116,12 +128,11 @@ void PhpbbFeedRequest::checkLogin() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkLogin()));
         }
         else {
@@ -142,7 +153,6 @@ void PhpbbFeedRequest::checkLogin() {
         reply->deleteLater();
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         break;
@@ -179,12 +189,11 @@ void PhpbbFeedRequest::checkPage() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkPage()));
         }
         else {
@@ -200,7 +209,6 @@ void PhpbbFeedRequest::checkPage() {
     case QNetworkReply::NoError:
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         return;
@@ -231,7 +239,7 @@ void PhpbbFeedRequest::checkPage() {
     }
     
     if (m_results == 0) {
-        QString redirect = getLatestPageUrl(html);
+        const QString redirect = getLatestPageUrl(html);
 
         if (!redirect.isEmpty()) {
             if (m_redirects < MAX_REDIRECTS) {
@@ -260,7 +268,6 @@ void PhpbbFeedRequest::checkPage() {
         qDebug() << "PhpbbFeedRequest::checkPage(). No items found. Writing end of feed";
 #endif
         writeEndFeed();
-        setErrorString(QString());
         setStatus(Ready);
         emit finished(this);
         return;
@@ -296,10 +303,8 @@ void PhpbbFeedRequest::checkPage() {
     
     writeEndFeed();
 #ifdef PHPBB_DEBUG
-    qDebug() << "PhpbbFeedRequest::checkPage(). Writing end of feed. Result:";
-    qDebug() << result();
+    qDebug() << "PhpbbFeedRequest::checkPage(). Writing end of feed";
 #endif
-    setErrorString(QString());
     setStatus(Ready);
     emit finished(this);
 }
@@ -308,7 +313,7 @@ void PhpbbFeedRequest::followRedirect(const QUrl &url, const char *slot) {
 #ifdef PHPBB_DEBUG
     qDebug() << "PhpbbFeedRequest::followRedirect(). URL:" << url;
 #endif
-    m_redirects++;
+    ++m_redirects;
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", USER_AGENT);
     QNetworkReply *reply = networkAccessManager()->get(request);
@@ -548,7 +553,6 @@ QString PhpbbFeedRequest::unescape(const QString &text) {
 }
 
 void PhpbbFeedRequest::writeStartFeed() {
-    m_buffer.close();
     m_buffer.open(QBuffer::WriteOnly);
     m_writer.setDevice(&m_buffer);
     m_writer.setAutoFormatting(true);
@@ -559,9 +563,11 @@ void PhpbbFeedRequest::writeStartFeed() {
     m_writer.writeAttribute("xmlns:content", "http://purl.org/rss/1.0/modules/content/");
     m_writer.writeStartElement("channel");
     m_writer.writeTextElement("description", tr("phpBB thread posts"));
+    m_buffer.close();
 }
 
 void PhpbbFeedRequest::writeEndFeed() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
     m_writer.writeEndElement();
     m_writer.writeEndDocument();
@@ -569,21 +575,29 @@ void PhpbbFeedRequest::writeEndFeed() {
 }
 
 void PhpbbFeedRequest::writeFeedTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void PhpbbFeedRequest::writeFeedUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
 }
 
 void PhpbbFeedRequest::writeStartItem() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("item");
+    m_buffer.close();
 }
 
 void PhpbbFeedRequest::writeEndItem() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void PhpbbFeedRequest::writeItemAuthor(const QHtmlElement &element) {
@@ -597,10 +611,13 @@ void PhpbbFeedRequest::writeItemAuthor(const QHtmlElement &element) {
         }
     }
     
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:creator", author.text(true));
+    m_buffer.close();
 }
 
 void PhpbbFeedRequest::writeItemBody(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("content:encoded");
     QHtmlElement body = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "postbody"));
     
@@ -619,15 +636,18 @@ void PhpbbFeedRequest::writeItemBody(const QHtmlElement &element) {
     
     m_writer.writeCDATA(body.toString());
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void PhpbbFeedRequest::writeItemDate(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     QString dateString = element.nthElementByTagName(1, "span", QHtmlAttributeMatch("class", "postdetails")).text();
     
     if (!dateString.isEmpty()) {
         dateString = dateString.left(dateString.indexOf("&")).trimmed();
         m_writer.writeTextElement("dc:date", QDateTime::fromString(dateString, "'Posted: 'ddd MMM dd, yyyy h:mm ap")
                                                                   .toString(Qt::ISODate));
+        m_buffer.close();
         return;
     }
 
@@ -636,6 +656,7 @@ void PhpbbFeedRequest::writeItemDate(const QHtmlElement &element) {
     if (!dateString.isEmpty()) {
         m_writer.writeTextElement("dc:date", QDateTime::fromString(dateString.trimmed(), "ddd MMM dd, yyyy h:mm ap")
                                                                   .toString(Qt::ISODate));
+        m_buffer.close();
         return;
     }
 
@@ -645,13 +666,17 @@ void PhpbbFeedRequest::writeItemDate(const QHtmlElement &element) {
         dateString = dateString.left(dateString.indexOf("&")).trimmed();
         m_writer.writeTextElement("dc:date", QDateTime::fromString(dateString, "ddd MMM dd, yyyy h:mm ap")
                                                                   .toString(Qt::ISODate));
-    }    
+    } 
+
+    m_buffer.close();
 }
 
 void PhpbbFeedRequest::writeItemTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void PhpbbFeedRequest::writeItemUrl(const QHtmlElement &element) {
@@ -666,8 +691,10 @@ void PhpbbFeedRequest::writeItemUrl(const QHtmlElement &element) {
         }
     }
     
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", el.firstElementByTagName("a", QHtmlAttributeMatch("href", "http",
                                                                QHtmlParser::MatchStartsWith)).attribute("href"));
+    m_buffer.close();
 }
 
 QNetworkAccessManager* PhpbbFeedRequest::networkAccessManager() {

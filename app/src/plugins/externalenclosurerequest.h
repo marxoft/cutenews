@@ -38,7 +38,7 @@ public:
 
     virtual QString errorString() const;
 
-    virtual Enclosure result() const;
+    virtual EnclosureResult result() const;
 
     virtual Status status() const;
 
@@ -53,7 +53,7 @@ private Q_SLOTS:
 private:
     void setErrorString(const QString &e);
     
-    void setResult(const Enclosure &r);
+    void setResult(const EnclosureResult &r);
     
     void setStatus(Status s);
     
@@ -66,9 +66,9 @@ private:
 
     QString m_errorString;
 
-    Enclosure m_result;
+    EnclosureResult m_result;
 
     Status m_status;    
 };
 
-#endif // EXTERNALSERVICEPLUGIN_H
+#endif // EXTERNALENCLOSUREREQUEST_H

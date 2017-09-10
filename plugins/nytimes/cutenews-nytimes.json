@@ -2,6 +2,44 @@
     "type": "qt",
     "version": 1,
     "name": "The New York Times",
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(www\\.|)nytimes\\.com/[\\w-]+",
+    "supportsEnclosures": true,
+    "enclosureRegExp": "http(s|)://(www\\.|graphics\\d+\\.|)nytimes\\.com/video/[\\w-]+",
+    "enclosureSettings": [
+        {
+            "type": "list",
+            "key": "videoFormat",
+            "label": "Video format",
+            "value": "video_1080p_mp4",
+            "options": [
+                {
+                    "label": "1080P",
+                    "value": "video_1080p_mp4"
+                },
+
+                {
+                    "label": "720P",
+                    "value": "video_720p_mp4"
+                },
+
+                {
+                    "label": "480P",
+                    "value": "video_480p_mp4"
+                },
+
+                {
+                    "label": "360P",
+                    "value": "video_360p_mp4"
+                },
+
+                {
+                    "label": "240P",
+                    "value": "video_240p_mp4"
+                }
+            ]
+        }
+    ],
     "supportsFeeds": true,
     "feedSettings": [
         {

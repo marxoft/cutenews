@@ -15,11 +15,9 @@
  */
 
 #include "xenforofeedrequest.h"
-#include <QDateTime>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegExp>
-#include <QStringList>
 #ifdef XENFORO_DEBUG
 #include <QDebug>
 #endif
@@ -43,17 +41,28 @@ QString XenforoFeedRequest::errorString() const {
 
 void XenforoFeedRequest::setErrorString(const QString &e) {
     m_errorString = e;
+#ifdef XENFORO_DEBUG
+    if (!e.isEmpty()) {
+        qDebug() << "XenforoFeedRequest::error." << e;
+    }
+#endif
 }
 
 QByteArray XenforoFeedRequest::result() const {
     return m_buffer.data();
 }
 
-XenforoFeedRequest::Status XenforoFeedRequest::status() const {
+void XenforoFeedRequest::setResult(const QByteArray &r) {
+    m_buffer.open(QBuffer::WriteOnly);
+    m_buffer.write(r);
+    m_buffer.close();
+}
+
+FeedRequest::Status XenforoFeedRequest::status() const {
     return m_status;
 }
 
-void XenforoFeedRequest::setStatus(XenforoFeedRequest::Status s) {
+void XenforoFeedRequest::setStatus(FeedRequest::Status s) {
     if (s != status()) {
         m_status = s;
         emit statusChanged(s);
@@ -75,6 +84,8 @@ bool XenforoFeedRequest::getFeed(const QVariantMap &settings) {
     }
 
     setStatus(Active);
+    setErrorString(QString());
+    setResult(QByteArray());
     m_settings = settings;
     m_results = 0;
     
@@ -96,7 +107,7 @@ bool XenforoFeedRequest::getFeed(const QVariantMap &settings) {
 
 void XenforoFeedRequest::login(const QUrl &url, const QString &username, const QString &password) {
 #ifdef XENFORO_DEBUG
-    qDebug() << "XenforoFeedRequest::login(). URL:" << url << "Username:" << username << "Password:" << password;
+    qDebug() << "XenforoFeedRequest::login(). URL:" << url;
 #endif
     const QString data = QString("login=%1&password=%2&register=0&_xfToken=").arg(username).arg(password);
     QNetworkRequest request(url);
@@ -117,12 +128,11 @@ void XenforoFeedRequest::checkLogin() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkLogin()));
         }
         else {
@@ -143,7 +153,6 @@ void XenforoFeedRequest::checkLogin() {
         reply->deleteLater();
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         break;
@@ -180,12 +189,11 @@ void XenforoFeedRequest::checkPage() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkPage()));
         }
         else {
@@ -201,7 +209,6 @@ void XenforoFeedRequest::checkPage() {
     case QNetworkReply::NoError:
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         return;
@@ -222,7 +229,7 @@ void XenforoFeedRequest::checkPage() {
     const QString title = html.firstElementByTagName("h1").text();
     
     if (m_results == 0) {
-        redirect = getLatestPageUrl(html);
+        const QString redirect = getLatestPageUrl(html);
 
         if (!redirect.isEmpty()) {
             if (m_redirects < MAX_REDIRECTS) {
@@ -251,7 +258,6 @@ void XenforoFeedRequest::checkPage() {
         qDebug() << "XenforoFeedRequest::checkPage(). No items found. Writing end of feed";
 #endif
         writeEndFeed();
-        setErrorString(QString());
         setStatus(Ready);
         emit finished(this);
         return;
@@ -290,7 +296,6 @@ void XenforoFeedRequest::checkPage() {
     qDebug() << "XenforoFeedRequest::checkPage(). Writing end of feed";
 #endif
     writeEndFeed();
-    setErrorString(QString());
     setStatus(Ready);
     emit finished(this);
 }
@@ -299,7 +304,7 @@ void XenforoFeedRequest::followRedirect(const QUrl &url, const char *slot) {
 #ifdef XENFORO_DEBUG
     qDebug() << "XenforoFeedRequest::followRedirect(). URL:" << url;
 #endif
-    m_redirects++;
+    ++m_redirects;
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", USER_AGENT);
     QNetworkReply *reply = networkAccessManager()->get(request);
@@ -405,10 +410,8 @@ QString XenforoFeedRequest::unescape(const QString &text) {
 }
 
 void XenforoFeedRequest::writeStartFeed() {
-    m_buffer.close();
     m_buffer.open(QBuffer::WriteOnly);
     m_writer.setDevice(&m_buffer);
-    m_writer.setAutoFormatting(true);
     m_writer.writeStartDocument();
     m_writer.writeStartElement("rss");
     m_writer.writeAttribute("version", "2.0");
@@ -416,9 +419,11 @@ void XenforoFeedRequest::writeStartFeed() {
     m_writer.writeAttribute("xmlns:content", "http://purl.org/rss/1.0/modules/content/");
     m_writer.writeStartElement("channel");
     m_writer.writeTextElement("description", tr("XenForo thread posts"));
+    m_buffer.close();
 }
 
 void XenforoFeedRequest::writeEndFeed() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
     m_writer.writeEndElement();
     m_writer.writeEndDocument();
@@ -426,37 +431,53 @@ void XenforoFeedRequest::writeEndFeed() {
 }
 
 void XenforoFeedRequest::writeFeedTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void XenforoFeedRequest::writeFeedUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
 }
 
 void XenforoFeedRequest::writeStartItem() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("item");
+    m_buffer.close();
 }
 
 void XenforoFeedRequest::writeEndItem() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void XenforoFeedRequest::writeItemAuthor(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:creator", element.attribute("data-author"));
+    m_buffer.close();
 }
 
 void XenforoFeedRequest::writeItemBody(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("content:encoded");
     m_writer.writeCDATA(element.firstElementByTagName("div", QHtmlAttributeMatch("class", "messageContent")).toString());
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void XenforoFeedRequest::writeItemCategories(const QStringList &categories) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+
     foreach (const QString &category, categories) {
         m_writer.writeTextElement("category", category);
     }
+
+    m_buffer.close();
 }
 
 void XenforoFeedRequest::writeItemDate(const QHtmlElement &element) {
@@ -466,19 +487,25 @@ void XenforoFeedRequest::writeItemDate(const QHtmlElement &element) {
         dateString = element.firstElementByTagName("abbr", QHtmlAttributeMatch("class", "DateTime")).text();        
     }
 
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:date", QDateTime::fromString(dateString, "MMM d, yyyy 'at' h:mm AP")
                                                               .toString(Qt::ISODate));
+    m_buffer.close();
 }
 
 void XenforoFeedRequest::writeItemTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void XenforoFeedRequest::writeItemUrl(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", element.firstElementByTagName("a", QHtmlAttributeMatch("class", "datePermalink"))
                                              .attribute("href"));
+    m_buffer.close();
 }
 
 QNetworkAccessManager* XenforoFeedRequest::networkAccessManager() {

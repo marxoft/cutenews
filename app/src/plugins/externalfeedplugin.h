@@ -39,6 +39,7 @@ public:
     QString id() const;
     void setId(const QString &id);
     
+    virtual ArticleRequest* articleRequest(QObject *parent = 0);
     virtual EnclosureRequest* enclosureRequest(QObject *parent = 0);
     virtual FeedRequest* feedRequest(QObject *parent = 0);
 

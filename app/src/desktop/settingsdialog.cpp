@@ -15,11 +15,12 @@
  */
 
 #include "settingsdialog.h"
+#include "articlesettingspage.h"
 #include "categorysettingspage.h"
+#include "enclosuresettingspage.h"
 #include "generalsettingspage.h"
 #include "interfacesettingspage.h"
 #include "networksettingspage.h"
-#include "pluginssettingspage.h"
 #include "urlopenersettingspage.h"
 #include <QDialogButtonBox>
 #include <QPushButton>
@@ -34,7 +35,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     m_interfacePage(0),
     m_categoryPage(0),
     m_openerPage(0),
-    m_pluginPage(0),
+    m_articlePage(0),
+    m_enclosurePage(0),
     m_tabBar(new QTabBar(this)),
     m_stack(new QStackedWidget(this)),
     m_buttonBox(new QDialogButtonBox(QDialogButtonBox::Cancel | QDialogButtonBox::Save, Qt::Horizontal, this)),
@@ -47,7 +49,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     m_tabBar->addTab(tr("Interfaces"));
     m_tabBar->addTab(tr("Categories"));
     m_tabBar->addTab(tr("URL openers"));
-    m_tabBar->addTab(tr("Plugins"));
+    m_tabBar->addTab(tr("Articles"));
+    m_tabBar->addTab(tr("Enclosures"));
     
     m_buttonBox->button(QDialogButtonBox::Cancel)->setDefault(false);
     
@@ -90,7 +93,10 @@ void SettingsDialog::setCurrentPage(int index) {
         showUrlOpenerPage();
         break;
     case 5:
-        showPluginPage();
+        showArticlePage();
+        break;
+    case 6:
+        showEnclosurePage();
         break;
     default:
         break;
@@ -142,11 +148,20 @@ void SettingsDialog::showUrlOpenerPage() {
     m_stack->setCurrentWidget(m_openerPage);
 }
 
-void SettingsDialog::showPluginPage() {
-    if (!m_pluginPage) {
-        m_pluginPage = new PluginsSettingsPage(m_stack);
-        m_stack->addWidget(m_pluginPage);
+void SettingsDialog::showArticlePage() {
+    if (!m_articlePage) {
+        m_articlePage = new ArticleSettingsPage(m_stack);
+        m_stack->addWidget(m_articlePage);
     }
 
-    m_stack->setCurrentWidget(m_pluginPage);
+    m_stack->setCurrentWidget(m_articlePage);
+}
+
+void SettingsDialog::showEnclosurePage() {
+    if (!m_enclosurePage) {
+        m_enclosurePage = new EnclosureSettingsPage(m_stack);
+        m_stack->addWidget(m_enclosurePage);
+    }
+
+    m_stack->setCurrentWidget(m_enclosurePage);
 }

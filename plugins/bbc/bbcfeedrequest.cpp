@@ -15,10 +15,9 @@
  */
 
 #include "bbcfeedrequest.h"
-#include <QDateTime>
+#include "bbcarticlerequest.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-#include <QRegExp>
 #ifdef BBC_DEBUG
 #include <QDebug>
 #endif
@@ -32,6 +31,7 @@ const QByteArray BbcFeedRequest::USER_AGENT("Wget/1.13.4 (linux-gnu)");
 
 BbcFeedRequest::BbcFeedRequest(QObject *parent) :
     FeedRequest(parent),
+    m_request(0),
     m_nam(0),
     m_status(Idle),
     m_results(0),
@@ -45,17 +45,28 @@ QString BbcFeedRequest::errorString() const {
 
 void BbcFeedRequest::setErrorString(const QString &e) {
     m_errorString = e;
+#ifdef BBC_DEBUG
+    if (!e.isEmpty()) {
+        qDebug() << "BbcFeedRequest::error." << e;
+    }
+#endif
 }
 
 QByteArray BbcFeedRequest::result() const {
     return m_buffer.data();
 }
 
-BbcFeedRequest::Status BbcFeedRequest::status() const {
+void BbcFeedRequest::setResult(const QByteArray &r) {
+    m_buffer.open(QBuffer::WriteOnly);
+    m_buffer.write(r);
+    m_buffer.close();
+}
+
+FeedRequest::Status BbcFeedRequest::status() const {
     return m_status;
 }
 
-void BbcFeedRequest::setStatus(BbcFeedRequest::Status s) {
+void BbcFeedRequest::setStatus(FeedRequest::Status s) {
     if (s != status()) {
         m_status = s;
         emit statusChanged(s);
@@ -64,8 +75,13 @@ void BbcFeedRequest::setStatus(BbcFeedRequest::Status s) {
 
 bool BbcFeedRequest::cancel() {
     if (status() == Active) {
-        setStatus(Canceled);
-        emit finished(this);
+        if ((m_request) && (m_request->status() == ArticleRequest::Active)) {
+            m_request->cancel();
+        }
+        else {
+            setStatus(Canceled);
+            emit finished(this);
+        }
     }
 
     return true;
@@ -77,6 +93,8 @@ bool BbcFeedRequest::getFeed(const QVariantMap &settings) {
     }
 
     setStatus(Active);
+    setResult(QByteArray());
+    setErrorString(QString());
     m_settings = settings;
     m_results = 0;
     m_redirects = 0;
@@ -110,12 +128,11 @@ void BbcFeedRequest::checkFeed() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkFeed()));
         }
         else {
@@ -131,7 +148,6 @@ void BbcFeedRequest::checkFeed() {
     case QNetworkReply::NoError:
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         return;
@@ -141,25 +157,31 @@ void BbcFeedRequest::checkFeed() {
         emit finished(this);
         return;
     }
-    
+
     m_parser.setContent(reply->readAll());
-    reply->deleteLater();
 
     if (m_parser.readChannel()) {
-#ifdef BBC_DEBUG
-        qDebug() << "BbcFeedRequest::checkFeed(). Writing start of feed";
-#endif
         writeStartFeed();
         writeFeedTitle(m_parser.title());
         writeFeedUrl(m_parser.url());
 
-        if ((m_parser.readNextArticle()) && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
-            getPage(m_parser.url());
+        if (m_parser.readNextArticle()) {
+            if (m_parser.date() > m_settings.value("lastUpdated").toDateTime()) {
+                reply->deleteLater();
+                getArticle(m_parser.url());
+            }
+            else {
+#ifdef BBC_DEBUG
+                qDebug() << "BbcFeedRequest::checkFeed(). No new articles";
+#endif
+                writeEndFeed();
+                setStatus(Ready);
+                emit finished(this);
+            }
+
             return;
         }
-#ifdef BBC_DEBUG
-        qDebug() << "BbcFeedRequest::checkFeed(). Writing end of feed";
-#endif
+
         writeEndFeed();
     }
     
@@ -168,89 +190,58 @@ void BbcFeedRequest::checkFeed() {
     emit finished(this);
 }
 
-void BbcFeedRequest::getPage(const QString &url) {
+void BbcFeedRequest::getArticle(const QString &url) {
 #ifdef BBC_DEBUG
-    qDebug() << "BbcFeedRequest::getPage(). URL:" << url;
+    qDebug() << "BbcFeedRequest::getArticle(). URL:" << url;
 #endif
-    m_redirects = 0;
-    QNetworkRequest request(url);
-    request.setRawHeader("User-Agent", USER_AGENT);
-    QNetworkReply *reply = networkAccessManager()->get(request);
-    connect(reply, SIGNAL(finished()), this, SLOT(checkPage()));
-    connect(this, SIGNAL(finished(FeedRequest*)), reply, SLOT(deleteLater()));
+    articleRequest()->getArticle(url, m_settings);
 }
 
-void BbcFeedRequest::checkPage() {
-    QNetworkReply *reply = qobject_cast<QNetworkReply*>(sender());
-
-    if (!reply) {
-        setErrorString(tr("Network error"));
-        setStatus(Error);
-        emit finished(this);
-        return;
-    }
-
-    QString redirect = getRedirect(reply);
-
-    if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
-        if (m_redirects < MAX_REDIRECTS) {
-            followRedirect(redirect, SLOT(checkPage()));
-        }
-        else {
-            setErrorString(tr("Maximum redirects reached"));
-            setStatus(Error);
-            emit finished(this);
-        }
-        
-        return;
-    }
-
-    switch (reply->error()) {
-    case QNetworkReply::NoError:
-        break;
-    case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
+void BbcFeedRequest::checkArticle(ArticleRequest *request) {
+    if (request->status() == ArticleRequest::Canceled) {
         setStatus(Canceled);
         emit finished(this);
         return;
-    default:
-        setErrorString(reply->errorString());
-        setStatus(Error);
-        emit finished(this);
-        return;
     }
 
-    const QUrl url = reply->url();
-    const QString baseUrl = url.scheme() + "://" + url.authority();
-    QString page = QString::fromUtf8(reply->readAll());
-    reply->deleteLater();
-    fixRelativeUrls(page, baseUrl);
-    const int max = m_settings.value("maxResults", 20).toInt();
     ++m_results;
-#ifdef BBC_DEBUG
-    qDebug() << "BbcFeedRequest::checkPage(). Writing item" << m_results << "of" << max;
-#endif
-    const QHtmlDocument document(page);
-    const QHtmlElement html = document.htmlElement();
-    writeStartItem();
-    writeItemBody(html);
-    writeItemDate(m_parser.date());
-    writeItemTitle(m_parser.title());
-    writeItemUrl(m_parser.url());
-    writeEndItem();
-    
-    if ((m_results < max) && (m_parser.readNextArticle())
-            && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
-        getPage(m_parser.url());
-        return;
+
+    if (request->status() == ArticleRequest::Ready) {
+        const ArticleResult article = request->result();
+        writeStartItem();
+        writeItemAuthor(article.author.isEmpty() ? m_parser.author() : article.author);
+        writeItemBody(article.body.isEmpty() ? m_parser.description() : article.body);
+        writeItemCategories(article.categories.isEmpty() ? m_parser.categories() : article.categories);
+        writeItemDate(article.date.isNull() ? m_parser.date() : article.date);
+        writeItemEnclosures(article.enclosures.isEmpty() ? m_parser.enclosures() : article.enclosures);
+        writeItemTitle(article.title.isEmpty() ? m_parser.title() : article.title);
+        writeItemUrl(article.url.isEmpty() ? m_parser.url() : article.url);
+        writeEndItem();
     }
 #ifdef BBC_DEBUG
-    qDebug() << "BbcFeedRequest::checkPage(). Writing end of feed";
+    else {
+        qDebug() << "BbcFeedRequest::checkArticle(). Error:" << request->errorString();
+    }
 #endif
+    if (m_results < m_settings.value("maxResults", 20).toInt()) {
+        if (!m_parser.readNextArticle()) {
+            writeEndFeed();
+            setErrorString(m_parser.errorString());
+            setStatus(Error);
+            emit finished(this);
+            return;
+        }
+
+        if (m_parser.date() > m_settings.value("lastUpdated").toDateTime()) {
+            getArticle(m_parser.url());
+            return;
+        }
+#ifdef BBC_DEBUG
+        qDebug() << "BbcFeedRequest::checkArticle(). No more new articles";
+#endif
+    }
+
     writeEndFeed();
-    setErrorString(QString());
     setStatus(Ready);
     emit finished(this);
 }
@@ -259,38 +250,12 @@ void BbcFeedRequest::followRedirect(const QString &url, const char *slot) {
 #ifdef BBC_DEBUG
     qDebug() << "BbcFeedRequest::followRedirect(). URL:" << url;
 #endif
-    m_redirects++;
+    ++m_redirects;
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", USER_AGENT);
     QNetworkReply *reply = networkAccessManager()->get(request);
     connect(reply, SIGNAL(finished()), this, slot);
     connect(this, SIGNAL(finished(FeedRequest*)), reply, SLOT(deleteLater()));
-}
-
-void BbcFeedRequest::fixRelativeUrls(QString &page, const QString &baseUrl) {
-    const QString scheme = baseUrl.left(baseUrl.indexOf("/"));
-    const QRegExp re("( href=| src=)('|\")(?!http)");
-    int pos = 0;
-    
-    while ((pos = re.indexIn(page, pos)) != -1) {
-        const int i = re.pos(2) + 1;
-        const QString u = page.mid(i, 2);
-
-        if (u == "//") {
-            page.insert(i, scheme);
-            pos += scheme.size();
-        }
-        else if (u.startsWith("/")) {
-            page.insert(i, baseUrl);
-            pos += baseUrl.size();
-        }
-        else {
-            page.insert(i, baseUrl + "/");
-            pos += baseUrl.size() + 1;
-        }
-
-        pos += re.matchedLength();
-    }
 }
 
 QString BbcFeedRequest::getRedirect(const QNetworkReply *reply) {
@@ -321,23 +286,29 @@ QString BbcFeedRequest::unescape(const QString &text) {
 }
 
 void BbcFeedRequest::writeStartFeed() {
-    m_buffer.close();
+#ifdef BBC_DEBUG
+    qDebug() << "BbcFeedRequest::writeStartFeed()";
+#endif
     m_buffer.open(QBuffer::WriteOnly);
     m_writer.setDevice(&m_buffer);
-    m_writer.setAutoFormatting(true);
     m_writer.writeStartDocument();
     m_writer.writeStartElement("rss");
     m_writer.writeAttribute("version", "2.0");
     m_writer.writeAttribute("xmlns:dc", "http://purl.org/dc/elements/1.1/");
     m_writer.writeAttribute("xmlns:content", "http://purl.org/rss/1.0/modules/content/");
     m_writer.writeStartElement("channel");
-    m_writer.writeTextElement("description", tr("News articles from the BBC"));
+    m_writer.writeTextElement("description", tr("News articles from The BBC"));
     m_writer.writeStartElement("image");
     m_writer.writeTextElement("url", ICON_URL);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void BbcFeedRequest::writeEndFeed() {
+#ifdef BBC_DEBUG
+    qDebug() << "BbcFeedRequest::writeEndFeed()";
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
     m_writer.writeEndElement();
     m_writer.writeEndDocument();
@@ -345,50 +316,104 @@ void BbcFeedRequest::writeEndFeed() {
 }
 
 void BbcFeedRequest::writeFeedTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void BbcFeedRequest::writeFeedUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
 }
 
 void BbcFeedRequest::writeStartItem() {
+#ifdef BBC_DEBUG
+    qDebug() << "BbcFeedRequest::writeStartItem(). Item" << m_results << "of"
+        << m_settings.value("maxResults", 20).toInt();
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("item");
+    m_buffer.close();
 }
 
 void BbcFeedRequest::writeEndItem() {
+#ifdef BBC_DEBUG
+    qDebug() << "BbcFeedRequest::writeEndItem(). Item" << m_results << "of"
+        << m_settings.value("maxResults", 20).toInt();
+#endif
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
-void BbcFeedRequest::writeItemBody(const QHtmlElement &element) {
-    const QHtmlElement body = element.firstElementByTagName("div", QHtmlAttributeMatches()
-        << QHtmlAttributeMatch("property", "articleBody") << QHtmlAttributeMatch("class", "main_article_text")
-        << QHtmlAttributeMatch("id", "story-body") << QHtmlAttributeMatch("class", "vxp-media__summary"),
-        QHtmlParser::MatchAny);
+void BbcFeedRequest::writeItemAuthor(const QString &author) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+    m_writer.writeTextElement("dc:creator", author);
+    m_buffer.close();
+}
 
-    QRegExp figure("<figure.*</figure>");
-    figure.setMinimal(true);
-    QRegExp caption("<figcaption.*</figcaption>");
-    caption.setMinimal(true);
+void BbcFeedRequest::writeItemBody(const QString &body) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("content:encoded");
-    m_writer.writeCDATA(body.toString().remove(figure).remove(caption));
+    m_writer.writeCDATA(body);
     m_writer.writeEndElement();
+    m_buffer.close();
+}
+
+void BbcFeedRequest::writeItemCategories(const QStringList &categories) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+
+    foreach (const QString &category, categories) {
+        m_writer.writeTextElement("category", category);
+    }
+
+    m_buffer.close();
 }
 
 void BbcFeedRequest::writeItemDate(const QDateTime &date) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:date", date.toString(Qt::ISODate));
+    m_buffer.close();
+}
+
+void BbcFeedRequest::writeItemEnclosures(const QVariantList &enclosures) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+
+    foreach (const QVariant &e, enclosures) {
+        const QVariantMap enclosure = e.toMap();
+        m_writer.writeStartElement("enclosure");
+        m_writer.writeAttribute("url", enclosure.value("url").toString());
+        m_writer.writeAttribute("type", enclosure.value("type").toString());
+        m_writer.writeEndElement();
+    }
+
+    m_buffer.close();
 }
 
 void BbcFeedRequest::writeItemTitle(const QString &title) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(title));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void BbcFeedRequest::writeItemUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
+}
+
+BbcArticleRequest* BbcFeedRequest::articleRequest() {
+    if (!m_request) {
+        m_request = new BbcArticleRequest(this);
+        connect(m_request, SIGNAL(finished(ArticleRequest*)), this, SLOT(checkArticle(ArticleRequest*)));
+    }
+
+    return m_request;
 }
 
 QNetworkAccessManager* BbcFeedRequest::networkAccessManager() {

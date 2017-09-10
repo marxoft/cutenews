@@ -18,6 +18,7 @@
 #define BBCFEEDPLUGIN_H
 
 #include "feedplugin.h"
+#include "bbcarticlerequest.h"
 #include "bbcfeedrequest.h"
 #if QT_VERSION < 0x050000
 #include <QtPlugin>
@@ -32,7 +33,7 @@ class BbcFeedPlugin : public QObject, public FeedPlugin
 #endif
 
 public:
-    virtual EnclosureRequest* enclosureRequest(QObject *) { return 0; }
+    virtual ArticleRequest* articleRequest(QObject *parent = 0) { return new BbcArticleRequest(parent); }
     virtual FeedRequest* feedRequest(QObject *parent = 0) { return new BbcFeedRequest(parent); }
 };
 

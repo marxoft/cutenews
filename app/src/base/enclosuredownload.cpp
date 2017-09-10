@@ -452,7 +452,7 @@ void EnclosureDownload::moveDownloadedFiles() {
 
 void EnclosureDownload::onEnclosureRequestFinished(EnclosureRequest *request) {
     if (request->status() == EnclosureRequest::Ready) {
-        Enclosure enclosure = request->result();
+        EnclosureResult enclosure = request->result();
         setFileName(enclosure.fileName);
         setName(enclosure.fileName);
         startDownload(enclosure.request, enclosure.operation, enclosure.data);

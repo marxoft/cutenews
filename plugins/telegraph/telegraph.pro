@@ -6,11 +6,13 @@ TEMPLATE = lib
 
 HEADERS += \
     feedparser.h \
+    telegrapharticlerequest.h \
     telegraphfeedplugin.h \
     telegraphfeedrequest.h
 
 SOURCES += \
     feedparser.cpp \
+    telegrapharticlerequest.cpp \
     telegraphfeedrequest.cpp
 
 maemo5 {
@@ -19,7 +21,7 @@ maemo5 {
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
-        /usr/include/cutenews/enclosurerequest.h \
+        /usr/include/cutenews/articlerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h
     
@@ -33,13 +35,12 @@ maemo5 {
         config
 
 } else:unix {
-    DEFINES += TELEGRAPH_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
-        /usr/include/cutenews/enclosurerequest.h \
+        /usr/include/cutenews/articlerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h
     

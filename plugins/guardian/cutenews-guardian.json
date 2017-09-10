@@ -2,6 +2,16 @@
     "type": "qt",
     "version": 1,
     "name": "The Guardian",
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(www\\.|)theguardian\\.com/\\w+",
+    "articleSettings": [
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
+        }
+    ],
     "supportsFeeds": true,
     "feedSettings": [
         {
@@ -80,6 +90,13 @@
                     "value": "world"
                 }
             ]
+        },
+
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
         },
 
         {

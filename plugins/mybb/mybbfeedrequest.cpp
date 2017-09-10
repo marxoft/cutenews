@@ -15,7 +15,6 @@
  */
 
 #include "mybbfeedrequest.h"
-#include <QDateTime>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegExp>
@@ -42,17 +41,28 @@ QString MybbFeedRequest::errorString() const {
 
 void MybbFeedRequest::setErrorString(const QString &e) {
     m_errorString = e;
+#ifdef MYBB_DEBUG
+    if (!e.isEmpty()) {
+        qDebug() << "MybbFeedRequest::error." << e;
+    }
+#endif
 }
 
 QByteArray MybbFeedRequest::result() const {
     return m_buffer.data();
 }
 
-MybbFeedRequest::Status MybbFeedRequest::status() const {
+void MybbFeedRequest::setResult(const QByteArray &r) {
+    m_buffer.open(QBuffer::WriteOnly);
+    m_buffer.write(r);
+    m_buffer.close();
+}
+
+FeedRequest::Status MybbFeedRequest::status() const {
     return m_status;
 }
 
-void MybbFeedRequest::setStatus(MybbFeedRequest::Status s) {
+void MybbFeedRequest::setStatus(FeedRequest::Status s) {
     if (s != status()) {
         m_status = s;
         emit statusChanged(s);
@@ -74,6 +84,8 @@ bool MybbFeedRequest::getFeed(const QVariantMap &settings) {
     }
 
     setStatus(Active);
+    setErrorString(QString());
+    setResult(QByteArray());
     m_settings = settings;
     m_results = 0;
     
@@ -95,7 +107,7 @@ bool MybbFeedRequest::getFeed(const QVariantMap &settings) {
 
 void MybbFeedRequest::login(const QUrl &url, const QString &username, const QString &password) {
 #ifdef MYBB_DEBUG
-    qDebug() << "MybbFeedRequest::login(). URL:" << url << "Username:" << username << "Password:" << password;
+    qDebug() << "MybbFeedRequest::login(). URL:" << url;
 #endif
     const QString data = QString("quick_username=%1&quick_password=%2&s=&action=do_login&quick_login=1&submit=Login").arg(username).arg(password);
     QNetworkRequest request(url);
@@ -116,12 +128,11 @@ void MybbFeedRequest::checkLogin() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkLogin()));
         }
         else {
@@ -142,7 +153,6 @@ void MybbFeedRequest::checkLogin() {
         reply->deleteLater();
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         break;
@@ -179,12 +189,11 @@ void MybbFeedRequest::checkPage() {
         return;
     }
 
-    QString redirect = getRedirect(reply);
+    const QString redirect = getRedirect(reply);
 
     if (!redirect.isEmpty()) {
-        reply->deleteLater();
-        
         if (m_redirects < MAX_REDIRECTS) {
+            reply->deleteLater();
             followRedirect(redirect, SLOT(checkPage()));
         }
         else {
@@ -200,7 +209,6 @@ void MybbFeedRequest::checkPage() {
     case QNetworkReply::NoError:
         break;
     case QNetworkReply::OperationCanceledError:
-        setErrorString(QString());
         setStatus(Canceled);
         emit finished(this);
         return;
@@ -220,7 +228,7 @@ void MybbFeedRequest::checkPage() {
     const QHtmlElement html = document.htmlElement();
     
     if (m_results == 0) {
-        QString redirect = getLatestPageUrl(html);
+        const QString redirect = getLatestPageUrl(html);
 
         if (!redirect.isEmpty()) {
             if (m_redirects < MAX_REDIRECTS) {
@@ -249,7 +257,6 @@ void MybbFeedRequest::checkPage() {
         qDebug() << "MybbFeedRequest::checkPage(). No items found. Writing end of feed";
 #endif
         writeEndFeed();
-        setErrorString(QString());
         setStatus(Ready);
         emit finished(this);
         return;
@@ -286,7 +293,6 @@ void MybbFeedRequest::checkPage() {
     qDebug() << "MybbFeedRequest::checkPage(). Writing end of feed";
 #endif
     writeEndFeed();
-    setErrorString(QString());
     setStatus(Ready);
     emit finished(this);
 }
@@ -295,7 +301,7 @@ void MybbFeedRequest::followRedirect(const QUrl &url, const char *slot) {
 #ifdef MYBB_DEBUG
     qDebug() << "MybbFeedRequest::followRedirect(). URL:" << url;
 #endif
-    m_redirects++;
+    ++m_redirects;
     QNetworkRequest request(url);
     request.setRawHeader("User-Agent", USER_AGENT);
     QNetworkReply *reply = networkAccessManager()->get(request);
@@ -403,7 +409,6 @@ QString MybbFeedRequest::unescape(const QString &text) {
 }
 
 void MybbFeedRequest::writeStartFeed() {
-    m_buffer.close();
     m_buffer.open(QBuffer::WriteOnly);
     m_writer.setDevice(&m_buffer);
     m_writer.setAutoFormatting(true);
@@ -414,9 +419,11 @@ void MybbFeedRequest::writeStartFeed() {
     m_writer.writeAttribute("xmlns:content", "http://purl.org/rss/1.0/modules/content/");
     m_writer.writeStartElement("channel");
     m_writer.writeTextElement("description", tr("MyBB thread posts"));
+    m_buffer.close();
 }
 
 void MybbFeedRequest::writeEndFeed() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
     m_writer.writeEndElement();
     m_writer.writeEndDocument();
@@ -424,40 +431,54 @@ void MybbFeedRequest::writeEndFeed() {
 }
 
 void MybbFeedRequest::writeFeedTitle(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(element.firstElementByTagName("title").text()));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void MybbFeedRequest::writeFeedUrl(const QString &url) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", url);
+    m_buffer.close();
 }
 
 void MybbFeedRequest::writeStartItem() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("item");
+    m_buffer.close();
 }
 
 void MybbFeedRequest::writeEndItem() {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void MybbFeedRequest::writeItemAuthor(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("dc:creator",
                               element.firstElementByTagName("span", QHtmlAttributeMatch("class", "largetext"))
                               .firstElementByTagName("a").text(true));
+    m_buffer.close();
 }
 
 void MybbFeedRequest::writeItemBody(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("content:encoded");
     m_writer.writeCDATA(element.nthElementByTagName(1, "div").toString());
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void MybbFeedRequest::writeItemDate(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     QString dateString = element.nthElementByTagName(-1, "span", QHtmlAttributeMatch("class", "smalltext")).text().trimmed();
     
     if (dateString.isEmpty()) {
         m_writer.writeTextElement("dc:date", QDateTime::currentDateTime().toString(Qt::ISODate));
+        m_buffer.close();
         return;
     }
 
@@ -489,18 +510,24 @@ void MybbFeedRequest::writeItemDate(const QHtmlElement &element) {
         m_writer.writeTextElement("dc:date", QDateTime::fromString(dateString, "dd-MM-yyyy HH:mm")
                                                                   .toString(Qt::ISODate));
     }
+
+    m_buffer.close();
 }
 
 void MybbFeedRequest::writeItemTitle(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
     m_writer.writeCDATA(unescape(element.nthElementByTagName(2, "span", QHtmlAttributeMatch("class", "smalltext"))
                                  .firstChildElement().text()));
     m_writer.writeEndElement();
+    m_buffer.close();
 }
 
 void MybbFeedRequest::writeItemUrl(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeTextElement("link", element.nthElementByTagName(1, "span", QHtmlAttributeMatch("class", "smalltext"))
                               .firstElementByTagName("a").attribute("href"));
+    m_buffer.close();
 }
 
 QNetworkAccessManager* MybbFeedRequest::networkAccessManager() {

@@ -17,7 +17,6 @@ maemo5 {
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
-        /usr/include/cutenews/enclosurerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h
     
@@ -31,13 +30,11 @@ maemo5 {
         config
 
 } else:unix {
-    DEFINES += WORDPRESS_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
-        /usr/include/cutenews/enclosurerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h
     

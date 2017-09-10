@@ -6,11 +6,17 @@ TEMPLATE = lib
 
 HEADERS += \
     feedparser.h \
+    json.h \
+    nytimesarticlerequest.h \
+    nytimesenclosurerequest.h \
     nytimesfeedplugin.h \
     nytimesfeedrequest.h
 
 SOURCES += \
     feedparser.cpp \
+    json.cpp \
+    nytimesarticlerequest.cpp \
+    nytimesenclosurerequest.cpp \
     nytimesfeedrequest.cpp
 
 maemo5 {
@@ -19,6 +25,7 @@ maemo5 {
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
+        /usr/include/cutenews/articlerequest.h \
         /usr/include/cutenews/enclosurerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h
@@ -33,12 +40,12 @@ maemo5 {
         config
 
 } else:unix {
-    DEFINES += NYTIMES_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
+        /usr/include/cutenews/articlerequest.h \
         /usr/include/cutenews/enclosurerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h

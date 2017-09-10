@@ -18,6 +18,8 @@
 #define NYTIMESFEEDPLUGIN_H
 
 #include "feedplugin.h"
+#include "nytimesarticlerequest.h"
+#include "nytimesenclosurerequest.h"
 #include "nytimesfeedrequest.h"
 #if QT_VERSION < 0x050000
 #include <QtPlugin>
@@ -32,7 +34,8 @@ class NytimesFeedPlugin : public QObject, public FeedPlugin
 #endif
 
 public:
-    virtual EnclosureRequest* enclosureRequest(QObject *) { return 0; }
+    virtual ArticleRequest* articleRequest(QObject *parent = 0) { return new NytimesArticleRequest(parent); }
+    virtual EnclosureRequest* enclosureRequest(QObject *parent = 0) { return new NytimesEnclosureRequest(parent); }
     virtual FeedRequest* feedRequest(QObject *parent = 0) { return new NytimesFeedRequest(parent); }
 };
 

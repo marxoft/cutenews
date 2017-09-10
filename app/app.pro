@@ -35,13 +35,16 @@ HEADERS += \
     src/base/updateintervaltypemodel.h \
     src/base/urlopenermodel.h \
     src/base/utils.h \
+    src/plugins/articlerequest.h \
     src/plugins/enclosurerequest.h \
+    src/plugins/externalarticlerequest.h \
     src/plugins/externalenclosurerequest.h \
     src/plugins/externalfeedplugin.h \
     src/plugins/externalfeedrequest.h \
     src/plugins/feedplugin.h \
     src/plugins/feedpluginconfig.h \
     src/plugins/feedrequest.h \
+    src/plugins/javascriptarticlerequest.h \
     src/plugins/javascriptenclosurerequest.h \
     src/plugins/javascriptfeedplugin.h \
     src/plugins/javascriptfeedrequest.h \
@@ -72,10 +75,12 @@ SOURCES += \
     src/base/transfers.cpp \
     src/base/urlopenermodel.cpp \
     src/base/utils.cpp \
+    src/plugins/externalarticlerequest.cpp \
     src/plugins/externalenclosurerequest.cpp \
     src/plugins/externalfeedplugin.cpp \
     src/plugins/externalfeedrequest.cpp \
     src/plugins/feedpluginconfig.cpp \
+    src/plugins/javascriptarticlerequest.cpp \
     src/plugins/javascriptenclosurerequest.cpp \
     src/plugins/javascriptfeedplugin.cpp \
     src/plugins/javascriptfeedrequest.cpp \
@@ -194,7 +199,7 @@ maemo5 {
     TARGET.EPOCHEAPSIZE = 0x20000 0x8000000
     TARGET.EPOCSTACKSIZE = 0x14000
     
-    VERSION = 1.0.0
+    VERSION = 1.1.0
     ICON = desktop/symbian/cutenews.svg
     
     MMP_RULES += "DEBUGGABLE_UDEBONLY"
@@ -339,12 +344,14 @@ maemo5 {
     
     HEADERS += \
         src/desktop/aboutdialog.h \
+        src/desktop/articlesettingspage.h \
         src/desktop/browserpage.h \
         src/desktop/cachingnetworkaccessmanager.h \
         src/desktop/categorysettingspage.h \
         src/desktop/customcommanddialog.h \
         src/desktop/cutenews.h \
         src/desktop/definitions.h \
+        src/desktop/enclosuresettingspage.h \
         src/desktop/generalsettingspage.h \
         src/desktop/interfacesettingspage.h \
         src/desktop/logger.h \
@@ -353,7 +360,6 @@ maemo5 {
         src/desktop/page.h \
         src/desktop/plugindialog.h \
         src/desktop/pluginsettingspage.h \
-        src/desktop/pluginssettingspage.h \
         src/desktop/qdatetimedialog.h \
         src/desktop/settings.h \
         src/desktop/settingsdialog.h \
@@ -365,11 +371,13 @@ maemo5 {
     
     SOURCES += \
         src/desktop/aboutdialog.cpp \
+        src/desktop/articlesettingspage.cpp \
         src/desktop/browserpage.cpp \
         src/desktop/cachingnetworkaccessmanager.cpp \
         src/desktop/categorysettingspage.cpp \
         src/desktop/customcommanddialog.cpp \
         src/desktop/cutenews.cpp \
+        src/desktop/enclosuresettingspage.cpp \
         src/desktop/generalsettingspage.cpp \
         src/desktop/interfacesettingspage.cpp \
         src/desktop/logger.cpp \
@@ -379,7 +387,6 @@ maemo5 {
         src/desktop/page.cpp \
         src/desktop/plugindialog.cpp \
         src/desktop/pluginsettingspage.cpp \
-        src/desktop/pluginssettingspage.cpp \
         src/desktop/qdatetimedialog.cpp \
         src/desktop/settings.cpp \
         src/desktop/settingsdialog.cpp \

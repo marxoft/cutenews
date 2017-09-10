@@ -18,6 +18,7 @@
 #define INDEPENDENTFEEDPLUGIN_H
 
 #include "feedplugin.h"
+#include "independentarticlerequest.h"
 #include "independentfeedrequest.h"
 #if QT_VERSION < 0x050000
 #include <QtPlugin>
@@ -32,7 +33,7 @@ class IndependentFeedPlugin : public QObject, public FeedPlugin
 #endif
 
 public:
-    virtual EnclosureRequest* enclosureRequest(QObject *) { return 0; }
+    virtual ArticleRequest* articleRequest(QObject *parent = 0) { return new IndependentArticleRequest(parent); }
     virtual FeedRequest* feedRequest(QObject *parent = 0) { return new IndependentFeedRequest(parent); }
 };
 

@@ -19,11 +19,12 @@
 
 #include <QDialog>
 
+class ArticleSettingsPage;
 class CategorySettingsPage;
+class EnclosureSettingsPage;
 class GeneralSettingsPage;
 class InterfaceSettingsPage;
 class NetworkSettingsPage;
-class PluginsSettingsPage;
 class UrlOpenerSettingsPage;
 class QDialogButtonBox;
 class QStackedWidget;
@@ -48,7 +49,8 @@ private Q_SLOTS:
     void showInterfacePage();
     void showCategoryPage();
     void showUrlOpenerPage();
-    void showPluginPage();
+    void showArticlePage();
+    void showEnclosurePage();
 
 private:
     GeneralSettingsPage *m_generalPage;
@@ -56,7 +58,8 @@ private:
     InterfaceSettingsPage *m_interfacePage;
     CategorySettingsPage *m_categoryPage;
     UrlOpenerSettingsPage *m_openerPage;
-    PluginsSettingsPage *m_pluginPage;
+    ArticleSettingsPage *m_articlePage;
+    EnclosureSettingsPage *m_enclosurePage;
     
     QTabBar *m_tabBar;
     

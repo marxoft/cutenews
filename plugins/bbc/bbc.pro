@@ -5,13 +5,15 @@ TARGET = cutenews-bbc
 TEMPLATE = lib
 
 HEADERS += \
-    feedparser.h \
+    bbcarticlerequest.h \
     bbcfeedplugin.h \
-    bbcfeedrequest.h
+    bbcfeedrequest.h \
+    feedparser.h
 
 SOURCES += \
-    feedparser.cpp \
-    bbcfeedrequest.cpp
+    bbcarticlerequest.cpp \
+    bbcfeedrequest.cpp \
+    feedparser.cpp
 
 maemo5 {
     CONFIG += link_prl
@@ -19,7 +21,7 @@ maemo5 {
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
-        /usr/include/cutenews/enclosurerequest.h \
+        /usr/include/cutenews/articlerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h
     
@@ -33,13 +35,12 @@ maemo5 {
         config
 
 } else:unix {
-    DEFINES += BBC_DEBUG
     CONFIG += link_prl
     LIBS += -L/usr/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
-        /usr/include/cutenews/enclosurerequest.h \
+        /usr/include/cutenews/articlerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h
     
