@@ -1,0 +1,366 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "The Washington Post",
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(www\\.|)washingtonpost\\.com/[\\w-]+",
+    "articleSettings": [
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
+        }
+    ],
+    "supportsFeeds": true,
+    "feedSettings": [
+        {
+            "type": "list",
+            "key": "section",
+            "label": "Section",
+            "value": "feeds.washingtonpost.com/rss/business",
+            "options": [
+                {
+                    "label": "Business",
+                    "value": "feeds.washingtonpost.com/rss/business"
+                },
+
+                {
+                    "label": "Business - Digger",
+                    "value": "feeds.washingtonpost.com/rss/rss_digger"
+                },
+
+                {
+                    "label": "Business - Energy and Environment",
+                    "value": "feeds.washingtonpost.com/rss/national/energy-environment"
+                },
+
+                {
+                    "label": "Business - On Leadership",
+                    "value": "feeds.washingtonpost.com/rss/rss_on-leadership"
+                },
+
+                {
+                    "label": "Business - The Switch",
+                    "value": "feeds.washingtonpost.com/rss/rss_the-switch"
+                },
+
+                {
+                    "label": "Business - Wonkblog",
+                    "value": "feeds.washingtonpost.com/rss/rss_wonkblog"
+                },
+
+                {
+                    "label": "Entertainment",
+                    "value": "feeds.washingtonpost.com/rss/entertainment"
+                },
+
+                {
+                    "label": "Entertainment - Comic Riffs",
+                    "value": "feeds.washingtonpost.com/rss/rss_comic-riffs"
+                },
+
+                {
+                    "label": "Entertainment - Going Out Guide",
+                    "value": "feeds.washingtonpost.com/rss/rss_going-out-gurus"
+                },
+
+                {
+                    "label": "Entertainment - The Intersect",
+                    "value": "feeds.washingtonpost.com/rss/rss_the-intersect"
+                },
+
+                {
+                    "label": "Lifestyle",
+                    "value": "feeds.washingtonpost.com/rss/lifestyle"
+                },
+
+                {
+                    "label": "Lifestyle - Arts and Entertainment",
+                    "value": "feeds.washingtonpost.com/rss/rss_arts-post"
+                },
+
+                {
+                    "label": "Lifestyle - Solo-ish",
+                    "value": "feeds.washingtonpost.com/rss/rss_soloish"
+                },
+
+                {
+                    "label": "Lifestyle - The Reliable Source",
+                    "value": "feeds.washingtonpost.com/rss/rss_reliable-source"
+                },
+
+                {
+                    "label": "Local",
+                    "value": "feeds.washingtonpost.com/rss/local"
+                },
+
+                {
+                    "label": "Local - A House Divided",
+                    "value": "feeds.washingtonpost.com/rss/rss_house-divided"
+                },
+
+                {
+                    "label": "Local - Acts of Faith",
+                    "value": "feeds.washingtonpost.com/rss/rss_acts-of-faith"
+                },
+
+                {
+                    "label": "Local - Capital Weather Gang",
+                    "value": "feeds.washingtonpost.com/rss/rss_capital-weather-gang"
+                },
+
+                {
+                    "label": "Local - Grade Point",
+                    "value": "feeds.washingtonpost.com/rss/rss_grade-point"
+                },
+
+                {
+                    "label": "Local - Inspired Life",
+                    "value": "feeds.washingtonpost.com/rss/national/inspired-life"
+                },
+
+                {
+                    "label": "Local - Retropolis",
+                    "value": "www.washingtonpost.com/news/retropolis/?outputType=rss"
+                },
+
+                {
+                    "label": "Local - The Answer Sheet",
+                    "value": "www.washingtonpost.com/blogs/answer-sheet/feed"
+                },
+
+                {
+                    "label": "National",
+                    "value": "feeds.washingtonpost.com/rss/national"
+                },
+
+                {
+                    "label": "National - Achenblog",
+                    "value": "feeds.washingtonpost.com/rss/rss_achenblog"
+                },
+
+                {
+                    "label": "National - Checkpoint",
+                    "value": "feeds.washingtonpost.com/rss/rss_checkpoint"
+                },
+
+                {
+                    "label": "National - Innovations",
+                    "value": "feeds.washingtonpost.com/rss/rss_innovations"
+                },
+
+                {
+                    "label": "National - Morning Mix",
+                    "value": "feeds.washingtonpost.com/rss/rss_morning-mix"
+                },
+
+                {
+                    "label": "National - Post Nation",
+                    "value": "feeds.washingtonpost.com/rss/rss_post-nation"
+                },
+
+                {
+                    "label": "National - Speaking of Science",
+                    "value": "feeds.washingtonpost.com/rss/rss_speaking-of-science"
+                },
+
+                {
+                    "label": "National - To Your Health",
+                    "value": "feeds.washingtonpost.com/rss/rss_to-your-health"
+                },
+
+                {
+                    "label": "Opinions",
+                    "value": "feeds.washingtonpost.com/rss/opinions"
+                },
+
+                {
+                    "label": "Opinions - Alexandra Petri's 'ComPost'",
+                    "value": "feeds.washingtonpost.com/rss/rss_compost"
+                },
+
+                {
+                    "label": "Opinions - All Opinions Are Local",
+                    "value": "feeds.washingtonpost.com/rss/rss_all-opinions-are-local"
+                },
+
+                {
+                    "label": "Opinions - Alyssa Rosenberg's 'Act Four'",
+                    "value": "feeds.washingtonpost.com/rss/rss_act-four"
+                },
+
+                {
+                    "label": "Opinions - Ask the Post",
+                    "value": "feeds.washingtonpost.com/rss/rss_ask-the-post"
+                },
+
+                {
+                    "label": "Opinions - Carlos Lozada's 'Book Party'",
+                    "value": "feeds.washingtonpost.com/rss/rss_book-party"
+                },
+
+                {
+                    "label": "Opinions - Catherine Rampell's 'Rampage'",
+                    "value": "feeds.washingtonpost.com/rss/rss_rampage"
+                },
+
+                {
+                    "label": "Opinions - Erik Wemple",
+                    "value": "feeds.washingtonpost.com/rss/rss_erik-wemple"
+                },
+
+                {
+                    "label": "Opinions - Greg Sargent's 'The Plum Line'",
+                    "value": "feeds.washingtonpost.com/rss/rss_plum-line"
+                },
+
+                {
+                    "label": "Opinions - In Theory",
+                    "value": "feeds.washingtonpost.com/rss/rss_in-theory"
+                },
+
+                {
+                    "label": "Opinions - Jennifer Rubin's 'Right Turn'",
+                    "value": "feeds.washingtonpost.com/rss/rss_right-turn"
+                },
+
+                {
+                    "label": "Opinions - PostEverything",
+                    "value": "feeds.washingtonpost.com/rss/rss_post-everything"
+                },
+
+                {
+                    "label": "Opinions - PostPartisan",
+                    "value": "feeds.washingtonpost.com/rss/rss_post-partisan"
+                },
+
+                {
+                    "label": "Opinions - Radley Balko's 'The Watch'",
+                    "value": "feeds.washingtonpost.com/rss/rss_the-watch"
+                },
+
+                {
+                    "label": "Opinions - The Volokh Conspiracy",
+                    "value": "feeds.washingtonpost.com/rss/rss_volokh-conspiracy"
+                },
+
+                {
+                    "label": "Opinions - Tom Toles",
+                    "value": "feeds.washingtonpost.com/rss/rss_tom-toles"
+                },
+
+                {
+                    "label": "Politics",
+                    "value": "feeds.washingtonpost.com/rss/politics"
+                },
+
+                {
+                    "label": "Politics - Monkey Cage",
+                    "value": "feeds.washingtonpost.com/rss/rss_monkey-cage"
+                },
+
+                {
+                    "label": "Politics - Post Politics",
+                    "value": "feeds.washingtonpost.com/rss/rss_election-2012"
+                },
+
+                {
+                    "label": "Politics - PowerPost",
+                    "value": "feeds.washingtonpost.com/rss/rss_powerpost"
+                },
+
+                {
+                    "label": "Politics - The Fact Checker",
+                    "value": "feeds.washingtonpost.com/rss/rss_fact-checker"
+                },
+
+                {
+                    "label": "Politics - The Fix",
+                    "value": "feeds.washingtonpost.com/rss/rss_the-fix"
+                },
+
+                {
+                    "label": "Sports",
+                    "value": "feeds.washingtonpost.com/rss/sports"
+                },
+
+                {
+                    "label": "Sports - AllMetSports",
+                    "value": "feeds.washingtonpost.com/rss/rss_recruting-insider"
+                },
+
+                {
+                    "label": "Sports - DC Sports Bog",
+                    "value": "feeds.washingtonpost.com/rss/rss_dc-sports-bog"
+                },
+
+                {
+                    "label": "Sports - Fancy Stats",
+                    "value": "feeds.washingtonpost.com/rss/rss_fancy-stats"
+                },
+
+                {
+                    "label": "Sports - Maryland Terrapins",
+                    "value": "feeds.washingtonpost.com/rss/rss_terrapins-insider"
+                },
+
+                {
+                    "label": "Sports - Soccer Insider",
+                    "value": "feeds.washingtonpost.com/rss/rss_soccer-insider"
+                },
+
+                {
+                    "label": "Sports - The Early Lead",
+                    "value": "feeds.washingtonpost.com/rss/rss_early-lead"
+                },
+
+                {
+                    "label": "Sports - The Insider",
+                    "value": "feeds.washingtonpost.com/rss/rss_football-insider"
+                },
+
+                {
+                    "label": "Sports - Washington Capitals",
+                    "value": "feeds.washingtonpost.com/rss/rss_capitals-insider"
+                },
+
+                {
+                    "label": "Sports - Washington Nationals",
+                    "value": "feeds.washingtonpost.com/rss/rss_nationals-journal"
+                },
+
+                {
+                    "label": "Sports - Washington Wizards",
+                    "value": "feeds.washingtonpost.com/rss/rss_wizards-insider"
+                },
+
+                {
+                    "label": "World",
+                    "value": "feeds.washingtonpost.com/rss/world"
+                },
+
+                {
+                    "label": "World - WorldViews",
+                    "value": "feeds.washingtonpost.com/rss/rss_blogpost"
+                }
+            ]
+        },
+
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        }
+    ]
+}
