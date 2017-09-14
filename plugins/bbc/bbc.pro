@@ -17,7 +17,7 @@ SOURCES += \
 
 maemo5 {
     CONFIG += link_prl
-    LIBS += -L/usr/lib -lqhtmlparser
+    LIBS += -L/opt/lib -lqhtmlparser
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
