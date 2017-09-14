@@ -120,6 +120,8 @@ maemo5 {
     qml.files += \
         src/maemo5/qml/AboutDialog.qml \
         src/maemo5/qml/ArticleDelegate.qml \
+        src/maemo5/qml/ArticleRequestWindow.qml \
+        src/maemo5/qml/ArticleSettingsDialog.qml \
         src/maemo5/qml/ArticlesWindow.qml \
         src/maemo5/qml/ArticleWindow.qml \
         src/maemo5/qml/CategoriesDialog.qml \
@@ -130,13 +132,13 @@ maemo5 {
         src/maemo5/qml/DownloadDialog.qml \
         src/maemo5/qml/EnclosureDelegate.qml \
         src/maemo5/qml/EnclosuresDialog.qml \
+        src/maemo5/qml/EnclosureSettingsDialog.qml \
         src/maemo5/qml/ListSelectorButton.qml \
         src/maemo5/qml/LogDialog.qml \
         src/maemo5/qml/MainWindow.qml \
         src/maemo5/qml/NetworkProxyDialog.qml \
         src/maemo5/qml/OpenDialog.qml \
         src/maemo5/qml/PluginDialog.qml \
-        src/maemo5/qml/PluginSettingsDialog.qml \
         src/maemo5/qml/SearchDialog.qml \
         src/maemo5/qml/SettingsDialog.qml \
         src/maemo5/qml/ShortcutsDialog.qml \
