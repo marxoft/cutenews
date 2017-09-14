@@ -91,11 +91,17 @@ Dialog {
                 text: qsTr("Url openers")
                 onClicked: popupManager.open(Qt.resolvedUrl("UrlOpenersDialog.qml"), root)
             }
+
+            Button {
+                width: parent.width
+                text: qsTr("Plugins - Articles")
+                onClicked: popupManager.open(articleDialog, root)
+            }
             
             Button {
                 width: parent.width
-                text: qsTr("Plugins")
-                onClicked: popupManager.open(pluginsDialog, root)
+                text: qsTr("Plugins - Enclosures")
+                onClicked: popupManager.open(enclosureDialog, root)
             }
             
             Label {
@@ -177,23 +183,44 @@ Dialog {
             onAccepted: settings.downloadPath = folder
         }
     }
-    
+
     Component {
-        id: pluginsDialog
+        id: articleDialog
         
         ListPickSelector {
-            title: qsTr("Plugins")
+            title: qsTr("Plugins - Articles")
+            model: PluginConfigModel {}
+            textRole: "displayName"
+            onSelected: {
+                var plugin = model.itemData(currentIndex);
+                
+                if ((plugin.supportsArticles) && (plugin.articleSettings)) {
+                    popupManager.open(Qt.resolvedUrl("ArticleSettingsDialog.qml"), root, {title: plugin.displayName,
+                    pluginId: plugin.id, pluginSettings: plugin.articleSettings});
+                }
+                else {
+                    informationBox.information(qsTr("No article settings for this plugin"));
+                }
+            }
+        }
+    }
+    
+    Component {
+        id: enclosureDialog
+        
+        ListPickSelector {
+            title: qsTr("Plugins - Enclosures")
             model: PluginConfigModel {}
             textRole: "displayName"
             onSelected: {
                 var plugin = model.itemData(currentIndex);
                 
                 if ((plugin.supportsEnclosures) && (plugin.enclosureSettings)) {
-                    popupManager.open(Qt.resolvedUrl("PluginSettingsDialog.qml"), root, {title: plugin.displayName,
+                    popupManager.open(Qt.resolvedUrl("EnclosureSettingsDialog.qml"), root, {title: plugin.displayName,
                     pluginId: plugin.id, pluginSettings: plugin.enclosureSettings});
                 }
                 else {
-                    informationBox.information(qsTr("No settings for this plugin"));
+                    informationBox.information(qsTr("No enclosure settings for this plugin"));
                 }
             }
         }

@@ -24,7 +24,7 @@ Dialog {
     property alias pluginId: plugin.pluginId
     property alias pluginSettings: repeater.model
         
-    title: qsTr("Plugin settings")
+    title: qsTr("Article settings")
     height: Math.min(360, column.height + platformStyle.paddingMedium)
     
     PluginSettings {

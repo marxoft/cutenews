@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,14 +22,11 @@ import cuteNews 1.0
 
 Window {
     id: root
-    
-    property Article article
-    
-    signal next
-    signal nextUnread
-    signal previous
-    
-    showProgressIndicator: (article != null) && (article.status == Article.Active)
+
+    property string url
+    property QtObject article
+
+    showProgressIndicator: (article != null) && (article.status == ArticleRequest.Active)
     title: qsTr("Article")
     menuBar: MenuBar {
         MenuItem {
@@ -45,21 +42,7 @@ Window {
         }
                 
         MenuItem {
-            text: (article != null) && (article.read) ? qsTr("Mark as unread") : qsTr("Mark as read")
-            action: readAction
-        }
-        
-        MenuItem {
-            text: (article != null) && (article.favourite) ? qsTr("Unfavourite") : qsTr("Favourite")
-            action: favouriteAction
-        }
-        
-        MenuItem {
             action: enclosuresAction
-        }
-        
-        MenuItem {
-            action: deleteAction
         }
     }
     
@@ -69,7 +52,7 @@ Window {
         text: qsTr("Copy URL")
         autoRepeat: false
         shortcut: settings.copyShortcut
-        onTriggered: clipboard.text = article.url
+        onTriggered: clipboard.text = article.resultUrl
     }
     
     Action {
@@ -78,7 +61,7 @@ Window {
         text: qsTr("Open externally")
         autoRepeat: false
         shortcut: settings.openExternallyShortcut
-        onTriggered: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: article.url})
+        onTriggered: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: article.resultUrl})
     }
     
     Action {
@@ -87,23 +70,7 @@ Window {
         text: qsTr("Download")
         autoRepeat: false
         shortcut: settings.downloadShortcut
-        onTriggered: popupManager.open(Qt.resolvedUrl("DownloadDialog.qml"), root, {url: article.url})
-    }
-        
-    Action {
-        id: readAction
-        
-        autoRepeat: false
-        shortcut: settings.toggleArticleReadShortcut
-        onTriggered: article.markRead(!article.read)
-    }
-    
-    Action {
-        id: favouriteAction
-        
-        autoRepeat: false
-        shortcut: settings.toggleArticleFavouriteShortcut
-        onTriggered: article.markFavourite(!article.favourite)
+        onTriggered: popupManager.open(Qt.resolvedUrl("DownloadDialog.qml"), root, {url: article.resultUrl})
     }
     
     Action {
@@ -112,46 +79,10 @@ Window {
         text: qsTr("Enclosures")
         autoRepeat: false
         shortcut: settings.showArticleEnclosuresShortcut
-        enabled: (article != null) && (article.hasEnclosures)
+        enabled: (article != null) && (article.resultHasEnclosures)
         onTriggered: popupManager.open(enclosuresDialog, root)
     }
-    
-    Action {
-        id: deleteAction
-        
-        text: qsTr("Delete")
-        autoRepeat: false
-        shortcut: settings.deleteShortcut
-        onTriggered: popupManager.open(deleteDialog, root)
-    }
-    
-    Action {
-        id: nextAction
-        
-        text: qsTr("Next article")
-        autoRepeat: false
-        shortcut: settings.nextArticleShortcut
-        onTriggered: root.next()
-    }
-    
-    Action {
-        id: nextUnreadAction
-        
-        text: qsTr("Next unread article")
-        autoRepeat: false
-        shortcut: settings.nextUnreadArticleShortcut
-        onTriggered: root.nextUnread()
-    }
-    
-    Action {
-        id: previousAction
-        
-        text: qsTr("Previous article")
-        autoRepeat: false
-        shortcut: settings.previousArticleShortcut
-        onTriggered: root.previous()
-    }
-    
+       
     Flickable {
         id: flickable
         
@@ -210,37 +141,52 @@ Window {
             }            
         }
     }
-    
-    Component {
-        id: deleteDialog
-        
-        MessageBox {
-            text: qsTr("Do you want to delete") + " '" + article.title + "'?"
-            onAccepted: article.remove()
-        }
-    }
-    
+       
     Component {
         id: enclosuresDialog
         
         EnclosuresDialog {
-            enclosures: article.enclosures
+            enclosures: article.resultEnclosures
         }
     }
-    
-    onArticleChanged: {
-        if (article) {
-            flickable.contentY = 0;
-            title = article.title || qsTr("Article");
-            view.html = "<p class='title'>" + title + "</p><div class='separator'></div><p>"
-            + qsTr("Author") + ": " + (article.author || qsTr("Unknown")) + "</br>"
-            + qsTr("Date") + ": " + (article.dateString || qsTr("Unknown")) + "</br>"
-            + qsTr("Categories") + ": " + (article.categories.length > 0 ? article.categories.join(", ") : qsTr("None"))
-            + "</p><div class='separator'></div><p>" + article.body + "</p>";
-            
-            if (!article.read) {
-                article.markRead(true);
+
+    Connections {
+        target: article
+        onFinished: {
+            if (article.status == ArticleRequest.Ready) {
+                flickable.contentY = 0;
+                title = article.resultTitle || qsTr("Article");
+                view.html = "<p class='title'>" + title + "</p><div class='separator'></div><p>"
+                + qsTr("Author") + ": " + (article.resultAuthor || qsTr("Unknown")) + "</br>"
+                + qsTr("Date") + ": " + (article.resultDateString || qsTr("Unknown")) + "</br>"
+                + qsTr("Categories") + ": " + (article.resultCategories.length > 0 ? article.resultCategories.join(", ")
+                : qsTr("None")) + "</p><div class='separator'></div><p>" + article.resultBody + "</p>";
+            }
+            else if (article.status == ArticleRequest.Error) {
+                informationBox.information(article.errorString);
             }
         }
+    }
+
+    PluginSettings {
+        id: pluginSettings
+    }
+
+    onUrlChanged: {
+        var config = plugins.getConfigForArticle(url);
+
+        if (!config) {
+            informationBox.information(qsTr("No plugin found for this article URL"));
+            return;
+        }
+
+        pluginSettings.pluginId = config.id;
+
+        if (article) {
+            article.destroy();
+        }
+
+        article = plugins.articleRequest(url, root);
+        article.getArticle(url, pluginSettings.values);
     }
 }

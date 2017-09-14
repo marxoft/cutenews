@@ -138,6 +138,7 @@ void CuteNews::initEngine() {
     }
     
     qRegisterMetaType< QList<QVariantList> >("QList<QVariantList>");
+    qRegisterMetaType<ArticleRequest::Status>("ArticleRequest::Status");
     qRegisterMetaType<DBConnection::Status>("DBConnection::Status");
     qmlRegisterType<Article>("cuteNews", 1, 0, "Article");
     qmlRegisterType<ArticleModel>("cuteNews", 1, 0, "ArticleModel");
@@ -156,6 +157,7 @@ void CuteNews::initEngine() {
     qmlRegisterType<TransferPriorityModel>("cuteNews", 1, 0, "TransferPriorityModel");
     qmlRegisterType<UpdateIntervalTypeModel>("cuteNews", 1, 0, "UpdateIntervalTypeModel");
     
+    qmlRegisterUncreatableType<ArticleRequest>("cuteNews", 1, 0, "ArticleRequest", "");
     qmlRegisterUncreatableType<DBConnection>("cuteNews", 1, 0, "DBConnection", "");
     qmlRegisterUncreatableType<FeedPluginConfig>("cuteNews", 1, 0, "FeedPluginConfig", "");
     qmlRegisterUncreatableType<Subscriptions>("cuteNews", 1, 0, "Subscriptions", "");

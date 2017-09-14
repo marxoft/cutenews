@@ -70,6 +70,6 @@ static const QString FAVOURITES_SUBSCRIPTION_ID("favourite_articles");
 static const QString WEB_INTERFACE_PATH("/opt/cutenews/webif/");
 
 // Version
-static const QString VERSION_NUMBER("1.0.0");
+static const QString VERSION_NUMBER("1.1.0");
 
 #endif // DEFINITIONS_H
