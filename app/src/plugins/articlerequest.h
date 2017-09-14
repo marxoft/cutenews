@@ -21,6 +21,7 @@
 
 #include <QObject>
 #include <QDateTime>
+#include <QStringList>
 #include <QVariantList>
 
 /*!
@@ -143,11 +144,25 @@ class ArticleRequest : public QObject
     Q_PROPERTY(QDateTime resultDate READ resultDate NOTIFY finished)
 
     /*!
+     * The \c date property of the result, formatted as a string.
+     *
+     * \sa result, resultDate, ArticleResult
+     */
+    Q_PROPERTY(QString resultDateString READ resultDateString NOTIFY finished)
+
+    /*!
      * The \c enclosures property of the result.
      *
      * \sa result, ArticleResult
      */
     Q_PROPERTY(QVariantList resultEnclosures READ resultEnclosures NOTIFY finished)
+
+    /*!
+     * Whether the result has any enclosures.
+     *
+     * \sa result, resultEnclosures, ArticleResult
+     */
+    Q_PROPERTY(bool resultHasEnclosures READ resultHasEnclosures NOTIFY finished)
 
     /*!
      * The \c title property of the result.
@@ -254,11 +269,25 @@ public:
     QDateTime resultDate() const { return result().date; }
 
     /*!
+     * This is a convenience method that returns the \c date property of the result, formated as a string.
+     *
+     * \sa result(), resultDate(), ArticleResult
+     */
+    QString resultDateString() const { return resultDate().toString("dd MMM yyyy HH:mm"); }
+
+    /*!
      * This is a convenience method that returns the \c enclosures property of the result.
      *
-     * \sa result, ArticleResult
+     * \sa result(), ArticleResult
      */
     QVariantList resultEnclosures() const { return result().enclosures; }
+
+    /*!
+     * This is a convenience method that returns \c true if the result has any enclosures.
+     *
+     * \sa result(), resultEnclosures(), ArticleResult
+     */
+    bool resultHasEnclosures() const { return !resultEnclosures().isEmpty(); }
 
     /*!
      * This is a convenience method that returns the \c title property of the result.
