@@ -18,6 +18,7 @@
 #include <qyoutube/resourcesrequest.h>
 #include <QXmlStreamWriter>
 #include <QSettings>
+#include <QStringList>
 #if QT_VERSION >= 0x050000
 #include <QStandardPaths>
 #else

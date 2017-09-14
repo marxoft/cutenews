@@ -15,9 +15,11 @@
  */
 
 #include "vbulletinfeedrequest.h"
+#include <QDateTime>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegExp>
+#include <QStringList>
 #ifdef VBULLETIN_DEBUG
 #include <QDebug>
 #endif

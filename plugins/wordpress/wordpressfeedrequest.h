@@ -20,6 +20,7 @@
 #include "feedrequest.h"
 #include <qhtmlparser/qhtmlparser.h>
 #include <QBuffer>
+#include <QStringList>
 #include <QVariantMap>
 #include <QXmlStreamWriter>
 

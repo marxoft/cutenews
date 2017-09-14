@@ -15,6 +15,7 @@
  */
 
 #include "wordpressfeedrequest.h"
+#include <QDateTime>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegExp>
