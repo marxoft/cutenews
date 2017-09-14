@@ -8,7 +8,7 @@ Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-dailymotion
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.0.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0)
 Description: A content plugin for cuteNews providing Dailymotion videos as an RSS feed
 XB-Maemo-Display-Name: cuteNews - Dailymotion
 XB-Maemo-Icon-26:

@@ -1,3 +1,9 @@
+cutenews-youtube (0.0.3) unstable; urgency=low
+
+  * Update to cutenews plugin API.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Thu, 14 Sep 2017 19:50:13 +0100
+
 cutenews-youtube (0.0.2) unstable; urgency=low
 
   * Update to cutenews plugin API.

@@ -1,3 +1,9 @@
+cutenews-mybb (0.0.2) unstable; urgency=low
+
+  * Plugin API changes.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Thu, 14 Sep 2017 19:24:12 +0100
+
 cutenews-mybb (0.0.1) unstable; urgency=low
 
   * Initial Release.

@@ -2,13 +2,13 @@ Source: cutenews-guardian
 Section: user/multimedia
 Priority: optional
 Maintainer: Stuart Howarth <showarth@marxoft.co.uk>
-Build-Depends: debhelper (>= 5), libqt4-dev, cutenews-dev, qhtmlparser-dev
+Build-Depends: debhelper (>= 5), libqt4-dev, cutenews-dev (>= 0.1.0), qhtmlparser-dev
 Standards-Version: 3.7.3
 Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-guardian
 Architecture: armel
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.0.0), qhtmlparser
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0), qhtmlparser
 Description: A content plugin for cuteNews providing news articles from The Guardian
 XB-Maemo-Display-Name: cuteNews - The Guardian
 XB-Maemo-Icon-26:

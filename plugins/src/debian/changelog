@@ -1,3 +1,9 @@
+cutenews-dev (0.1.0) unstable; urgency=low
+
+  * Add ArticleRequest class for retrieving individual articles.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Thu, 14 Sep 2017 18:24:12 +0000
+
 cutenews-dev (0.0.1) unstable; urgency=low
 
   * Initial release.

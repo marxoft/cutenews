@@ -8,7 +8,7 @@ Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-imagetwist
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.0.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0)
 Description: A content plugin for cuteNews providing ImageTwist image downloads
 XB-Maemo-Display-Name: cuteNews - ImageTwist
 XB-Maemo-Icon-26:

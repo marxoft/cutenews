@@ -8,7 +8,7 @@ Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-depicme
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.0.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0)
 Description: A content plugin for cuteNews providing Depic.me image downloads
 XB-Maemo-Display-Name: cuteNews - Depic.me
 XB-Maemo-Icon-26:

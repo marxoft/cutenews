@@ -8,7 +8,7 @@ Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-openload
 Architecture: all
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.0.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0)
 Description: A content plugin for cuteNews providing Openload file downloads
 XB-Maemo-Display-Name: cuteNews - Openload
 XB-Maemo-Icon-26:
