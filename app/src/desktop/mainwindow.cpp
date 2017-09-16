@@ -355,6 +355,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_enclosuresLabel->hide();
 
     m_messageLabel->setMargin(6);
+    m_messageLabel->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
     
     m_tabsLayout->addWidget(m_tabs);
     m_tabsLayout->addWidget(m_stack);
@@ -959,7 +960,8 @@ void MainWindow::showAboutDialog() {
 }
 
 void MainWindow::showMessage(const QString &message) {
-    m_messageLabel->setText(message);
+    m_messageLabel->setText(m_messageLabel->fontMetrics().elidedText(message, Qt::ElideRight,
+                m_messageLabel->width() - m_messageLabel->margin() * 2));
 }
 
 void MainWindow::showError(const QString &errorString) {
