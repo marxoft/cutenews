@@ -230,8 +230,8 @@ void SubscriptionModel::load() {
         return;
     }
 
-    setStatus(Active);
     clear();
+    setStatus(Active);
     beginInsertRows(QModelIndex(), 0, 1);
     m_list << new Subscription(ALL_ARTICLES_SUBSCRIPTION_ID, tr("All articles"), false, QString(), QDateTime(),
                                QString(), Subscription::None, tr("All articles"), 0, QString(), 0, this);

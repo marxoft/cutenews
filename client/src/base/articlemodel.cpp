@@ -299,12 +299,12 @@ void ArticleModel::load(const QString &subscriptionId) {
         return;
     }
 
+    clear();
     setStatus(Active);    
     m_subscriptionId = subscriptionId;
     m_query = QString();
     emit queryChanged(m_query);
     emit subscriptionIdChanged(m_subscriptionId);
-    clear();
     DBConnection::connection(this,
     SLOT(onArticlesFetched(DBConnection*)))->fetchArticlesForSubscription(m_subscriptionId, 0, m_limit);
 }
@@ -314,12 +314,12 @@ void ArticleModel::search(const QString &query) {
         return;
     }
     
+    clear();
     setStatus(Active);
     m_query = query;
     m_subscriptionId = ALL_ARTICLES_SUBSCRIPTION_ID;
     emit queryChanged(m_query);
     emit subscriptionIdChanged(m_subscriptionId);
-    clear();
     DBConnection::connection(this, SLOT(onArticlesFetched(DBConnection*)))->searchArticles(m_query, 0, m_limit);
 }
 
