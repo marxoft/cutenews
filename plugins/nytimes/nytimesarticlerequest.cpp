@@ -221,14 +221,6 @@ void NytimesArticleRequest::replace(QString &in, const QString &s, const QString
     }
 }
 
-void NytimesArticleRequest::unescape(QString &s) {
-    s.replace("&amp;", "&");
-    s.replace("&apos;", "'");
-    s.replace("&lt;", "<");
-    s.replace("&gt;", ">");
-    s.replace("&quot;", "\"");
-}
-
 void NytimesArticleRequest::writeArticleAuthor(const QHtmlElement &element) {
     m_result.author = element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "author"))
         .attribute("content");
@@ -283,7 +275,6 @@ void NytimesArticleRequest::writeArticleEnclosures(const QHtmlElement &element) 
 void NytimesArticleRequest::writeArticleTitle(const QHtmlElement &element) {
     m_result.title = element.firstElementByTagName("meta", QHtmlAttributeMatch("property", "og:title"))
         .attribute("content");
-    unescape(m_result.title);
 }
 
 void NytimesArticleRequest::writeArticleUrl(const QString &url) {

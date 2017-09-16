@@ -221,14 +221,6 @@ void TelegraphArticleRequest::replace(QString &in, const QString &s, const QStri
     }
 }
 
-void TelegraphArticleRequest::unescape(QString &s) {
-    s.replace("&amp;", "&");
-    s.replace("&apos;", "'");
-    s.replace("&lt;", "<");
-    s.replace("&gt;", ">");
-    s.replace("&quot;", "\"");
-}
-
 void TelegraphArticleRequest::writeArticleAuthor(const QHtmlElement &element) {
     m_result.author = element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "DCSext.author"))
         .attribute("content");
@@ -286,7 +278,6 @@ void TelegraphArticleRequest::writeArticleEnclosures(const QHtmlElement &) {}
 void TelegraphArticleRequest::writeArticleTitle(const QHtmlElement &element) {
     m_result.title = element.firstElementByTagName("meta", QHtmlAttributeMatch("property", "og:title"))
         .attribute("content");
-    unescape(m_result.title);
 }
 
 void TelegraphArticleRequest::writeArticleUrl(const QString &url) {

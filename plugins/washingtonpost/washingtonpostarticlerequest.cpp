@@ -221,14 +221,6 @@ void WashingtonPostArticleRequest::replace(QString &in, const QString &s, const 
     }
 }
 
-void WashingtonPostArticleRequest::unescape(QString &s) {
-    s.replace("&amp;", "&");
-    s.replace("&apos;", "'");
-    s.replace("&lt;", "<");
-    s.replace("&gt;", ">");
-    s.replace("&quot;", "\"");
-}
-
 void WashingtonPostArticleRequest::writeArticleAuthor(const QHtmlElement &element) {
     m_result.author = element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "author"))
         .attribute("content");
@@ -305,7 +297,6 @@ void WashingtonPostArticleRequest::writeArticleEnclosures(const QHtmlElement &el
 void WashingtonPostArticleRequest::writeArticleTitle(const QHtmlElement &element) {
     m_result.title = element.firstElementByTagName("meta", QHtmlAttributeMatch("property", "og:title"))
         .attribute("content");
-    unescape(m_result.title);
 }
 
 void WashingtonPostArticleRequest::writeArticleUrl(const QString &url) {

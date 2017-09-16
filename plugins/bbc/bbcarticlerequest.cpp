@@ -221,14 +221,6 @@ void BbcArticleRequest::replace(QString &in, const QString &s, const QString &r)
     }
 }
 
-void BbcArticleRequest::unescape(QString &s) {
-    s.replace("&amp;", "&");
-    s.replace("&apos;", "'");
-    s.replace("&lt;", "<");
-    s.replace("&gt;", ">");
-    s.replace("&quot;", "\"");
-}
-
 void BbcArticleRequest::writeArticleAuthor(const QHtmlElement &element) {
     m_result.author = element.firstElementByTagName("meta", QHtmlAttributeMatch("property", "article:author"))
         .attribute("content");
@@ -308,14 +300,12 @@ void BbcArticleRequest::writeArticleTitle(const QHtmlElement &element) {
 
     if (!titleEl.isNull()) {
         m_result.title = titleEl.text();
-        unescape(m_result.title);
     }
     else {
         titleEl = element.firstElementByTagName("meta", QHtmlAttributeMatch("property", "og:title"));
 
         if (!titleEl.isNull()) {
             m_result.title = titleEl.attribute("content");
-            unescape(m_result.title);
         }
     }
 }

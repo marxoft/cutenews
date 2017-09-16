@@ -275,16 +275,6 @@ QString GuardianFeedRequest::getRedirect(const QNetworkReply *reply) {
     return redirect;
 }
 
-QString GuardianFeedRequest::unescape(const QString &text) {
-    QString t(text);
-    t.replace("&amp;", "&");
-    t.replace("&apos;", "'");
-    t.replace("&lt;", "<");
-    t.replace("&gt;", ">");
-    t.replace("&quot;", "\"");
-    return t;
-}
-
 void GuardianFeedRequest::writeStartFeed() {
 #ifdef GUARDIAN_DEBUG
     qDebug() << "GuardianFeedRequest::writeStartFeed()";
@@ -318,7 +308,7 @@ void GuardianFeedRequest::writeEndFeed() {
 void GuardianFeedRequest::writeFeedTitle(const QString &title) {
     m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(unescape(title));
+    m_writer.writeCDATA(title);
     m_writer.writeEndElement();
     m_buffer.close();
 }
@@ -396,7 +386,7 @@ void GuardianFeedRequest::writeItemEnclosures(const QVariantList &enclosures) {
 void GuardianFeedRequest::writeItemTitle(const QString &title) {
     m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(unescape(title));
+    m_writer.writeCDATA(title);
     m_writer.writeEndElement();
     m_buffer.close();
 }

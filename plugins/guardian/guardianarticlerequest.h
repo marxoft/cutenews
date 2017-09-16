@@ -59,7 +59,6 @@ private:
     
     static void remove(QString &in, const QString &s);
     static void replace(QString &in, const QString &s, const QString &r);
-    static void unescape(QString &s);
 
     void writeArticleAuthor(const QHtmlElement &element);
     void writeArticleBody(const QHtmlElement &element);

@@ -270,16 +270,6 @@ QString WashingtonPostFeedRequest::getRedirect(const QNetworkReply *reply) {
     return redirect;
 }
 
-QString WashingtonPostFeedRequest::unescape(const QString &text) {
-    QString t(text);
-    t.replace("&amp;", "&");
-    t.replace("&apos;", "'");
-    t.replace("&lt;", "<");
-    t.replace("&gt;", ">");
-    t.replace("&quot;", "\"");
-    return t;
-}
-
 void WashingtonPostFeedRequest::writeStartFeed() {
 #ifdef WASHINGTONPOST_DEBUG
     qDebug() << "WashingtonPostFeedRequest::writeStartFeed()";
@@ -310,7 +300,7 @@ void WashingtonPostFeedRequest::writeEndFeed() {
 void WashingtonPostFeedRequest::writeFeedTitle(const QString &title) {
     m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(unescape(title));
+    m_writer.writeCDATA(title);
     m_writer.writeEndElement();
     m_buffer.close();
 }
@@ -388,7 +378,7 @@ void WashingtonPostFeedRequest::writeItemEnclosures(const QVariantList &enclosur
 void WashingtonPostFeedRequest::writeItemTitle(const QString &title) {
     m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(unescape(title));
+    m_writer.writeCDATA(title);
     m_writer.writeEndElement();
     m_buffer.close();
 }

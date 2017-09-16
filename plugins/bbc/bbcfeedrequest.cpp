@@ -275,16 +275,6 @@ QString BbcFeedRequest::getRedirect(const QNetworkReply *reply) {
     return redirect;
 }
 
-QString BbcFeedRequest::unescape(const QString &text) {
-    QString t(text);
-    t.replace("&amp;", "&");
-    t.replace("&apos;", "'");
-    t.replace("&lt;", "<");
-    t.replace("&gt;", ">");
-    t.replace("&quot;", "\"");
-    return t;
-}
-
 void BbcFeedRequest::writeStartFeed() {
 #ifdef BBC_DEBUG
     qDebug() << "BbcFeedRequest::writeStartFeed()";
@@ -318,7 +308,7 @@ void BbcFeedRequest::writeEndFeed() {
 void BbcFeedRequest::writeFeedTitle(const QString &title) {
     m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(unescape(title));
+    m_writer.writeCDATA(title);
     m_writer.writeEndElement();
     m_buffer.close();
 }
@@ -396,7 +386,7 @@ void BbcFeedRequest::writeItemEnclosures(const QVariantList &enclosures) {
 void BbcFeedRequest::writeItemTitle(const QString &title) {
     m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(unescape(title));
+    m_writer.writeCDATA(title);
     m_writer.writeEndElement();
     m_buffer.close();
 }

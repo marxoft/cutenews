@@ -221,14 +221,6 @@ void IndependentArticleRequest::replace(QString &in, const QString &s, const QSt
     }
 }
 
-void IndependentArticleRequest::unescape(QString &s) {
-    s.replace("&amp;", "&");
-    s.replace("&apos;", "'");
-    s.replace("&lt;", "<");
-    s.replace("&gt;", ">");
-    s.replace("&quot;", "\"");
-}
-
 void IndependentArticleRequest::writeArticleAuthor(const QHtmlElement &element) {
     m_result.author = element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "article:author_name"))
         .attribute("content");
@@ -286,7 +278,6 @@ void IndependentArticleRequest::writeArticleEnclosures(const QHtmlElement &) {}
 void IndependentArticleRequest::writeArticleTitle(const QHtmlElement &element) {
     m_result.title = element.firstElementByTagName("meta", QHtmlAttributeMatch("property", "og:title"))
         .attribute("content");
-    unescape(m_result.title);
 }
 
 void IndependentArticleRequest::writeArticleUrl(const QString &url) {

@@ -401,16 +401,6 @@ QHtmlElementList XenforoFeedRequest::getItems(const QHtmlElement &element) {
     return element.firstElementByTagName("ol", QHtmlAttributeMatch("class", "messageList")).elementsByTagName("li");
 }
 
-QString XenforoFeedRequest::unescape(const QString &text) {
-    QString t(text);
-    t.replace("&amp;", "&");
-    t.replace("&apos;", "'");
-    t.replace("&lt;", "<");
-    t.replace("&gt;", ">");
-    t.replace("&quot;", "\"");
-    return t;
-}
-
 void XenforoFeedRequest::writeStartFeed() {
     m_buffer.open(QBuffer::WriteOnly);
     m_writer.setDevice(&m_buffer);
@@ -435,7 +425,7 @@ void XenforoFeedRequest::writeEndFeed() {
 void XenforoFeedRequest::writeFeedTitle(const QString &title) {
     m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(unescape(title));
+    m_writer.writeCDATA(title);
     m_writer.writeEndElement();
     m_buffer.close();
 }
@@ -498,7 +488,7 @@ void XenforoFeedRequest::writeItemDate(const QHtmlElement &element) {
 void XenforoFeedRequest::writeItemTitle(const QString &title) {
     m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(unescape(title));
+    m_writer.writeCDATA(title);
     m_writer.writeEndElement();
     m_buffer.close();
 }

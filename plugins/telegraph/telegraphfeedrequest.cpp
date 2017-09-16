@@ -275,16 +275,6 @@ QString TelegraphFeedRequest::getRedirect(const QNetworkReply *reply) {
     return redirect;
 }
 
-QString TelegraphFeedRequest::unescape(const QString &text) {
-    QString t(text);
-    t.replace("&amp;", "&");
-    t.replace("&apos;", "'");
-    t.replace("&lt;", "<");
-    t.replace("&gt;", ">");
-    t.replace("&quot;", "\"");
-    return t;
-}
-
 void TelegraphFeedRequest::writeStartFeed() {
 #ifdef TELEGRAPH_DEBUG
     qDebug() << "TelegraphFeedRequest::writeStartFeed()";
@@ -318,7 +308,7 @@ void TelegraphFeedRequest::writeEndFeed() {
 void TelegraphFeedRequest::writeFeedTitle(const QString &title) {
     m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(unescape(title));
+    m_writer.writeCDATA(title);
     m_writer.writeEndElement();
     m_buffer.close();
 }
@@ -396,7 +386,7 @@ void TelegraphFeedRequest::writeItemEnclosures(const QVariantList &enclosures) {
 void TelegraphFeedRequest::writeItemTitle(const QString &title) {
     m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
     m_writer.writeStartElement("title");
-    m_writer.writeCDATA(unescape(title));
+    m_writer.writeCDATA(title);
     m_writer.writeEndElement();
     m_buffer.close();
 }

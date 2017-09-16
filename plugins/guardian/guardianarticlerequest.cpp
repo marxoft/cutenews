@@ -221,14 +221,6 @@ void GuardianArticleRequest::replace(QString &in, const QString &s, const QStrin
     }
 }
 
-void GuardianArticleRequest::unescape(QString &s) {
-    s.replace("&amp;", "&");
-    s.replace("&apos;", "'");
-    s.replace("&lt;", "<");
-    s.replace("&gt;", ">");
-    s.replace("&quot;", "\"");
-}
-
 void GuardianArticleRequest::writeArticleAuthor(const QHtmlElement &element) {
     m_result.author = element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "author"))
         .attribute("content");
@@ -248,8 +240,7 @@ void GuardianArticleRequest::writeArticleBody(const QHtmlElement &element) {
     if (m_settings.value("includeImages", false).toBool()) {
         foreach (const QHtmlElement &figure, bodyEl.elementsByTagName("figure")) {
             QString image = figure.firstElementByTagName("img").toString();
-            unescape(image);
-            replace(m_result.body, figure.toString(), image);
+            replace(m_result.body, figure.toString(), image.replace("&amp;", "&"));
         }
     }
     else {
@@ -328,7 +319,6 @@ void GuardianArticleRequest::writeArticleEnclosures(const QHtmlElement &element)
 void GuardianArticleRequest::writeArticleTitle(const QHtmlElement &element) {
     m_result.title = element.firstElementByTagName("meta", QHtmlAttributeMatch("property", "og:title"))
         .attribute("content");
-    unescape(m_result.title);
 }
 
 void GuardianArticleRequest::writeArticleUrl(const QString &url) {
