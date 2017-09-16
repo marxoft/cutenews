@@ -166,7 +166,6 @@ Window {
             preferredWidth: flickable.width
             contextMenuPolicy: Qt.NoContextMenu
             linkDelegationPolicy: WebPage.DelegateAllLinks
-            settings.autoLoadImages: !settings.offlineModeEnabled
             settings.userStyleSheetUrl: {
                 return "data:text/css;charset=utf-8;base64,"
                 + Qt.btoa("html { font-family: " + platformStyle.fontFamily + "; font-size: "
