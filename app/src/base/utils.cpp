@@ -168,6 +168,16 @@ QString Utils::unescape(const QString &s) {
     return QString::fromUtf8(us);
 }
 
+QString Utils::unescapeHtml(const QString &html) {
+    QString s(html);
+    s.replace("&amp;", "&");
+    s.replace("&apos;", "'");
+    s.replace("&lt;", "<");
+    s.replace("&gt;", ">");
+    s.replace("&quot;", "\"");
+    return s;
+}
+
 QList< QPair<QString, QString> > Utils::urlQueryItems(const QUrl &url) {
 #if QT_VERSION >= 0x050000
     return QUrlQuery(url).queryItems();

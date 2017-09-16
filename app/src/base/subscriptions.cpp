@@ -331,7 +331,7 @@ void Subscriptions::parseXml(const QByteArray &xml) {
         return;
     }
     
-    const QString channelTitle = parser.title();
+    const QString channelTitle = Utils::unescapeHtml(parser.title());
     const QString channelDescription = parser.description();
     const QString channelUrl = parser.url();
     const QString channelIconUrl = parser.iconUrl();
@@ -377,7 +377,7 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     
     QString id = Utils::createId();
     QDateTime date = parser.date();
-    QVariantList enc = parser.enclosures();    
+    QVariantList enc = parser.enclosures();
     QVariantList ids = QVariantList() << id;
     QVariantList authors = QVariantList() << parser.author();
     QVariantList bodies = QVariantList() << replaceImageUrls(parser.description(), QString("%1%2%3/%4/")
@@ -390,7 +390,7 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     QVariantList reads = QVariantList() << 0;
     QVariantList lastReads = QVariantList() << 0;
     QVariantList subscriptionIds = QVariantList() << subscriptionId;
-    QVariantList titles = QVariantList() << parser.title();
+    QVariantList titles = QVariantList() << Utils::unescapeHtml(parser.title());
     QVariantList urls = QVariantList() << parser.url();
     
     if (subscription()->downloadEnclosures()) {
@@ -413,7 +413,7 @@ void Subscriptions::parseXml(const QByteArray &xml) {
         reads << 0;
         lastReads << 0;
         subscriptionIds << subscriptionId;
-        titles << parser.title();
+        titles << Utils::unescapeHtml(parser.title());
         urls << parser.url();
 
         if (subscription()->downloadEnclosures()) {

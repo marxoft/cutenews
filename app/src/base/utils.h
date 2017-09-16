@@ -52,6 +52,7 @@ public:
     Q_INVOKABLE static QString toRichText(QString s);  
     
     Q_INVOKABLE static QString unescape(const QString &s);
+    Q_INVOKABLE static QString unescapeHtml(const QString &html);
     
     static QList< QPair<QString, QString> > urlQueryItems(const QUrl &url);
     Q_INVOKABLE static QVariantMap urlQueryItemMap(const QUrl &url);
