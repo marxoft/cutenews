@@ -222,15 +222,25 @@ void NytimesArticleRequest::replace(QString &in, const QString &s, const QString
 }
 
 void NytimesArticleRequest::writeArticleAuthor(const QHtmlElement &element) {
-    m_result.author = element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "author"))
-        .attribute("content");
+    QHtmlElement author = element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "author"));
+
+    if (author.isNull()) {
+        author = element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "byl"));
+    }
+
+    m_result.author = author.attribute("content");
 }
 
 void NytimesArticleRequest::writeArticleBody(const QHtmlElement &element) {
-    const QHtmlElement article = element.firstElementByTagName("article", QHtmlAttributeMatch("id", "story"));
+    QHtmlElement article = element.firstElementByTagName("article", QHtmlAttributeMatch("id", "story"));
 
-    foreach (const QHtmlElement &p, article.elementsByTagName("p", QHtmlAttributeMatch("class",
-                    "story-body-text story-content"))) {
+    if (article.isNull()) {
+        article = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "articleBody"));
+    }
+
+    foreach (const QHtmlElement &p, article.elementsByTagName("p", QHtmlAttributeMatches()
+                << QHtmlAttributeMatch("class", "story-body-text story-content")
+                << QHtmlAttributeMatch("itemprop", "articleBody"), QHtmlParser::MatchAny)) {
         m_result.body.append(p.toString());
 
         foreach (const QHtmlElement &figure, p.elementsByTagName("figure")) {
@@ -249,10 +259,10 @@ void NytimesArticleRequest::writeArticleCategories(const QHtmlElement &element) 
 }
 
 void NytimesArticleRequest::writeArticleDate(const QHtmlElement &element) {
-    QHtmlElement dateEl = element.firstElementByTagName("meta", QHtmlAttributeMatch("property", "article:modified"));
+    QHtmlElement dateEl = element.firstElementByTagName("meta", QHtmlAttributeMatch("itemprop", "dateModified"));
 
     if (dateEl.isNull()) {
-        dateEl = element.firstElementByTagName("meta", QHtmlAttributeMatch("property", "article:published"));
+        dateEl = element.firstElementByTagName("meta", QHtmlAttributeMatch("itemprop", "datePublished"));
     }
 
     m_result.date = QDateTime::fromString(dateEl.attribute("content"), Qt::ISODate);
