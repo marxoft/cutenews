@@ -259,7 +259,7 @@ void IndependentArticleRequest::writeArticleBody(const QHtmlElement &element) {
 
 void IndependentArticleRequest::writeArticleCategories(const QHtmlElement &element) {
     m_result.categories = element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "keywords"))
-        .attribute("content").split(",");
+        .attribute("content").split(", ");
 }
 
 void IndependentArticleRequest::writeArticleDate(const QHtmlElement &element) {
