@@ -2,6 +2,8 @@
     "type": "js",
     "version": 1,
     "name": "PicState",
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(www\\.|)picstate\\.com/view/full/[\\w_]+",
     "supportsFeeds": false,
     "supportsEnclosures": true,
     "enclosureRegExp": "http(s|)://(www\\.|)picstate\\.com/view/full/[\\w_]+"

@@ -18,14 +18,36 @@ var USER_AGENT = "Wget/1.13.4 (linux-gnu)";
 
 var request = null;
 
+function getArticle(url, settings) {
+    request = new XMLHttpRequest();
+    request.onreadystatechange = function() {
+        if (request.readyState == 4) {
+            try {
+                var imageUrl = /src="(http(s|):\/\/(www\.|)picstate\.com\/files\/[^"]+)"/
+                    .exec(request.responseText)[1];
+                var result = new ArticleResult();
+                result.body = "<img src='" + imageUrl + "'>";
+                result.title = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+                finished(result);
+            }
+            catch(err) {
+                error(err);
+            }
+        }
+    }
+    
+    request.open("GET", url);
+    request.setRequestHeader("User-Agent", USER_AGENT);
+    request.send();
+}
+
 function getEnclosure(url, settings) {
     request = new XMLHttpRequest();
     request.onreadystatechange = function() {
         if (request.readyState == 4) {
-            var response = request.responseText;
-            
             try {
-                var imageUrl = /http(s|):\/\/(www\.|)picstate\.com\/files\/[\w_]+\/.+\.\w+/.exec(response)[0];
+                var imageUrl = /src="(http(s|):\/\/(www\.|)picstate\.com\/files\/[^"]+)"/
+                    .exec(request.responseText)[1];
                 var fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
                 finished(new EnclosureResult(fileName, new NetworkRequest(imageUrl)));
             }
