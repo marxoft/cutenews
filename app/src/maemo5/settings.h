@@ -33,8 +33,8 @@ class Settings : public QObject
     Q_PROPERTY(QStringList categoryNames READ categoryNames NOTIFY categoriesChanged)
     Q_PROPERTY(QString customTransferCommand READ customTransferCommand WRITE setCustomTransferCommand
                NOTIFY customTransferCommandChanged)
-    Q_PROPERTY(bool customTransferCommandEnabled READ customTransferCommandEnabled WRITE setCustomTransferCommandEnabled
-               NOTIFY customTransferCommandEnabledChanged)
+    Q_PROPERTY(bool customTransferCommandEnabled READ customTransferCommandEnabled
+               WRITE setCustomTransferCommandEnabled NOTIFY customTransferCommandEnabledChanged)
     Q_PROPERTY(QString defaultCategory READ defaultCategory WRITE setDefaultCategory NOTIFY defaultCategoryChanged)
     Q_PROPERTY(QString downloadPath READ downloadPath WRITE setDownloadPath NOTIFY downloadPathChanged)
     Q_PROPERTY(bool enableAutomaticScrollingInWidget READ enableAutomaticScrollingInWidget
@@ -59,17 +59,21 @@ class Settings : public QObject
                NOTIFY offlineModeEnabledChanged)
     Q_PROPERTY(bool openArticlesExternallyFromWidget READ openArticlesExternallyFromWidget
                WRITE setOpenArticlesExternallyFromWidget NOTIFY openArticlesExternallyFromWidgetChanged)
-    Q_PROPERTY(int readArticleExpiry READ readArticleExpiry WRITE setReadArticleExpiry NOTIFY readArticleExpiryChanged)
+    Q_PROPERTY(int readArticleExpiry READ readArticleExpiry WRITE setReadArticleExpiry
+               NOTIFY readArticleExpiryChanged)
+    Q_PROPERTY(int screenOrientation READ screenOrientation WRITE setScreenOrientation
+               NOTIFY screenOrientationChanged)
     Q_PROPERTY(bool startTransfersAutomatically READ startTransfersAutomatically WRITE setStartTransfersAutomatically
                NOTIFY startTransfersAutomaticallyChanged)
-    Q_PROPERTY(bool updateSubscriptionsOnStartup READ updateSubscriptionsOnStartup WRITE setUpdateSubscriptionsOnStartup
-               NOTIFY updateSubscriptionsOnStartupChanged)
+    Q_PROPERTY(bool updateSubscriptionsOnStartup READ updateSubscriptionsOnStartup
+               WRITE setUpdateSubscriptionsOnStartup NOTIFY updateSubscriptionsOnStartupChanged)
     Q_PROPERTY(QString copyShortcut READ copyShortcut WRITE setCopyShortcut NOTIFY copyShortcutChanged)
     Q_PROPERTY(QString deleteShortcut READ deleteShortcut WRITE setDeleteShortcut NOTIFY deleteShortcutChanged)
-    Q_PROPERTY(QString downloadShortcut READ downloadShortcut WRITE setDownloadShortcut NOTIFY downloadShortcutChanged)
+    Q_PROPERTY(QString downloadShortcut READ downloadShortcut WRITE setDownloadShortcut
+               NOTIFY downloadShortcutChanged)
     Q_PROPERTY(QString editShortcut READ editShortcut WRITE setEditShortcut NOTIFY editShortcutChanged)
-    Q_PROPERTY(QString importSubscriptionsShortcut READ importSubscriptionsShortcut WRITE setImportSubscriptionsShortcut
-               NOTIFY importSubscriptionsShortcutChanged)
+    Q_PROPERTY(QString importSubscriptionsShortcut READ importSubscriptionsShortcut
+               WRITE setImportSubscriptionsShortcut NOTIFY importSubscriptionsShortcutChanged)
     Q_PROPERTY(QString markAllArticlesReadShortcut READ markAllArticlesReadShortcut
                WRITE setMarkAllArticlesReadShortcut NOTIFY markAllArticlesReadShortcutChanged)
     Q_PROPERTY(QString markAllSubscriptionsReadShortcut READ markAllSubscriptionsReadShortcut
@@ -92,7 +96,8 @@ class Settings : public QObject
                NOTIFY previousArticleShortcutChanged)
     Q_PROPERTY(QString reloadShortcut READ reloadShortcut WRITE setReloadShortcut NOTIFY reloadShortcutChanged)
     Q_PROPERTY(QString searchShortcut READ searchShortcut WRITE setSearchShortcut NOTIFY searchShortcutChanged)
-    Q_PROPERTY(QString settingsShortcut READ settingsShortcut WRITE setSettingsShortcut NOTIFY settingsShortcutChanged)
+    Q_PROPERTY(QString settingsShortcut READ settingsShortcut WRITE setSettingsShortcut
+               NOTIFY settingsShortcutChanged)
     Q_PROPERTY(QString showArticleEnclosuresShortcut READ showArticleEnclosuresShortcut
                WRITE setShowArticleEnclosuresShortcut NOTIFY showArticleEnclosuresShortcutChanged)
     Q_PROPERTY(QString startAllTransfersShortcut READ startAllTransfersShortcut WRITE setStartAllTransfersShortcut
@@ -113,6 +118,8 @@ class Settings : public QObject
                WRITE setUpdateAllSubscriptionsShortcut NOTIFY updateAllSubscriptionsShortcutChanged)
     Q_PROPERTY(QString updateSubscriptionShortcut READ updateSubscriptionShortcut WRITE setUpdateSubscriptionShortcut
                NOTIFY updateSubscriptionShortcutChanged)
+    Q_PROPERTY(bool volumeKeysEnabled READ volumeKeysEnabled WRITE setVolumeKeysEnabled
+               NOTIFY volumeKeysEnabledChanged)
     
 public:
     ~Settings();
@@ -153,11 +160,13 @@ public:
     static bool openArticlesExternallyFromWidget();
     
     static int readArticleExpiry();
+
+    static int screenOrientation();
     
     static bool startTransfersAutomatically();
     
     static bool updateSubscriptionsOnStartup();
-    
+
     static QString copyShortcut();
     static QString deleteShortcut();
     static QString downloadShortcut();
@@ -186,6 +195,7 @@ public:
     static QString transfersShortcut();
     static QString updateAllSubscriptionsShortcut();
     static QString updateSubscriptionShortcut();
+    static bool volumeKeysEnabled();
         
     Q_INVOKABLE static QVariant value(const QString &key, const QVariant &defaultValue = QVariant());
 
@@ -223,6 +233,8 @@ public Q_SLOTS:
     
     static void setReadArticleExpiry(int expiry);
     
+    static void setScreenOrientation(int orientation);
+
     static void setStartTransfersAutomatically(bool enabled);
     
     static void setUpdateSubscriptionsOnStartup(bool enabled);
@@ -255,6 +267,7 @@ public Q_SLOTS:
     static void setTransfersShortcut(const QString &key);
     static void setUpdateAllSubscriptionsShortcut(const QString &key);
     static void setUpdateSubscriptionShortcut(const QString &key);
+    static void setVolumeKeysEnabled(bool enabled);
     
     static void setValue(const QString &key, const QVariant &value);
 
@@ -274,6 +287,7 @@ Q_SIGNALS:
     void offlineModeEnabledChanged(bool enabled);
     void openArticlesExternallyFromWidgetChanged(bool enabled);
     void readArticleExpiryChanged(int expiry);
+    void screenOrientationChanged(int orientation);
     void startTransfersAutomaticallyChanged(bool enabled);
     void updateSubscriptionsOnStartupChanged(bool enabled);
     void copyShortcutChanged(const QString &key);
@@ -305,6 +319,7 @@ Q_SIGNALS:
     void transfersShortcutChanged(const QString &key);
     void updateAllSubscriptionsShortcutChanged(const QString &key);
     void updateSubscriptionShortcutChanged(const QString &key);
+    void volumeKeysEnabledChanged(bool enabled);
 
 private:
     Settings();

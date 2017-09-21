@@ -29,7 +29,6 @@ Window {
     signal nextUnread
     signal previous
     
-    showProgressIndicator: (article != null) && (article.status == Article.Active)
     title: qsTr("Article")
     menuBar: MenuBar {
         MenuItem {
@@ -159,12 +158,13 @@ Window {
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
         contentHeight: view.height
         pressDelay: 100000
+        focus: true
         
         WebView {
             id: view
             
             preferredWidth: flickable.width
-            contextMenuPolicy: Qt.NoContextMenu
+            contextMenuPolicy: Qt.CustomContextMenu
             linkDelegationPolicy: WebPage.DelegateAllLinks
             settings.userStyleSheetUrl: {
                 return "data:text/css;charset=utf-8;base64,"
@@ -175,7 +175,33 @@ Window {
                 + platformStyle.fontSizeLarge + "pt; } .separator { height: 1px; background-color: "
                 + platformStyle.secondaryTextColor + "; }");
             }
-            onLinkClicked: popupManager.open(urlMenu, root, {url: link})
+            onCustomContextMenuRequested: {
+                var result = hitTestContent(menuX, menuY);
+                var link = result.linkUrl.toString();
+
+                if (link) {
+                    popupManager.open(urlMenu, root, {url: link});
+                }
+            }
+            onLinkClicked: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: link})
+            onStatusChanged: root.showProgressIndicator = (status == WebView.Loading)
+        }
+
+        Keys.onPressed: {
+            if (!event.isAutoRepeat) {
+                switch (event.key) {
+                    case Qt.Key_F7:
+                        root.next();
+                        break;
+                    case Qt.Key_F8:
+                        root.previous();
+                        break;
+                    default:
+                        return;
+                }
+
+                event.accepted = true;
+            }
         }
     }
     
@@ -194,7 +220,7 @@ Window {
 
             MenuItem {
                 text: qsTr("Open article")
-                enabled: plugins.articleIsSupported(menu.url)
+                enabled: (menu.url) && (plugins.articleIsSupported(menu.url))
                 onTriggered: windowStack.push(Qt.resolvedUrl("ArticleRequestWindow.qml"), {url: menu.url})
             }
             
@@ -226,6 +252,8 @@ Window {
             enclosures: article.enclosures
         }
     }
+
+    VolumeKeys.enabled: settings.volumeKeysEnabled
     
     onArticleChanged: {
         if (article) {
@@ -234,8 +262,8 @@ Window {
             view.html = "<p class='title'>" + title + "</p><div class='separator'></div><p>"
             + qsTr("Author") + ": " + (article.author || qsTr("Unknown")) + "</br>"
             + qsTr("Date") + ": " + (article.dateString || qsTr("Unknown")) + "</br>"
-            + qsTr("Categories") + ": " + (article.categories.length > 0 ? article.categories.join(", ") : qsTr("None"))
-            + "</p><div class='separator'></div><p>" + article.body + "</p>";
+            + qsTr("Categories") + ": " + (article.categories.length > 0 ? article.categories.join(", ")
+            : qsTr("None")) + "</p><div class='separator'></div><p>" + article.body + "</p>";
             
             if (!article.read) {
                 article.markRead(true);

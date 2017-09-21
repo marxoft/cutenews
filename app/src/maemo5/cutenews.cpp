@@ -30,6 +30,7 @@
 #include "pluginconfigmodel.h"
 #include "pluginmanager.h"
 #include "pluginsettings.h"
+#include "screenorientationmodel.h"
 #include "settings.h"
 #include "subscription.h"
 #include "subscriptionmodel.h"
@@ -93,7 +94,10 @@ bool CuteNews::quit() {
         }
     }
     
+    Logger::log("CuteNews::quit(). Saving incomplete transfers.", Logger::LowVerbosity);
     Transfers::instance()->save();
+    Logger::log("CuteNews::quit(). Removing temporary cache", Logger::LowVerbosity);
+    Utils::removeDirectory(TEMPORARY_CACHE_PATH);
     Logger::log("CuteNews::quit(). Quitting the application", Logger::LowVerbosity);
     QCoreApplication::quit();
     return true;
@@ -149,6 +153,7 @@ void CuteNews::initEngine() {
     qmlRegisterType<NetworkProxyTypeModel>("cuteNews", 1, 0, "NetworkProxyTypeModel");
     qmlRegisterType<PluginConfigModel>("cuteNews", 1, 0, "PluginConfigModel");
     qmlRegisterType<PluginSettings>("cuteNews", 1, 0, "PluginSettings");
+    qmlRegisterType<ScreenOrientationModel>("cuteNews", 1, 0, "ScreenOrientationModel");
     qmlRegisterType<SelectionModel>("cuteNews", 1, 0, "SelectionModel");
     qmlRegisterType<Subscription>("cuteNews", 1, 0, "Subscription");
     qmlRegisterType<SubscriptionModel>("cuteNews", 1, 0, "SubscriptionModel");
@@ -181,6 +186,9 @@ void CuteNews::initEngine() {
     context->setContextProperty("utils", new Utils(this));
     context->setContextProperty("ALL_ARTICLES_SUBSCRIPTION_ID", ALL_ARTICLES_SUBSCRIPTION_ID);
     context->setContextProperty("FAVOURITES_SUBSCRIPTION_ID", FAVOURITES_SUBSCRIPTION_ID);
+    context->setContextProperty("CACHE_AUTHORITY", CACHE_AUTHORITY);
+    context->setContextProperty("CACHE_PATH", CACHE_PATH);
+    context->setContextProperty("TEMPORARY_CACHE_PATH", TEMPORARY_CACHE_PATH);
     context->setContextProperty("VERSION_NUMBER", VERSION_NUMBER);
     
     connect(m_engine, SIGNAL(warnings(QList<QDeclarativeError>)), logger, SLOT(log(QList<QDeclarativeError>)));

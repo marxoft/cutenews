@@ -78,8 +78,33 @@ Dialog {
         }
         style: DialogButtonStyle {}
         text: qsTr("Done")
-        enabled: root.url
+        enabled: root.url != ""
         onClicked: root.accept()
+    }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        AnchorChanges {
+            target: column
+            anchors.right: parent.right
+        }
+
+        PropertyChanges {
+            target: column
+            anchors.rightMargin: 0
+        }
+
+        PropertyChanges {
+            target: button
+            width: parent.width
+        }
+
+        PropertyChanges {
+            target: root
+            height: column.height + button.height + platformStyle.paddingMedium * 2
+        }
     }
     
     onAccepted: transfers.addEnclosureDownload(url, category, priority, pluginCheckBox.checked)

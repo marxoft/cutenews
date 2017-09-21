@@ -26,7 +26,6 @@ Window {
     property string url
     property QtObject article
 
-    showProgressIndicator: (article != null) && (article.status == ArticleRequest.Active)
     title: qsTr("Article")
     menuBar: MenuBar {
         MenuItem {
@@ -90,12 +89,13 @@ Window {
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
         contentHeight: view.height
         pressDelay: 100000
+        focus: true
         
         WebView {
             id: view
             
             preferredWidth: flickable.width
-            contextMenuPolicy: Qt.NoContextMenu
+            contextMenuPolicy: Qt.CustomContextMenu
             linkDelegationPolicy: WebPage.DelegateAllLinks
             settings.userStyleSheetUrl: {
                 return "data:text/css;charset=utf-8;base64,"
@@ -106,7 +106,16 @@ Window {
                 + platformStyle.fontSizeLarge + "pt; } .separator { height: 1px; background-color: "
                 + platformStyle.secondaryTextColor + "; }");
             }
-            onLinkClicked: popupManager.open(urlMenu, root, {url: link})
+            onCustomContextMenuRequested: {
+                var result = hitTestContent(menuX, menuY);
+                var link = result.linkUrl.toString();
+
+                if (link) {
+                    popupManager.open(urlMenu, root, {url: link});
+                }
+            }
+            onLinkClicked: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: link})
+            onStatusChanged: root.showProgressIndicator = (status == WebView.Loading)
         }
     }
     
@@ -125,7 +134,7 @@ Window {
 
             MenuItem {
                 text: qsTr("Open article")
-                enabled: plugins.articleIsSupported(menu.url)
+                enabled: (menu.url) && (plugins.articleIsSupported(menu.url))
                 onTriggered: windowStack.push(Qt.resolvedUrl("ArticleRequestWindow.qml"), {url: menu.url})
             }
             
@@ -158,13 +167,15 @@ Window {
                 view.html = "<p class='title'>" + title + "</p><div class='separator'></div><p>"
                 + qsTr("Author") + ": " + (article.resultAuthor || qsTr("Unknown")) + "</br>"
                 + qsTr("Date") + ": " + (article.resultDateString || qsTr("Unknown")) + "</br>"
-                + qsTr("Categories") + ": " + (article.resultCategories.length > 0 ? article.resultCategories.join(", ")
-                : qsTr("None")) + "</p><div class='separator'></div><p>" + article.resultBody + "</p>";
+                + qsTr("Categories") + ": " + (article.resultCategories.length > 0
+                ? article.resultCategories.join(", ") : qsTr("None")) + "</p><div class='separator'></div><p>"
+                + utils.replaceSrcPaths(article.resultBody, CACHE_AUTHORITY + TEMPORARY_CACHE_PATH) + "</p>";
             }
             else if (article.status == ArticleRequest.Error) {
                 informationBox.information(article.errorString);
             }
         }
+        onStatusChanged: root.showProgressIndicator = (article.status == ArticleRequest.Active)
     }
 
     PluginSettings {

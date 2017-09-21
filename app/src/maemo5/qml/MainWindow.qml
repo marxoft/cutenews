@@ -216,7 +216,7 @@ ApplicationWindow {
         anchors {
             left: parent.left
             right: parent.right
-            top: subscriptionButton.bottom
+            top: updateButton.bottom
             topMargin: platformStyle.paddingMedium
             bottom: parent.bottom
         }
@@ -236,7 +236,7 @@ ApplicationWindow {
         
         function information(message) {
             informationLabel.text = message;
-            open();
+            show();
         }
         
         height: informationLabel.height + platformStyle.paddingLarge
@@ -351,6 +351,37 @@ ApplicationWindow {
     Connections {
         target: transfers
         onTransferAdded: informationBox.information(qsTr("Enclosure added to downloads"))
+    }
+
+    Binding {
+        target: screen
+        orientationLock: settings.screenOrientation
+    }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        AnchorChanges {
+            target: subscriptionButton
+            anchors.right: parent.right
+        }
+
+        PropertyChanges {
+            target: subscriptionButton
+            anchors.rightMargin: platformStyle.paddingMedium
+        }
+
+        AnchorChanges {
+            target: updateButton
+            anchors.left: parent.left
+            anchors.top: subscriptionButton.bottom
+        }
+
+        PropertyChanges {
+            target: updateButton
+            anchors.leftMargin: platformStyle.paddingMedium
+        }
     }
     
     Component.onCompleted: subscriptionModel.load()

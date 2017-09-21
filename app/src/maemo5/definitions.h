@@ -44,6 +44,7 @@ static const int ICON_SIZE = 48;
 // Cache
 static const QString CACHE_AUTHORITY("http://localhost");
 static const QString CACHE_PATH(HOME_PATH + "/cutenews/cache/");
+static const QString TEMPORARY_CACHE_PATH(CACHE_PATH + "temp/");
 
 // Database
 static const QString DATABASE_PATH(HOME_PATH + "/cutenews/");

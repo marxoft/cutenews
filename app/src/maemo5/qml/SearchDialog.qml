@@ -32,7 +32,7 @@ Dialog {
             left: parent.left
             right: button.left
             rightMargin: platformStyle.paddingMedium
-            bottom: parent.bottom
+            top: parent.top
         }
         placeholderText: qsTr("Search query")
         onAccepted: if (text) root.accept();
@@ -49,6 +49,31 @@ Dialog {
         text: qsTr("Done")
         enabled: searchField.text != ""
         onClicked: searchField.accepted()
+    }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        AnchorChanges {
+            target: searchField
+            anchors.right: parent.right
+        }
+
+        PropertyChanges {
+            target: searchField
+            anchors.rightMargin: 0
+        }
+
+        PropertyChanges {
+            target: button
+            width: parent.width
+        }
+
+        PropertyChanges {
+            target: root
+            height: searchField.height + button.height + platformStyle.paddingMedium * 2
+        }
     }
     
     onStatusChanged: if (status == DialogStatus.Open) searchField.forceActiveFocus();

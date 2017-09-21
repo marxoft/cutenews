@@ -23,10 +23,10 @@ Dialog {
     property string url
     
     title: qsTr("Open externally")
-    height: row.height + platformStyle.paddingMedium
+    height: flow.height + platformStyle.paddingMedium
     
-    Row {
-        id: row
+    Flow {
+        id: flow
         
         anchors {
             left: parent.left
@@ -36,6 +36,8 @@ Dialog {
         spacing: platformStyle.paddingMedium
         
         Button {            
+            id: directButton
+
             width: Math.floor((parent.width / 2) - (parent.spacing / 2))
             text: qsTr("Open directly")
             onClicked: {
@@ -44,7 +46,9 @@ Dialog {
             }
         }
         
-        Button {            
+        Button {
+            id: pluginButton
+
             width: Math.floor((parent.width / 2) - (parent.spacing / 2))
             text: qsTr("Open with plugin")
             enabled: plugins.enclosureIsSupported(root.url)
@@ -52,6 +56,21 @@ Dialog {
                 urlopener.openWithPlugin(root.url);
                 root.accept();
             }
+        }
+    }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        PropertyChanges {
+            target: directButton
+            width: parent.width
+        }
+
+        PropertyChanges {
+            target: pluginButton
+            width: parent.width
         }
     }
 }
