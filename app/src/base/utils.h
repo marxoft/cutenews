@@ -28,7 +28,7 @@ class Utils : public QObject
         
 public:
     explicit Utils(QObject *parent = 0);
-        
+
     Q_INVOKABLE static QString createId();
     
     Q_INVOKABLE static QDateTime dateTimeFromMSecs(qint64 msecs);
@@ -48,8 +48,10 @@ public:
     Q_INVOKABLE static bool isLocalFile(const QUrl &url);
 
     Q_INVOKABLE static bool removeDirectory(const QString &directory);
+
+    Q_INVOKABLE static QString replaceSrcPaths(const QString &s, const QString &path);
     
-    Q_INVOKABLE static QString toRichText(QString s);  
+    Q_INVOKABLE static QString toRichText(const QString &s);  
     
     Q_INVOKABLE static QString unescape(const QString &s);
     Q_INVOKABLE static QString unescapeHtml(const QString &html);

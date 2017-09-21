@@ -1011,7 +1011,8 @@ void MainWindow::onArticleRequestFinished(ArticleRequest *request) {
     switch (request->status()) {
     case ArticleRequest::Ready:
         showMessage(tr("Article retrieved"));
-        showHtmlInTab(request->resultTitle(), request->resultBody());
+        showHtmlInTab(request->resultTitle(), Utils::replaceSrcPaths(request->resultBody(), CACHE_AUTHORITY
+                    + TEMPORARY_CACHE_PATH));
         break;
     case ArticleRequest::Error:
         showMessage(tr("Error retrieving article"));

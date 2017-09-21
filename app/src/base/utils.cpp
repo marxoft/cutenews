@@ -141,19 +141,37 @@ bool Utils::removeDirectory(const QString &directory) {
 #endif
 }
 
-QString Utils::toRichText(QString s) {
-    s.replace("&", "&amp;").replace("<", "&lt;").replace(QRegExp("[\n\r]"), "<br>");
+QString Utils::replaceSrcPaths(const QString &s, const QString &path) {
+    QString result(s);
+    const QRegExp src(" src=('|\")([^'\"]+)");
+    int pos = 0;
+
+    while ((pos = src.indexIn(result, pos)) != -1) {
+        const QString url = src.cap(2);
+        result.replace(url, path + url.toUtf8().toBase64());
+        pos += src.matchedLength();
+    }
+
+    return result;
+}
+
+QString Utils::toRichText(const QString &s) {
+    QString result(s);
+    result.replace("&", "&amp;");
+    result.replace("<", "&lt;");
+    result.replace(QRegExp("[\n\r]"), "<br>");
     
     QRegExp re("((http(s|)://|[\\w-_\\.]+@)[^\\s<:\"']+)");
     int pos = 0;
 
-    while ((pos = re.indexIn(s, pos)) != -1) {
+    while ((pos = re.indexIn(result, pos)) != -1) {
         QString link = re.cap(1);
-        s.replace(pos, link.size(), QString("<a href='%1'>%2</a>").arg(link.contains('@') ? "mailto:" + link : link).arg(link));
+        result.replace(pos, link.size(), QString("<a href='%1'>%2</a>")
+                .arg(link.contains('@') ? "mailto:" + link : link).arg(link));
         pos += re.matchedLength() * 2 + 15;
     }
 
-    return s;
+    return result;
 }
 
 QString Utils::unescape(const QString &s) {

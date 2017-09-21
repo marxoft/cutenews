@@ -16,9 +16,11 @@
 
 #include "cutenews.h"
 #include "dbconnection.h"
+#include "definitions.h"
 #include "logger.h"
 #include "mainwindow.h"
 #include "transfers.h"
+#include "utils.h"
 #include <QCoreApplication>
 #include <QThread>
 #ifdef DBUS_INTERFACE
@@ -58,7 +60,10 @@ bool CuteNews::quit() {
         }
     }
     
+    Logger::log("CuteNews::quit(). Saving incomplete transfers.", Logger::LowVerbosity);
     Transfers::instance()->save();
+    Logger::log("CuteNews::quit(). Removing temporary cache", Logger::LowVerbosity);
+    Utils::removeDirectory(TEMPORARY_CACHE_PATH);
     Logger::log("CuteNews::quit(). Quitting the application", Logger::LowVerbosity);
     QCoreApplication::quit();
     return true;
