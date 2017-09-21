@@ -461,6 +461,7 @@ contains(DEFINES, WEB_INTERFACE) {
         src/webif/articleserver.h \
         src/webif/fileserver.h \
         src/webif/pluginserver.h \
+        src/webif/serverresponse.h \
         src/webif/settingsserver.h \
         src/webif/transferserver.h \
         src/webif/subscriptionserver.h \
