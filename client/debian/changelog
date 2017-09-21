@@ -1,6 +1,14 @@
+cutenews-client (1.1.0) unstable; urgency=low
+
+  * Add support for retrieving full articles from links where plugin is
+    available.
+  * Add support for portrait mode.
+  * Add option to use volume keys to switch between articles.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sun, 17 Sep 2017 19:42:34 +0100
+
 cutenews-client (1.0.0) unstable; urgency=low
 
   * Initial release.
 
  -- Stuart Howarth <showarth@marxoft.co.uk>  Fri, 16 Sep 2016 03:03:14 +0100
-
