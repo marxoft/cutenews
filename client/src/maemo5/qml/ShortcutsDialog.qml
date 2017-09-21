@@ -46,6 +46,13 @@ Dialog {
                 top: parent.top
             }
             spacing: platformStyle.paddingMedium            
+
+            CheckBox {
+                width: parent.width
+                text: qsTr("Use volume keys to change articles")
+                checked: settings.volumeKeysEnabled
+                onCheckedChanged: settings.volumeKeysEnabled = checked
+            }
             
             Label {
                 width: parent.width
@@ -367,5 +374,32 @@ Dialog {
         style: DialogButtonStyle {}
         text: qsTr("Done")
         onClicked: root.accept()
+    }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        AnchorChanges {
+            target: flickable
+            anchors.right: parent.right
+            anchors.bottom: button.top
+        }
+
+        PropertyChanges {
+            target: flickable
+            anchors.rightMargin: 0
+            anchors.bottomMargin: platformStyle.paddingMedium
+        }
+
+        PropertyChanges {
+            target: button
+            width: parent.width
+        }
+
+        PropertyChanges {
+            target: root
+            height: 680
+        }
     }
 }

@@ -58,6 +58,7 @@ private Q_SLOTS:
     void showContextMenu(const QPoint &pos);
 
 Q_SIGNALS:
+    void openArticleInTab(const QString &title, const QString &url);
     void openUrlInTab(const QString &title, const QString &url);
     void openUrlExternally(const QString &url);
     void downloadUrl(const QString &url);

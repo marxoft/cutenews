@@ -19,16 +19,18 @@
 
 FeedPluginConfig::FeedPluginConfig(QObject *parent) :
     QObject(parent),
+    m_articles(false),
     m_enclosures(false),
-    m_feeds(true),
+    m_feeds(false),
     m_version(1)
 {
 }
 
 FeedPluginConfig::FeedPluginConfig(const QVariantMap &config, QObject *parent) :
     QObject(parent),
+    m_articles(false),
     m_enclosures(false),
-    m_feeds(true),
+    m_feeds(false),
     m_version(1)
 {
     load(config);
@@ -44,6 +46,18 @@ QString FeedPluginConfig::id() const {
 
 QString FeedPluginConfig::pluginType() const {
     return m_pluginType;
+}
+
+bool FeedPluginConfig::supportsArticles() const {
+    return m_articles;
+}
+
+QRegExp FeedPluginConfig::articleRegExp() const {
+    return m_articleRegExp;
+}
+
+QVariantList FeedPluginConfig::articleSettings() const {
+    return m_articleSettings;
 }
 
 bool FeedPluginConfig::supportsEnclosures() const {
@@ -74,6 +88,9 @@ void FeedPluginConfig::load(const QVariantMap &config) {
     m_displayName = config.value("displayName").toString();
     m_id = config.value("id").toString();
     m_pluginType = config.value("pluginType").toString();
+    m_articles = config.value("supportsArticles", false).toBool();
+    m_articleRegExp = QRegExp(config.value("articleRegExp").toString());
+    m_articleSettings = config.value("articleSettings").toList();
     m_enclosures = config.value("supportsEnclosures", false).toBool();
     m_enclosureRegExp = QRegExp(config.value("enclosureRegExp").toString());
     m_enclosureSettings = config.value("enclosureSettings").toList();
@@ -81,6 +98,10 @@ void FeedPluginConfig::load(const QVariantMap &config) {
     m_feedSettings = config.value("feedSettings").toList();
     m_version = qMax(1, config.value("version").toInt());
     emit changed();
+}
+
+bool FeedPluginConfig::articleIsSupported(const QString &url) const {
+    return (!m_articleRegExp.isEmpty()) && (m_articleRegExp.indexIn(url) == 0);
 }
 
 bool FeedPluginConfig::enclosureIsSupported(const QString &url) const {

@@ -31,6 +31,7 @@ HEADERS += \
     src/base/updateintervaltypemodel.h \
     src/base/urlopenermodel.h \
     src/base/utils.h \
+    src/plugins/articlerequest.h \
     src/plugins/feedpluginconfig.h \
     src/plugins/pluginconfigmodel.h \
     src/plugins/pluginmanager.h
@@ -53,6 +54,7 @@ SOURCES += \
     src/base/transfermodel.cpp \
     src/base/urlopenermodel.cpp \
     src/base/utils.cpp \
+    src/plugins/articlerequest.cpp \
     src/plugins/feedpluginconfig.cpp \
     src/plugins/pluginconfigmodel.cpp \
     src/plugins/pluginmanager.cpp
@@ -65,6 +67,7 @@ maemo5 {
     HEADERS += \
         src/maemo5/definitions.h \
         src/maemo5/logger.h \
+        src/maemo5/screenorientationmodel.h \
         src/maemo5/settings.h \
         src/maemo5/subscriptionsourcetypemodel.h
     
@@ -76,6 +79,7 @@ maemo5 {
     qml.files += \
         src/maemo5/qml/AboutDialog.qml \
         src/maemo5/qml/ArticleDelegate.qml \
+        src/maemo5/qml/ArticleRequestWindow.qml \
         src/maemo5/qml/ArticlesWindow.qml \
         src/maemo5/qml/ArticleWindow.qml \
         src/maemo5/qml/DateSelectorButton.qml \

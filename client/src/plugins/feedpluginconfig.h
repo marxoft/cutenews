@@ -29,6 +29,9 @@ class FeedPluginConfig : public QObject
     Q_PROPERTY(QString displayName READ displayName NOTIFY changed)
     Q_PROPERTY(QString id READ id NOTIFY changed)
     Q_PROPERTY(QString pluginType READ pluginType NOTIFY changed)
+    Q_PROPERTY(bool supportsArticles READ supportsArticles NOTIFY changed)
+    Q_PROPERTY(QRegExp articleRegExp READ articleRegExp NOTIFY changed)
+    Q_PROPERTY(QVariantList articleSettings READ articleSettings NOTIFY changed)
     Q_PROPERTY(bool supportsEnclosures READ supportsEnclosures NOTIFY changed)
     Q_PROPERTY(QRegExp enclosureRegExp READ enclosureRegExp NOTIFY changed)
     Q_PROPERTY(QVariantList enclosureSettings READ enclosureSettings NOTIFY changed)
@@ -46,6 +49,10 @@ public:
     
     QString pluginType() const;
 
+    bool supportsArticles() const;
+    QRegExp articleRegExp() const;
+    QVariantList articleSettings() const;
+
     bool supportsEnclosures() const;
     QRegExp enclosureRegExp() const;
     QVariantList enclosureSettings() const;
@@ -58,6 +65,7 @@ public:
 public Q_SLOTS:    
     void load(const QVariantMap &config);
 
+    bool articleIsSupported(const QString &url) const;
     bool enclosureIsSupported(const QString &url) const;
 
 Q_SIGNALS:
@@ -68,11 +76,14 @@ private:
     QString m_id;
     QString m_pluginType;
     
+    QRegExp m_articleRegExp;
     QRegExp m_enclosureRegExp;
     
+    QVariantList m_articleSettings;
     QVariantList m_enclosureSettings;
     QVariantList m_feedSettings;
     
+    bool m_articles;
     bool m_enclosures;
     bool m_feeds;
     

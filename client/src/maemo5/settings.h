@@ -32,7 +32,10 @@ class Settings : public QObject
     
     Q_PROPERTY(QString loggerFileName READ loggerFileName WRITE setLoggerFileName NOTIFY loggerFileNameChanged)
     Q_PROPERTY(int loggerVerbosity READ loggerVerbosity WRITE setLoggerVerbosity NOTIFY loggerVerbosityChanged)
-    Q_PROPERTY(int readArticleExpiry READ readArticleExpiry WRITE setReadArticleExpiry NOTIFY readArticleExpiryChanged)
+    Q_PROPERTY(int readArticleExpiry READ readArticleExpiry WRITE setReadArticleExpiry
+               NOTIFY readArticleExpiryChanged)
+    Q_PROPERTY(int screenOrientation READ screenOrientation WRITE setScreenOrientation
+               NOTIFY screenOrientationChanged)
     Q_PROPERTY(QString serverAddress READ serverAddress WRITE setServerAddress NOTIFY serverAddressChanged)
     Q_PROPERTY(bool serverAuthenticationEnabled READ serverAuthenticationEnabled WRITE setServerAuthenticationEnabled
                NOTIFY serverAuthenticationEnabledChanged)
@@ -40,10 +43,11 @@ class Settings : public QObject
     Q_PROPERTY(QString serverUsername READ serverUsername WRITE setServerUsername NOTIFY serverUsernameChanged)
     Q_PROPERTY(QString copyShortcut READ copyShortcut WRITE setCopyShortcut NOTIFY copyShortcutChanged)
     Q_PROPERTY(QString deleteShortcut READ deleteShortcut WRITE setDeleteShortcut NOTIFY deleteShortcutChanged)
-    Q_PROPERTY(QString downloadShortcut READ downloadShortcut WRITE setDownloadShortcut NOTIFY downloadShortcutChanged)
+    Q_PROPERTY(QString downloadShortcut READ downloadShortcut WRITE setDownloadShortcut
+               NOTIFY downloadShortcutChanged)
     Q_PROPERTY(QString editShortcut READ editShortcut WRITE setEditShortcut NOTIFY editShortcutChanged)
-    Q_PROPERTY(QString importSubscriptionsShortcut READ importSubscriptionsShortcut WRITE setImportSubscriptionsShortcut
-               NOTIFY importSubscriptionsShortcutChanged)
+    Q_PROPERTY(QString importSubscriptionsShortcut READ importSubscriptionsShortcut
+               WRITE setImportSubscriptionsShortcut NOTIFY importSubscriptionsShortcutChanged)
     Q_PROPERTY(QString markAllArticlesReadShortcut READ markAllArticlesReadShortcut
                WRITE setMarkAllArticlesReadShortcut NOTIFY markAllArticlesReadShortcutChanged)
     Q_PROPERTY(QString markAllSubscriptionsReadShortcut READ markAllSubscriptionsReadShortcut
@@ -66,7 +70,8 @@ class Settings : public QObject
                NOTIFY previousArticleShortcutChanged)
     Q_PROPERTY(QString reloadShortcut READ reloadShortcut WRITE setReloadShortcut NOTIFY reloadShortcutChanged)
     Q_PROPERTY(QString searchShortcut READ searchShortcut WRITE setSearchShortcut NOTIFY searchShortcutChanged)
-    Q_PROPERTY(QString settingsShortcut READ settingsShortcut WRITE setSettingsShortcut NOTIFY settingsShortcutChanged)
+    Q_PROPERTY(QString settingsShortcut READ settingsShortcut WRITE setSettingsShortcut
+               NOTIFY settingsShortcutChanged)
     Q_PROPERTY(QString showArticleEnclosuresShortcut READ showArticleEnclosuresShortcut
                WRITE setShowArticleEnclosuresShortcut NOTIFY showArticleEnclosuresShortcutChanged)
     Q_PROPERTY(QString startAllTransfersShortcut READ startAllTransfersShortcut WRITE setStartAllTransfersShortcut
@@ -87,6 +92,8 @@ class Settings : public QObject
                WRITE setUpdateAllSubscriptionsShortcut NOTIFY updateAllSubscriptionsShortcutChanged)
     Q_PROPERTY(QString updateSubscriptionShortcut READ updateSubscriptionShortcut WRITE setUpdateSubscriptionShortcut
                NOTIFY updateSubscriptionShortcutChanged)
+    Q_PROPERTY(bool volumeKeysEnabled READ volumeKeysEnabled WRITE setVolumeKeysEnabled
+               NOTIFY volumeKeysEnabledChanged)
     
 public:
     ~Settings();
@@ -97,12 +104,14 @@ public:
     static int loggerVerbosity();
     
     static int readArticleExpiry();
+
+    static int screenOrientation();
     
     static QString serverAddress();
     static bool serverAuthenticationEnabled();
     static QString serverPassword();
     static QString serverUsername();
-    
+ 
     static QString copyShortcut();
     static QString deleteShortcut();
     static QString downloadShortcut();
@@ -131,6 +140,7 @@ public:
     static QString transfersShortcut();
     static QString updateAllSubscriptionsShortcut();
     static QString updateSubscriptionShortcut();
+    static bool volumeKeysEnabled();
             
     Q_INVOKABLE static QVariant value(const QString &key, const QVariant &defaultValue = QVariant());
 
@@ -139,6 +149,8 @@ public Q_SLOTS:
     static void setLoggerVerbosity(int verbosity);
         
     static void setReadArticleExpiry(int expiry);
+
+    static void setScreenOrientation(int orientation);
     
     static void setServerAddress(const QString &address);
     static void setServerAuthenticationEnabled(bool enabled);
@@ -173,6 +185,7 @@ public Q_SLOTS:
     static void setTransfersShortcut(const QString &key);
     static void setUpdateAllSubscriptionsShortcut(const QString &key);
     static void setUpdateSubscriptionShortcut(const QString &key);
+    static void setVolumeKeysEnabled(bool enabled);
         
     static void setValue(const QString &key, const QVariant &value);
 
@@ -180,6 +193,7 @@ Q_SIGNALS:
     void loggerFileNameChanged(const QString &fileName);
     void loggerVerbosityChanged(int verbosity);
     void readArticleExpiryChanged(int expiry);
+    void screenOrientationChanged(int orientation);
     void serverAddressChanged(const QString &address);
     void serverAuthenticationEnabledChanged(bool enabled);
     void serverPasswordChanged(const QString &password);
@@ -212,6 +226,7 @@ Q_SIGNALS:
     void transfersShortcutChanged(const QString &key);
     void updateAllSubscriptionsShortcutChanged(const QString &key);
     void updateSubscriptionShortcutChanged(const QString &key);
+    void volumeKeysEnabledChanged(bool enabled);
 
 private:
     Settings();

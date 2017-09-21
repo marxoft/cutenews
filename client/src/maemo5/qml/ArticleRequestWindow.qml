@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -22,13 +22,9 @@ import cuteNews 1.0
 
 Window {
     id: root
-    
-    property Article article
-    
-    signal next
-    signal nextUnread
-    signal previous
-    
+
+    property string url
+
     title: qsTr("Article")
     menuBar: MenuBar {
         MenuItem {
@@ -44,21 +40,7 @@ Window {
         }
                 
         MenuItem {
-            text: (article != null) && (article.read) ? qsTr("Mark as unread") : qsTr("Mark as read")
-            action: readAction
-        }
-        
-        MenuItem {
-            text: (article != null) && (article.favourite) ? qsTr("Unfavourite") : qsTr("Favourite")
-            action: favouriteAction
-        }
-        
-        MenuItem {
             action: enclosuresAction
-        }
-        
-        MenuItem {
-            action: deleteAction
         }
     }
     
@@ -68,7 +50,7 @@ Window {
         text: qsTr("Copy URL")
         autoRepeat: false
         shortcut: settings.copyShortcut
-        onTriggered: clipboard.text = article.url
+        onTriggered: clipboard.text = article.resultUrl
     }
     
     Action {
@@ -77,7 +59,7 @@ Window {
         text: qsTr("Open externally")
         autoRepeat: false
         shortcut: settings.openExternallyShortcut
-        onTriggered: urlopener.open(article.url)
+        onTriggered: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: article.resultUrl})
     }
     
     Action {
@@ -86,23 +68,7 @@ Window {
         text: qsTr("Download")
         autoRepeat: false
         shortcut: settings.downloadShortcut
-        onTriggered: popupManager.open(Qt.resolvedUrl("DownloadDialog.qml"), root, {url: article.url})
-    }
-        
-    Action {
-        id: readAction
-        
-        autoRepeat: false
-        shortcut: settings.toggleArticleReadShortcut
-        onTriggered: article.markRead(!article.read)
-    }
-    
-    Action {
-        id: favouriteAction
-        
-        autoRepeat: false
-        shortcut: settings.toggleArticleFavouriteShortcut
-        onTriggered: article.markFavourite(!article.favourite)
+        onTriggered: popupManager.open(Qt.resolvedUrl("DownloadDialog.qml"), root, {url: article.resultUrl})
     }
     
     Action {
@@ -111,46 +77,10 @@ Window {
         text: qsTr("Enclosures")
         autoRepeat: false
         shortcut: settings.showArticleEnclosuresShortcut
-        enabled: (article != null) && (article.hasEnclosures)
+        enabled: article.resultHasEnclosures
         onTriggered: popupManager.open(enclosuresDialog, root)
     }
-    
-    Action {
-        id: deleteAction
-        
-        text: qsTr("Delete")
-        autoRepeat: false
-        shortcut: settings.deleteShortcut
-        onTriggered: popupManager.open(deleteDialog, root)
-    }
-    
-    Action {
-        id: nextAction
-        
-        text: qsTr("Next article")
-        autoRepeat: false
-        shortcut: settings.nextArticleShortcut
-        onTriggered: root.next()
-    }
-    
-    Action {
-        id: nextUnreadAction
-        
-        text: qsTr("Next unread article")
-        autoRepeat: false
-        shortcut: settings.nextUnreadArticleShortcut
-        onTriggered: root.nextUnread()
-    }
-    
-    Action {
-        id: previousAction
-        
-        text: qsTr("Previous article")
-        autoRepeat: false
-        shortcut: settings.previousArticleShortcut
-        onTriggered: root.previous()
-    }
-    
+       
     Flickable {
         id: flickable
         
@@ -186,23 +116,6 @@ Window {
             onLinkClicked: urlopener.open(link)
             onStatusChanged: root.showProgressIndicator = (status == WebView.Loading)
         }
-
-        Keys.onPressed: {
-            if (!event.isAutoRepeat) {
-                switch (event.key) {
-                    case Qt.Key_F7:
-                        root.next();
-                        break;
-                    case Qt.Key_F8:
-                        root.previous();
-                        break;
-                    default:
-                        return;
-                }
-
-                event.accepted = true;
-            }
-        }
     }
     
     Component {
@@ -226,48 +139,43 @@ Window {
             
             MenuItem {
                 text: qsTr("Open externally")
-                onTriggered: urlopener.open(menu.url)
+                onTriggered: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: menu.url})
             }
 
             MenuItem {
                 text: qsTr("Download")
                 onTriggered: popupManager.open(Qt.resolvedUrl("DownloadDialog.qml"), root, {url: menu.url})
-            }
+            }            
         }
     }
-    
-    Component {
-        id: deleteDialog
-        
-        MessageBox {
-            text: qsTr("Do you want to delete") + " '" + article.title + "'?"
-            onAccepted: article.remove()
-        }
-    }
-    
+       
     Component {
         id: enclosuresDialog
         
         EnclosuresDialog {
-            enclosures: article.enclosures
+            enclosures: article.resultEnclosures
         }
     }
 
-    VolumeKeys.enabled: settings.volumeKeysEnabled
-    
-    onArticleChanged: {
-        if (article) {
-            flickable.contentY = 0;
-            title = article.title || qsTr("Article");
-            view.html = "<p class='title'>" + title + "</p><div class='separator'></div><p>"
-            + qsTr("Author") + ": " + (article.author || qsTr("Unknown")) + "</br>"
-            + qsTr("Date") + ": " + (article.dateString || qsTr("Unknown")) + "</br>"
-            + qsTr("Categories") + ": " + (article.categories.length > 0 ? article.categories.join(", ")
-            : qsTr("None")) + "</br><div class='separator'></div><p>" + article.body + "</p>";
-            
-            if (!article.read) {
-                article.markRead(true);
+    ArticleRequest {
+        id: article
+
+        onFinished: {
+            if (status == ArticleRequest.Ready) {
+                flickable.contentY = 0;
+                root.title = resultTitle || qsTr("Article");
+                view.html = "<p class='title'>" + root.title + "</p><div class='separator'></div><p>"
+                + qsTr("Author") + ": " + (resultAuthor || qsTr("Unknown")) + "</br>"
+                + qsTr("Date") + ": " + (resultDateString || qsTr("Unknown")) + "</br>"
+                + qsTr("Categories") + ": " + (resultCategories.length > 0 ? resultCategories.join(", ")
+                : qsTr("None")) + "</p><div class='separator'></div><p>" + article.resultBody + "</p>";
+            }
+            else if (status == ArticleRequest.Error) {
+                informationBox.information(errorString);
             }
         }
+        onStatusChanged: root.showProgressIndicator = (status == ArticleRequest.Active)
     }
+
+    onUrlChanged: article.getArticle(url)
 }

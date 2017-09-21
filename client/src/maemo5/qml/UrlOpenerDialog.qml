@@ -33,7 +33,7 @@ Dialog {
             left: parent.left
             right: button.left
             rightMargin: platformStyle.paddingMedium
-            bottom: parent.bottom
+            top: parent.top
         }
         spacing: platformStyle.paddingMedium
 
@@ -71,6 +71,31 @@ Dialog {
         text: qsTr("Done")
         enabled: (regexpField.text != "") && (commandField.text != "")
         onClicked: root.accept()
+    }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        AnchorChanges {
+            target: column
+            anchors.right: parent.right
+        }
+
+        PropertyChanges {
+            target: column
+            anchors.rightMargin: 0
+        }
+
+        PropertyChanges {
+            target: button
+            width: parent.width
+        }
+
+        PropertyChanges {
+            target: root
+            height: column.height + button.height + platformStyle.paddingMedium * 2
+        }
     }
 
     onStatusChanged: if (status == DialogStatus.Open) regexpField.forceActiveFocus();

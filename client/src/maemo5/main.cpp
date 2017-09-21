@@ -16,6 +16,7 @@
 
 #include "article.h"
 #include "articlemodel.h"
+#include "articlerequest.h"
 #include "categorynamemodel.h"
 #include "concurrenttransfersmodel.h"
 #include "dbconnection.h"
@@ -24,6 +25,7 @@
 #include "logger.h"
 #include "loggerverbositymodel.h"
 #include "pluginmanager.h"
+#include "screenorientationmodel.h"
 #include "serversettings.h"
 #include "settings.h"
 #include "subscription.h"
@@ -44,13 +46,16 @@
 #include <QSslConfiguration>
 
 inline void registerTypes() {
+    qRegisterMetaType<ArticleRequest::Status>("ArticleRequest::Status");
     qRegisterMetaType<DBConnection::Status>("DBConnection::Status");
     qmlRegisterType<Article>("cuteNews", 1, 0, "Article");
     qmlRegisterType<ArticleModel>("cuteNews", 1, 0, "ArticleModel");
+    qmlRegisterType<ArticleRequest>("cuteNews", 1, 0, "ArticleRequest");
     qmlRegisterType<CategoryNameModel>("cuteNews", 1, 0, "CategoryNameModel");
     qmlRegisterType<ConcurrentTransfersModel>("cuteNews", 1, 0, "ConcurrentTransfersModel");
     qmlRegisterType<DBConnection>("cuteNews", 1, 0, "DBConnection");
     qmlRegisterType<LoggerVerbosityModel>("cuteNews", 1, 0, "LoggerVerbosityModel");
+    qmlRegisterType<ScreenOrientationModel>("cuteNews", 1, 0, "ScreenOrientationModel");
     qmlRegisterType<SelectionModel>("cuteNews", 1, 0, "SelectionModel");
     qmlRegisterType<Subscription>("cuteNews", 1, 0, "Subscription");
     qmlRegisterType<SubscriptionModel>("cuteNews", 1, 0, "SubscriptionModel");

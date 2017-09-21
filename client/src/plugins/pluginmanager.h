@@ -53,7 +53,9 @@ public:
     FeedPluginList plugins() const;
 
     Q_INVOKABLE FeedPluginConfig* getConfig(const QString &id) const;
+    Q_INVOKABLE FeedPluginConfig* getConfigForArticle(const QString &url) const;
     
+    Q_INVOKABLE bool articleIsSupported(const QString &url) const;
     Q_INVOKABLE bool enclosureIsSupported(const QString &url) const;
 
 public Q_SLOTS:

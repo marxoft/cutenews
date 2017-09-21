@@ -94,4 +94,14 @@ Dialog {
             url: enclosures[view.currentIndex].url
         }
     }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        PropertyChanges {
+            target: root
+            height: Math.min(680, view.count * 70 + platformStyle.paddingMedium)
+        }
+    }
 }

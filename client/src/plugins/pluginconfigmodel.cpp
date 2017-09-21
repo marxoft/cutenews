@@ -20,11 +20,14 @@ PluginConfigModel::PluginConfigModel(QObject *parent) :
     QAbstractListModel(parent)
 {
     m_roles[DisplayNameRole] = "displayName";
+    m_roles[ArticleRegExpRole] = "articleRegExp";
+    m_roles[ArticleSettingsRole] = "articleSettings";
     m_roles[EnclosureRegExpRole] = "enclosureRegExp";
     m_roles[EnclosureSettingsRole] = "enclosureSettings";
     m_roles[FeedSettingsRole] = "feedSettings";
     m_roles[IdRole] = "id";
     m_roles[PluginTypeRole] = "pluginType";
+    m_roles[SupportsArticlesRole] = "supportsArticles";
     m_roles[SupportsEnclosuresRole] = "supportsEnclosures";
     m_roles[SupportsFeedsRole] = "supportsFeeds";
     m_roles[VersionRole] = "version";
@@ -90,6 +93,10 @@ QVariant PluginConfigModel::data(const QModelIndex &index, int role) const {
         }
         
         return QVariant();
+    case ArticleRegExpRole:
+        return config->articleRegExp();
+    case ArticleSettingsRole:
+        return config->articleSettings();
     case EnclosureRegExpRole:
         return config->enclosureRegExp();
     case EnclosureSettingsRole:
@@ -100,6 +107,8 @@ QVariant PluginConfigModel::data(const QModelIndex &index, int role) const {
         return config->id();
     case PluginTypeRole:
         return config->pluginType();
+    case SupportsArticlesRole:
+        return config->supportsArticles();
     case SupportsEnclosuresRole:
         return config->supportsEnclosures();
     case SupportsFeedsRole:

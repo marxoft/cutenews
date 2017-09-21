@@ -104,7 +104,21 @@ Dialog {
                 text: qsTr("Url openers")
                 onClicked: popupManager.open(Qt.resolvedUrl("UrlOpenersDialog.qml"), root)
             }
-            
+             
+            Button {
+                width: parent.width
+                text: qsTr("Keyboard shortcuts")
+                onClicked: popupManager.open(Qt.resolvedUrl("ShortcutsDialog.qml"), root)
+            }
+
+            ListSelectorButton {
+                width: parent.width
+                text: qsTr("Screen orientation")
+                model: ScreenOrientationModel {}
+                value: settings.screenOrientation
+                onSelected: settings.screenOrientation = value
+            }
+           
             ListSelectorButton {
                 width: parent.width
                 text: qsTr("Logging verbosity")
@@ -117,12 +131,6 @@ Dialog {
                 width: parent.width
                 text: qsTr("View log")
                 onClicked: popupManager.open(Qt.resolvedUrl("LogDialog.qml"), root)
-            }
-            
-            Button {
-                width: parent.width
-                text: qsTr("Keyboard shortcuts")
-                onClicked: popupManager.open(Qt.resolvedUrl("ShortcutsDialog.qml"), root)
             }
             
             Label {
@@ -176,6 +184,33 @@ Dialog {
         style: DialogButtonStyle {}
         text: qsTr("Done")
         onClicked: root.accept()
+    }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        AnchorChanges {
+            target: flickable
+            anchors.right: parent.right
+            anchors.bottom: button.top
+        }
+
+        PropertyChanges {
+            target: flickable
+            anchors.rightMargin: 0
+            anchors.bottomMargin: platformStyle.paddingMedium
+        }
+
+        PropertyChanges {
+            target: button
+            width: parent.width
+        }
+
+        PropertyChanges {
+            target: root
+            height: 680
+        }
     }
     
     onAccepted: {

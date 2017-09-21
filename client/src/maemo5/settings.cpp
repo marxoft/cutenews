@@ -75,6 +75,20 @@ void Settings::setReadArticleExpiry(int expiry) {
     }
 }
 
+int Settings::screenOrientation() {
+    return value("UI/screenOrientation", Qt::WA_Maemo5LandscapeOrientation).toInt();
+}
+
+void Settings::setScreenOrientation(int orientation) {
+    if (orientation != screenOrientation()) {
+        setValue("UI/screenOrientation", orientation);
+
+        if (self) {
+            emit self->screenOrientationChanged(orientation);
+        }
+    }
+}
+
 QString Settings::serverAddress() {
     return value("Server/serverAddress").toString();
 }
@@ -519,6 +533,20 @@ void Settings::setUpdateSubscriptionShortcut(const QString &key) {
         
         if (self) {
             emit self->updateSubscriptionShortcutChanged(key);
+        }
+    }
+}
+
+bool Settings::volumeKeysEnabled() {
+    return value("Shortcuts/volumeKeysEnabled", false).toBool();
+}
+
+void Settings::setVolumeKeysEnabled(bool enabled) {
+    if (enabled != volumeKeysEnabled()) {
+        setValue("Shortcuts/volumeKeysEnabled", enabled);
+
+        if (self) {
+            emit self->volumeKeysEnabledChanged(enabled);
         }
     }
 }

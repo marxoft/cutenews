@@ -18,6 +18,7 @@
 #include "aboutdialog.h"
 #include "article.h"
 #include "articlemodel.h"
+#include "articlerequest.h"
 #include "browserpage.h"
 #include "dbconnection.h"
 #include "dbnotify.h"
@@ -335,6 +336,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_enclosuresLabel->hide();
 
     m_messageLabel->setMargin(6);
+    m_messageLabel->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
     
     m_tabsLayout->addWidget(m_tabs);
     m_tabsLayout->addWidget(m_stack);
@@ -423,6 +425,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_enclosuresView, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showEnclosureContextMenu(QPoint)));
     connect(m_enclosuresView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(openCurrentEnclosureInBrowser()));
 
+    connect(m_browser, SIGNAL(openArticleInTab(QString, QString)), this, SLOT(openArticleInTab(QString, QString)));
     connect(m_browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(m_browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(m_browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
@@ -765,21 +768,22 @@ void MainWindow::showEnclosureContextMenu(const QPoint &pos) {
     }
 }
 
-void MainWindow::openUrlExternally(const QString &url) {
-    UrlOpenerModel::instance()->open(url);
-}
-
-void MainWindow::downloadUrl(const QString &url) {
-    TransferModel::instance()->addEnclosureDownload(url, false);
-}
-
-void MainWindow::downloadUrlWithPlugin(const QString &url) {
-    TransferModel::instance()->addEnclosureDownload(url, true);
+void MainWindow::openArticleInTab(const QString &, const QString &url) {
+    if (PluginManager::instance()->articleIsSupported(url)) {
+        showMessage(tr("Retrieving article from %1").arg(url));
+        ArticleRequest *request = new ArticleRequest(this);
+        connect(request, SIGNAL(finished(ArticleRequest*)), this, SLOT(onArticleRequestFinished(ArticleRequest*)));
+        request->getArticle(url);
+    }
+    else {
+        showError(tr("No plugin found for article URL %1").arg(url));
+    }
 }
 
 void MainWindow::openUrlInTab(const QString &title, const QString &url) {
     BrowserPage *browser = new BrowserPage(url, m_stack);
     browser->setAttribute(Qt::WA_DeleteOnClose, true);
+    connect(browser, SIGNAL(openArticleInTab(QString, QString)), this, SLOT(openArticleInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
@@ -796,10 +800,23 @@ void MainWindow::openUrlInTab(const QString &title, const QString &url) {
     m_tabs->show();
 }
 
+void MainWindow::openUrlExternally(const QString &url) {
+    UrlOpenerModel::instance()->open(url);
+}
+
+void MainWindow::downloadUrl(const QString &url) {
+    TransferModel::instance()->addEnclosureDownload(url, false);
+}
+
+void MainWindow::downloadUrlWithPlugin(const QString &url) {
+    TransferModel::instance()->addEnclosureDownload(url, true);
+}
+
 void MainWindow::showHtmlInTab(const QString &title, const QString &html, const QString &baseUrl) {
     BrowserPage *browser = new BrowserPage(m_stack);
     browser->setAttribute(Qt::WA_DeleteOnClose, true);
     browser->setHtml(html, baseUrl);
+    connect(browser, SIGNAL(openArticleInTab(QString, QString)), this, SLOT(openArticleInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
@@ -820,6 +837,7 @@ void MainWindow::showTextInTab(const QString &title, const QString &text, const 
     BrowserPage *browser = new BrowserPage(m_stack);
     browser->setAttribute(Qt::WA_DeleteOnClose, true);
     browser->setText(text, baseUrl);
+    connect(browser, SIGNAL(openArticleInTab(QString, QString)), this, SLOT(openArticleInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
     connect(browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
@@ -909,7 +927,8 @@ void MainWindow::showAboutDialog() {
 }
 
 void MainWindow::showMessage(const QString &message) {
-    m_messageLabel->setText(message);
+    m_messageLabel->setText(m_messageLabel->fontMetrics().elidedText(message, Qt::ElideRight,
+                m_messageLabel->width() - m_messageLabel->margin() * 2));
 }
 
 void MainWindow::showError(const QString &errorString) {
@@ -930,6 +949,23 @@ void MainWindow::onSubscriptionsStatusChanged(Subscriptions::Status status) {
     const bool active = (status == Subscriptions::Active);    
     m_updateAllSubscriptionsAction->setVisible(!active);
     m_cancelSubscriptionUpdatesAction->setVisible(active);
+}
+
+void MainWindow::onArticleRequestFinished(ArticleRequest *request) {
+    switch (request->status()) {
+    case ArticleRequest::Ready:
+        showMessage(tr("Article retrieved"));
+        showHtmlInTab(request->resultTitle(), request->resultBody());
+        break;
+    case ArticleRequest::Error:
+        showMessage(tr("Error retrieving article"));
+        showError(request->errorString());
+        break;
+    default:
+        break;
+    }
+
+    request->deleteLater();
 }
 
 void MainWindow::onArticlesCountChanged(int count) {

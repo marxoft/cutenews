@@ -34,7 +34,7 @@ Dialog {
             left: parent.left
             right: button.left
             rightMargin: platformStyle.paddingMedium
-            bottom: parent.bottom
+            top: parent.top
         }
         spacing: platformStyle.paddingMedium
         
@@ -128,6 +128,31 @@ Dialog {
         
         FileDialog {
             onAccepted: sourceField.text = filePath
+        }
+    }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        AnchorChanges {
+            target: flow
+            anchors.right: parent.right
+        }
+
+        PropertyChanges {
+            target: flow
+            anchors.rightMargin: 0
+        }
+
+        PropertyChanges {
+            target: button
+            width: parent.width
+        }
+
+        PropertyChanges {
+            target: root
+            height: flow.height + button.height + platformStyle.paddingMedium * 2
         }
     }
     

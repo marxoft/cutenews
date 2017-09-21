@@ -75,8 +75,34 @@ FeedPluginConfig* PluginManager::getConfig(const QString &id) const {
         }
     }
     
-    Logger::log("PluginManager::getConfig(). No Plugin found for id" + id, Logger::HighVerbosity);
+    Logger::log("PluginManager::getConfig(). No Plugin found for id " + id, Logger::HighVerbosity);
     return 0;
+}
+
+FeedPluginConfig* PluginManager::getConfigForArticle(const QString &url) const {
+    foreach (FeedPluginConfig *config, m_plugins) {
+        if (config->articleIsSupported(url)) {
+            Logger::log("PluginManager::getConfigForArticle(). Plugin found for article " + url,
+                    Logger::HighVerbosity);
+            return config;
+        }
+    }
+    
+    Logger::log("PluginManager::getConfigForArticle(). No Plugin found for article " + url, Logger::HighVerbosity);
+    return 0;
+}
+
+bool PluginManager::articleIsSupported(const QString &url) const {
+    foreach (FeedPluginConfig *config, m_plugins) {
+        if (config->articleIsSupported(url)) {
+            Logger::log("PluginManager::articleIsSupported(). Plugin found for article " + url,
+                        Logger::HighVerbosity);
+            return true;
+        }
+    }
+    
+    Logger::log("PluginManager::articleIsSupported(). No Plugin found for article " + url, Logger::HighVerbosity);
+    return false;
 }
 
 bool PluginManager::enclosureIsSupported(const QString &url) const {
