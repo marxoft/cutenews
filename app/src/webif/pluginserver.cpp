@@ -19,12 +19,16 @@
 #include "pluginmanager.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
+#include "serverresponse.h"
 
 static QVariantMap pluginConfigToMap(const FeedPluginConfig *config) {
     QVariantMap map;
     map["displayName"] = config->displayName();
     map["id"] = config->id();
     map["pluginType"] = config->pluginType();
+    map["supportsArticles"] = config->supportsArticles();
+    map["articleRegExp"] = config->articleRegExp().pattern();
+    map["articleSettings"] = config->articleSettings();
     map["supportsEnclosures"] = config->supportsEnclosures();
     map["enclosureRegExp"] = config->enclosureRegExp().pattern();
     map["enclosureSettings"] = config->enclosureSettings();
@@ -32,13 +36,6 @@ static QVariantMap pluginConfigToMap(const FeedPluginConfig *config) {
     map["feedSettings"] = config->feedSettings();
     map["version"] = config->version();
     return map;
-}
-
-static void writeResponse(QHttpResponse *response, int responseCode, const QByteArray &data = QByteArray()) {
-    response->setHeader("Content-Type", "application/json");
-    response->setHeader("Content-Length", QByteArray::number(data.size()));
-    response->writeHead(responseCode);
-    response->end(data);
 }
 
 PluginServer::PluginServer(QObject *parent) :

@@ -19,6 +19,7 @@
 #include "diskcache.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
+#include "serverresponse.h"
 #include <QFile>
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
@@ -32,9 +33,7 @@ FileServer::FileServer(QObject *parent) :
 
 bool FileServer::handleRequest(QHttpRequest *request, QHttpResponse *response) {
     if (request->method() != QHttpRequest::HTTP_GET) {
-        response->setHeader("Content-Length", "0");
-        response->writeHead(QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
-        response->end();
+        writeResponse(response, QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
         return true;
     }
     
@@ -59,16 +58,12 @@ bool FileServer::handleRequest(QHttpRequest *request, QHttpResponse *response) {
     QFile file(filePath);
     
     if (file.open(QFile::ReadOnly)) {
-        response->setHeader("Content-Length", QByteArray::number(file.size()));
-        response->writeHead(QHttpResponse::STATUS_OK);
-        response->end(file.readAll());
+        writeResponse(response, QHttpResponse::STATUS_OK, file.readAll());
         file.close();
         return true;
     }
     
-    response->setHeader("Content-Length", "0");
-    response->writeHead(QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
-    response->end();
+    writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
     return true;
 }
 
@@ -176,21 +171,15 @@ void FileServer::writeCachedFile(QNetworkReply *reply) {
                     m_replies.insert(manager->get(request), response);
                 }
                 else {
-                    response->setHeader("Content-Length", "0");
-                    response->writeHead(QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
-                    response->end();
+                    writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
                 }
             }
         }
         else if (reply->error() == QNetworkReply::NoError) {
-            response->setHeader("Content-Length", QByteArray::number(reply->bytesAvailable()));
-            response->writeHead(QHttpResponse::STATUS_OK);
-            response->end(reply->readAll());
+            writeResponse(response, QHttpResponse::STATUS_OK, reply->readAll());
         }
         else {
-            response->setHeader("Content-Length", "0");
-            response->writeHead(QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
-            response->end();
+            writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
         }
     }
 

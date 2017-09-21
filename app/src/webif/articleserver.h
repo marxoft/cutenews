@@ -20,6 +20,7 @@
 #include <QObject>
 #include <QQueue>
 
+class ArticleRequest;
 class DBConnection;
 class QHttpRequest;
 class QHttpResponse;
@@ -36,6 +37,7 @@ public:
 private Q_SLOTS:
     void onArticleFetched(DBConnection *connection);
     void onArticlesFetched(DBConnection *connection);
+    void onArticleRequestFinished(ArticleRequest *request);
     void onReadArticlesDeleted(DBConnection *connection);
     void onConnectionFinished(DBConnection *connection);
     void onResponseDone();

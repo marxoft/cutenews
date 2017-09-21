@@ -18,16 +18,10 @@
 #include "json.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
+#include "serverresponse.h"
 #include "settings.h"
 #include <QMetaObject>
 #include <QMetaProperty>
-
-static void writeResponse(QHttpResponse *response, int responseCode, const QByteArray &data = QByteArray()) {
-    response->setHeader("Content-Type", "application/json");
-    response->setHeader("Content-Length", QByteArray::number(data.size()));
-    response->writeHead(responseCode);
-    response->end(data);
-}
 
 SettingsServer::SettingsServer(QObject *parent) :
     QObject(parent)

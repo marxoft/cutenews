@@ -19,6 +19,7 @@
 #include "json.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
+#include "serverresponse.h"
 #include "subscription.h"
 #include "subscriptions.h"
 #include "utils.h"
@@ -37,13 +38,6 @@ static QVariantMap subscriptionToMap(const DBConnection *connection) {
     subscription["url"] = connection->value(9);
     subscription["unreadArticles"] = connection->value(10);
     return subscription;
-}
-
-static void writeResponse(QHttpResponse *response, int responseCode, const QByteArray &data = QByteArray()) {
-    response->setHeader("Content-Type", "application/json");
-    response->setHeader("Content-Length", QByteArray::number(data.size()));
-    response->writeHead(responseCode);
-    response->end(data);
 }
 
 SubscriptionServer::SubscriptionServer(QObject *parent) :

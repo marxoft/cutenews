@@ -18,8 +18,11 @@
 #include "dbconnection.h"
 #include "definitions.h"
 #include "json.h"
+#include "pluginmanager.h"
+#include "pluginsettings.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
+#include "serverresponse.h"
 #include "utils.h"
 
 static QVariantMap articleQueryToMap(const DBConnection *connection, const QString &authority) {
@@ -38,11 +41,16 @@ static QVariantMap articleQueryToMap(const DBConnection *connection, const QStri
     return article;
 }
 
-static void writeResponse(QHttpResponse *response, int responseCode, const QByteArray &data = QByteArray()) {
-    response->setHeader("Content-Type", "application/json");
-    response->setHeader("Content-Length", QByteArray::number(data.size()));
-    response->writeHead(responseCode);
-    response->end(data);
+static QVariantMap articleResultToMap(const ArticleResult &result, const QString &authority) {
+    QVariantMap article;
+    article["author"] = result.author;
+    article["body"] = Utils::replaceSrcPaths(result.body, authority + TEMPORARY_CACHE_PATH);
+    article["categories"] = result.categories;
+    article["date"] = result.date;
+    article["enclosures"] = result.enclosures;
+    article["title"] = result.title;
+    article["url"] = result.url;
+    return article;
 }
 
 ArticleServer::ArticleServer(QObject *parent) :
@@ -130,7 +138,25 @@ bool ArticleServer::handleRequest(QHttpRequest *request, QHttpResponse *response
                 SLOT(onReadArticlesDeleted(DBConnection*)))->deleteReadArticles(expiryDate);
             }
             else {
-                DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->fetchArticle(parts.at(1));
+                const QString id = QString::fromUtf8(QByteArray::fromBase64(parts.at(1).toUtf8()));
+                FeedPluginConfig *config = PluginManager::instance()->getConfigForArticle(id);
+
+                if (config) {
+                    ArticleRequest *request = PluginManager::instance()->articleRequest(id, this);
+
+                    if (request) {
+                        PluginSettings settings(config->id());
+                        request->getArticle(id, settings.values());
+                        connect(request, SIGNAL(finished(ArticleRequest*)),
+                                this, SLOT(onArticleRequestFinished(ArticleRequest*)));
+                    }
+                    else {
+                        writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+                    }
+                }
+                else {
+                    DBConnection::connection(this, SLOT(onArticleFetched(DBConnection*)))->fetchArticle(parts.at(1));
+                }
             }
 
             return true;
@@ -164,9 +190,8 @@ QHttpResponse* ArticleServer::dequeueResponse() {
 
 void ArticleServer::onArticleFetched(DBConnection *connection) {
     if (QHttpResponse *response = dequeueResponse()) {
-        const QString authority = response->property("authority").toString();
-        
         if (connection->status() == DBConnection::Ready) {
+            const QString authority = response->property("authority").toString();
             writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(articleQueryToMap(connection,
                                                                                                         authority)));
         }
@@ -180,9 +205,8 @@ void ArticleServer::onArticleFetched(DBConnection *connection) {
 
 void ArticleServer::onArticlesFetched(DBConnection *connection) {
     if (QHttpResponse *response = dequeueResponse()) {
-        const QString authority = response->property("authority").toString();
-        
         if (connection->status() == DBConnection::Ready) {
+            const QString authority = response->property("authority").toString();
             QVariantList articles;
             
             while (connection->nextRecord()) {
@@ -197,6 +221,21 @@ void ArticleServer::onArticlesFetched(DBConnection *connection) {
     }
     
     connection->deleteLater();
+}
+
+void ArticleServer::onArticleRequestFinished(ArticleRequest *request) {
+    if (QHttpResponse *response = dequeueResponse()) {
+        if (request->status() == ArticleRequest::Ready) {
+            const QString authority = response->property("authority").toString();
+            writeResponse(response, QHttpResponse::STATUS_OK,
+                    QtJson::Json::serialize(articleResultToMap(request->result(), authority)));
+        }
+        else {
+            writeResponse(response, QHttpResponse::STATUS_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    request->deleteLater();
 }
 
 void ArticleServer::onReadArticlesDeleted(DBConnection *connection) {

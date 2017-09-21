@@ -18,6 +18,7 @@
 #include "json.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
+#include "serverresponse.h"
 #include "transfers.h"
 #include "utils.h"
 
@@ -31,13 +32,6 @@ static QVariantMap transferToMap(const Transfer *transfer) {
     }
     
     return map;
-}
-
-static void writeResponse(QHttpResponse *response, int responseCode, const QByteArray &data = QByteArray()) {
-    response->setHeader("Content-Type", "application/json");
-    response->setHeader("Content-Length", QByteArray::number(data.size()));
-    response->writeHead(responseCode);
-    response->end(data);
 }
 
 TransferServer::TransferServer(QObject *parent) :
