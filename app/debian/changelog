@@ -2,6 +2,8 @@ cutenews (1.1.0) unstable; urgency=low
 
   * Add support for retrieving full articles from links where plugin is
     available.
+  * Add support for portrait mode.
+  * Add option to use volume keys to switch between articles.
   * Fix status changes in article/subscription data models.
 
  -- Stuart Howarth <showarth@marxoft.co.uk>  Fri, 15 Sep 2017 15:51:28 +0100
