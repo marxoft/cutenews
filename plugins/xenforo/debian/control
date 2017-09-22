@@ -8,7 +8,7 @@ Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-xenforo
 Architecture: armel
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0), qhtmlparser
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0), qhtmlparser (>= 0.0.4)
 Description: A content plugin for cuteNews providing latest posts from XenForo threads
 XB-Maemo-Display-Name: cuteNews - XenForo
 XB-Maemo-Icon-26:

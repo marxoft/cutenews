@@ -8,7 +8,7 @@ Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-phpbb
 Architecture: armel
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0), qhtmlparser
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0), qhtmlparser (>= 0.0.4)
 Description: A content plugin for cuteNews providing latest posts from phpBB threads
 XB-Maemo-Display-Name: cuteNews - phpBB
 XB-Maemo-Icon-26:

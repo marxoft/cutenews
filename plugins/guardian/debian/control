@@ -8,7 +8,7 @@ Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-guardian
 Architecture: armel
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0), qhtmlparser
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0), qhtmlparser (>= 0.0.4)
 Description: A content plugin for cuteNews providing news articles from The Guardian
 XB-Maemo-Display-Name: cuteNews - The Guardian
 XB-Maemo-Icon-26:

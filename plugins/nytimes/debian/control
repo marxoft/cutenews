@@ -8,7 +8,7 @@ Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-nytimes
 Architecture: armel
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0), qhtmlparser
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0), qhtmlparser (>= 0.0.4)
 Description: A content plugin for cuteNews providing news articles from The New York Times
 XB-Maemo-Display-Name: cuteNews - The New York Times
 XB-Maemo-Icon-26:
