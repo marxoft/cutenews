@@ -106,6 +106,7 @@ maemo5 {
         src/maemo5/definitions.h \
         src/maemo5/eventfeed.h \
         src/maemo5/logger.h \
+        src/maemo5/screenorientationmodel.h \
         src/maemo5/settings.h \
         src/maemo5/subscriptionsourcetypemodel.h
     
