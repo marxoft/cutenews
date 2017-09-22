@@ -25,7 +25,7 @@
 const int BbcFeedRequest::MAX_REDIRECTS = 8;
 
 const QString BbcFeedRequest::BASE_URL("http://feeds.bbci.co.uk");
-const QString BbcFeedRequest::ICON_URL("http://static.bbci.co.uk/news/1.207.11915/apple-touch-icon-72x72-precomposed.png");
+const QString BbcFeedRequest::ICON_URL("http://news.bbcimg.co.uk/nol/shared/img/bbc_news_120x60.gif");
 
 const QByteArray BbcFeedRequest::USER_AGENT("Wget/1.13.4 (linux-gnu)");
 
