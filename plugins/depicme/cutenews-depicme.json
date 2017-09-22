@@ -3,6 +3,8 @@
     "version": 1,
     "name": "Depic.me",
     "supportsFeeds": false,
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(www\\.|)depic\\.me/\\w+",
     "supportsEnclosures": true,
     "enclosureRegExp": "http(s|)://(www\\.|)depic\\.me/\\w+"
 }
