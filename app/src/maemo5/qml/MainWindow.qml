@@ -355,7 +355,8 @@ ApplicationWindow {
 
     Binding {
         target: screen
-        orientationLock: settings.screenOrientation
+        property: "orientationLock"
+        value: settings.screenOrientation
     }
 
     contentItem.states: State {
