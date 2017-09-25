@@ -1,0 +1,221 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "IBTimes",
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(www\\.|)ibtimes(\\.com\\.au|\\.co\\.in|\\.co\\.uk|\\.com)/[\\w-]+",
+    "articleSettings": [
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
+        }
+    ],
+    "supportsFeeds": true,
+    "feedSettings": [
+        {
+            "type": "list",
+            "key": "section",
+            "label": "Section",
+            "value": "http://www.ibtimes.co.uk/rss/uk",
+            "options": [
+                {
+                    "label": "Australia",
+                    "value": "http://www.ibtimes.com.au/rss"
+                },
+
+                {
+                    "label": "Australia - Companies",
+                    "value": "http://www.ibtimes.com.au/rss/companies"
+                },
+
+                {
+                    "label": "Australia - Economy",
+                    "value": "http://www.ibtimes.com.au/rss/economy"
+                },
+
+                {
+                    "label": "Australia - Entertainment",
+                    "value": "http://www.ibtimes.com.au/rss/entertainment"
+                },
+
+                {
+                    "label": "Australia - Science",
+                    "value": "http://www.ibtimes.com.au/rss/science"
+                },
+
+                {
+                    "label": "Australia - Sports",
+                    "value": "http://www.ibtimes.com.au/rss/sports"
+                },
+
+                {
+                    "label": "Australia - Technology",
+                    "value": "http://www.ibtimes.com.au/rss/technology"
+                },
+
+                {
+                    "label": "Australia - Top news",
+                    "value": "http://www.ibtimes.com.au/rss/feed"
+                },
+
+                {
+                    "label": "Australia - World",
+                    "value": "http://www.ibtimes.com.au/rss/world"
+                },
+
+                {
+                    "label": "India",
+                    "value": "http://www.ibtimes.co.in/rss/in"
+                },
+
+                {
+                    "label": "India - Companies",
+                    "value": "http://www.ibtimes.co.in/rss/companies"
+                },
+
+                {
+                    "label": "India - Economy",
+                    "value": "http://www.ibtimes.co.in/rss/economy"
+                },
+
+                {
+                    "label": "India - Entertainment",
+                    "value": "http://www.ibtimes.co.in/rss/entertainment"
+                },
+
+                {
+                    "label": "India - Photos",
+                    "value": "http://www.ibtimes.co.in/rss/photos"
+                },
+
+                {
+                    "label": "India - Science",
+                    "value": "http://www.ibtimes.co.in/rss/science"
+                },
+
+                {
+                    "label": "India - Sports",
+                    "value": "http://www.ibtimes.co.in/rss/sports"
+                },
+
+                {
+                    "label": "India - Technology",
+                    "value": "http://www.ibtimes.co.in/rss/technology"
+                },
+
+                {
+                    "label": "India - Top news",
+                    "value": "http://www.ibtimes.co.in/rss/feed"
+                },
+
+                {
+                    "label": "India - World",
+                    "value": "http://www.ibtimes.co.in/rss/world"
+                },
+
+                {
+                    "label": "U.K.",
+                    "value": "http://www.ibtimes.co.uk/rss/uk"
+                },
+
+                {
+                    "label": "U.K. - Companies",
+                    "value": "http://www.ibtimes.co.uk/rss/companies"
+                },
+
+                {
+                    "label": "U.K. - Economy",
+                    "value": "http://www.ibtimes.co.uk/rss/economy"
+                },
+
+                {
+                    "label": "U.K. - Entertainment",
+                    "value": "http://www.ibtimes.co.uk/rss/entertainment"
+                },
+
+                {
+                    "label": "U.K. - Science",
+                    "value": "http://www.ibtimes.co.uk/rss/science"
+                },
+
+                {
+                    "label": "U.K. - Sports",
+                    "value": "http://www.ibtimes.co.uk/rss/sports"
+                },
+
+                {
+                    "label": "U.K. - Technology",
+                    "value": "http://www.ibtimes.co.uk/rss/technology"
+                },
+
+                {
+                    "label": "U.K. - Top news",
+                    "value": "http://www.ibtimes.co.uk/rss/feed"
+                },
+
+                {
+                    "label": "U.K. - World",
+                    "value": "http://www.ibtimes.co.uk/rss/world"
+                },
+
+                {
+                    "label": "U.S.",
+                    "value": "http://www.ibtimes.com/rss"
+                },
+
+                {
+                    "label": "U.S. - Companies",
+                    "value": "http://www.ibtimes.com/rss/companies"
+                },
+
+                {
+                    "label": "U.S. - Economy",
+                    "value": "http://www.ibtimes.com/rss/economy"
+                },
+
+                {
+                    "label": "U.S. - Entertainment",
+                    "value": "http://www.ibtimes.com/rss/entertainment"
+                },
+
+                {
+                    "label": "U.S. - Sports",
+                    "value": "http://www.ibtimes.com/rss/sports"
+                },
+
+                {
+                    "label": "U.S. - Technology",
+                    "value": "http://www.ibtimes.com/rss/technology"
+                },
+
+                {
+                    "label": "U.S. - Top news",
+                    "value": "http://www.ibtimes.com/rss/feed"
+                },
+
+                {
+                    "label": "U.S. - World",
+                    "value": "http://www.ibtimes.com/rss/world"
+                }
+            ]
+        },
+
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        }
+    ]
+}
