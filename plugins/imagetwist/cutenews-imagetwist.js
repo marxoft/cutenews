@@ -23,7 +23,7 @@ function getArticle(url, settings) {
     request.onreadystatechange = function() {
         if (request.readyState == 4) {
             try {
-                var imageUrl = /src="(http(s|):\/\/img\d+\.imagetwist\.com\/[^"]+)"/
+                var imageUrl = /src="(http(s|):\/\/i(mg|)\d+\.imagetwist\.com\/[^"]+)"/
                     .exec(request.responseText)[1];
                 var result = new ArticleResult();
                 result.body = "<img src='" + imageUrl + "' >";
@@ -46,7 +46,7 @@ function getEnclosure(url, settings) {
     request.onreadystatechange = function() {
         if (request.readyState == 4) {
             try {
-                var imageUrl = /src="(http(s|):\/\/img\d+\.imagetwist\.com\/[^"]+)"/
+                var imageUrl = /src="(http(s|):\/\/i(mg|)\d+\.imagetwist\.com\/[^"]+)"/
                     .exec(request.responseText)[1];
                 var fileName = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
                 finished(new EnclosureResult(fileName, new NetworkRequest(imageUrl)));
