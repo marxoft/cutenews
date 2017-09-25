@@ -125,6 +125,7 @@ Dialog {
             target: view
             anchors.rightMargin: 0
             anchors.bottomMargin: platformStyle.paddingMedium
+            clip: true
         }
 
         PropertyChanges {

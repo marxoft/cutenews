@@ -34,7 +34,7 @@ Dialog {
             left: parent.left
             right: button.left
             rightMargin: platformStyle.paddingMedium
-            bottom: parent.bottom
+            top: parent.top
         }
         spacing: platformStyle.paddingMedium
         
@@ -136,15 +136,13 @@ Dialog {
         when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
 
         AnchorChanges {
-            target: flickable
+            target: flow
             anchors.right: parent.right
-            anchors.bottom: button.top
         }
 
         PropertyChanges {
-            target: flickable
+            target: flow
             anchors.rightMargin: 0
-            anchors.bottomMargin: platformStyle.paddingMedium
         }
 
         PropertyChanges {
@@ -154,7 +152,7 @@ Dialog {
 
         PropertyChanges {
             target: root
-            height: 680
+            height: flow.height + button.height + platformStyle.paddingMedium * 2
         }
     }
     

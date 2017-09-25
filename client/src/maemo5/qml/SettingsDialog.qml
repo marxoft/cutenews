@@ -200,6 +200,7 @@ Dialog {
             target: flickable
             anchors.rightMargin: 0
             anchors.bottomMargin: platformStyle.paddingMedium
+            clip: true
         }
 
         PropertyChanges {
