@@ -168,6 +168,7 @@ void FeedParser::clear() {
     setDate(QDateTime());
     setDescription(QString());
     setEnclosures(QVariantList());
+    setErrorString(QString());
     setIconUrl(QString());
     setTitle(QString());
     setUrl(QString());
@@ -337,14 +338,14 @@ void FeedParser::readAuthor() {
         
         while (m_reader.qualifiedName() != "author") {
             if (m_reader.qualifiedName() == "name") {
-                setAuthor(m_reader.readElementText());
+                setAuthor(m_reader.readElementText().trimmed());
             }
             
             m_reader.readNextStartElement();
         }
     }
     else {
-        setAuthor(m_reader.readElementText());
+        setAuthor(m_reader.readElementText().trimmed());
     }
     
     m_reader.readNextStartElement();
@@ -352,14 +353,14 @@ void FeedParser::readAuthor() {
 
 void FeedParser::readCategories() {    
     if (m_reader.qualifiedName() == "itunes:keywords") {
-        setCategories(m_reader.readElementText().replace(", ", ",").split(",", QString::SkipEmptyParts));
+        setCategories(m_reader.readElementText().trimmed().replace(", ", ",").split(",", QString::SkipEmptyParts));
         m_reader.readNextStartElement();
     }
     else {
         QStringList c;
         
         while ((m_reader.qualifiedName() == "category") || (m_reader.qualifiedName() == "dc:subject")) {
-            c << m_reader.readElementText();
+            c << m_reader.readElementText().trimmed();
             m_reader.readNextStartElement();
         }
         
@@ -369,18 +370,28 @@ void FeedParser::readCategories() {
 
 void FeedParser::readDate() {
     if (m_reader.qualifiedName() == "pubDate") {
-        setDate(QDateTime::fromString(m_reader.readElementText().section(' ', 0, -2),
-                                              "ddd, dd MMM yyyy HH:mm:ss"));
+        const QString text = m_reader.readElementText().trimmed();
+        QDateTime date = QDateTime::fromString(text.left(text.lastIndexOf(" ")), "ddd, dd MMM yyyy HH:mm:ss");
+        
+        if (!date.isValid()) {
+            date = QDateTime::fromString(text, "yyyy-MM-dd HH:mm:ss");
+
+            if (!date.isValid()) {
+                date = QDateTime::fromString(text, Qt::ISODate);
+            }
+        }
+        
+        setDate(date);
     }
     else {
-        setDate(QDateTime::fromString(m_reader.readElementText(), Qt::ISODate));
+        setDate(QDateTime::fromString(m_reader.readElementText().trimmed(), Qt::ISODate));
     }
     
     m_reader.readNextStartElement();
 }
 
 void FeedParser::readDescription() {
-    setDescription(m_reader.readElementText());
+    setDescription(m_reader.readElementText().trimmed());
     m_reader.readNextStartElement();
 }
 
@@ -423,7 +434,7 @@ void FeedParser::readIconUrl() {
         
         while (m_reader.name() != "image") {
             if (m_reader.qualifiedName() == "url") {
-                setIconUrl(m_reader.readElementText());
+                setIconUrl(m_reader.readElementText().trimmed());
             }
             
             m_reader.readNextStartElement();
@@ -434,7 +445,7 @@ void FeedParser::readIconUrl() {
 }   
 
 void FeedParser::readTitle() {
-    setTitle(m_reader.readElementText());
+    setTitle(m_reader.readElementText().trimmed());
     m_reader.readNextStartElement();
 }
 
@@ -446,7 +457,7 @@ void FeedParser::readUrl() {
         m_reader.readNextStartElement();
     }
     else {
-        setUrl(m_reader.readElementText());
+        setUrl(m_reader.readElementText().trimmed());
     }
     
     m_reader.readNextStartElement();
