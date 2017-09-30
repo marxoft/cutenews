@@ -158,7 +158,7 @@ maemo5 {
     desktop.files = desktop/maemo5/cutenews.desktop
     desktop.path = /usr/share/applications/hildon
     
-    widget.files = desktop/widget/cutenews.desktop
+    widget.files = desktop/maemo5/widget/cutenews.desktop
     widget.path = /usr/share/applications/hildon-home
     
     icon.files = desktop/maemo5/64/cutenews.png
