@@ -78,58 +78,73 @@ HomescreenWidget {
         
             Component.onCompleted: load(ALL_ARTICLES_SUBSCRIPTION_ID)
         }
-        delegate: Item {
-            width: view.width
-            height: 70
+        delegate: ListItem {
+            id: listItem
+
+            style: OssoListItemStyle {
+                background: ""
+                backgroundSelected: ""
+                itemHeight: 70
+            }
             
-            Rectangle {
-                anchors.fill: parent
-                color: platformStyle.selectionColor
-                visible: mouseArea.pressed
-            }   
-            
+            Loader {
+                id: unreadLoader
+                
+                anchors {
+                    left: parent.left
+                    top: parent.top
+                    bottom: parent.bottom
+                    margins: platformStyle.paddingMedium
+                }
+                width: platformStyle.paddingMedium
+                sourceComponent: !read ? unreadIndicator : undefined
+            }
+
             Label {
                 id: titleLabel
                 
                 anchors {
-                    left: parent.left
+                    left: unreadLoader.right
                     right: parent.right
                     top: parent.top
                     margins: platformStyle.paddingMedium
                 }
                 elide: Text.ElideRight
                 font.pointSize: platformStyle.fontSizeSmall
-                color: (read) || (mouseArea.pressed) ? platformStyle.defaultTextColor : platformStyle.activeTextColor
                 text: title
             }
-    
+            
             Label {
                 id: dateLabel
                 
                 anchors {
-                    left: parent.left
-                    right: parent.right
+                    left: titleLabel.left
+                    right: titleLabel.right
                     bottom: parent.bottom
-                    margins: platformStyle.paddingMedium
+                    bottomMargin: platformStyle.paddingMedium
                 }
                 verticalAlignment: Text.AlignBottom
                 elide: Text.ElideRight
                 font.pointSize: platformStyle.fontSizeSmall
-                color: (read) || (mouseArea.pressed) ? platformStyle.secondaryTextColor : platformStyle.activeTextColor
-                text: Qt.formatDateTime(date, "dd/MM/yyyy HH:mm")
+                color: platformStyle.secondaryTextColor
+                text: dateString
             }
             
-            MouseArea {
-                id: mouseArea
+            Component {
+                id: unreadIndicator
                 
-                anchors.fill: parent
-                onClicked: {
-                    if (settings.openArticlesExternallyFromWidget) {
-                        popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), null, {url: url});
-                    }
-                    else {
-                        cutenews.showArticle(id);
-                    }
+                Rectangle {
+                    anchors.fill: parent
+                    color: listItem.pressed ? platformStyle.defaultTextColor : platformStyle.activeTextColor
+                }
+            }
+           
+            onClicked: {
+                if (settings.openArticlesExternallyFromWidget) {
+                    popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), null, {url: url});
+                }
+                else {
+                    cutenews.showArticle(id);
                 }
             }
         }
