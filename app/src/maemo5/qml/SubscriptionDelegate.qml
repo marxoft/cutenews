@@ -32,6 +32,7 @@ ListItem {
         width: height
         source: iconPath ? iconPath : "image://icon/cutenews"
         smooth: true
+        fillMode: Image.PreserveAspectFit
     }
     
     Label {
