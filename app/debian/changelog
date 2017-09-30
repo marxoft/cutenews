@@ -4,9 +4,12 @@ cutenews (1.1.0) unstable; urgency=low
     available.
   * Add support for portrait mode.
   * Add option to use volume keys to switch between articles.
+  * Preserve aspect ratio for subscription icons.
+  * Change article delegate appearance in the homescreen widget.
+  * Fix missing desktop file for homescreen widget.
   * Fix status changes in article/subscription data models.
 
- -- Stuart Howarth <showarth@marxoft.co.uk>  Fri, 15 Sep 2017 15:51:28 +0100
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sat, 30 Sep 2017 23:50:28 +0100
 
 cutenews (1.0.0) unstable; urgency=low
 
