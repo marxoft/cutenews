@@ -24,10 +24,10 @@ Dialog {
 
     title: "cuteNews"
     showProgressIndicator: process.state == Process.RunningState
-    height: row.height + platformStyle.paddingMedium
+    height: grid.height + platformStyle.paddingMedium
     
-    Row {
-        id: row
+    Grid {
+        id: grid
         
         anchors {
             left: parent.left
@@ -35,11 +35,12 @@ Dialog {
             bottom: parent.bottom
         }
         spacing: platformStyle.paddingMedium
+        columns: 2
         
         CheckBox {
             id: checkBox
             
-            width: row.width - button.width - row.spacing
+            width: grid.width - button.width - grid.spacing
             text: qsTr("Publish articles to event feed")
             checked: settings.enabled
         }
@@ -75,5 +76,25 @@ Dialog {
         property bool enabled
         
         fileName: "/home/user/.config/cutenews/eventfeed"
+    }
+
+    contentItem.states: State {
+        name: "Portrait"
+        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
+
+        PropertyChanges {
+            target: grid
+            columns: 1
+        }
+
+        PropertyChanges {
+            target: checkBox
+            width: grid.width
+        }
+
+        PropertyChanges {
+            target: button
+            width: grid.width
+        }
     }
 }
