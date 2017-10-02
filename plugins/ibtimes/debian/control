@@ -10,7 +10,7 @@ Package: cutenews-ibtimes
 Architecture: armel
 Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0), qhtmlparser (>= 0.0.4)
 Description: A content plugin for cuteNews providing news articles from IBTimes
-XB-Maemo-Display-Name: cuteNews - The New York Times
+XB-Maemo-Display-Name: cuteNews - IBTimes
 XB-Maemo-Icon-26:
  iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABmJLR0QAJwAnACn1EoBiAAAACXBI
  WXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3wcaEAIUlvJ6PgAAABl0RVh0Q29tbWVudABDcmVhdGVk

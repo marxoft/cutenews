@@ -1,3 +1,9 @@
+cutenews-ibtimes (0.0.2) unstable; urgency=low
+
+  * Fix package display name.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sun, 01 Oct 2017 17:24:25 +0100
+
 cutenews-ibtimes (0.0.1) unstable; urgency=low
 
   * Initial Release.
