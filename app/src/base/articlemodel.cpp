@@ -294,8 +294,6 @@ void ArticleModel::clear() {
         m_offset = 0;
         m_moreResults = false;
     }
-
-    setStatus(Idle);
 }
 
 void ArticleModel::load(const QString &subscriptionId) {
@@ -303,8 +301,8 @@ void ArticleModel::load(const QString &subscriptionId) {
         return;
     }
     
-    clear();
     setStatus(Active);
+    clear();
     m_subscriptionId = subscriptionId;
     m_query = QString();
     emit queryChanged(m_query);
