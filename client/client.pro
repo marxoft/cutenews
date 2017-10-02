@@ -60,11 +60,14 @@ SOURCES += \
     src/plugins/pluginmanager.cpp
 
 maemo5 {
+    DEFINES += DBUS_INTERFACE
+
     QT += declarative
     
     INCLUDEPATH += src/maemo5
     
     HEADERS += \
+        src/maemo5/cutenews.h \
         src/maemo5/definitions.h \
         src/maemo5/logger.h \
         src/maemo5/screenorientationmodel.h \
@@ -72,6 +75,7 @@ maemo5 {
         src/maemo5/subscriptionsourcetypemodel.h
     
     SOURCES += \
+        src/maemo5/cutenews.cpp \
         src/maemo5/logger.cpp \
         src/maemo5/main.cpp \
         src/maemo5/settings.cpp
@@ -102,22 +106,42 @@ maemo5 {
         src/maemo5/qml/TransfersWindow.qml \
         src/maemo5/qml/UrlOpenerDelegate.qml \
         src/maemo5/qml/UrlOpenerDialog.qml \
-        src/maemo5/qml/UrlOpenersDialog.qml
+        src/maemo5/qml/UrlOpenersDialog.qml \
+        src/maemo5/qml/Widget.qml
     
     qml.path = /opt/cutenews-client/qml
     
     desktop.files = desktop/maemo5/cutenews-client.desktop
     desktop.path = /usr/share/applications/hildon
+
+    widget.files = desktop/maemo5/widget/cutenews-client.desktop
+    widget.path = /usr/share/applications/hildon-home
         
     icon.files = desktop/maemo5/64/cutenews-client.png
     icon.path = /usr/share/icons/hicolor/64x64/apps
+
+    scripts.files = \
+        src/maemo5/scripts/showwidget \
+        src/maemo5/scripts/showwindow
+
+    scripts.path = /opt/cutenews-client/bin
+
+    dbus_service.files = dbus/maemo5/org.marxoft.cutenewsclient.service
+    dbus_service.path = /usr/share/dbus-1/services
+
+    dbus_interface.files = dbus/maemo5/org.marxoft.cutenewsclient.xml
+    dbus_interface.path = /usr/share/dbus-1/interfaces
     
     target.path = /opt/cutenews-client/bin
     
     INSTALLS += \
         qml \
         desktop \
+        widget \
         icon \
+        scripts \
+        dbus_service \
+        dbus_interface \
         target
 
 } else:symbian {    
@@ -312,4 +336,8 @@ maemo5 {
         icon22 \
         icon16 \
         target
+}
+
+contains(DEFINES, DBUS_INTERFACE) {
+    QT += dbus
 }

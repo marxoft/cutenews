@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=cuteNews client
+Comment=Homescreen widget for cuteNews client
+Type=qt
+X-Path=/opt/cutenews-client/bin/showwidget
+X-Multiple-Instances=false
+X-home-applet-minwidth=300
+X-home-applet-minheight=332

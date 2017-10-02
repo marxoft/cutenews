@@ -318,6 +318,27 @@ ApplicationWindow {
         }
     }
 
+    Component {
+        id: articleComponent
+
+        Article {
+            id: article
+
+            autoUpdate: true
+            onFinished: windowStack.currentWindow.article = article
+        }
+    }
+
+    Connections {
+        target: cutenews
+        onArticleRequested: {
+            windowStack.clear();
+            windowStack.push(Qt.resolvedUrl("ArticleWindow.qml"));
+            var article = articleComponent.createObject(windowStack.currentWindow);
+            article.load(articleId);
+        }
+    }
+
     Connections {
         target: settings
         onServerAddressChanged: {
@@ -332,9 +353,6 @@ ApplicationWindow {
             updateButton.enabled = connected;
             
             if (connected) {
-                subscriptions.getStatus(Subscriptions.DefaultStatusInterval);
-                serversettings.load();
-                plugins.load();
                 subscriptionModel.load();
             }
         }
@@ -394,7 +412,6 @@ ApplicationWindow {
     }
     
     Component.onCompleted: {
-        urlopener.load();
         var connected = (settings.serverAddress != "");
         reloadAction.enabled = connected;
         readAllAction.enabled = connected;
@@ -405,9 +422,6 @@ ApplicationWindow {
         updateButton.enabled = connected;
         
         if (connected) {
-            subscriptions.getStatus(Subscriptions.DefaultStatusInterval);
-            serversettings.load();
-            plugins.load();
             subscriptionModel.load();
         }
     }

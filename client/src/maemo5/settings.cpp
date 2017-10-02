@@ -33,6 +33,20 @@ Settings* Settings::instance() {
     return self ? self : self = new Settings;
 }
 
+bool Settings::enableAutomaticScrollingInWidget() {
+    return value("Widget/automaticScrollingEnabled", true).toBool();
+}
+
+void Settings::setEnableAutomaticScrollingInWidget(bool enabled) {
+    if (enabled != enableAutomaticScrollingInWidget()) {
+        setValue("Widget/automaticScrollingEnabled", enabled);
+        
+        if (self) {
+            emit self->enableAutomaticScrollingInWidgetChanged(enabled);
+        }
+    }
+}
+
 QString Settings::loggerFileName() {
     return value("Logger/fileName", APP_CONFIG_PATH + "log").toString();
 }
@@ -57,6 +71,20 @@ void Settings::setLoggerVerbosity(int verbosity) {
         
         if (self) {
             emit self->loggerVerbosityChanged(verbosity);
+        }
+    }
+}
+
+bool Settings::openArticlesExternallyFromWidget() {
+    return value("Widget/openArticlesExternally", false).toBool();
+}
+
+void Settings::setOpenArticlesExternallyFromWidget(bool enabled) {
+    if (enabled != openArticlesExternallyFromWidget()) {
+        setValue("Widget/openArticlesExternally", enabled);
+        
+        if (self) {
+            emit self->openArticlesExternallyFromWidgetChanged(enabled);
         }
     }
 }

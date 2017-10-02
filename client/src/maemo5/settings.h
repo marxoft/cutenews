@@ -30,6 +30,8 @@ class Settings : public QObject
 {
     Q_OBJECT
     
+    Q_PROPERTY(bool enableAutomaticScrollingInWidget READ enableAutomaticScrollingInWidget
+               WRITE setEnableAutomaticScrollingInWidget NOTIFY enableAutomaticScrollingInWidgetChanged)
     Q_PROPERTY(QString loggerFileName READ loggerFileName WRITE setLoggerFileName NOTIFY loggerFileNameChanged)
     Q_PROPERTY(int loggerVerbosity READ loggerVerbosity WRITE setLoggerVerbosity NOTIFY loggerVerbosityChanged)
     Q_PROPERTY(int readArticleExpiry READ readArticleExpiry WRITE setReadArticleExpiry
@@ -60,6 +62,8 @@ class Settings : public QObject
                NOTIFY nextArticleShortcutChanged)
     Q_PROPERTY(QString nextUnreadArticleShortcut READ nextUnreadArticleShortcut WRITE setNextUnreadArticleShortcut
                NOTIFY nextUnreadArticleShortcutChanged)
+    Q_PROPERTY(bool openArticlesExternallyFromWidget READ openArticlesExternallyFromWidget
+               WRITE setOpenArticlesExternallyFromWidget NOTIFY openArticlesExternallyFromWidgetChanged)
     Q_PROPERTY(QString openExternallyShortcut READ openExternallyShortcut WRITE setOpenExternallyShortcut
                NOTIFY openExternallyShortcutChanged)
     Q_PROPERTY(QString pauseAllTransfersShortcut READ pauseAllTransfersShortcut WRITE setPauseAllTransfersShortcut
@@ -99,9 +103,13 @@ public:
     ~Settings();
     
     static Settings* instance();
+
+    static bool enableAutomaticScrollingInWidget();
     
     static QString loggerFileName();
     static int loggerVerbosity();
+
+    static bool openArticlesExternallyFromWidget();
     
     static int readArticleExpiry();
 
@@ -145,9 +153,13 @@ public:
     Q_INVOKABLE static QVariant value(const QString &key, const QVariant &defaultValue = QVariant());
 
 public Q_SLOTS:
+    static void setEnableAutomaticScrollingInWidget(bool enabled);
+
     static void setLoggerFileName(const QString &fileName);
     static void setLoggerVerbosity(int verbosity);
         
+    static void setOpenArticlesExternallyFromWidget(bool enabled);
+
     static void setReadArticleExpiry(int expiry);
 
     static void setScreenOrientation(int orientation);
@@ -190,6 +202,7 @@ public Q_SLOTS:
     static void setValue(const QString &key, const QVariant &value);
 
 Q_SIGNALS:
+    void enableAutomaticScrollingInWidgetChanged(bool enabled);
     void loggerFileNameChanged(const QString &fileName);
     void loggerVerbosityChanged(int verbosity);
     void readArticleExpiryChanged(int expiry);
@@ -209,6 +222,7 @@ Q_SIGNALS:
     void newContentShortcutChanged(const QString &key);
     void nextArticleShortcutChanged(const QString &key);
     void nextUnreadArticleShortcutChanged(const QString &key);
+    void openArticlesExternallyFromWidgetChanged(bool enabled);
     void openExternallyShortcutChanged(const QString &key);
     void pauseAllTransfersShortcutChanged(const QString &key);
     void pauseTransferShortcutChanged(const QString &key);
