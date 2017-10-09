@@ -56,7 +56,7 @@ Window {
     Action {
         id: openAction
         
-        text: qsTr("Open externally")
+        text: qsTr("Open")
         autoRepeat: false
         shortcut: settings.openExternallyShortcut
         onTriggered: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: article.resultUrl})
@@ -77,8 +77,8 @@ Window {
         text: qsTr("Enclosures")
         autoRepeat: false
         shortcut: settings.showArticleEnclosuresShortcut
-        enabled: article.resultHasEnclosures
-        onTriggered: popupManager.open(enclosuresDialog, root)
+        onTriggered: if (article.resultHasEnclosures) popupManager.open(Qt.resolvedUrl("EnclosuresDialog.qml"), root,
+        {enclosures: article.resultEnclosures});
     }
        
     Flickable {
@@ -96,6 +96,7 @@ Window {
             preferredWidth: flickable.width
             contextMenuPolicy: Qt.CustomContextMenu
             linkDelegationPolicy: WebPage.DelegateAllLinks
+            settings.javascriptEnabled: false
             settings.userStyleSheetUrl: {
                 return "data:text/css;charset=utf-8;base64,"
                 + Qt.btoa("html { font-family: " + platformStyle.fontFamily + "; font-size: "
@@ -113,7 +114,7 @@ Window {
                     popupManager.open(urlMenu, root, {url: link});
                 }
             }
-            onLinkClicked: urlopener.open(link)
+            onLinkClicked: popupManager.open(Qt.resolveedUrl("OpenDialog.qml"), root, {url: link})
             onStatusChanged: root.showProgressIndicator = (status == WebView.Loading)
         }
     }
@@ -132,13 +133,7 @@ Window {
             }
 
             MenuItem {
-                text: qsTr("Open article")
-                enabled: (menu.url) && (plugins.articleIsSupported(menu.url))
-                onTriggered: windowStack.push(Qt.resolvedUrl("ArticleRequestWindow.qml"), {url: menu.url})
-            }
-            
-            MenuItem {
-                text: qsTr("Open externally")
+                text: qsTr("Open")
                 onTriggered: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: menu.url})
             }
 
@@ -146,14 +141,6 @@ Window {
                 text: qsTr("Download")
                 onTriggered: popupManager.open(Qt.resolvedUrl("DownloadDialog.qml"), root, {url: menu.url})
             }            
-        }
-    }
-       
-    Component {
-        id: enclosuresDialog
-        
-        EnclosuresDialog {
-            enclosures: article.resultEnclosures
         }
     }
 

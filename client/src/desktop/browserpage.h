@@ -61,6 +61,7 @@ Q_SIGNALS:
     void openArticleInTab(const QString &title, const QString &url);
     void openUrlInTab(const QString &title, const QString &url);
     void openUrlExternally(const QString &url);
+    void openUrlWithPlugin(const QString &url);
     void downloadUrl(const QString &url);
     void downloadUrlWithPlugin(const QString &url);
     void showHtmlInTab(const QString &title, const QString &html, const QString &baseUrl = QString());

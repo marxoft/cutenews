@@ -70,6 +70,7 @@ private Q_SLOTS:
     void openCurrentArticleInTab();
     void openCurrentArticleInBrowser();
     void openCurrentArticleExternally();
+    void openCurrentArticleWithPlugin();
     void downloadCurrentArticle();
     void downloadCurrentArticleWithPlugin();
     
@@ -77,6 +78,7 @@ private Q_SLOTS:
     void openCurrentEnclosureInTab();
     void openCurrentEnclosureInBrowser();
     void openCurrentEnclosureExternally();
+    void openCurrentEnclosureWithPlugin();
     void downloadCurrentEnclosure();
     void downloadCurrentEnclosureWithPlugin();
     
@@ -93,6 +95,7 @@ private Q_SLOTS:
     void openArticleInTab(const QString &title, const QString &url);
     void openUrlInTab(const QString &title, const QString &url);
     void openUrlExternally(const QString &url);
+    void openUrlWithPlugin(const QString &url);
     void downloadUrl(const QString &url);
     void downloadUrlWithPlugin(const QString &url);
     void showHtmlInTab(const QString &title, const QString &html, const QString &baseUrl = QString());
@@ -168,6 +171,7 @@ private:
     QAction *m_openArticleInTabAction;
     QAction *m_openArticleInBrowserAction;
     QAction *m_openArticleExternallyAction;
+    QAction *m_openArticleWithPluginAction;
     QAction *m_downloadArticleAction;
     QAction *m_downloadArticleWithPluginAction;
     
@@ -175,6 +179,7 @@ private:
     QAction *m_openEnclosureInTabAction;
     QAction *m_openEnclosureInBrowserAction;
     QAction *m_openEnclosureExternallyAction;
+    QAction *m_openEnclosureWithPluginAction;
     QAction *m_downloadEnclosureAction;
     QAction *m_downloadEnclosureWithPluginAction;
     

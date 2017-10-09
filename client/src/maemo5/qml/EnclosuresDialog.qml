@@ -40,11 +40,12 @@ Dialog {
     Action {
         id: openAction
         
-        text: qsTr("Open externally")
+        text: qsTr("Open")
         autoRepeat: false
         shortcut: settings.openExternallyShortcut
         enabled: view.currentIndex >= 0
-        onTriggered: urlopener.open(enclosures[view.currentIndex].url)
+        onTriggered: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root,
+        {url: enclosures[view.currentIndex].url})
     }    
     
     Action {
@@ -54,7 +55,8 @@ Dialog {
         autoRepeat: false
         shortcut: settings.downloadShortcut
         enabled: view.currentIndex >= 0
-        onTriggered: popupManager.open(downloadDialog, root)
+        onTriggered: popupManager.open(Qt.resolvedUrl("DownloadDialog.qml"), root,
+        {url: enclosures[view.currentIndex].url})
     }
     
     ListView {
@@ -64,7 +66,7 @@ Dialog {
         horizontalScrollBarPolicy: Qt.ScrollBarAlwaysOff
         model: enclosures
         delegate: EnclosureDelegate {
-            onClicked: urlopener.open(modelData.url)
+            onClicked: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: modelData.url})
             onPressAndHold: popupManager.open(contextMenu, root)
         }
     }
@@ -79,19 +81,11 @@ Dialog {
             
             MenuItem {
                 action: openAction
-            }
-                        
+            }           
+            
             MenuItem {
                 action: downloadAction
             }
-        }
-    }
-    
-    Component {
-        id: downloadDialog
-        
-        DownloadDialog {
-            url: enclosures[view.currentIndex].url
         }
     }
 

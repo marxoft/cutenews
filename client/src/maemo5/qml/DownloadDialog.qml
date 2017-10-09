@@ -22,6 +22,7 @@ Dialog {
     id: root
     
     property string url
+    property alias command: commandField.text
     property alias category: categorySelector.value
     property alias priority: prioritySelector.value
     property alias usePlugin: pluginCheckBox.checked
@@ -39,6 +40,18 @@ Dialog {
             top: parent.top
         }
         spacing: platformStyle.paddingMedium
+
+        Label {
+            width: parent.width
+            wrapMode: Text.WordWrap
+            text: qsTr("Custom command (%f for filename)")
+        }
+
+        TextField {
+            id: commandField
+
+            width: parent.width
+        }
         
         ListSelectorButton {
             id: categorySelector
@@ -64,8 +77,6 @@ Dialog {
             
             width: parent.width
             text: qsTr("Use plugin")
-            enabled: plugins.enclosureIsSupported(root.url)
-            checked: enabled
         }
     }
     
@@ -106,6 +117,19 @@ Dialog {
             height: column.height + button.height + platformStyle.paddingMedium * 2
         }
     }
+
+    onUrlChanged: {
+        var config = plugins.getConfigForEnclosure(url);
+
+        if (config) {
+            pluginCheckBox.text = qsTr("Use") + " " + config.displayName + " " + qsTr("plugin");
+            pluginCheckBox.visible = true;
+            pluginCheckBox.checked = true;
+        }
+        else {
+            pluginCheckBox.visible = false;
+        }
+    }
     
-    onAccepted: transfers.addEnclosureDownload(url, category, priority, pluginCheckBox.checked)
+    onAccepted: transfers.addEnclosureDownload(url, command, category, priority, pluginCheckBox.checked)
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,13 +20,13 @@ import org.hildon.components 1.0
 Dialog {
     id: root
     
-    property alias query: searchField.text
+    property alias command: commandField.text
     
-    title: qsTr("Search articles")
-    height: searchField.height + platformStyle.paddingMedium
+    title: qsTr("Custom command")
+    height: commandField.height + platformStyle.paddingMedium
 
     TextField {
-        id: searchField
+        id: commandField
         
         anchors {
             left: parent.left
@@ -34,7 +34,7 @@ Dialog {
             rightMargin: platformStyle.paddingMedium
             top: parent.top
         }
-        placeholderText: qsTr("Search query")
+        placeholderText: qsTr("Command")
         onAccepted: if (text) root.accept();
     }
 
@@ -47,8 +47,8 @@ Dialog {
         }
         style: DialogButtonStyle {}
         text: qsTr("Done")
-        enabled: searchField.text != ""
-        onClicked: searchField.accepted()
+        enabled: commandField.text != ""
+        onClicked: commandField.accepted()
     }
 
     contentItem.states: State {
@@ -56,12 +56,12 @@ Dialog {
         when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
 
         AnchorChanges {
-            target: searchField
+            target: commandField
             anchors.right: parent.right
         }
 
         PropertyChanges {
-            target: searchField
+            target: commandField
             anchors.rightMargin: 0
         }
 
@@ -72,11 +72,9 @@ Dialog {
 
         PropertyChanges {
             target: root
-            height: searchField.height + button.height + platformStyle.paddingMedium * 2
+            height: commandField.height + button.height + platformStyle.paddingMedium * 2
         }
     }
     
-    onStatusChanged: if (status == DialogStatus.Open) searchField.forceActiveFocus();
-    onAccepted: windowStack.push(Qt.resolvedUrl("ArticlesWindow.qml"), {title: qsTr("Search") + " - " + query})
-    .search(query)
+    onStatusChanged: if (status == DialogStatus.Open) commandField.forceActiveFocus();
 }

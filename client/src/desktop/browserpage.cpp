@@ -150,6 +150,7 @@ void BrowserPage::showContextMenu(const QPoint &pos) {
         QAction *articleAction = article ? menu.addAction(tr("Open Article in New Tab")) : 0;
         QAction *tabAction = menu.addAction(tr("Open Link in New Tab"));
         QAction *externalAction = menu.addAction(tr("Open Link Externally"));
+        QAction *pluginAction = enclosure ? menu.addAction(tr("Open Link Externally Using Plugin")) : 0;
         QAction *downloadAction = menu.addAction(tr("Download Link"));
         QAction *downloadPluginAction = enclosure ? menu.addAction(tr("Download Link Using Plugin")) : 0;
         QAction *action = menu.exec(m_webView->mapToGlobal(pos));
@@ -166,6 +167,9 @@ void BrowserPage::showContextMenu(const QPoint &pos) {
         }
         else if (action == externalAction) {
             emit openUrlExternally(url);
+        }
+        else if (action == pluginAction) {
+            emit openUrlWithPlugin(url);
         }
         else if (action == downloadAction) {
             emit downloadUrl(url);

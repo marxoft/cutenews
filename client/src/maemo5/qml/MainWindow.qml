@@ -45,6 +45,10 @@ ApplicationWindow {
         MenuItem {
             action: searchAction
         }
+
+        MenuItem {
+            action: articleAction
+        }
         
         MenuItem {
             action: settingsAction
@@ -102,10 +106,19 @@ ApplicationWindow {
     Action {
         id: searchAction
         
-        text: qsTr("Search")
+        text: qsTr("Search articles")
         autoRepeat: false
         shortcut: settings.searchShortcut
         onTriggered: popupManager.open(Qt.resolvedUrl("SearchDialog.qml"), appWindow)
+    }
+
+    Action {
+        id: articleAction
+
+        text: qsTr("Fetch article")
+        autoRepeat: false
+        shortcut: settings.fetchArticleShortcut
+        onTriggered: popupManager.open(Qt.resolvedUrl("ArticleDialog.qml"), appWindow)
     }
     
     Action {
@@ -333,9 +346,15 @@ ApplicationWindow {
         target: cutenews
         onArticleRequested: {
             windowStack.clear();
-            windowStack.push(Qt.resolvedUrl("ArticleWindow.qml"));
-            var article = articleComponent.createObject(windowStack.currentWindow);
-            article.load(articleId);
+
+            if (plugins.articleIsSupported(articleId)) {
+                windowStack.push(Qt.resolvedUrl("ArticleRequestWindow.qml"), {url: articleId});
+            }
+            else {
+                windowStack.push(Qt.resolvedUrl("ArticleWindow.qml"));
+                var article = articleComponent.createObject(windowStack.currentWindow);
+                article.load(articleId);
+            }
         }
     }
 

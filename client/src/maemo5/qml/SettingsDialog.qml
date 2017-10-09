@@ -98,10 +98,17 @@ Dialog {
                 echoMode: TextInput.Password
                 text: settings.serverPassword
             }
+
+            CheckBox {
+                width: parent.width
+                text: qsTr("Enable JavaScript in browser")
+                checked: settings.enableJavaScriptInBrowser
+                onCheckedChanged: settings.enableJavaScriptInBrowser = checked
+            }
             
             Button {
                 width: parent.width
-                text: qsTr("Url openers")
+                text: qsTr("URL openers")
                 onClicked: popupManager.open(Qt.resolvedUrl("UrlOpenersDialog.qml"), root)
             }
              
@@ -163,13 +170,34 @@ Dialog {
                 enabled: settings.serverAddress != ""
                 onSelected: serversettings.maximumConcurrentTransfers = value
             }
+
+            Label {
+                width: parent.width
+                wrapMode: Text.WordWrap
+                text: qsTr("Custom download command (%f for filename)")
+            }
+
+            TextField {
+                width: parent.width
+                enabled: settings.serverAddress != ""
+                text: serversettings.customTransferCommand
+                onTextChanged: serversettings.customTransferCommand = text
+            }
+
+            CheckBox {
+                width: parent.width
+                text: qsTr("Enable custom download command")
+                enabled: settings.serverAddress != ""
+                checked: serversettings.customTransferCommandEnabled
+                onCheckedChanged: serversettings.customTransferCommandEnabled = checked
+            }
         
             CheckBox {
                 width: parent.width
                 text: qsTr("Start downloads automatically")
                 enabled: settings.serverAddress != ""
                 checked: serversettings.startTransfersAutomatically
-                onClicked: serversettings.startTransfersAutomatically = checked
+                onCheckedChanged: serversettings.startTransfersAutomatically = checked
             }
         }
     }

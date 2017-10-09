@@ -30,6 +30,7 @@ Window {
     signal previous
     
     title: qsTr("Article")
+    showProgressIndicator: view.status == WebView.Loading
     menuBar: MenuBar {
         MenuItem {
             action: copyAction
@@ -74,10 +75,10 @@ Window {
     Action {
         id: openAction
         
-        text: qsTr("Open externally")
+        text: qsTr("Open")
         autoRepeat: false
         shortcut: settings.openExternallyShortcut
-        onTriggered: urlopener.open(article.url)
+        onTriggered: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: article.url})
     }
     
     Action {
@@ -111,8 +112,8 @@ Window {
         text: qsTr("Enclosures")
         autoRepeat: false
         shortcut: settings.showArticleEnclosuresShortcut
-        enabled: (article != null) && (article.hasEnclosures)
-        onTriggered: popupManager.open(enclosuresDialog, root)
+        onTriggered: if (article.hasEnclosures) popupManager.open(Qt.resolvedUrl("EnclosuresDialog.qml"), root,
+        {enclosures: article.enclosures});
     }
     
     Action {
@@ -166,6 +167,7 @@ Window {
             preferredWidth: flickable.width
             contextMenuPolicy: Qt.CustomContextMenu
             linkDelegationPolicy: WebPage.DelegateAllLinks
+            settings.javascriptEnabled: false
             settings.userStyleSheetUrl: {
                 return "data:text/css;charset=utf-8;base64,"
                 + Qt.btoa("html { font-family: " + platformStyle.fontFamily + "; font-size: "
@@ -183,8 +185,7 @@ Window {
                     popupManager.open(urlMenu, root, {url: link});
                 }
             }
-            onLinkClicked: urlopener.open(link)
-            onStatusChanged: root.showProgressIndicator = (status == WebView.Loading)
+            onLinkClicked: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: link})
         }
 
         Keys.onPressed: {
@@ -219,14 +220,8 @@ Window {
             }
 
             MenuItem {
-                text: qsTr("Open article")
-                enabled: (menu.url) && (plugins.articleIsSupported(menu.url))
-                onTriggered: windowStack.push(Qt.resolvedUrl("ArticleRequestWindow.qml"), {url: menu.url})
-            }
-            
-            MenuItem {
-                text: qsTr("Open externally")
-                onTriggered: urlopener.open(menu.url)
+                text: qsTr("Open")
+                onTriggered: popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root, {url: menu.url})
             }
 
             MenuItem {
@@ -242,14 +237,6 @@ Window {
         MessageBox {
             text: qsTr("Do you want to delete") + " '" + article.title + "'?"
             onAccepted: article.remove()
-        }
-    }
-    
-    Component {
-        id: enclosuresDialog
-        
-        EnclosuresDialog {
-            enclosures: article.enclosures
         }
     }
 

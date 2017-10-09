@@ -96,12 +96,14 @@ MainWindow::MainWindow(QWidget *parent) :
     m_openArticleInTabAction(new QAction(tr("Open in &tab"), this)),
     m_openArticleInBrowserAction(new QAction(tr("Open in &browser"), this)),
     m_openArticleExternallyAction(new QAction(tr("Open &externally"), this)),
+    m_openArticleWithPluginAction(new QAction(tr("Open externally using &plugin"), this)),
     m_downloadArticleAction(new QAction(tr("&Download"), this)),
     m_downloadArticleWithPluginAction(new QAction(tr("Download using &plugin"), this)),
     m_copyEnclosureUrlAction(new QAction(tr("&Copy URL"), this)),
     m_openEnclosureInTabAction(new QAction(tr("Open in &tab"), this)),
     m_openEnclosureInBrowserAction(new QAction(tr("Open in &browser"), this)),
     m_openEnclosureExternallyAction(new QAction(tr("Open &externally"), this)),
+    m_openEnclosureWithPluginAction(new QAction(tr("Open externally using &plugin"), this)),
     m_downloadEnclosureAction(new QAction(tr("&Download"), this)),
     m_downloadEnclosureWithPluginAction(new QAction(tr("Download using &plugin"), this)),
     m_transfersAction(new QAction(QIcon::fromTheme("folder-download"), tr("Show &downloads"), this)),
@@ -171,6 +173,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_articleMenu->addAction(m_openArticleInTabAction);
     m_articleMenu->addAction(m_openArticleInBrowserAction);
     m_articleMenu->addAction(m_openArticleExternallyAction);
+    m_articleMenu->addAction(m_openArticleWithPluginAction);
     m_articleMenu->addAction(m_downloadArticleAction);
     m_articleMenu->addAction(m_downloadArticleWithPluginAction);
     
@@ -182,6 +185,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_articleContextMenu->addAction(m_openArticleInTabAction);
     m_articleContextMenu->addAction(m_openArticleInBrowserAction);
     m_articleContextMenu->addAction(m_openArticleExternallyAction);
+    m_articleContextMenu->addAction(m_openArticleWithPluginAction);
     m_articleContextMenu->addAction(m_downloadArticleAction);
     m_articleContextMenu->addAction(m_downloadArticleWithPluginAction);
     
@@ -189,6 +193,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_enclosureContextMenu->addAction(m_openEnclosureInTabAction);
     m_enclosureContextMenu->addAction(m_openEnclosureInBrowserAction);
     m_enclosureContextMenu->addAction(m_openEnclosureExternallyAction);
+    m_enclosureContextMenu->addAction(m_openEnclosureWithPluginAction);
     m_enclosureContextMenu->addAction(m_downloadEnclosureAction);
     m_enclosureContextMenu->addAction(m_downloadEnclosureWithPluginAction);
     
@@ -392,6 +397,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_openArticleInTabAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleInTab()));
     connect(m_openArticleInBrowserAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleInBrowser()));
     connect(m_openArticleExternallyAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleExternally()));
+    connect(m_openArticleWithPluginAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleWithPlugin()));
     connect(m_downloadArticleAction, SIGNAL(triggered()), this, SLOT(downloadCurrentArticle()));
     connect(m_downloadArticleWithPluginAction, SIGNAL(triggered()), this, SLOT(downloadCurrentArticleWithPlugin()));
     
@@ -399,6 +405,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_openEnclosureInTabAction, SIGNAL(triggered()), this, SLOT(openCurrentEnclosureInTab()));
     connect(m_openEnclosureInBrowserAction, SIGNAL(triggered()), this, SLOT(openCurrentEnclosureInBrowser()));
     connect(m_openEnclosureExternallyAction, SIGNAL(triggered()), this, SLOT(openCurrentEnclosureExternally()));
+    connect(m_openEnclosureWithPluginAction, SIGNAL(triggered()), this, SLOT(openCurrentEnclosureWithPlugin()));
     connect(m_downloadEnclosureAction, SIGNAL(triggered()), this, SLOT(downloadCurrentEnclosure()));
     connect(m_downloadEnclosureWithPluginAction, SIGNAL(triggered()), this, SLOT(downloadCurrentEnclosureWithPlugin()));
     
@@ -428,6 +435,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_browser, SIGNAL(openArticleInTab(QString, QString)), this, SLOT(openArticleInTab(QString, QString)));
     connect(m_browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(m_browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
+    connect(m_browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
     connect(m_browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
     connect(m_browser, SIGNAL(downloadUrlWithPlugin(QString)), this, SLOT(downloadUrlWithPlugin(QString)));
     connect(m_browser, SIGNAL(showHtmlInTab(QString, QString, QString)),
@@ -596,6 +604,10 @@ void MainWindow::openCurrentArticleExternally() {
     openUrlExternally(m_articlesView->currentIndex().data(Article::UrlRole).toString());
 }
 
+void MainWindow::openCurrentArticleWithPlugin() {
+    openUrlWithPlugin(m_articlesView->currentIndex().data(Article::UrlRole).toString());
+}
+
 void MainWindow::copyCurrentEnclosureUrl() {
     if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
         QApplication::clipboard()->setText(item->text());
@@ -617,6 +629,12 @@ void MainWindow::openCurrentEnclosureInBrowser() {
 void MainWindow::openCurrentEnclosureExternally() {
     if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
         openUrlExternally(item->text());
+    }
+}
+
+void MainWindow::openCurrentEnclosureWithPlugin() {
+    if (const QStandardItem *item = m_enclosuresModel->item(m_enclosuresView->currentIndex().row(), 0)) {
+        openUrlWithPlugin(item->text());
     }
 }
 
@@ -728,6 +746,7 @@ void MainWindow::setCurrentArticle(const QModelIndex &index) {
     }
     
     const bool pluginEnabled = PluginManager::instance()->enclosureIsSupported(index.data(Article::UrlRole).toString());
+    m_openArticleWithPluginAction->setEnabled(pluginEnabled);
     m_downloadArticleWithPluginAction->setEnabled(pluginEnabled);
     
     if (!isRead) {
@@ -763,6 +782,7 @@ void MainWindow::showEnclosureContextMenu(const QPoint &pos) {
     if (m_enclosuresView->currentIndex().isValid()) {
         const bool pluginEnabled =
             PluginManager::instance()->enclosureIsSupported(m_enclosuresView->currentIndex().data().toString());
+        m_openEnclosureWithPluginAction->setEnabled(pluginEnabled);
         m_downloadEnclosureWithPluginAction->setEnabled(pluginEnabled);
         m_enclosureContextMenu->popup(m_enclosuresView->mapToGlobal(pos), m_copyEnclosureUrlAction);
     }
@@ -786,6 +806,7 @@ void MainWindow::openUrlInTab(const QString &title, const QString &url) {
     connect(browser, SIGNAL(openArticleInTab(QString, QString)), this, SLOT(openArticleInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
+    connect(browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
     connect(browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
     connect(browser, SIGNAL(downloadUrlWithPlugin(QString)), this, SLOT(downloadUrlWithPlugin(QString)));
     connect(browser, SIGNAL(showHtmlInTab(QString, QString, QString)),
@@ -804,6 +825,10 @@ void MainWindow::openUrlExternally(const QString &url) {
     UrlOpenerModel::instance()->open(url);
 }
 
+void MainWindow::openUrlWithPlugin(const QString &url) {
+    UrlOpenerModel::instance()->openWithPlugin(url);
+}
+
 void MainWindow::downloadUrl(const QString &url) {
     TransferModel::instance()->addEnclosureDownload(url, false);
 }
@@ -819,6 +844,7 @@ void MainWindow::showHtmlInTab(const QString &title, const QString &html, const 
     connect(browser, SIGNAL(openArticleInTab(QString, QString)), this, SLOT(openArticleInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlInTab(QString, QString)), this, SLOT(openUrlInTab(QString, QString)));
     connect(browser, SIGNAL(openUrlExternally(QString)), this, SLOT(openUrlExternally(QString)));
+    connect(browser, SIGNAL(openUrlWithPlugin(QString)), this, SLOT(openUrlWithPlugin(QString)));
     connect(browser, SIGNAL(downloadUrl(QString)), this, SLOT(downloadUrl(QString)));
     connect(browser, SIGNAL(downloadUrlWithPlugin(QString)), this, SLOT(downloadUrlWithPlugin(QString)));
     connect(browser, SIGNAL(showHtmlInTab(QString, QString, QString)),
