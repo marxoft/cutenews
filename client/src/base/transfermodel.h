@@ -76,7 +76,8 @@ public:
     Q_INVOKABLE Transfer* get(const QString &id) const;
     
     Q_INVOKABLE void addEnclosureDownload(const QString &url, bool usePlugin);
-    Q_INVOKABLE void addEnclosureDownload(const QString &url, const QString &category, int priority, bool usePlugin);    
+    Q_INVOKABLE void addEnclosureDownload(const QString &url, const QString &command, const QString &category,
+                                          int priority, bool usePlugin);    
     
 public Q_SLOTS:
     void load();

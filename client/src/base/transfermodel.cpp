@@ -223,10 +223,11 @@ Transfer* TransferModel::get(const QString &id) const {
 }
 
 void TransferModel::addEnclosureDownload(const QString &url, bool usePlugin) {
-    addEnclosureDownload(url, QString(), Transfer::NormalPriority, usePlugin);
+    addEnclosureDownload(url, QString(), QString(), Transfer::NormalPriority, usePlugin);
 }
 
-void TransferModel::addEnclosureDownload(const QString &url, const QString &category, int priority, bool usePlugin) {
+void TransferModel::addEnclosureDownload(const QString &url, const QString &command, const QString &category,
+                                         int priority, bool usePlugin) {
     Logger::log("TransferModel::addEnclosureDownload(). URL: " + url, Logger::LowVerbosity);
     
     if (status() == Active) {
@@ -236,6 +237,7 @@ void TransferModel::addEnclosureDownload(const QString &url, const QString &cate
     setStatus(Active);
     QVariantMap properties;
     properties["url"] = url;
+    properties["customCommand"] = command;
     properties["category"] = category;
     properties["priority"] = priority;
     properties["usePlugin"] = usePlugin;
