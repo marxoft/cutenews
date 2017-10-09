@@ -39,6 +39,8 @@ class Settings : public QObject
     Q_PROPERTY(QString downloadPath READ downloadPath WRITE setDownloadPath NOTIFY downloadPathChanged)
     Q_PROPERTY(bool enableAutomaticScrollingInWidget READ enableAutomaticScrollingInWidget
                WRITE setEnableAutomaticScrollingInWidget NOTIFY enableAutomaticScrollingInWidgetChanged)
+    Q_PROPERTY(bool enableJavaScriptInBrowser READ enableJavaScriptInBrowser
+               WRITE setEnableJavaScriptInBrowser NOTIFY enableJavaScriptInBrowserChanged)
     Q_PROPERTY(bool eventFeedEnabled READ eventFeedEnabled WRITE setEventFeedEnabled NOTIFY eventFeedEnabledChanged)
     Q_PROPERTY(QString loggerFileName READ loggerFileName WRITE setLoggerFileName NOTIFY loggerFileNameChanged)
     Q_PROPERTY(int loggerVerbosity READ loggerVerbosity WRITE setLoggerVerbosity NOTIFY loggerVerbosityChanged)
@@ -72,6 +74,8 @@ class Settings : public QObject
     Q_PROPERTY(QString downloadShortcut READ downloadShortcut WRITE setDownloadShortcut
                NOTIFY downloadShortcutChanged)
     Q_PROPERTY(QString editShortcut READ editShortcut WRITE setEditShortcut NOTIFY editShortcutChanged)
+    Q_PROPERTY(QString fetchArticleShortcut READ fetchArticleShortcut WRITE setFetchArticleShortcut
+               NOTIFY fetchArticleShortcutChanged)
     Q_PROPERTY(QString importSubscriptionsShortcut READ importSubscriptionsShortcut
                WRITE setImportSubscriptionsShortcut NOTIFY importSubscriptionsShortcutChanged)
     Q_PROPERTY(QString markAllArticlesReadShortcut READ markAllArticlesReadShortcut
@@ -110,6 +114,8 @@ class Settings : public QObject
                NOTIFY toggleArticleReadShortcutChanged)
     Q_PROPERTY(QString transferCategoryShortcut READ transferCategoryShortcut WRITE setTransferCategoryShortcut
                NOTIFY transferCategoryShortcutChanged)
+    Q_PROPERTY(QString transferCommandShortcut READ transferCommandShortcut WRITE setTransferCommandShortcut
+               NOTIFY transferCommandShortcutChanged)
     Q_PROPERTY(QString transferPriorityShortcut READ transferPriorityShortcut WRITE setTransferPriorityShortcut
                NOTIFY transferPriorityShortcutChanged)
     Q_PROPERTY(QString transfersShortcut READ transfersShortcut WRITE setTransfersShortcut
@@ -139,6 +145,8 @@ public:
     Q_INVOKABLE static QString downloadPath(const QString &category);
     
     static bool enableAutomaticScrollingInWidget();
+
+    static bool enableJavaScriptInBrowser();
     
     static bool eventFeedEnabled();
     
@@ -171,6 +179,7 @@ public:
     static QString deleteShortcut();
     static QString downloadShortcut();
     static QString editShortcut();
+    static QString fetchArticleShortcut();
     static QString importSubscriptionsShortcut();
     static QString markAllArticlesReadShortcut();
     static QString markAllSubscriptionsReadShortcut();
@@ -191,6 +200,7 @@ public:
     static QString toggleArticleFavouriteShortcut();
     static QString toggleArticleReadShortcut();
     static QString transferCategoryShortcut();
+    static QString transferCommandShortcut();
     static QString transferPriorityShortcut();
     static QString transfersShortcut();
     static QString updateAllSubscriptionsShortcut();
@@ -210,6 +220,8 @@ public Q_SLOTS:
     static void setDownloadPath(const QString &path);
     
     static void setEnableAutomaticScrollingInWidget(bool enabled);
+
+    static void setEnableJavaScriptInBrowser(bool enabled);
     
     static void setEventFeedEnabled(bool enabled);
     
@@ -243,6 +255,7 @@ public Q_SLOTS:
     static void setDeleteShortcut(const QString &key);
     static void setDownloadShortcut(const QString &key);
     static void setEditShortcut(const QString &key);
+    static void setFetchArticleShortcut(const QString &key);
     static void setImportSubscriptionsShortcut(const QString &key);
     static void setMarkAllArticlesReadShortcut(const QString &key);
     static void setMarkAllSubscriptionsReadShortcut(const QString &key);
@@ -263,6 +276,7 @@ public Q_SLOTS:
     static void setToggleArticleFavouriteShortcut(const QString &key);
     static void setToggleArticleReadShortcut(const QString &key);
     static void setTransferCategoryShortcut(const QString &key);
+    static void setTransferCommandShortcut(const QString &key);
     static void setTransferPriorityShortcut(const QString &key);
     static void setTransfersShortcut(const QString &key);
     static void setUpdateAllSubscriptionsShortcut(const QString &key);
@@ -278,6 +292,7 @@ Q_SIGNALS:
     void customTransferCommandEnabledChanged(bool enabled);
     void downloadPathChanged(const QString &path);
     void enableAutomaticScrollingInWidgetChanged(bool enabled);
+    void enableJavaScriptInBrowserChanged(bool enabled);
     void eventFeedEnabledChanged(bool enabled);
     void loggerFileNameChanged(const QString &fileName);
     void loggerVerbosityChanged(int verbosity);
@@ -294,6 +309,7 @@ Q_SIGNALS:
     void deleteShortcutChanged(const QString &key);
     void downloadShortcutChanged(const QString &key);
     void editShortcutChanged(const QString &key);
+    void fetchArticleShortcutChanged(const QString &key);
     void importSubscriptionsShortcutChanged(const QString &key);
     void markAllArticlesReadShortcutChanged(const QString &key);
     void markAllSubscriptionsReadShortcutChanged(const QString &key);
@@ -315,6 +331,7 @@ Q_SIGNALS:
     void toggleArticleFavouriteShortcutChanged(const QString &key);
     void toggleArticleReadShortcutChanged(const QString &key);
     void transferCategoryShortcutChanged(const QString &key);
+    void transferCommandShortcutChanged(const QString &key);
     void transferPriorityShortcutChanged(const QString &key);
     void transfersShortcutChanged(const QString &key);
     void updateAllSubscriptionsShortcutChanged(const QString &key);

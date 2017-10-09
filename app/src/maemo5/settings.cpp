@@ -182,6 +182,20 @@ void Settings::setEnableAutomaticScrollingInWidget(bool enabled) {
     }
 }
 
+bool Settings::enableJavaScriptInBrowser() {
+    return value("Browser/javascriptEnabled", true).toBool();
+}
+
+void Settings::setEnableJavaScriptInBrowser(bool enabled) {
+    if (enabled != enableJavaScriptInBrowser()) {
+        setValue("Browser/javascriptEnabled", enabled);
+        
+        if (self) {
+            emit self->enableJavaScriptInBrowserChanged(enabled);
+        }
+    }
+}
+
 bool Settings::eventFeedEnabled() {
     return QSettings(APP_CONFIG_PATH + "eventfeed", QSettings::IniFormat).value("enabled", false).toBool();
 }
@@ -495,6 +509,20 @@ void Settings::setEditShortcut(const QString &key) {
     }
 }
 
+QString Settings::fetchArticleShortcut() {
+    return value("Shortcuts/fetchArticle", tr("Ctrl+G")).toString();
+}
+
+void Settings::setFetchArticleShortcut(const QString &key) {
+    if (key != fetchArticleShortcut()) {
+        setValue("Shortcuts/fetchArticle", key);
+        
+        if (self) {
+            emit self->fetchArticleShortcutChanged(key);
+        }
+    }
+}
+
 QString Settings::importSubscriptionsShortcut() {
     return value("Shortcuts/importSubscriptions", tr("Ctrl+O")).toString();
 }
@@ -771,6 +799,20 @@ void Settings::setTransferCategoryShortcut(const QString &key) {
         
         if (self) {
             emit self->transferCategoryShortcutChanged(key);
+        }
+    }
+}
+
+QString Settings::transferCommandShortcut() {
+    return value("Shortcuts/transferCommand", tr("X")).toString();
+}
+
+void Settings::setTransferCommandShortcut(const QString &key) {
+    if (key != transferCommandShortcut()) {
+        setValue("Shortcuts/transferCommand", key);
+        
+        if (self) {
+            emit self->transferCommandShortcutChanged(key);
         }
     }
 }
