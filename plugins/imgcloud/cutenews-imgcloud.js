@@ -27,6 +27,7 @@ function getArticle(url, settings) {
                 var result = new ArticleResult();
                 result.body = "<img src='" + imageUrl + "' >";
                 result.title = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
+                result.url = url;
                 finished(result);
             }
             catch(err) {
