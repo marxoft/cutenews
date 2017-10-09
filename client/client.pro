@@ -32,6 +32,7 @@ HEADERS += \
     src/base/urlopenermodel.h \
     src/base/utils.h \
     src/plugins/articlerequest.h \
+    src/plugins/enclosurerequest.h \
     src/plugins/feedpluginconfig.h \
     src/plugins/pluginconfigmodel.h \
     src/plugins/pluginmanager.h
@@ -55,6 +56,7 @@ SOURCES += \
     src/base/urlopenermodel.cpp \
     src/base/utils.cpp \
     src/plugins/articlerequest.cpp \
+    src/plugins/enclosurerequest.cpp \
     src/plugins/feedpluginconfig.cpp \
     src/plugins/pluginconfigmodel.cpp \
     src/plugins/pluginmanager.cpp
@@ -83,9 +85,12 @@ maemo5 {
     qml.files += \
         src/maemo5/qml/AboutDialog.qml \
         src/maemo5/qml/ArticleDelegate.qml \
+        src/maemo5/qml/ArticleDialog.qml \
         src/maemo5/qml/ArticleRequestWindow.qml \
         src/maemo5/qml/ArticlesWindow.qml \
         src/maemo5/qml/ArticleWindow.qml \
+        src/maemo5/qml/BrowserWindow.qml \
+        src/maemo5/qml/CustomCommandDialog.qml \
         src/maemo5/qml/DateSelectorButton.qml \
         src/maemo5/qml/DeleteDialog.qml \
         src/maemo5/qml/DownloadDialog.qml \
@@ -94,6 +99,7 @@ maemo5 {
         src/maemo5/qml/ListSelectorButton.qml \
         src/maemo5/qml/LogDialog.qml \
         src/maemo5/qml/MainWindow.qml \
+        src/maemo5/qml/OpenDialog.qml \
         src/maemo5/qml/PluginDialog.qml \
         src/maemo5/qml/PopupLoader.qml \
         src/maemo5/qml/SearchDialog.qml \
