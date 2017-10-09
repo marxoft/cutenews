@@ -23,7 +23,7 @@ Dialog {
     id: root
 
     title: "cuteNews"
-    showProgressIndicator: process.state == Process.RunningState
+    showProgressIndicator: process.state == Process.Running
     height: grid.height + platformStyle.paddingMedium
     
     Grid {
@@ -56,7 +56,7 @@ Dialog {
                     return;
                 }
                 
-                settings.publishArticles = checkBox.checked;
+                settings.enabled = checkBox.checked;
                 process.command = checkBox.checked ? "/opt/cutenews/bin/enable_events"
                                                    : "/opt/cutenews/bin/disable_events";
                 process.start();

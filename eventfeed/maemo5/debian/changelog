@@ -1,3 +1,9 @@
+cutenewsevents (0.0.4) unstable; urgency=low
+
+  * Fix enable/disable setting.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Mon, 09 Oct 2017 19:13:31 +0100
+
 cutenewsevents (0.0.3) unstable; urgency=low
 
   * Add support for portrait orientation in the settings dialog.
