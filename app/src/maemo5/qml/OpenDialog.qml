@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,61 +16,50 @@
 
 import QtQuick 1.0
 import org.hildon.components 1.0
+import cuteNews 1.0
 
-Dialog {
+ListPickSelector {
     id: root
-    
+
     property string url
-    
-    title: qsTr("Open externally")
-    height: flow.height + platformStyle.paddingMedium
-    
-    Flow {
-        id: flow
-        
-        anchors {
-            left: parent.left
-            right: parent.right
-            top: parent.top
-        }
-        spacing: platformStyle.paddingMedium
-        
-        Button {            
-            id: directButton
 
-            width: Math.floor((parent.width / 2) - (parent.spacing / 2))
-            text: qsTr("Open directly")
-            onClicked: {
-                urlopener.open(root.url);
-                root.accept();
-            }
-        }
-        
-        Button {
-            id: pluginButton
+    title: qsTr("Open")
+    textRole: "name"
+    model: SelectionModel {}
+    onUrlChanged: {
+        model.clear();
+        var articleConfig = plugins.getConfigForArticle(url);
+        var enclosureConfig = plugins.getConfigForEnclosure(url);
 
-            width: Math.floor((parent.width / 2) - (parent.spacing / 2))
-            text: qsTr("Open with plugin")
-            enabled: plugins.enclosureIsSupported(root.url)
-            onClicked: {
-                urlopener.openWithPlugin(root.url);
-                root.accept();
-            }
+        if (articleConfig) {
+            model.append(qsTr("Fetch article from") + " " + articleConfig.displayName, 0);
         }
+
+        model.append(qsTr("Open URL in browser"), 1);
+        model.append(qsTr("Open URL externally"), 2);
+
+        if (enclosureConfig) {
+            model.append(qsTr("Open URL externally via") + " " + enclosureConfig.displayName, 3);
+        }
+
+        currentIndex = 0;
     }
-
-    contentItem.states: State {
-        name: "Portrait"
-        when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
-
-        PropertyChanges {
-            target: directButton
-            width: parent.width
-        }
-
-        PropertyChanges {
-            target: pluginButton
-            width: parent.width
+    onSelected: {
+        switch (model.data(currentIndex, "value")) {
+            case 0:
+                windowStack.push(Qt.resolvedUrl("ArticleRequestWindow.qml"), {url: url});
+                break;
+            case 1:
+                windowStack.push(Qt.resolvedUrl("BrowserWindow.qml"), {url: url});
+                break;
+            case 2:
+                urlopener.open(url);
+                break;
+            case 3:
+                urlopener.openWithPlugin(url);
+                break;
+            default:
+                break;
         }
     }
 }

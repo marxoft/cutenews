@@ -69,18 +69,18 @@ Window {
         text: qsTr("Copy URL")
         autoRepeat: false
         shortcut: settings.copyShortcut
-        enabled: articleView.currentIndex >= 0
-        onTriggered: clipboard.text = articleModel.data(articleView.currentIndex, "url")
+        onTriggered: if (articleView.currentIndex >= 0)
+        clipboard.text = articleModel.data(articleView.currentIndex, "url");
     }
     
     Action {
         id: openAction
         
-        text: qsTr("Open externally")
+        text: qsTr("Open")
         autoRepeat: false
         shortcut: settings.openExternallyShortcut
-        enabled: articleView.currentIndex >= 0
-        onTriggered: popupManager.open(openDialog, root)
+        onTriggered: if (articleView.currentIndex >= 0) popupManager.open(Qt.resolvedUrl("OpenDialog.qml"), root,
+        {url: articleModel.data(articleView.currentIndex, "url")});
     }
     
     Action {
@@ -89,8 +89,8 @@ Window {
         text: qsTr("Download")
         autoRepeat: false
         shortcut: settings.downloadShortcut
-        enabled: articleView.currentIndex >= 0
-        onTriggered: popupManager.open(downloadDialog, root)
+        onTriggered: if (articleView.currentIndex >= 0) popupManager.open(Qt.resolvedUrl("DownloadDialog.qml"), root,
+        {url: articleModel.data(articleView.currentIndex, "url")});
     }
         
     Action {
@@ -98,9 +98,8 @@ Window {
         
         autoRepeat: false
         shortcut: settings.toggleArticleReadShortcut
-        enabled: articleView.currentIndex >= 0
-        onTriggered: articleModel.setData(articleView.currentIndex,
-        !articleModel.data(articleView.currentIndex, "read"), "read")
+        onTriggered: if (articleView.currentIndex >= 0) articleModel.setData(articleView.currentIndex,
+        !articleModel.data(articleView.currentIndex, "read"), "read");
     }
     
     Action {
@@ -108,9 +107,8 @@ Window {
         
         autoRepeat: false
         shortcut: settings.toggleArticleFavouriteShortcut
-        enabled: articleView.currentIndex >= 0
-        onTriggered: articleModel.setData(articleView.currentIndex,
-        !articleModel.data(articleView.currentIndex, "favourite"), "favourite")
+        onTriggered: if (articleView.currentIndex >= 0) articleModel.setData(articleView.currentIndex,
+        !articleModel.data(articleView.currentIndex, "favourite"), "favourite");
     }
     
     Action {
@@ -119,9 +117,10 @@ Window {
         text: qsTr("Enclosures")
         autoRepeat: false
         shortcut: settings.showArticleEnclosuresShortcut
-        enabled: (articleView.currentIndex >= 0)
-        && (articleModel.data(articleView.currentIndex, "hasEnclosures") === true)
-        onTriggered: popupManager.open(enclosuresDialog, root)
+        onTriggered: if ((articleView.currentIndex >= 0)
+        && (articleModel.data(articleView.currentIndex, "hasEnclosures")))
+        popupManager.open(Qt.resolvedUrl("EnclosuresDialog.qml"), root,
+        {enclosures: articleModel.data(articleView.currentIndex, "enclosures")})
     }
     
     Action {
@@ -130,8 +129,7 @@ Window {
         text: qsTr("Delete")
         autoRepeat: false
         shortcut: settings.deleteShortcut
-        enabled: articleView.currentIndex >= 0
-        onTriggered: popupManager.open(deleteDialog, root)
+        onTriggered: if (articleView.currentIndex >= 0) popupManager.open(deleteDialog, root);
     }
     
     ListView {
@@ -236,31 +234,7 @@ Window {
             }
         }
     }
-    
-    Component {
-        id: enclosuresDialog
-        
-        EnclosuresDialog {
-            enclosures: articleModel.data(articleView.currentIndex, "enclosures")
-        }
-    }
-    
-    Component {
-        id: openDialog
-        
-        OpenDialog {
-            url: articleModel.data(articleView.currentIndex, "url")
-        }
-    }
-    
-    Component {
-        id: downloadDialog
-        
-        DownloadDialog {
-            url: articleModel.data(articleView.currentIndex, "url")
-        }
-    }
-    
+
     Component {
         id: deleteDialog
         

@@ -67,6 +67,13 @@ Dialog {
                 checked: settings.offlineModeEnabled
                 onCheckedChanged: settings.offlineModeEnabled = checked
             }
+
+            CheckBox {
+                width: parent.width
+                text: qsTr("Enable JavaScript in browser")
+                checked: settings.enableJavaScriptInBrowser
+                onCheckedChanged: settings.enableJavaScriptInBrowser = checked
+            }
             
             Button {
                 width: parent.width
@@ -88,7 +95,7 @@ Dialog {
         
             Button {
                 width: parent.width
-                text: qsTr("Url openers")
+                text: qsTr("URL openers")
                 onClicked: popupManager.open(Qt.resolvedUrl("UrlOpenersDialog.qml"), root)
             }
 
@@ -133,12 +140,31 @@ Dialog {
                 value: settings.maximumConcurrentTransfers
                 onSelected: settings.maximumConcurrentTransfers = value
             }
+
+            Label {
+                width: parent.width
+                wrapMode: Text.WordWrap
+                text: qsTr("Custom download command (%f for filename)")
+            }
+
+            TextField {
+                width: parent.width
+                text: settings.customTransferCommand
+                onTextChanged: settings.customTransferCommand = text
+            }
+
+            CheckBox {
+                width: parent.width
+                text: qsTr("Enable custom download command")
+                checked: settings.customTransferCommandEnabled
+                onCheckedChanged: settings.customTransferCommandEnabled = checked
+            }
         
             CheckBox {
                 width: parent.width
                 text: qsTr("Start downloads automatically")
                 checked: settings.startTransfersAutomatically
-                onClicked: settings.startTransfersAutomatically = checked
+                onCheckedChanged: settings.startTransfersAutomatically = checked
             }
             
             Button {

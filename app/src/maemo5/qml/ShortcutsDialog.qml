@@ -185,6 +185,28 @@ Dialog {
                 text: settings.nextUnreadArticleShortcut
                 onTextChanged: settings.nextUnreadArticleShortcut = text
             }
+
+            Label {
+                width: parent.width
+                text: qsTr("Search articles")
+            }
+            
+            TextField {
+                width: parent.width
+                text: settings.searchShortcut
+                onTextChanged: settings.searchShortcut = text
+            }
+
+            Label {
+                width: parent.width
+                text: qsTr("Fetch article")
+            }
+            
+            TextField {
+                width: parent.width
+                text: settings.fetchArticleShortcut
+                onTextChanged: settings.fetchArticleShortcut = text
+            }
             
             Label {
                 width: parent.width
@@ -240,6 +262,17 @@ Dialog {
                 text: settings.pauseAllTransfersShortcut
                 onTextChanged: settings.pauseAllTransfersShortcut = text
             }
+
+            Label {
+                width: parent.width
+                text: qsTr("Set custom download command")
+            }
+
+            TextField {
+                width: parent.width
+                text: settings.transferCommandShortcut
+                onTextChanged: settings.transferCommandShortcut = text
+            }
             
             Label {
                 width: parent.width
@@ -261,17 +294,6 @@ Dialog {
                 width: parent.width
                 text: settings.transferPriorityShortcut
                 onTextChanged: settings.transferPriorityShortcut = text
-            }
-            
-            Label {
-                width: parent.width
-                text: qsTr("Search")
-            }
-            
-            TextField {
-                width: parent.width
-                text: settings.searchShortcut
-                onTextChanged: settings.searchShortcut = text
             }
             
             Label {

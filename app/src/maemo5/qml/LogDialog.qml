@@ -44,7 +44,7 @@ Dialog {
                 right: parent.right
                 top: parent.top
             }
-            height: Math.max(contentItem.height, lineCount * lineHeight + style.paddingTop + style.paddingBottom)
+            height: Math.max(contentItem.height, paintedHeight + style.paddingTop + style.paddingBottom)
             readOnly: true
             wrapMode: Text.Wrap
         }

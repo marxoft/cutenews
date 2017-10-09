@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -20,13 +20,13 @@ import org.hildon.components 1.0
 Dialog {
     id: root
     
-    property alias query: searchField.text
+    property alias url: textField.text
     
-    title: qsTr("Search articles")
-    height: searchField.height + platformStyle.paddingMedium
+    title: qsTr("Fetch article")
+    height: textField.height + platformStyle.paddingMedium
 
     TextField {
-        id: searchField
+        id: textField
         
         anchors {
             left: parent.left
@@ -34,7 +34,7 @@ Dialog {
             rightMargin: platformStyle.paddingMedium
             top: parent.top
         }
-        placeholderText: qsTr("Search query")
+        placeholderText: qsTr("URL")
         onAccepted: if (text) root.accept();
     }
 
@@ -47,8 +47,8 @@ Dialog {
         }
         style: DialogButtonStyle {}
         text: qsTr("Done")
-        enabled: searchField.text != ""
-        onClicked: searchField.accepted()
+        enabled: textField.text != ""
+        onClicked: textField.accepted()
     }
 
     contentItem.states: State {
@@ -56,12 +56,12 @@ Dialog {
         when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
 
         AnchorChanges {
-            target: searchField
+            target: textField
             anchors.right: parent.right
         }
 
         PropertyChanges {
-            target: searchField
+            target: textField
             anchors.rightMargin: 0
         }
 
@@ -72,11 +72,17 @@ Dialog {
 
         PropertyChanges {
             target: root
-            height: searchField.height + button.height + platformStyle.paddingMedium * 2
+            height: textField.height + button.height + platformStyle.paddingMedium * 2
         }
     }
     
-    onStatusChanged: if (status == DialogStatus.Open) searchField.forceActiveFocus();
-    onAccepted: windowStack.push(Qt.resolvedUrl("ArticlesWindow.qml"), {title: qsTr("Search") + " - " + query})
-    .search(query)
+    onStatusChanged: if (status == DialogStatus.Open) textField.forceActiveFocus();
+    onAccepted: {
+        if (plugins.articleIsSupported(url)) {
+            windowStack.push(Qt.resolvedUrl("ArticleRequestWindow.qml"), {url: url});
+        }
+        else {
+            informationBox.information(qsTr("No plugin found for this article"));
+        }
+    }
 }

@@ -57,8 +57,7 @@ Window {
         text: qsTr("Start")
         autoRepeat: false
         shortcut: settings.startTransferShortcut
-        enabled: view.currentIndex >= 0
-        onTriggered: transfers.get(view.currentIndex).queue()
+        onTriggered: if (view.currentIndex >= 0) transfers.get(view.currentIndex).queue();
     }
     
     Action {
@@ -67,8 +66,16 @@ Window {
         text: qsTr("Pause")
         autoRepeat: false
         shortcut: settings.pauseTransferShortcut
-        enabled: view.currentIndex >= 0
-        onTriggered: transfers.get(view.currentIndex).pause()
+        onTriggered: if (view.currentIndex >= 0) transfers.get(view.currentIndex).pause();
+    }
+
+    Action {
+        id: commandAction
+
+        text: qsTr("Command")
+        autoRepeat: false
+        shortcut: settings.transferCommandShortcut
+        onTriggered: if (view.currentIndex >= 0) popupManager.open(commandDialog, root);
     }
     
     Action {
@@ -77,8 +84,7 @@ Window {
         text: qsTr("Category")
         autoRepeat: false
         shortcut: settings.transferCategoryShortcut
-        enabled: view.currentIndex >= 0
-        onTriggered: popupManager.open(categoryDialog, root)
+        onTriggered: if (view.currentIndex >= 0) popupManager.open(categoryDialog, root);
     }
     
     Action {
@@ -87,8 +93,7 @@ Window {
         text: qsTr("Priority")
         autoRepeat: false
         shortcut: settings.transferPriorityShortcut
-        enabled: view.currentIndex >= 0
-        onTriggered: popupManager.open(priorityDialog, root)
+        onTriggered: if (view.currentIndex >= 0) popupManager.open(priorityDialog, root);
     }
     
     Action {
@@ -97,8 +102,7 @@ Window {
         text: qsTr("Remove")
         autoRepeat: false
         shortcut: settings.deleteShortcut
-        enabled: view.currentIndex >= 0
-        onTriggered: popupManager.open(removeDialog, root)
+        onTriggered: if (view.currentIndex >= 0) popupManager.open(removeDialog, root);
     }
     
     ListView {
@@ -128,9 +132,14 @@ Window {
         
         Menu {            
             MenuItem {
-                text: transferModel.data(view.currentIndex, "status") >= Transfer.Queued ? qsTr("Pause") : qsTr("Start")
+                text: transferModel.data(view.currentIndex, "status") >= Transfer.Queued
+                ? qsTr("Pause") : qsTr("Start")
                 onTriggered: transferModel.data(view.currentIndex, "status") >= Transfer.Queued
                 ? transfers.get(view.currentIndex).pause() : transfers.get(view.currentIndex).queue()
+            }
+
+            MenuItem {
+                action: commandAction
             }
             
             MenuItem {
@@ -144,6 +153,15 @@ Window {
             MenuItem {
                 action: removeAction
             }
+        }
+    }
+
+    Component {
+        id: commandDialog
+
+        CustomCommandDialog {
+            command: transferModel.data(view.currentIndex, "customCommand")
+            onAccepted: transferModel.setData(view.currentIndex, command, "customCommand")
         }
     }
     
