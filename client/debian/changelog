@@ -1,3 +1,11 @@
+cutenews-client (1.2.0) unstable; urgency=low
+
+  * Add option to open links in a built-in browser.
+  * Add option to set a custom download command.
+  * Add option to fetch an article from a URL via UI or 'showArticle' DBus method.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Fri, 06 Oct 2017 02:05:16 +0100
+
 cutenews-client (1.1.0) unstable; urgency=low
 
   * Add support for retrieving full articles from links where plugin is
