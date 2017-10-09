@@ -17,6 +17,7 @@
 #include "webserver.h"
 #include "articleserver.h"
 #include "definitions.h"
+#include "enclosureserver.h"
 #include "fileserver.h"
 #include "pluginserver.h"
 #include "qhttprequest.h"
@@ -32,6 +33,7 @@ WebServer::WebServer() :
     QObject(),
     m_server(0),
     m_articleServer(0),
+    m_enclosureServer(0),
     m_subscriptionServer(0),
     m_fileServer(0),
     m_port(8080),
@@ -160,6 +162,10 @@ void WebServer::init() {
     if (!m_articleServer) {
         m_articleServer = new ArticleServer(this);
     }
+
+    if (!m_enclosureServer) {
+        m_enclosureServer = new EnclosureServer(this);
+    }
     
     if (!m_subscriptionServer) {
         m_subscriptionServer = new SubscriptionServer(this);
@@ -203,27 +209,32 @@ void WebServer::onRequestEnd() {
 }
 
 void WebServer::handleRequest(QHttpRequest *request, QHttpResponse *response) {
-    if (request->path().startsWith("/articles")) {
+    if (request->path().startsWith("/articles", Qt::CaseInsensitive)) {
         if (m_articleServer->handleRequest(request, response)) {
             return;
         }
     }
-    else if (request->path().startsWith("/subscriptions")) {
+    else if (request->path().startsWith("/enclosures", Qt::CaseInsensitive)) {
+        if (m_enclosureServer->handleRequest(request, response)) {
+            return;
+        }
+    }
+    else if (request->path().startsWith("/subscriptions", Qt::CaseInsensitive)) {
         if (m_subscriptionServer->handleRequest(request, response)) {
             return;
         }
     }
-    else if (request->path().startsWith("/plugins")) {
+    else if (request->path().startsWith("/plugins", Qt::CaseInsensitive)) {
         if (PluginServer::handleRequest(request, response)) {
             return;
         }
     }
-    else if (request->path().startsWith("/transfers")) {
+    else if (request->path().startsWith("/transfers", Qt::CaseInsensitive)) {
         if (TransferServer::handleRequest(request, response)) {
             return;
         }
     }
-    else if (request->path().startsWith("/settings")) {
+    else if (request->path().startsWith("/settings", Qt::CaseInsensitive)) {
         if (SettingsServer::handleRequest(request, response)) {
             return;
         }

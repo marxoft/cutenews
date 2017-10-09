@@ -21,6 +21,7 @@
 #include <QHash>
 
 class ArticleServer;
+class EnclosureServer;
 class FileServer;
 class SubscriptionServer;
 class QHttpServer;
@@ -99,6 +100,7 @@ private:
     
     QHttpServer *m_server;
     ArticleServer *m_articleServer;
+    EnclosureServer *m_enclosureServer;
     SubscriptionServer *m_subscriptionServer;
     FileServer *m_fileServer;
     

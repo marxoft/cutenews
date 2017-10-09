@@ -18,7 +18,7 @@
 #define SUBSCRIPTIONSERVER_H
 
 #include <QObject>
-#include <QQueue>
+#include <QHash>
 
 class DBConnection;
 class QHttpRequest;
@@ -40,10 +40,11 @@ private Q_SLOTS:
     void onResponseDone();
 
 private:
-    void enqueueResponse(QHttpResponse *response);
-    QHttpResponse* dequeueResponse();
+    void addResponse(DBConnection *connection, QHttpResponse *response);
+    QHttpResponse* getResponse(DBConnection *connection);
+    void removeResponse(QHttpResponse *response);
     
-    QQueue<QHttpResponse*> m_responses;
+    QHash<DBConnection *, QHttpResponse*> m_responses;
 };
 
 #endif // SUBSCRIPTIONSERVER_H

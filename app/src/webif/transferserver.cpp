@@ -42,7 +42,7 @@ TransferServer::TransferServer(QObject *parent) :
 bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *response) {
     const QStringList parts = request->path().split("/", QString::SkipEmptyParts);
     
-    if ((parts.isEmpty()) || (parts.size() > 2) || (parts.first() != "transfers")) {
+    if ((parts.isEmpty()) || (parts.size() > 2) || (parts.first().compare("transfers", Qt::CaseInsensitive) != 0)) {
         return false;
     }
     

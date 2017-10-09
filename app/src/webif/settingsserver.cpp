@@ -29,7 +29,7 @@ SettingsServer::SettingsServer(QObject *parent) :
 }
 
 bool SettingsServer::handleRequest(QHttpRequest *request, QHttpResponse *response) {
-    if (request->path() != "/settings") {
+    if (request->path().compare("/settings", Qt::CaseInsensitive) != 0) {
         return false;
     }
     

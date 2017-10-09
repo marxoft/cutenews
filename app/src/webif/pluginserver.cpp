@@ -17,6 +17,7 @@
 #include "pluginserver.h"
 #include "json.h"
 #include "pluginmanager.h"
+#include "pluginsettings.h"
 #include "qhttprequest.h"
 #include "qhttpresponse.h"
 #include "serverresponse.h"
@@ -38,28 +39,154 @@ static QVariantMap pluginConfigToMap(const FeedPluginConfig *config) {
     return map;
 }
 
+static void pluginConfigSetting(const PluginSettings &plugin, QVariantMap &setting, const QString &group = QString()) {
+    QString key = setting.value("key").toString();
+
+    if (key.isEmpty()) {
+        return;
+    }
+    
+    if (!group.isEmpty()) {
+        key.prepend("/");
+        key.prepend(group);
+    }
+
+    const QString type = setting.value("type").toString();
+
+    if (type == "group") {
+        QVariantList settings = setting.value("settings").toList();
+        
+        for (int i = 0; i < settings.size(); i++) {
+            QVariantMap map = settings.at(i).toMap();
+            pluginConfigSetting(plugin, map, key);
+            settings[i] = map;
+        }
+
+        setting["settings"] = settings;
+    }
+    else {
+        setting["value"] = plugin.value(key, setting.value("value"));
+    }
+}       
+
+static QVariantList pluginConfigArticleSettings(const FeedPluginConfig *config) {
+    QVariantList settings = config->articleSettings();
+
+    if (settings.isEmpty()) {
+        return settings;
+    }
+
+    PluginSettings plugin(config->id());
+
+    for (int i = 0; i < settings.size(); i++) {
+        QVariantMap setting = settings.at(i).toMap();
+        pluginConfigSetting(plugin, setting);
+        settings[i] = setting;
+    }
+
+    return settings;
+}
+
+static QVariantList pluginConfigEnclosureSettings(const FeedPluginConfig *config) {
+    QVariantList settings = config->enclosureSettings();
+
+    if (settings.isEmpty()) {
+        return settings;
+    }
+
+    PluginSettings plugin(config->id());
+
+    for (int i = 0; i < settings.size(); i++) {
+        QVariantMap setting = settings.at(i).toMap();
+        pluginConfigSetting(plugin, setting);
+        settings[i] = setting;
+    }
+
+    return settings;
+}
+
 PluginServer::PluginServer(QObject *parent) :
     QObject(parent)
 {
 }
 
 bool PluginServer::handleRequest(QHttpRequest *request, QHttpResponse *response) {    
-    if (request->path() != "/plugins") {
-        return false;
-    }
-    
-    if (request->method() == QHttpRequest::HTTP_GET) {
-        QVariantList configs;
-        const FeedPluginList plugins = PluginManager::instance()->plugins();
-        
-        for (int i = 0; i < plugins.size(); i++) {
-            configs << pluginConfigToMap(plugins.at(i).config);
+    const QStringList parts = request->path().split("/", QString::SkipEmptyParts);
+
+    if ((parts.size() > 3) || (parts.first().compare("plugins", Qt::CaseInsensitive) != 0)) {
+       return false;
+    } 
+
+    if (parts.size() == 1) {
+        if (request->method() == QHttpRequest::HTTP_GET) {
+            QVariantList configs;
+            const FeedPluginList plugins = PluginManager::instance()->plugins();
+            
+            for (int i = 0; i < plugins.size(); i++) {
+                configs << pluginConfigToMap(plugins.at(i).config);
+            }
+            
+            writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(configs));
         }
-        
-        writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(configs));
+        else {
+            writeResponse(response, QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
+        }
+
+        return true;
+    }
+
+    const FeedPluginConfig *config = PluginManager::instance()->getConfig(parts.at(1));
+
+    if (!config) {
+        writeResponse(response, QHttpResponse::STATUS_NOT_FOUND);
+        return true;
+    }
+
+    if (parts.size() == 2) {
+        if (request->method() == QHttpRequest::HTTP_GET) {
+            writeResponse(response, QHttpResponse::STATUS_OK, QtJson::Json::serialize(pluginConfigToMap(config)));
+        }
+        else {
+            writeResponse(response, QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
+        }
+
         return true;
     }
     
-    writeResponse(response, QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
+    if (parts.size() == 3) {
+        if (parts.at(2).compare("articlesettings", Qt::CaseInsensitive) == 0) {
+            if (request->method() == QHttpRequest::HTTP_GET) {
+                writeResponse(response, QHttpResponse::STATUS_OK,
+                        QtJson::Json::serialize(pluginConfigArticleSettings(config)));
+            }
+            else if (request->method() == QHttpRequest::HTTP_PUT) {
+                PluginSettings ps(config->id());
+                ps.setValues(QtJson::Json::parse(QString::fromUtf8(request->body())).toMap());
+                writeResponse(response, QHttpResponse::STATUS_OK);
+            }
+            else {
+                writeResponse(response, QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
+            }
+        }
+        else if (parts.at(2).compare("enclosuresettings", Qt::CaseInsensitive) == 0) {
+            if (request->method() == QHttpRequest::HTTP_GET) {
+                writeResponse(response, QHttpResponse::STATUS_OK,
+                        QtJson::Json::serialize(pluginConfigEnclosureSettings(config)));
+            }
+            else if (request->method() == QHttpRequest::HTTP_PUT) {
+                PluginSettings ps(config->id());
+                ps.setValues(QtJson::Json::parse(QString::fromUtf8(request->body())).toMap());
+                writeResponse(response, QHttpResponse::STATUS_OK);
+            }
+            else {
+                writeResponse(response, QHttpResponse::STATUS_METHOD_NOT_ALLOWED);
+            }
+        }
+
+        return true;
+    }
+
+    writeResponse(response, QHttpResponse::STATUS_BAD_REQUEST);
     return true;
 }
+

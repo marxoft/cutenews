@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,41 +14,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef ARTICLESERVER_H
-#define ARTICLESERVER_H
+#ifndef ENCLOSURESERVER_H
+#define ENCLOSURESERVER_H
 
 #include <QObject>
 #include <QHash>
 
-class ArticleRequest;
-class DBConnection;
+class EnclosureRequest;
 class QHttpRequest;
 class QHttpResponse;
 
-class ArticleServer : public QObject
+class EnclosureServer : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit ArticleServer(QObject *parent = 0);
+    explicit EnclosureServer(QObject *parent = 0);
     
     bool handleRequest(QHttpRequest *request, QHttpResponse *response);
 
 private Q_SLOTS:
-    void onArticleFetched(DBConnection *connection);
-    void onArticlesFetched(DBConnection *connection);
-    void onArticleRequestFinished(ArticleRequest *request);
-    void onReadArticlesDeleted(DBConnection *connection);
-    void onConnectionFinished(DBConnection *connection);
+    void onEnclosureRequestFinished(EnclosureRequest *request);
     void onResponseDone();
 
 private:
-    void addResponse(DBConnection *connection, QHttpResponse *response);
-    void addResponse(ArticleRequest *request, QHttpResponse *response);
-    QHttpResponse* getResponse(QObject *obj);
+    void addResponse(EnclosureRequest *request, QHttpResponse *response);
+    QHttpResponse* getResponse(EnclosureRequest *request);
     void removeResponse(QHttpResponse *response);
     
-    QHash<QObject*, QHttpResponse*> m_responses;
+    QHash<EnclosureRequest*, QHttpResponse*> m_responses;
 };
 
-#endif // ARTICLESERVER_H
+#endif // ENCLOSURESERVER_H
