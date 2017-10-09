@@ -92,6 +92,19 @@ FeedPluginConfig* PluginManager::getConfigForArticle(const QString &url) const {
     return 0;
 }
 
+FeedPluginConfig* PluginManager::getConfigForEnclosure(const QString &url) const {
+    foreach (FeedPluginConfig *config, m_plugins) {
+        if (config->enclosureIsSupported(url)) {
+            Logger::log("PluginManager::getConfigForEnclosure(). Plugin found for enclosure " + url,
+                    Logger::HighVerbosity);
+            return config;
+        }
+    }
+    
+    Logger::log("PluginManager::getConfigForEnclosure(). No Plugin found for enclosure " + url, Logger::HighVerbosity);
+    return 0;
+}
+
 bool PluginManager::articleIsSupported(const QString &url) const {
     foreach (FeedPluginConfig *config, m_plugins) {
         if (config->articleIsSupported(url)) {
