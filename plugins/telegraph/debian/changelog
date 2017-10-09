@@ -1,3 +1,9 @@
+cutenews-telegraph (0.1.0) unstable; urgency=low
+
+  * Make fetching of full articles optional.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sat, 07 Oct 2017 19:22:12 +0100
+
 cutenews-telegraph (0.0.1) unstable; urgency=low
 
   * Initial Release.
