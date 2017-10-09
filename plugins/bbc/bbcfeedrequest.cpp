@@ -164,25 +164,47 @@ void BbcFeedRequest::checkFeed() {
         writeStartFeed();
         writeFeedTitle(m_parser.title());
         writeFeedUrl(m_parser.url());
+        const bool fetchFullArticle = m_settings.value("fetchFullArticle", true).toBool();
+        const QDateTime lastUpdated = m_settings.value("lastUpdated").toDateTime();
 
-        if (m_parser.readNextArticle()) {
-            if (m_parser.date() > m_settings.value("lastUpdated").toDateTime()) {
-                reply->deleteLater();
-                getArticle(m_parser.url());
-            }
-            else {
-#ifdef BBC_DEBUG
-                qDebug() << "BbcFeedRequest::checkFeed(). No new articles";
-#endif
-                writeEndFeed();
-                setStatus(Ready);
-                emit finished(this);
+        if (fetchFullArticle) {
+            if (m_parser.readNextArticle()) {
+                if (m_parser.date() > lastUpdated) {
+                    reply->deleteLater();
+                    getArticle(m_parser.url());
+                }
+                else {
+                    writeEndFeed();
+                    setStatus(Ready);
+                    emit finished(this);
+                }
+
+                return;
             }
 
+            writeEndFeed();
+        }
+        else {
+            const int max = m_settings.value("maxResults", 20).toInt();
+
+            while((m_results < max) && (m_parser.readNextArticle()) && (m_parser.date() > lastUpdated)) {
+                ++m_results;
+                writeStartItem();
+                writeItemAuthor(m_parser.author());
+                writeItemBody(m_parser.description());
+                writeItemCategories(m_parser.categories());
+                writeItemDate(m_parser.date());
+                writeItemEnclosures(m_parser.enclosures());
+                writeItemTitle(m_parser.title());
+                writeItemUrl(m_parser.url());
+                writeEndItem();
+            }
+
+            writeEndFeed();
+            setStatus(Ready);
+            emit finished(this);
             return;
         }
-
-        writeEndFeed();
     }
     
     setErrorString(m_parser.errorString());
