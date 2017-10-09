@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -19,6 +19,8 @@
 
 #include "selectionmodel.h"
 
+class EnclosureRequest;
+
 class UrlOpenerModel : public SelectionModel
 {
     Q_OBJECT
@@ -35,9 +37,13 @@ public:
         
 public Q_SLOTS:    
     bool open(const QString &url);
+    bool openWithPlugin(const QString &url);
     
     void load();
     void save();
+
+private Q_SLOTS:
+    void onEnclosureRequestFinished(EnclosureRequest *request);
 
 private:
     UrlOpenerModel();
