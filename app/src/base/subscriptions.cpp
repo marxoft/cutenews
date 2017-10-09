@@ -311,6 +311,8 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     FeedParser parser(xml);
     
     if (!parser.readChannel()) {
+        Logger::log(QString("Subscriptions::parserXml(). Error parsing XML for subscription %1. Error: %2")
+                .arg(subscription()->id()).arg(parser.errorString()));
         setStatusText(tr("Error parsing XML for %1").arg(subscription()->title()));
         setStatus(Error);
         next();
@@ -321,14 +323,6 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     const QString channelDescription = parser.description();
     const QString channelUrl = parser.url();
     const QString channelIconUrl = parser.iconUrl();
-
-    if ((!parser.readNextArticle()) || (!parser.date().isValid())) {
-        setStatusText(tr("Error parsing XML for %1").arg(subscription()->title()));
-        setStatus(Error);
-        next();
-        return;
-    }
-    
     const QString subscriptionId = subscription()->id();
     const QDateTime lastUpdated = subscription()->lastUpdated();
     
@@ -337,6 +331,8 @@ void Subscriptions::parseXml(const QByteArray &xml) {
     sub["description"] = channelDescription;
     sub["url"] = channelUrl;
     sub["lastUpdated"] = QDateTime::currentDateTime().toTime_t();
+
+    parser.readNextArticle();
     
     if (parser.date() <= lastUpdated) {
         Logger::log(QString("Subscriptions::parseXml(). No new articles since %1 for subscription %2")
@@ -383,8 +379,11 @@ void Subscriptions::parseXml(const QByteArray &xml) {
             Transfers::instance()->addEnclosureDownload(e.toMap().value("url").toString(), true);
         }
     }
+
+    int articles = 1;
     
-    while ((parser.readNextArticle()) && ((date = parser.date()) > lastUpdated)) {
+    while ((articles < MAX_ARTICLES) && (parser.readNextArticle()) && ((date = parser.date()) > lastUpdated)) {
+        ++articles;
         id = Utils::createId();
         enc = parser.enclosures();
         ids << id;

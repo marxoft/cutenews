@@ -67,10 +67,13 @@ static const QByteArray USER_AGENT("Wget/1.13.4 (linux-gnu)");
 static const QString ALL_ARTICLES_SUBSCRIPTION_ID("all_articles");
 static const QString FAVOURITES_SUBSCRIPTION_ID("favourite_articles");
 
+// Articles
+static const int MAX_ARTICLES = 200;
+
 // Web interface
 static const QString WEB_INTERFACE_PATH("/usr/share/cutenews/webif/");
 
 // Version
-static const QString VERSION_NUMBER("1.1.0");
+static const QString VERSION_NUMBER("1.1.1");
 
 #endif // DEFINITIONS_H
