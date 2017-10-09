@@ -94,8 +94,15 @@
 
         {
             "type": "boolean",
+            "key": "fetchFullArticle",
+            "label": "Fetch full article",
+            "value": true
+        },
+
+        {
+            "type": "boolean",
             "key": "includeImages",
-            "label": "Include images",
+            "label": "Include images in full article",
             "value": false
         },
 

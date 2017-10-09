@@ -242,9 +242,10 @@ bool FeedParser::readChannel() {
     
     if ((m_reader.hasError()) && (!m_reader.atEnd())) {
         setErrorString(QString("Error parsing tag %1").arg(m_reader.qualifiedName().toString()));
+        return false;
     }
     
-    return false;
+    return true;
 }
 
 bool FeedParser::readNextArticle() {
@@ -327,9 +328,10 @@ bool FeedParser::readNextArticle() {
     
     if ((m_reader.hasError()) && (!m_reader.atEnd())) {
         setErrorString(QString("Error parsing tag %1").arg(m_reader.qualifiedName().toString()));
+        return false;
     }
     
-    return false;
+    return true;
 }
 
 void FeedParser::readAuthor() {
