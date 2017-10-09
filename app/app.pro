@@ -121,13 +121,16 @@ maemo5 {
     qml.files += \
         src/maemo5/qml/AboutDialog.qml \
         src/maemo5/qml/ArticleDelegate.qml \
+        src/maemo5/qml/ArticleDialog.qml \
         src/maemo5/qml/ArticleRequestWindow.qml \
         src/maemo5/qml/ArticleSettingsDialog.qml \
         src/maemo5/qml/ArticlesWindow.qml \
         src/maemo5/qml/ArticleWindow.qml \
+        src/maemo5/qml/BrowserWindow.qml \
         src/maemo5/qml/CategoriesDialog.qml \
         src/maemo5/qml/CategoryDelegate.qml \
         src/maemo5/qml/CategoryDialog.qml \
+        src/maemo5/qml/CustomCommandDialog.qml \
         src/maemo5/qml/DateSelectorButton.qml \
         src/maemo5/qml/DeleteDialog.qml \
         src/maemo5/qml/DownloadDialog.qml \
@@ -460,6 +463,7 @@ contains(DEFINES, WEB_INTERFACE) {
         src/qhttpserver/qhttpserverapi.h \
         src/qhttpserver/qhttpserverfwd.h \
         src/webif/articleserver.h \
+        src/webif/enclosureserver.h \
         src/webif/fileserver.h \
         src/webif/pluginserver.h \
         src/webif/serverresponse.h \
@@ -475,6 +479,7 @@ contains(DEFINES, WEB_INTERFACE) {
         src/qhttpserver/qhttpresponse.cpp \
         src/qhttpserver/qhttpserver.cpp \
         src/webif/articleserver.cpp \
+        src/webif/enclosureserver.cpp \
         src/webif/fileserver.cpp \
         src/webif/pluginserver.cpp \
         src/webif/settingsserver.cpp \
