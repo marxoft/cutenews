@@ -1,0 +1,10 @@
+{
+    "type": "js",
+    "version": 1,
+    "name": "ImageBam",
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(www\\.|)imagebam\\.com/image/[a-zA-Z0-9]+",
+    "supportsFeeds": false,
+    "supportsEnclosures": true,
+    "enclosureRegExp": "http(s|)://(www\\.|)imagebam\\.com/image/[a-zA-Z0-9]+"
+}

@@ -1,0 +1,9 @@
+cutenews-imagebam (0.0.2) unstable; urgency=low
+  * Set URL when retrieving articles.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sat, 07 Oct 2017 19:46:26 +0000
+
+cutenews-imagebam (0.0.1) unstable; urgency=low
+  * Initial release.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Tue, 03 Oct 2017 21:17:24 +0000
