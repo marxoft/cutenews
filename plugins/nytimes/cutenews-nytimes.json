@@ -141,6 +141,13 @@
         },
 
         {
+            "type": "boolean",
+            "key": "fetchFullArticle",
+            "label": "Fetch full article",
+            "value": true
+        },
+
+        {
             "type": "integer",
             "key": "maxResults",
             "label": "Maximum results",
