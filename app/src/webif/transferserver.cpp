@@ -79,11 +79,12 @@ bool TransferServer::handleRequest(QHttpRequest *request, QHttpResponse *respons
                 const QString url = properties.value("url").toString();
                 
                 if (!url.isEmpty()) {
+                    const QString command = properties.value("customCommand").toString();
                     const QString category = properties.value("category").toString();
                     const int priority = properties.value("priority", Transfer::NormalPriority).toInt();
                     const bool usePlugin = properties.value("usePlugin", false).toBool();
-                    const Transfer *transfer = Transfers::instance()->addEnclosureDownload(url, category, priority,
-                                                                                           usePlugin);
+                    const Transfer *transfer = Transfers::instance()->addEnclosureDownload(url, command, category,
+                            priority, usePlugin);
                 
                     if (transfer) {
                         transfers << transferToMap(transfer);
