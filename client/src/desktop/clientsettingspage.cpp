@@ -23,6 +23,7 @@
 ClientSettingsPage::ClientSettingsPage(QWidget *parent) :
     SettingsPage(parent),
     m_authCheckBox(new QCheckBox(tr("Enable server &authentication"), this)),
+    m_javascriptCheckBox(new QCheckBox(tr("Enable &JavaScript in browser"), this)),
     m_addressEdit(new QLineEdit(this)),
     m_usernameEdit(new QLineEdit(this)),
     m_passwordEdit(new QLineEdit(this)),
@@ -36,6 +37,7 @@ ClientSettingsPage::ClientSettingsPage(QWidget *parent) :
     m_layout->addRow(m_authCheckBox);
     m_layout->addRow(tr("Server &username:"), m_usernameEdit);
     m_layout->addRow(tr("Server &password:"), m_passwordEdit);
+    m_layout->addRow(m_javascriptCheckBox);
     
     restore();
 }
@@ -45,6 +47,7 @@ void ClientSettingsPage::restore() {
     m_addressEdit->setText(Settings::serverAddress());
     m_usernameEdit->setText(Settings::serverUsername());
     m_passwordEdit->setText(Settings::serverPassword());
+    m_javascriptCheckBox->setChecked(Settings::enableJavaScriptInBrowser());
 }
 
 void ClientSettingsPage::save() {
@@ -52,4 +55,5 @@ void ClientSettingsPage::save() {
     Settings::setServerPassword(m_passwordEdit->text());
     Settings::setServerAuthenticationEnabled(m_authCheckBox->isChecked());
     Settings::setServerAddress(m_addressEdit->text());
+    Settings::setEnableJavaScriptInBrowser(m_javascriptCheckBox->isChecked());
 }

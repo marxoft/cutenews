@@ -36,6 +36,7 @@ public Q_SLOTS:
 
 private:    
     QCheckBox *m_authCheckBox;
+    QCheckBox *m_javascriptCheckBox;
     
     QLineEdit *m_addressEdit;
     QLineEdit *m_usernameEdit;

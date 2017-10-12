@@ -30,6 +30,8 @@ class Settings : public QObject
     Q_OBJECT
 
     Q_PROPERTY(QByteArray articlesHeaderViewState READ articlesHeaderViewState WRITE setArticlesHeaderViewState)
+    Q_PROPERTY(bool enableJavaScriptInBrowser READ enableJavaScriptInBrowser WRITE setEnableJavaScriptInBrowser
+               NOTIFY enableJavaScriptInBrowserChanged)
     Q_PROPERTY(QString loggerFileName READ loggerFileName WRITE setLoggerFileName NOTIFY loggerFileNameChanged)
     Q_PROPERTY(int loggerVerbosity READ loggerVerbosity WRITE setLoggerVerbosity NOTIFY loggerVerbosityChanged)
     Q_PROPERTY(QByteArray mainWindowGeometry READ mainWindowGeometry WRITE setMainWindowGeometry)
@@ -51,6 +53,8 @@ public:
     static Settings* instance();
 
     static QByteArray articlesHeaderViewState();
+
+    static bool enableJavaScriptInBrowser();
     
     static QString loggerFileName();
     static int loggerVerbosity();
@@ -73,6 +77,8 @@ public:
 
 public Q_SLOTS:
     static void setArticlesHeaderViewState(const QByteArray &state);
+
+    static void setEnableJavaScriptInBrowser(bool enabled);
     
     static void setLoggerFileName(const QString &fileName);
     static void setLoggerVerbosity(int verbosity);
@@ -94,6 +100,7 @@ public Q_SLOTS:
     static void setValue(const QString &key, const QVariant &value);
 
 Q_SIGNALS:
+    void enableJavaScriptInBrowserChanged(bool enabled);
     void loggerFileNameChanged(const QString &fileName);
     void loggerVerbosityChanged(int verbosity);
     void readArticleExpiryChanged(int expiry);

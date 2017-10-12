@@ -17,6 +17,7 @@
 #include "browserpage.h"
 #include "cachingnetworkaccessmanager.h"
 #include "pluginmanager.h"
+#include <QAction>
 #include <QLineEdit>
 #include <QToolBar>
 #include <QVBoxLayout>

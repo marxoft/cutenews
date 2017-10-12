@@ -281,10 +281,12 @@ maemo5 {
     
     HEADERS += \
         src/desktop/aboutdialog.h \
+        src/desktop/articlepage.h \
         src/desktop/browserpage.h \
         src/desktop/clientsettingspage.h \
         src/desktop/customcommanddialog.h \
         src/desktop/definitions.h \
+        src/desktop/downloaddialog.h \
         src/desktop/logger.h \
         src/desktop/mainwindow.h \
         src/desktop/page.h \
@@ -301,9 +303,11 @@ maemo5 {
     
     SOURCES += \
         src/desktop/aboutdialog.cpp \
+        src/desktop/articlepage.cpp \
         src/desktop/browserpage.cpp \
         src/desktop/clientsettingspage.cpp \
         src/desktop/customcommanddialog.cpp \
+        src/desktop/downloaddialog.cpp \
         src/desktop/logger.cpp \
         src/desktop/main.cpp \
         src/desktop/mainwindow.cpp \

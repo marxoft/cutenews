@@ -368,7 +368,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_openArticleUrlExternallyAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleUrlExternally()));
     connect(m_openArticleUrlWithPluginAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleUrlWithPlugin()));
     connect(m_openArticleInTabWithPluginAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleInTabWithPlugin()));
-    connect(m_openArticleInBrowserWithPluginAction, SIGNAL(triggered()), this, SLOT(openCurrentArticleInBrowserWithPlugin()));
+    connect(m_openArticleInBrowserWithPluginAction, SIGNAL(triggered()),
+            this, SLOT(openCurrentArticleInBrowserWithPlugin()));
     connect(m_downloadArticleUrlAction, SIGNAL(triggered()), this, SLOT(downloadCurrentArticleUrl()));
     
     connect(m_transfersAction, SIGNAL(triggered()), this, SLOT(showTransfersTab()));
@@ -650,6 +651,7 @@ void MainWindow::setCurrentArticle(const QModelIndex &index) {
     m_openArticleUrlInTabAction->setEnabled(true);
     m_openArticleUrlInBrowserAction->setEnabled(true);
     m_openArticleUrlExternallyAction->setEnabled(true);
+    m_downloadArticleUrlAction->setEnabled(true);
 
     if (articleConfig) {
         m_openArticleInTabWithPluginAction->setEnabled(true);

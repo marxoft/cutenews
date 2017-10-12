@@ -32,7 +32,7 @@ GeneralSettingsPage::GeneralSettingsPage(QWidget *parent) :
     m_concurrentSpinBox(new QSpinBox(this)),
     m_commandCheckBox(new QCheckBox(tr("Enable &custom download command"), this)),
     m_automaticCheckBox(new QCheckBox(tr("Start downloads &automatically"), this)),
-    m_javascriptCheckBox(new QCheckBox(tr("Enable &javascript in browser"), this)),
+    m_javascriptCheckBox(new QCheckBox(tr("Enable &JavaScript in browser"), this)),
     m_layout(new QFormLayout(this))
 {
     setWindowTitle(tr("General"));
