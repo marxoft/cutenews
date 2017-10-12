@@ -21,21 +21,36 @@ Dialog {
     id: root
     
     property alias command: commandField.text
+    property alias overrideEnabled: overrideCheckBox.checked
     
     title: qsTr("Custom command")
-    height: commandField.height + platformStyle.paddingMedium
+    height: column.height + platformStyle.paddingMedium
 
-    TextField {
-        id: commandField
-        
+    Column {
+        id: column
+
         anchors {
             left: parent.left
             right: button.left
             rightMargin: platformStyle.paddingMedium
             top: parent.top
         }
-        placeholderText: qsTr("Command")
-        onAccepted: if (text) root.accept();
+        spacing: platformStyle.paddingMedium
+
+        TextField {
+            id: commandField
+            
+            width: parent.width
+            placeholderText: qsTr("Command")
+            onAccepted: root.accept();
+        }
+
+        CheckBox {
+            id: overrideCheckBox
+
+            width: parent.width
+            text: qsTr("Override global command")
+        }
     }
 
     Button {
@@ -47,7 +62,6 @@ Dialog {
         }
         style: DialogButtonStyle {}
         text: qsTr("Done")
-        enabled: commandField.text != ""
         onClicked: commandField.accepted()
     }
 
@@ -56,12 +70,12 @@ Dialog {
         when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
 
         AnchorChanges {
-            target: commandField
+            target: column
             anchors.right: parent.right
         }
 
         PropertyChanges {
-            target: commandField
+            target: column
             anchors.rightMargin: 0
         }
 
@@ -72,7 +86,7 @@ Dialog {
 
         PropertyChanges {
             target: root
-            height: commandField.height + button.height + platformStyle.paddingMedium * 2
+            height: column.height + button.height + platformStyle.paddingMedium * 2
         }
     }
     

@@ -23,60 +23,80 @@ Dialog {
     
     property string url
     property alias command: commandField.text
+    property alias commandOverrideEnabled: overrideCheckBox.checked
     property alias category: categorySelector.value
     property alias priority: prioritySelector.value
     property alias usePlugin: pluginCheckBox.checked
     
     title: qsTr("Download")
-    height: column.height + platformStyle.paddingMedium
+    height: Math.min(360, column.height + platformStyle.paddingMedium)
     
-    Column {
-        id: column
-        
+    Flickable {
+        id: flickable
+
         anchors {
             left: parent.left
             right: button.left
             rightMargin: platformStyle.paddingMedium
             top: parent.top
+            bottom: parent.bottom
         }
-        spacing: platformStyle.paddingMedium
+        contentHeight: column.height
 
-        Label {
-            width: parent.width
-            wrapMode: Text.WordWrap
-            text: qsTr("Custom command (%f for filename)")
-        }
+        Column {
+            id: column
+            
+            anchors {
+                left: parent.left
+                right: parent.right
+                top: parent.top
+            }
+            spacing: platformStyle.paddingMedium
 
-        TextField {
-            id: commandField
+            Label {
+                width: parent.width
+                wrapMode: Text.WordWrap
+                text: qsTr("Custom command (%f for filename)")
+            }
 
-            width: parent.width
-        }
-        
-        ListSelectorButton {
-            id: categorySelector
+            TextField {
+                id: commandField
+
+                width: parent.width
+            }
+
+            CheckBox {
+                id: overrideCheckBox
+
+                width: parent.width
+                text: qsTr("Override global custom command")
+            }
             
-            width: parent.width
-            text: qsTr("Category")
-            model: CategoryNameModel {}
-            value: settings.defaultCategory
-            onSelected: settings.defaultCategory = value
-        }
-        
-        ListSelectorButton {
-            id: prioritySelector
+            ListSelectorButton {
+                id: categorySelector
+                
+                width: parent.width
+                text: qsTr("Category")
+                model: CategoryNameModel {}
+                value: settings.defaultCategory
+                onSelected: settings.defaultCategory = value
+            }
             
-            width: parent.width
-            text: qsTr("Priority")
-            model: TransferPriorityModel {}
-            value: Transfer.NormalPriority
-        }
-        
-        CheckBox {
-            id: pluginCheckBox
+            ListSelectorButton {
+                id: prioritySelector
+                
+                width: parent.width
+                text: qsTr("Priority")
+                model: TransferPriorityModel {}
+                value: Transfer.NormalPriority
+            }
             
-            width: parent.width
-            text: qsTr("Use plugin")
+            CheckBox {
+                id: pluginCheckBox
+                
+                width: parent.width
+                text: qsTr("Use plugin")
+            }
         }
     }
     
@@ -98,13 +118,16 @@ Dialog {
         when: screen.currentOrientation == Qt.WA_Maemo5PortraitOrientation
 
         AnchorChanges {
-            target: column
+            target: flickable
             anchors.right: parent.right
+            anchors.bottom: button.top
         }
 
         PropertyChanges {
-            target: column
+            target: flickable
             anchors.rightMargin: 0
+            anchors.bottomMargin: platformStyle.paddingMedium
+            clip: true
         }
 
         PropertyChanges {
@@ -114,7 +137,7 @@ Dialog {
 
         PropertyChanges {
             target: root
-            height: column.height + button.height + platformStyle.paddingMedium * 2
+            height: Math.min(680, column.height + button.height + platformStyle.paddingMedium * 2)
         }
     }
 
@@ -131,5 +154,5 @@ Dialog {
         }
     }
     
-    onAccepted: transfers.addEnclosureDownload(url, command, category, priority, pluginCheckBox.checked)
+    onAccepted: transfers.addEnclosureDownload(url, command, commandOverrideEnabled, category, priority, usePlugin)
 }

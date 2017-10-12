@@ -161,7 +161,9 @@ Window {
 
         CustomCommandDialog {
             command: transferModel.data(view.currentIndex, "customCommand")
-            onAccepted: transferModel.setData(view.currentIndex, command, "customCommand")
+            overrideEnabled: transferModel.data(view.currentIndex, "customCommandOverrideEnabled")
+            onAccepted: transferModel.setItemData(view.currentIndex,
+            {customCommand: command, customCommandOverrideEnabled: overrideEnabled})
         }
     }
     

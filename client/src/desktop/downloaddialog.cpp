@@ -31,6 +31,7 @@ DownloadDialog::DownloadDialog(QWidget *parent) :
     m_commandEdit(new QLineEdit(this)),
     m_categorySelector(new QComboBox(this)),
     m_prioritySelector(new QComboBox(this)),
+    m_commandCheckBox(new QCheckBox(tr("&Override global custom command"), this)),
     m_pluginCheckBox(new QCheckBox(tr("Use &plugin"), this)),
     m_buttonBox(new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this)),
     m_layout(new QFormLayout(this))
@@ -43,6 +44,7 @@ DownloadDialog::DownloadDialog(QWidget *parent) :
     m_pluginCheckBox->setEnabled(false);
 
     m_layout->addRow(tr("Custom &command:"), m_commandEdit);
+    m_layout->addRow(m_commandCheckBox);
     m_layout->addRow(tr("&Category:"), m_categorySelector);
     m_layout->addRow(tr("&Priority:"), m_prioritySelector);
     m_layout->addRow(m_pluginCheckBox);
@@ -61,6 +63,7 @@ DownloadDialog::DownloadDialog(const QString &url, QWidget *parent) :
     m_commandEdit(new QLineEdit(this)),
     m_categorySelector(new QComboBox(this)),
     m_prioritySelector(new QComboBox(this)),
+    m_commandCheckBox(new QCheckBox(tr("&Override global custom command"), this)),
     m_pluginCheckBox(new QCheckBox(this)),
     m_buttonBox(new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this)),
     m_layout(new QFormLayout(this))
@@ -71,6 +74,7 @@ DownloadDialog::DownloadDialog(const QString &url, QWidget *parent) :
     m_prioritySelector->setModel(m_priorityModel);
 
     m_layout->addRow(tr("Custom &command:"), m_commandEdit);
+    m_layout->addRow(m_commandCheckBox);
     m_layout->addRow(tr("&Category:"), m_categorySelector);
     m_layout->addRow(tr("&Priority:"), m_prioritySelector);
     m_layout->addRow(m_pluginCheckBox);
@@ -97,6 +101,14 @@ QString DownloadDialog::customCommand() const {
 
 void DownloadDialog::setCustomCommand(const QString &command) {
     m_commandEdit->setText(command);
+}
+
+bool DownloadDialog::customCommandOverrideEnabled() const {
+    return m_commandCheckBox->isChecked();
+}
+
+void DownloadDialog::setCustomCommandOverrideEnabled(bool enabled) {
+    m_commandCheckBox->setChecked(enabled);
 }
 
 int DownloadDialog::priority() const {

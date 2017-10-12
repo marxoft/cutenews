@@ -746,8 +746,8 @@ void MainWindow::downloadUrl(const QString &url) {
     DownloadDialog dialog(url, this);
 
     if (dialog.exec() == QDialog::Accepted) {
-        Transfers::instance()->addEnclosureDownload(dialog.url(), dialog.customCommand(), dialog.category(),
-                dialog.priority(), dialog.usePlugin());
+        Transfers::instance()->addEnclosureDownload(dialog.url(), dialog.customCommand(),
+                dialog.customCommandOverrideEnabled(), dialog.category(), dialog.priority(), dialog.usePlugin());
     }
 }
 

@@ -53,15 +53,16 @@ int Transfers::count() const {
 }
 
 Transfer* Transfers::addEnclosureDownload(const QString &url, bool usePlugin) {
-    return addEnclosureDownload(url, QString(), QString(), Transfer::NormalPriority, usePlugin);
+    return addEnclosureDownload(url, QString(), false, QString(), Transfer::NormalPriority, usePlugin);
 }
 
-Transfer* Transfers::addEnclosureDownload(const QString &url, const QString &command, const QString &category,
-                                          int priority, bool usePlugin) {
+Transfer* Transfers::addEnclosureDownload(const QString &url, const QString &command, bool overrideGlobalCommand,
+        const QString &category, int priority, bool usePlugin) {
     Logger::log("Transfers::addEnclosureDownload(). URL: " + url, Logger::LowVerbosity);
     EnclosureDownload *transfer = new EnclosureDownload(this);
     transfer->setNetworkAccessManager(m_nam);
     transfer->setCustomCommand(command);
+    transfer->setCustomCommandOverrideEnabled(overrideGlobalCommand);
     transfer->setCategory(category);
     transfer->setId(Utils::createId());
     transfer->setDownloadPath(Settings::downloadPath() + ".incomplete/" + transfer->id());

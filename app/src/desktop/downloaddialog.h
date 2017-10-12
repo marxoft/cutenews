@@ -33,6 +33,8 @@ class DownloadDialog : public QDialog
 
     Q_PROPERTY(QString category READ category WRITE setCategory)
     Q_PROPERTY(QString customCommand READ customCommand WRITE setCustomCommand)
+    Q_PROPERTY(bool customCommandOverrideEnabled READ customCommandOverrideEnabled
+               WRITE setCustomCommandOverrideEnabled)
     Q_PROPERTY(int priority READ priority WRITE setPriority)
     Q_PROPERTY(bool usePlugin READ usePlugin WRITE setUsePlugin)
 
@@ -45,6 +47,8 @@ public:
 
     QString customCommand() const;
     void setCustomCommand(const QString &command);
+    bool customCommandOverrideEnabled() const;
+    void setCustomCommandOverrideEnabled(bool enabled);
 
     int priority() const;
     void setPriority(int priority);
@@ -64,6 +68,7 @@ private:
     QComboBox *m_categorySelector;
     QComboBox *m_prioritySelector;
 
+    QCheckBox *m_commandCheckBox;
     QCheckBox *m_pluginCheckBox;
 
     QDialogButtonBox *m_buttonBox;

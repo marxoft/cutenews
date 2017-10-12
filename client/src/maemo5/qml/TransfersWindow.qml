@@ -173,7 +173,9 @@ Window {
 
         CustomCommandDialog {
             command: transfers.data(view.currentIndex, "customCommand")
-            onAccepted: transfers.setData(view.currentIndex, command, "customCommand")
+            overrideEnabled: transfers.data(view.currentIndex, "customCommandOverrideEnabled")
+            onAccepted: transfers.setItemData(view.currentIndex,
+            {customCommand: command, customCommandOverrideEnabled: overrideEnabled})
         }
     }
     
