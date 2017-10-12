@@ -37,6 +37,8 @@ class Settings : public QObject
                NOTIFY customTransferCommandEnabledChanged)
     Q_PROPERTY(QString defaultCategory READ defaultCategory WRITE setDefaultCategory NOTIFY defaultCategoryChanged)
     Q_PROPERTY(QString downloadPath READ downloadPath WRITE setDownloadPath NOTIFY downloadPathChanged)
+    Q_PROPERTY(bool enableJavaScriptInBrowser READ enableJavaScriptInBrowser WRITE setEnableJavaScriptInBrowser
+               NOTIFY enableJavaScriptInBrowserChanged)
     Q_PROPERTY(QString loggerFileName READ loggerFileName WRITE setLoggerFileName NOTIFY loggerFileNameChanged)
     Q_PROPERTY(int loggerVerbosity READ loggerVerbosity WRITE setLoggerVerbosity NOTIFY loggerVerbosityChanged)
     Q_PROPERTY(QByteArray mainWindowGeometry READ mainWindowGeometry WRITE setMainWindowGeometry)
@@ -94,6 +96,8 @@ public:
     
     static QString downloadPath();
     Q_INVOKABLE static QString downloadPath(const QString &category);
+
+    static bool enableJavaScriptInBrowser();
     
     static QString loggerFileName();
     static int loggerVerbosity();
@@ -142,6 +146,8 @@ public Q_SLOTS:
     static void setCustomTransferCommandEnabled(bool enabled);
     
     static void setDownloadPath(const QString &path);
+
+    static void setEnableJavaScriptInBrowser(bool enabled);
     
     static void setLoggerFileName(const QString &fileName);
     static void setLoggerVerbosity(int verbosity);
@@ -186,6 +192,7 @@ Q_SIGNALS:
     void customTransferCommandChanged(const QString &command);
     void customTransferCommandEnabledChanged(bool enabled);
     void downloadPathChanged(const QString &path);
+    void enableJavaScriptInBrowserChanged(bool enabled);
     void loggerFileNameChanged(const QString &fileName);
     void loggerVerbosityChanged(int verbosity);
     void maximumConcurrentTransfersChanged(int maximum);

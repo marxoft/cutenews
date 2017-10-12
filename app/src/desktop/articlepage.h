@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 Stuart Howarth <showarth@marxoft.co.uk>
+ * Copyright (C) 2017 Stuart Howarth <showarth@marxoft.co.uk>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -14,49 +14,54 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef BROWSERPAGE_H
-#define BROWSERPAGE_H
+#ifndef ARTICLEPAGE_H
+#define ARTICLEPAGE_H
 
 #include "page.h"
 
-class CachingNetworkAccessManager;
-class QLineEdit;
-class QToolBar;
+class BrowserPage;
+class QLabel;
+class QModelIndex;
+class QStandardItemModel;
+class QTreeView;
 class QVBoxLayout;
-class QWebView;
 
-class BrowserPage : public Page
+class ArticlePage : public Page
 {
     Q_OBJECT
-    
+
+    Q_PROPERTY(QString header READ header WRITE setHeader)
     Q_PROPERTY(QString html READ toHtml WRITE setHtml)
     Q_PROPERTY(QString text READ toPlainText WRITE setText)
     Q_PROPERTY(QString title READ title NOTIFY titleChanged)
     Q_PROPERTY(QString url READ url WRITE setUrl NOTIFY urlChanged)
 
 public:
-    explicit BrowserPage(QWidget *parent = 0);
-    explicit BrowserPage(const QString &url, QWidget *parent = 0);
-    
+    explicit ArticlePage(QWidget *parent = 0);
+
+    QString header() const;
+
     QString toHtml() const;
     QString toPlainText() const;
 
     QString title() const;
-    
+
     QString url() const;
 
 public Q_SLOTS:
+    void setEnclosures(const QVariantList &enclosures);
+
+    void setHeader(const QString &header);
+
     void setHtml(const QString &html, const QString &baseUrl = QString());
     void setText(const QString &text, const QString &baseUrl = QString());
 
-    void setUrl(const QString &u);
+    void setUrl(const QString &url);
 
 private Q_SLOTS:
-    void setUrl(const QUrl &u);
+    void openEnclosureUrlInBrowser(const QModelIndex &index);
 
-    void onUrlChanged(const QUrl &u);
-
-    void showContextMenu(const QPoint &pos);
+    void showEnclosureContextMenu(const QPoint &pos);
 
 Q_SIGNALS:
     void openArticleInTab(const QString &title, const QString &url);
@@ -68,19 +73,18 @@ Q_SIGNALS:
     void showTextInTab(const QString &title, const QString &text, const QString &baseUrl = QString());
     void titleChanged(const QString &title);
     void urlChanged(const QString &url);
-    
+
 private:
-    static const QByteArray STYLE_SHEET;
-    
-    CachingNetworkAccessManager *m_nam;
-    
-    QLineEdit *m_urlEdit;
-    
-    QToolBar *m_toolBar;
-    
+    QStandardItemModel *m_enclosuresModel;
+
+    QLabel *m_headerLabel;
+    QLabel *m_enclosuresLabel;
+
+    BrowserPage *m_browser;
+
+    QTreeView *m_enclosuresView;
+
     QVBoxLayout *m_layout;
-    
-    QWebView *m_webView;
 };
 
-#endif // BROWSERPAGE_H
+#endif // ARTICLEPAGE_H

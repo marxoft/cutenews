@@ -74,6 +74,6 @@ static const int MAX_ARTICLES = 200;
 static const QString WEB_INTERFACE_PATH("/usr/share/cutenews/webif/");
 
 // Version
-static const QString VERSION_NUMBER("1.1.1");
+static const QString VERSION_NUMBER("1.2.0");
 
 #endif // DEFINITIONS_H

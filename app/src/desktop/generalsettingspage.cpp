@@ -32,6 +32,7 @@ GeneralSettingsPage::GeneralSettingsPage(QWidget *parent) :
     m_concurrentSpinBox(new QSpinBox(this)),
     m_commandCheckBox(new QCheckBox(tr("Enable &custom download command"), this)),
     m_automaticCheckBox(new QCheckBox(tr("Start downloads &automatically"), this)),
+    m_javascriptCheckBox(new QCheckBox(tr("Enable &javascript in browser"), this)),
     m_layout(new QFormLayout(this))
 {
     setWindowTitle(tr("General"));
@@ -44,6 +45,7 @@ GeneralSettingsPage::GeneralSettingsPage(QWidget *parent) :
     m_layout->addRow(tr("&Custom download command (%f for filename):"), m_commandEdit);
     m_layout->addRow(m_commandCheckBox);
     m_layout->addRow(m_automaticCheckBox);
+    m_layout->addRow(m_javascriptCheckBox);
     
     connect(m_pathButton, SIGNAL(clicked()), this, SLOT(showFileDialog()));
     restore();
@@ -55,6 +57,7 @@ void GeneralSettingsPage::restore() {
     m_commandEdit->setText(Settings::customTransferCommand());
     m_commandCheckBox->setChecked(Settings::customTransferCommandEnabled());
     m_automaticCheckBox->setChecked(Settings::startTransfersAutomatically());
+    m_javascriptCheckBox->setChecked(Settings::enableJavaScriptInBrowser());
 }
 
 void GeneralSettingsPage::save() {
@@ -63,6 +66,7 @@ void GeneralSettingsPage::save() {
     Settings::setCustomTransferCommand(m_commandEdit->text());
     Settings::setCustomTransferCommandEnabled(m_commandCheckBox->isChecked());
     Settings::setStartTransfersAutomatically(m_automaticCheckBox->isChecked());
+    Settings::setEnableJavaScriptInBrowser(m_javascriptCheckBox->isChecked());
 }
 
 void GeneralSettingsPage::showFileDialog() {

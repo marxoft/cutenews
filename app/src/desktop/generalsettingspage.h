@@ -49,6 +49,7 @@ private:
     
     QCheckBox *m_commandCheckBox;
     QCheckBox *m_automaticCheckBox;
+    QCheckBox *m_javascriptCheckBox;
     
     QFormLayout *m_layout;
 };

@@ -25,7 +25,6 @@
 #include <QWebView>
 #include <QWebHitTestResult>
 #include <QMenu>
-#include <QAction>
 
 const QByteArray BrowserPage::STYLE_SHEET = QByteArray("data:text/css;charset=utf-8;base64,")
     + QByteArray("img { max-width: 100%; } iframe { max-width: 100%; }").toBase64();
@@ -79,9 +78,11 @@ BrowserPage::BrowserPage(const QString &url, QWidget *parent) :
     m_toolBar->addAction(m_webView->pageAction(QWebPage::Reload));
     m_toolBar->setMovable(false);
 
+    m_webView->setStyleSheet("background: #fff");
     m_webView->setContextMenuPolicy(Qt::CustomContextMenu);
     m_webView->page()->setNetworkAccessManager(m_nam);
     m_webView->page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
+    m_webView->settings()->setUserStyleSheetUrl(QUrl::fromEncoded(STYLE_SHEET));
 
     m_layout->addWidget(m_toolBar);
     m_layout->addWidget(m_webView);
@@ -149,15 +150,16 @@ void BrowserPage::showContextMenu(const QPoint &pos) {
     QMenu menu(this);
     
     if (!url.isEmpty()) {
-        const bool article = PluginManager::instance()->articleIsSupported(url);
-        const bool enclosure = PluginManager::instance()->enclosureIsSupported(url);
+        const FeedPluginConfig *articleConfig = PluginManager::instance()->getConfigForArticle(url);
+        const FeedPluginConfig *enclosureConfig = PluginManager::instance()->getConfigForEnclosure(url);
         menu.addAction(m_webView->pageAction(QWebPage::CopyLinkToClipboard));
-        QAction *articleAction = article ? menu.addAction(tr("Open Article in New Tab")) : 0;
+        QAction *articleAction = articleConfig ? menu.addAction(tr("Open Article in New Tab Via %1")
+                .arg(articleConfig->displayName())) : 0;
         QAction *tabAction = menu.addAction(tr("Open Link in New Tab"));
         QAction *externalAction = menu.addAction(tr("Open Link Externally"));
-        QAction *pluginAction = enclosure ? menu.addAction(tr("Open Link Externally Using Plugin")) : 0;
+        QAction *pluginAction = enclosureConfig ? menu.addAction(tr("Open Link Externally Via %1")
+                .arg(enclosureConfig->displayName())) : 0;
         QAction *downloadAction = menu.addAction(tr("Download Link"));
-        QAction *downloadPluginAction = enclosure ? menu.addAction(tr("Download Link Using Plugin")) : 0;
         QAction *action = menu.exec(m_webView->mapToGlobal(pos));
 
         if (!action) {
@@ -178,9 +180,6 @@ void BrowserPage::showContextMenu(const QPoint &pos) {
         }
         else if (action == downloadAction) {
             emit downloadUrl(url);
-        }
-        else if (action == downloadPluginAction) {
-            emit downloadUrlWithPlugin(url);
         }
     }
     else {

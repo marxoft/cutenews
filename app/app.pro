@@ -350,6 +350,7 @@ maemo5 {
     
     HEADERS += \
         src/desktop/aboutdialog.h \
+        src/desktop/articlepage.h \
         src/desktop/articlesettingspage.h \
         src/desktop/browserpage.h \
         src/desktop/cachingnetworkaccessmanager.h \
@@ -357,6 +358,7 @@ maemo5 {
         src/desktop/customcommanddialog.h \
         src/desktop/cutenews.h \
         src/desktop/definitions.h \
+        src/desktop/downloaddialog.h \
         src/desktop/enclosuresettingspage.h \
         src/desktop/generalsettingspage.h \
         src/desktop/interfacesettingspage.h \
@@ -377,12 +379,14 @@ maemo5 {
     
     SOURCES += \
         src/desktop/aboutdialog.cpp \
+        src/desktop/articlepage.cpp \
         src/desktop/articlesettingspage.cpp \
         src/desktop/browserpage.cpp \
         src/desktop/cachingnetworkaccessmanager.cpp \
         src/desktop/categorysettingspage.cpp \
         src/desktop/customcommanddialog.cpp \
         src/desktop/cutenews.cpp \
+        src/desktop/downloaddialog.cpp \
         src/desktop/enclosuresettingspage.cpp \
         src/desktop/generalsettingspage.cpp \
         src/desktop/interfacesettingspage.cpp \

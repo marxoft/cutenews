@@ -176,6 +176,20 @@ void Settings::setDownloadPath(const QString &path) {
     }
 }
 
+bool Settings::enableJavaScriptInBrowser() {
+    return value("Browser/javascriptEnabled", true).toBool();
+}
+
+void Settings::setEnableJavaScriptInBrowser(bool enabled) {
+    if (enabled != enableJavaScriptInBrowser()) {
+        setValue("Browser/javascriptEnabled", enabled);
+
+        if (self) {
+            emit self->enableJavaScriptInBrowserChanged(enabled);
+        }
+    }
+}
+
 QString Settings::loggerFileName() {
     return value("Logger/fileName", APP_CONFIG_PATH + "log").toString();
 }

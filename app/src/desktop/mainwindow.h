@@ -23,6 +23,7 @@
 
 class Article;
 class ArticleModel;
+class ArticlePage;
 class ArticleRequest;
 class BrowserPage;
 class SubscriptionModel;
@@ -33,7 +34,6 @@ class QModelIndex;
 class QSortFilterProxyModel;
 class QSplitter;
 class QStackedWidget;
-class QStandardItemModel;
 class QTabBar;
 class QTreeView;
 class QToolBar;
@@ -66,37 +66,29 @@ private Q_SLOTS:
     void toggleCurrentArticleFavourite();
     void deleteCurrentArticle();
     void copyCurrentArticleUrl();
-    void openCurrentArticleInTab();
-    void openCurrentArticleInBrowser();
-    void openCurrentArticleExternally();
-    void openCurrentArticleWithPlugin();
-    void downloadCurrentArticle();
-    void downloadCurrentArticleWithPlugin();
-    
-    void copyCurrentEnclosureUrl();
-    void openCurrentEnclosureInTab();
-    void openCurrentEnclosureInBrowser();
-    void openCurrentEnclosureExternally();
-    void openCurrentEnclosureWithPlugin();
-    void downloadCurrentEnclosure();
-    void downloadCurrentEnclosureWithPlugin();
+    void openCurrentArticleUrlInTab();
+    void openCurrentArticleUrlInBrowser();
+    void openCurrentArticleUrlExternally();
+    void openCurrentArticleUrlWithPlugin();
+    void openCurrentArticleInTabWithPlugin();
+    void openCurrentArticleInBrowserWithPlugin();
+    void downloadCurrentArticleUrl();
     
     void setCurrentSubscription(const QModelIndex &index);
     void setCurrentArticle(const QModelIndex &index);
     
     void searchArticles(const QString &query);
+    void fetchArticle(const QString &url, bool openInTab = true);
     void deleteReadArticles(int expiryDate);
     
     void showSubscriptionContextMenu(const QPoint &pos);
     void showArticleContextMenu(const QPoint &pos);
-    void showEnclosureContextMenu(const QPoint &pos);
     
     void openArticleInTab(const QString &title, const QString &url);
     void openUrlInTab(const QString &title, const QString &url);
     void openUrlExternally(const QString &url);
     void openUrlWithPlugin(const QString &url);
     void downloadUrl(const QString &url);
-    void downloadUrlWithPlugin(const QString &url);
     void showHtmlInTab(const QString &title, const QString &html, const QString &baseUrl = QString());
     void showTextInTab(const QString &title, const QString &text, const QString &baseUrl = QString());
 
@@ -107,6 +99,7 @@ private Q_SLOTS:
     void showTransfersTab();
 
     void showSearchDialog();
+    void showArticleDialog();
     void showDeleteDialog();
     void showSettingsDialog();
     void showAboutDialog();
@@ -124,20 +117,22 @@ private Q_SLOTS:
     
     void onCurrentTabChanged(int index);
 
+    void onEnableJavaScriptInBrowserChanged(bool enabled);
     void onOfflineModeEnabledChanged(bool enabled);
 
 private:    
+    ArticlePage* addArticleTab(const QString &title);
+    BrowserPage* addBrowserTab(const QString &title);
+
     SubscriptionModel *m_subscriptionsModel;
     ArticleModel *m_articlesModel;
     QSortFilterProxyModel *m_articlesProxyModel;
-    QStandardItemModel *m_enclosuresModel;
     
     QMenu *m_subscriptionsMenu;
     QMenu *m_newSubscriptionMenu;
     QMenu *m_subscriptionMenu;
     QMenu *m_articleMenu;
     QMenu *m_articleContextMenu;
-    QMenu *m_enclosureContextMenu;
     QMenu *m_viewMenu;
     QMenu *m_toolsMenu;
     QMenu *m_helpMenu;
@@ -165,25 +160,19 @@ private:
     QAction *m_toggleArticleFavouriteAction;
     QAction *m_deleteArticleAction;
     QAction *m_copyArticleUrlAction;
-    QAction *m_openArticleInTabAction;
-    QAction *m_openArticleInBrowserAction;
-    QAction *m_openArticleExternallyAction;
-    QAction *m_openArticleWithPluginAction;
-    QAction *m_downloadArticleAction;
-    QAction *m_downloadArticleWithPluginAction;
-    
-    QAction *m_copyEnclosureUrlAction;
-    QAction *m_openEnclosureInTabAction;
-    QAction *m_openEnclosureInBrowserAction;
-    QAction *m_openEnclosureExternallyAction;
-    QAction *m_openEnclosureWithPluginAction;
-    QAction *m_downloadEnclosureAction;
-    QAction *m_downloadEnclosureWithPluginAction;
+    QAction *m_openArticleUrlInTabAction;
+    QAction *m_openArticleUrlInBrowserAction;
+    QAction *m_openArticleUrlExternallyAction;
+    QAction *m_openArticleUrlWithPluginAction;
+    QAction *m_openArticleInTabWithPluginAction;
+    QAction *m_openArticleInBrowserWithPluginAction;
+    QAction *m_downloadArticleUrlAction;
     
     QAction *m_transfersAction;
     QAction *m_closeTabAction;
     
     QAction *m_searchAction;
+    QAction *m_articleAction;
     QAction *m_deleteAction;
     QAction *m_pluginsAction;
     QAction *m_settingsAction;
@@ -199,19 +188,14 @@ private:
     
     QTreeView *m_subscriptionsView;
     QTreeView *m_articlesView;
-    QTreeView *m_enclosuresView;    
     
-    QLabel *m_infoLabel;
-    QLabel *m_enclosuresLabel;
     QLabel *m_messageLabel;
     
-    BrowserPage *m_browser;
+    ArticlePage *m_articlePage;
         
     QWidget *m_tabsContainer;
-    QWidget *m_articleContainer;
     
     QVBoxLayout *m_tabsLayout;
-    QVBoxLayout *m_articleLayout;
     
     QPointer<TransfersPage> m_transfersPage;
 };
