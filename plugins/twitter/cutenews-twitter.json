@@ -1,0 +1,22 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "Twitter",
+    "supportsArticles": false,
+    "supportsEnclosures": false,
+    "supportsFeeds": true,
+    "feedSettings": [
+        {
+            "type": "text",
+            "label": "Query (#<hashtag> or @<user>)",
+            "key": "query"
+        },
+
+        {
+            "type": "boolean",
+            "label": "Include images",
+            "key": "includeImages",
+            "value": true
+        }
+    ]
+}
