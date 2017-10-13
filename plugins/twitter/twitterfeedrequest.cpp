@@ -158,12 +158,13 @@ void TwitterFeedRequest::checkPage() {
 
     const QHtmlDocument document(QString::fromUtf8(reply->readAll()));
     const QHtmlElement html = document.htmlElement();
+    const bool includeImages = m_settings.value("includeImages", true).toBool();
     writeStartFeed(html);
 
     foreach (const QHtmlElement &item, getItems(html)) {
         writeStartItem();
         writeItemAuthor(item);
-        writeItemBody(item);
+        writeItemBody(item, includeImages);
         writeItemCategories(item);
         writeItemDate(item);
         writeItemEnclosures(item);
@@ -296,12 +297,18 @@ void TwitterFeedRequest::writeItemAuthor(const QHtmlElement &element) {
     m_buffer.close();
 }
 
-void TwitterFeedRequest::writeItemBody(const QHtmlElement &element) {
+void TwitterFeedRequest::writeItemBody(const QHtmlElement &element, bool includeImages) {
+    QString body;
+    const QHtmlElement retweet = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "js-retweet-text"));
+
+    if (!retweet.isNull()) {
+        body.append(QString("<p>%1</p>").arg(retweet.toString()));
+    }
+
     const QString tweet = element.firstElementByTagName("p", QHtmlAttributeMatch("class", "js-tweet-text",
                 QHtmlParser::MatchContains)).toString();
-    QString body;
 
-    if (m_settings.value("includeImages", true).toBool()) {
+    if (includeImages) {
         const QHtmlElement avatar = element.firstElementByTagName("img", QHtmlAttributeMatch("class", "avatar",
                     QHtmlParser::MatchStartsWith));
 
@@ -325,12 +332,6 @@ void TwitterFeedRequest::writeItemBody(const QHtmlElement &element) {
     }
     else {
         body.append(tweet);
-    }
-
-    const QHtmlElement retweet = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "js-retweet-text"));
-
-    if (!retweet.isNull()) {
-        body.prepend(QString("<p>%1</p>").arg(retweet.toString()));
     }
 
     fixRelativeUrls(body, BASE_URL);

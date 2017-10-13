@@ -69,7 +69,7 @@ private:
     void writeStartItem();
     void writeEndItem();
     void writeItemAuthor(const QHtmlElement &element);
-    void writeItemBody(const QHtmlElement &element);
+    void writeItemBody(const QHtmlElement &element, bool includeImages);
     void writeItemCategories(const QHtmlElement &element);
     void writeItemDate(const QHtmlElement &element);
     void writeItemEnclosures(const QHtmlElement &element);
