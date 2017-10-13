@@ -1,3 +1,12 @@
+cutenews (1.3.0) unstable; urgency=low
+
+  * Add option to override global command when setting custom download
+    command.
+  * Display popup when an article has no enclosures.
+  * Bug fixes.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Fri, 13 Oct 2017 17:21:41 +0100
+
 cutenews (1.2.0) unstable; urgency=low
 
   * Add built-in browser.
