@@ -112,8 +112,8 @@ Window {
         text: qsTr("Enclosures")
         autoRepeat: false
         shortcut: settings.showArticleEnclosuresShortcut
-        onTriggered: if (article.hasEnclosures) popupManager.open(Qt.resolvedUrl("EnclosuresDialog.qml"), root,
-        {enclosures: article.enclosures});
+        onTriggered: article.hasEnclosures ? popupManager.open(Qt.resolvedUrl("EnclosuresDialog.qml"), root,
+        {enclosures: article.enclosures}) : informationBox.information(qsTr("Article has no enclosures"))
     }
     
     Action {

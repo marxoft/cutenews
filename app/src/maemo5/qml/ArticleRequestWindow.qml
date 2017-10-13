@@ -78,8 +78,8 @@ Window {
         text: qsTr("Enclosures")
         autoRepeat: false
         shortcut: settings.showArticleEnclosuresShortcut
-        onTriggered: if (article.resultHasEnclosures) popupManager.open(Qt.resolvedUrl("EnclosuresDialog.qml"), root,
-        {enclosures: article.resultEnclosures});
+        onTriggered: article.resultHasEnclosures ? popupManager.open(Qt.resolvedUrl("EnclosuresDialog.qml"), root,
+        {enclosures: article.resultEnclosures}) : informationBox.information(qsTr("Article has no enclosures"))
     }
        
     Flickable {

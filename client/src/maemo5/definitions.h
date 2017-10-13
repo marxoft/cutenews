@@ -43,6 +43,6 @@ static const QString ALL_ARTICLES_SUBSCRIPTION_ID("all_articles");
 static const QString FAVOURITES_SUBSCRIPTION_ID("favourite_articles");
 
 // Version
-static const QString VERSION_NUMBER("1.2.0");
+static const QString VERSION_NUMBER("1.3.0");
 
 #endif // DEFINITIONS_H

@@ -117,10 +117,17 @@ Window {
         text: qsTr("Enclosures")
         autoRepeat: false
         shortcut: settings.showArticleEnclosuresShortcut
-        onTriggered: if ((articleView.currentIndex >= 0)
-        && (articleModel.data(articleView.currentIndex, "hasEnclosures")))
-        popupManager.open(Qt.resolvedUrl("EnclosuresDialog.qml"), root,
-        {enclosures: articleModel.data(articleView.currentIndex, "enclosures")})
+        onTriggered: {
+            if (articleView.currentIndex >= 0) {
+                if (articleModel.data(articleView.currentIndex, "hasEnclosures")) {
+                    popupManager.open(Qt.resolvedUrl("EnclosuresDialog.qml"), root,
+                    {enclosures: articleModel.data(articleView.currentIndex, "enclosures")});
+                }
+                else {
+                    informationBox.information(qsTr("Article has no enclosures"));
+                }
+            }
+        }
     }
     
     Action {
