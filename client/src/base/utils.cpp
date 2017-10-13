@@ -148,8 +148,9 @@ QString Utils::replaceSrcPaths(const QString &s, const QString &path) {
 
     while ((pos = src.indexIn(result, pos)) != -1) {
         const QString url = src.cap(2);
-        result.replace(url, path + url.toUtf8().toBase64());
-        pos += src.matchedLength();
+        const QString rep = path + url.toUtf8().toBase64();
+        result.replace(pos + 6, url.size(), rep);
+        pos += rep.size() + 7;
     }
 
     return result;
