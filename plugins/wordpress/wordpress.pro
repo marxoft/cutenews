@@ -1,49 +1,40 @@
-QT += core network
-QT -= gui
-CONFIG += plugin
-TARGET = cutenews-wordpress
-TEMPLATE = lib
-
-HEADERS += \
-    wordpressfeedplugin.h \
-    wordpressfeedrequest.h
-
-SOURCES += \
-    wordpressfeedrequest.cpp
+TEMPLATE = subdirs
 
 maemo5 {
-    CONFIG += link_prl
-    LIBS += -L/opt/lib -lqhtmlparser
-    PKGCONFIG += libqhtmlparser
-    INCLUDEPATH += /usr/include/cutenews
-    HEADERS += \
-        /usr/include/cutenews/feedplugin.h \
-        /usr/include/cutenews/feedrequest.h
-    
-    config.files = "$$TARGET".json
+    config.files = cutenews-wordpress.json
     config.path = /opt/cutenews/plugins
 
-    target.path = /opt/cutenews/plugins
-    
+    plugin.files = cutenews-wordpress.js
+    plugin.path = /opt/cutenews/plugins
+
     INSTALLS += \
-        target \
-        config
+        config \
+        plugin
+
+} else:symbian {
+    config.sources = cutenews-wordpress.json
+    config.path = !:/cutenews/plugins
+
+    plugin.sources = cutenews-wordpress.js
+    plugin.path = !:/cutenews/plugins
+
+    vendorinfo += "%{\"Stuart Howarth\"}" ":\"Stuart Howarth\""
+    wordpress_deployment.pkg_prerules += vendorinfo
+
+    DEPLOYMENT.display_name = cuteNews WordPress
+    DEPLOYMENT += \
+        wordpress_deployment \
+        config \
+        plugin
 
 } else:unix {
-    CONFIG += link_prl
-    LIBS += -L/usr/lib -lqhtmlparser
-    PKGCONFIG += libqhtmlparser
-    INCLUDEPATH += /usr/include/cutenews
-    HEADERS += \
-        /usr/include/cutenews/feedplugin.h \
-        /usr/include/cutenews/feedrequest.h
-    
-    config.files = "$$TARGET".json
+    config.files = cutenews-wordpress.json
     config.path = /usr/share/cutenews/plugins
 
-    target.path = /usr/share/cutenews/plugins
-    
+    plugin.files = cutenews-wordpress.js
+    plugin.path = /usr/share/cutenews/plugins
+
     INSTALLS += \
-        target \
-        config
+        config \
+        plugin
 }

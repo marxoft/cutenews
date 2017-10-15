@@ -2,14 +2,14 @@ Source: cutenews-wordpress
 Section: user/multimedia
 Priority: optional
 Maintainer: Stuart Howarth <showarth@marxoft.co.uk>
-Build-Depends: debhelper (>= 5), libqt4-dev, cutenews-dev (>= 0.1.0), qhtmlparser-dev
+Build-Depends: debhelper (>= 5)
 Standards-Version: 3.7.3
 Homepage: http://marxoft.co.uk/projects/cutenews
 
 Package: cutenews-wordpress
-Architecture: armel
-Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0), qhtmlparser (>= 0.0.4)
-Description: A content plugin for cuteNews providing latest posts from WordPress sites
+Architecture: all
+Depends: ${shlibs:Depends}, ${misc:Depends}, cutenews (>= 1.1.0)
+Description: A content plugin for cuteNews providing WordPress blog posts as an RSS feed
 XB-Maemo-Display-Name: cuteNews - WordPress
 XB-Maemo-Icon-26:
  iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABmJLR0QAJwAnACn1EoBiAAAACXBI

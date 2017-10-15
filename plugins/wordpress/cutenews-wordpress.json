@@ -1,29 +1,28 @@
 {
-    "type": "qt",
+    "type": "js",
     "version": 1,
     "name": "WordPress",
     "supportsFeeds": true,
     "feedSettings": [
         {
             "type": "text",
-            "key": "url",
-            "label": "URL"
+            "key": "host",
+            "label": "Host"
+        },
+
+        {
+            "type": "text",
+            "key": "search",
+            "label": "Search query (optional)"
         },
 
         {
             "type": "integer",
-            "key": "maxResults",
+            "key": "limit",
             "label": "Maximum results",
             "minimum": 5,
             "maximum": 50,
             "value": 20
-        },
-        
-        {
-            "type": "boolean",
-            "key": "fetchFullArticles",
-            "label": "Fetch full articles",
-            "value": false
         }
     ]
 }
