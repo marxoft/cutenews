@@ -32,10 +32,13 @@ function getEnclosure(url, settings) {
         url = url.substring(0, i) + fragment;
         var fileName = decodeURIComponent(fragment.substring(0, fragment.search(/[\?&]/)));
         finished(new EnclosureResult(fileName, new NetworkRequest(url)));
+        return true;
     }
     catch(err) {
         error(err);
     }
+
+    return false;
 }
 
 function cancel() {

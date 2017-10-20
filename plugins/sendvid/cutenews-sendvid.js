@@ -22,7 +22,7 @@ function getEnclosure(url, settings) {
     if (url.substring(url.length - 4) == ".mp4") {
         var fileName = url.substring(url.lastIndexOf("/") + 1);
         finished(new EnclosureResult(fileName, new NetworkRequest(url)));
-        return;
+        return true;
     }
     
     request = new XMLHttpRequest();
@@ -44,6 +44,7 @@ function getEnclosure(url, settings) {
     request.open("GET", url);
     request.setRequestHeader("User-Agent", USER_AGENT);
     request.send();
+    return true;
 }
 
 function cancel() {

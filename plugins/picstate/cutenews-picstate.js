@@ -40,6 +40,7 @@ function getArticle(url, settings) {
     request.open("GET", url);
     request.setRequestHeader("User-Agent", USER_AGENT);
     request.send();
+    return true;
 }
 
 function getEnclosure(url, settings) {
@@ -61,6 +62,7 @@ function getEnclosure(url, settings) {
     request.open("GET", url);
     request.setRequestHeader("User-Agent", USER_AGENT);
     request.send();
+    return true;
 }
 
 function cancel() {

@@ -24,7 +24,7 @@ var request = null;
 function getFeed(settings) {
     if (!settings.query) {
         error("No query specified");
-        return;
+        return false;
     }
     
     var url = RSS_URL;
@@ -44,6 +44,7 @@ function getFeed(settings) {
     request.open("GET", url);
     request.setRequestHeader("User-Agent", USER_AGENT);
     request.send();
+    return true;
 }
 
 function getEnclosure(url, settings) {
@@ -83,6 +84,7 @@ function getEnclosure(url, settings) {
     request.setRequestHeader("User-Agent", USER_AGENT);
     request.setRequestHeader("Cookie", VIDEO_COOKIE);
     request.send();
+    return true;
 }
 
 function cancel() {
