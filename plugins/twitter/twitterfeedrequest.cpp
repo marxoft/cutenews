@@ -15,7 +15,6 @@
  */
 
 #include "twitterfeedrequest.h"
-#include <QDateTime>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegExp>
@@ -160,17 +159,23 @@ void TwitterFeedRequest::checkPage() {
     const QHtmlElement html = document.htmlElement();
     const bool includeImages = m_settings.value("includeImages", true).toBool();
     writeStartFeed(html);
+    QList<Tweet> tweets;
 
     foreach (const QHtmlElement &item, getItems(html)) {
-        writeStartItem();
-        writeItemAuthor(item);
-        writeItemBody(item, includeImages);
-        writeItemCategories(item);
-        writeItemDate(item);
-        writeItemEnclosures(item);
-        writeItemTitle(item);
-        writeItemUrl(item);
-        writeEndItem();      
+        if (!item.attribute("class").contains("promoted")) {
+            Tweet tweet;
+            tweet.author = getItemAuthor(item);
+            tweet.body = getItemBody(item, includeImages);
+            tweet.date = getItemDate(item);
+            tweet.title = getItemTitle(item);
+            tweet.url = getItemUrl(item);
+            tweets << tweet;
+        }
+    }
+
+    if (!tweets.isEmpty()) {
+        qSort(tweets.begin(), tweets.end());
+        writeTweets(tweets);
     }
 
     writeEndFeed();
@@ -234,70 +239,15 @@ QString TwitterFeedRequest::getRedirect(const QNetworkReply *reply) {
 }
 
 QHtmlElementList TwitterFeedRequest::getItems(const QHtmlElement &element) {
-    QHtmlElementList items = element.elementsByTagName("div", QHtmlAttributeMatch("class", "js-stream-tweet",
+    return element.elementsByTagName("div", QHtmlAttributeMatch("class", "js-stream-tweet",
                 QHtmlParser::MatchContains));
-
-    for (int i = items.size() - 1; i >= 0; i--) {
-        if (items.at(i).attribute("class").contains("promoted-tweet")) {
-            items.removeAt(i);
-        }
-    }
-
-    return items;
 }
 
-void TwitterFeedRequest::writeStartFeed(const QHtmlElement &element) {
-    m_buffer.open(QBuffer::WriteOnly);
-    m_writer.setDevice(&m_buffer);
-    m_writer.writeStartDocument();
-    m_writer.writeStartElement("rss");
-    m_writer.writeAttribute("version", "2.0");
-    m_writer.writeAttribute("xmlns:dc", "http://purl.org/dc/elements/1.1/");
-    m_writer.writeAttribute("xmlns:content", "http://purl.org/rss/1.0/modules/content/");
-    m_writer.writeStartElement("channel");
-    m_writer.writeTextElement("link", element.firstElementByTagName("link", QHtmlAttributeMatch("rel", "canonical"))
-            .attribute("href"));
-    m_writer.writeStartElement("title");
-    m_writer.writeCDATA(element.firstElementByTagName("title").text());
-    m_writer.writeEndElement();
-    m_writer.writeStartElement("description");
-    m_writer.writeCDATA(element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "description"))
-                .attribute("content"));
-    m_writer.writeEndElement();
-    m_writer.writeStartElement("image");
-    m_writer.writeTextElement("url", ICON_URL);
-    m_writer.writeEndElement();
-    m_buffer.close();
+QString TwitterFeedRequest::getItemAuthor(const QHtmlElement &element) {
+    return QString("%1 (@%2)").arg(element.attribute("data-name")).arg(element.attribute("data-screen-name"));
 }
 
-void TwitterFeedRequest::writeEndFeed() {
-    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
-    m_writer.writeEndElement();
-    m_writer.writeEndElement();
-    m_writer.writeEndDocument();
-    m_buffer.close();
-}
-
-void TwitterFeedRequest::writeStartItem() {
-    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
-    m_writer.writeStartElement("item");
-    m_buffer.close();
-}
-
-void TwitterFeedRequest::writeEndItem() {
-    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
-    m_writer.writeEndElement();
-    m_buffer.close();
-}
-
-void TwitterFeedRequest::writeItemAuthor(const QHtmlElement &element) {
-    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
-    m_writer.writeTextElement("dc:creator", QString("%1 @%2").arg(element.attribute("data-name"))
-            .arg(element.attribute("data-screen-name")));
-    m_buffer.close();
-}
-
-void TwitterFeedRequest::writeItemBody(const QHtmlElement &element, bool includeImages) {
+QString TwitterFeedRequest::getItemBody(const QHtmlElement &element, bool includeImages) {
     QString body;
     const QHtmlElement retweet = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "js-retweet-text"));
 
@@ -335,30 +285,16 @@ void TwitterFeedRequest::writeItemBody(const QHtmlElement &element, bool include
     }
 
     fixRelativeUrls(body, BASE_URL);
-    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
-    m_writer.writeStartElement("content:encoded");
-    m_writer.writeCDATA(body);
-    m_writer.writeEndElement();
-    m_buffer.close();
+    return body;
 }
 
-void TwitterFeedRequest::writeItemCategories(const QHtmlElement &) {}
-
-void TwitterFeedRequest::writeItemDate(const QHtmlElement &element) {
+QDateTime TwitterFeedRequest::getItemDate(const QHtmlElement &element) {
     const QHtmlElement date = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "timestamp",
                 QHtmlParser::MatchContains));
-
-    if (!date.isNull()) {
-        m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
-        m_writer.writeTextElement("dc:date", QDateTime::fromTime_t(date.attribute("data-time").toUInt())
-                .toString(Qt::ISODate));
-        m_buffer.close();
-    }
+    return QDateTime::fromTime_t(date.attribute("data-time").toUInt());
 }
 
-void TwitterFeedRequest::writeItemEnclosures(const QHtmlElement &) {}
-
-void TwitterFeedRequest::writeItemTitle(const QHtmlElement &element) {
+QString TwitterFeedRequest::getItemTitle(const QHtmlElement &element) {
     QString author = element.attribute("data-retweeter");
     QString title;
 
@@ -370,16 +306,58 @@ void TwitterFeedRequest::writeItemTitle(const QHtmlElement &element) {
         title = tr("Tweet from @%1").arg(author);
     }
 
-    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
-    m_writer.writeStartElement("title");
-    m_writer.writeCDATA(title);
+    return title;
+}
+
+QString TwitterFeedRequest::getItemUrl(const QHtmlElement &element) {
+    return BASE_URL + element.attribute("data-permalink-path");
+}
+
+void TwitterFeedRequest::writeStartFeed(const QHtmlElement &element) {
+    m_buffer.open(QBuffer::WriteOnly);
+    m_writer.setDevice(&m_buffer);
+    m_writer.writeStartDocument();
+    m_writer.writeStartElement("rss");
+    m_writer.writeAttribute("version", "2.0");
+    m_writer.writeAttribute("xmlns:dc", "http://purl.org/dc/elements/1.1/");
+    m_writer.writeAttribute("xmlns:content", "http://purl.org/rss/1.0/modules/content/");
+    m_writer.writeStartElement("channel");
+    m_writer.writeTextElement("link", element.firstElementByTagName("link", QHtmlAttributeMatch("rel", "canonical"))
+            .attribute("href"));
+    m_writer.writeTextElement("title", element.firstElementByTagName("title").text());
+    m_writer.writeStartElement("description");
+    m_writer.writeCDATA(element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "description"))
+                .attribute("content"));
+    m_writer.writeEndElement();
+    m_writer.writeStartElement("image");
+    m_writer.writeTextElement("url", ICON_URL);
     m_writer.writeEndElement();
     m_buffer.close();
 }
 
-void TwitterFeedRequest::writeItemUrl(const QHtmlElement &element) {
+void TwitterFeedRequest::writeEndFeed() {
     m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
-    m_writer.writeTextElement("link", BASE_URL + element.attribute("data-permalink-path"));
+    m_writer.writeEndElement();
+    m_writer.writeEndElement();
+    m_writer.writeEndDocument();
+    m_buffer.close();
+}
+
+void TwitterFeedRequest::writeTweets(const QList<Tweet> &tweets) {
+    m_buffer.open(QBuffer::WriteOnly | QBuffer::Append);
+
+    foreach (const Tweet &tweet, tweets) {
+        m_writer.writeStartElement("item");
+        m_writer.writeTextElement("dc:creator", tweet.author);
+        m_writer.writeStartElement("content:encoded");
+        m_writer.writeCDATA(tweet.body);
+        m_writer.writeEndElement();
+        m_writer.writeTextElement("dc:date", tweet.date.toString(Qt::ISODate));
+        m_writer.writeTextElement("title", tweet.title);
+        m_writer.writeTextElement("link", tweet.url);
+        m_writer.writeEndElement();
+    }
+
     m_buffer.close();
 }
 

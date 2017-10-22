@@ -20,11 +20,28 @@
 #include "feedrequest.h"
 #include <qhtmlparser/qhtmlparser.h>
 #include <QBuffer>
+#include <QDateTime>
 #include <QVariantMap>
 #include <QXmlStreamWriter>
 
 class QNetworkAccessManager;
 class QNetworkReply;
+
+struct Tweet {
+    QString author;
+    QString body;
+    QDateTime date;
+    QString title;
+    QString url;
+
+    bool operator<(const Tweet &other) const {
+        return date > other.date;
+    }
+
+    bool operator>(const Tweet &other) const {
+        return date < other.date;
+    }
+};
 
 class TwitterFeedRequest : public FeedRequest
 {
@@ -62,19 +79,15 @@ private:
     static QString getRedirect(const QNetworkReply *reply);
 
     static QHtmlElementList getItems(const QHtmlElement &element);
+    static QString getItemAuthor(const QHtmlElement &element);
+    static QString getItemBody(const QHtmlElement &element, bool includeImages);
+    static QDateTime getItemDate(const QHtmlElement &element);
+    static QString getItemTitle(const QHtmlElement &element);
+    static QString getItemUrl(const QHtmlElement &element);
     
     void writeStartFeed(const QHtmlElement &element);
     void writeEndFeed();
-
-    void writeStartItem();
-    void writeEndItem();
-    void writeItemAuthor(const QHtmlElement &element);
-    void writeItemBody(const QHtmlElement &element, bool includeImages);
-    void writeItemCategories(const QHtmlElement &element);
-    void writeItemDate(const QHtmlElement &element);
-    void writeItemEnclosures(const QHtmlElement &element);
-    void writeItemTitle(const QHtmlElement &element);
-    void writeItemUrl(const QHtmlElement &element);
+    void writeTweets(const QList<Tweet> &tweets);
     
     QNetworkAccessManager* networkAccessManager();    
 
