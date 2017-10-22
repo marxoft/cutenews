@@ -1,0 +1,298 @@
+{
+    "type": "qt",
+    "version": 1,
+    "name": "Politico",
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(www\\.|)politico\\.(eu|com)/[\\w-]+",
+    "supportsFeeds": true,
+    "feedSettings": [
+        {
+            "type": "list",
+            "key": "section",
+            "label": "Section",
+            "value": "http://www.politico.eu/feed/",
+            "options": [
+                {
+                    "label": "Europe",
+                    "value": "http://www.politico.eu/feed/"
+                },
+
+                {
+                    "label": "Europe - Agriculture & Food",
+                    "value": "http://www.politico.eu/section/agriculture/feed/"
+                },
+
+                {
+                    "label": "Europe - Brexit",
+                    "value": "http://www.politico.eu/section/brexit/feed/"
+                },
+
+                {
+                    "label": "Europe - Brexit Files",
+                    "value": "http://www.politico.eu/pro/section/brexit/newsletter/feed/"
+                },
+
+                {
+                    "label": "Europe - Brussels Influence",
+                    "value": "http://www.politico.eu/newsletter/politico-brussels-influence/feed/"
+                },
+
+                {
+                    "label": "Europe - Brussels Playbook",
+                    "value": "http://www.politico.eu/newsletter/brussels-playbook/feed/"
+                },
+
+                {
+                    "label": "Europe - Economics",
+                    "value": "http://www.politico.eu/section/economics/feed/"
+                },
+
+                {
+                    "label": "Europe - Energy & Environment",
+                    "value": "http://www.politico.eu/section/energy/feed/"
+                },
+
+                {
+                    "label": "Europe - Features",
+                    "value": "http://www.politico.eu/section/features/feed/"
+                },
+
+                {
+                    "label": "Europe - Financial Services",
+                    "value": "http://www.politico.eu/section/financial-services/feed/"
+                },
+
+                {
+                    "label": "Europe - Foreign Affairs",
+                    "value": "http://www.politico.eu/section/foreign-affairs/feed/"
+                },
+
+                {
+                    "label": "Europe - Global Policy Lab",
+                    "value": "http://www.politico.eu/global-policy-lab/feed/"
+                },
+
+                {
+                    "label": "Europe - Health Care",
+                    "value": "http://www.politico.eu/section/health-care/feed/"
+                },
+
+                {
+                    "label": "Europe - Home Affairs",
+                    "value": "http://www.politico.eu/section/home-affairs/feed/"
+                },
+
+                {
+                    "label": "Europe - Letters to the Editor",
+                    "value": "http://www.politico.eu/section/letters-to-editor/feed/"
+                },
+
+                {
+                    "label": "Europe - London Playbook",
+                    "value": "http://www.politico.eu/newsletter/london-playbook/feed/"
+                },
+
+                {
+                    "label": "Europe - Morgen Europa",
+                    "value": "http://www.politico.eu/newsletter/morgen-europa/feed/"
+                },
+
+                {
+                    "label": "Europe - On Media",
+                    "value": "http://www.politico.eu/blogs/on-media/feed/"
+                },
+
+                {
+                    "label": "Europe - Opinion",
+                    "value": "http://www.politico.eu/section/opinion/feed/"
+                },
+
+                {
+                    "label": "Europe - Playbook Plus",
+                    "value": "http://www.politico.eu/blogs/playbook-plus/feed/"
+                },
+
+                {
+                    "label": "Europe - Policy",
+                    "value": "http://www.politico.eu/section/policy/feed/"
+                },
+
+                {
+                    "label": "Europe - Politics",
+                    "value": "http://www.politico.eu/section/politics/feed/"
+                },
+
+                {
+                    "label": "Europe - Sunday Crunch",
+                    "value": "http://www.politico.eu/newsletter/sunday-crunch/feed/"
+                },
+
+                {
+                    "label": "Europe - Technology",
+                    "value": "http://www.politico.eu/section/technology/feed/"
+                },
+
+                {
+                    "label": "Europe - Trade",
+                    "value": "http://www.politico.eu/section/trade/feed/"
+                },
+
+                {
+                    "label": "Europe - Transport",
+                    "value": "http://www.politico.eu/section/transport/feed/"
+                },
+
+                {
+                    "label": "US - Congress",
+                    "value": "http://www.politico.com/rss/congress.xml"
+                },
+
+                {
+                    "label": "US - Defense",
+                    "value": "http://www.politico.com/rss/defense.xml"
+                },
+
+                {
+                    "label": "US - Economy",
+                    "value": "http://www.politico.com/rss/economy.xml"
+                },
+
+                {
+                    "label": "US - Energy & Environment",
+                    "value": "http://www.politico.com/rss/energy.xml"
+                },
+
+                {
+                    "label": "US - Health Care",
+                    "value": "http://www.politico.com/rss/healthcare.xml"
+                },
+
+                {
+                    "label": "US - Huddle",
+                    "value": "http://www.politico.com/rss/huddle.xml"
+                },
+
+                {
+                    "label": "US - Joe Scarborough",
+                    "value": "http://www.politico.com/rss/joescarborough_full.xml"
+                },
+
+                {
+                    "label": "US - Josh Gerstein",
+                    "value": "http://www.politico.com/rss/undertheradar_full.xml"
+                },
+
+                {
+                    "label": "US - Morning Agriculture",
+                    "value": "http://www.politico.com/rss/morningagriculture.xml"
+                },
+
+                {
+                    "label": "US - Morning Cybersecurity",
+                    "value": "http://www.politico.com/rss/morningcybersecurity.xml"
+                },
+
+                {
+                    "label": "US - Morning Defense",
+                    "value": "http://www.politico.com/rss/morningdefense.xml"
+                },
+
+                {
+                    "label": "US - Morning Education",
+                    "value": "http://www.politico.com/rss/morningeducation.xml"
+                },
+
+                {
+                    "label": "US - Morning eHealth",
+                    "value": "http://www.politico.com/rss/morningehealth.xml"
+                },
+
+                {
+                    "label": "US - Morning Energy",
+                    "value": "http://www.politico.com/rss/morningenergy.xml"
+                },
+
+                {
+                    "label": "US - Morning Money",
+                    "value": "http://www.politico.com/rss/morningmoney.xml"
+                },
+
+                {
+                    "label": "US - Morning Score",
+                    "value": "http://www.politico.com/rss/morningscore.xml"
+                },
+
+                {
+                    "label": "US - Morning Shift",
+                    "value": "http://www.politico.com/rss/morningshift.xml"
+                },
+
+                {
+                    "label": "US - Morning Tax",
+                    "value": "http://www.politico.com/rss/morningtax.xml"
+                },
+
+                {
+                    "label": "US - Morning Trade",
+                    "value": "http://www.politico.com/rss/morningtrade.xml"
+                },
+
+                {
+                    "label": "US - Morning Transport",
+                    "value": "http://www.politico.com/rss/morningtransportation.xml"
+                },
+
+                {
+                    "label": "US - Morning Tech",
+                    "value": "http://www.politico.com/rss/morningtech.xml"
+                },
+
+                {
+                    "label": "US - Playbook",
+                    "value": "http://www.politico.com/rss/playbook.xml"
+                },
+
+                {
+                    "label": "US - POLITICO Influence",
+                    "value": "http://www.politico.com/rss/politicoinfluence.xml"
+                },
+
+                {
+                    "label": "US - POLITICO Pulse",
+                    "value": "http://www.politico.com/rss/politicopulse.xml"
+                },
+
+                {
+                    "label": "US - Politics",
+                    "value": "http://www.politico.com/rss/politics08.xml"
+                },
+
+                {
+                    "label": "US - Simon Says",
+                    "value": "http://www.politico.com/rss/rogersimon.xml"
+                },
+
+                {
+                    "label": "US - What Works",
+                    "value": "http://www.politico.com/magazine/rss/whatworks.xml"
+                }
+            ]
+        },
+
+        {
+            "type": "boolean",
+            "key": "fetchFullArticle",
+            "label": "Fetch full article",
+            "value": true
+        },
+
+        {
+            "type": "integer",
+            "key": "maxResults",
+            "label": "Maximum results",
+            "minimum": 5,
+            "maximum": 50,
+            "value": 20
+        }
+    ]
+}
