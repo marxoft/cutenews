@@ -1,3 +1,10 @@
+cutenews-twitter (0.0.2) unstable; urgency=low
+
+  * Sort tweets by date in descending order.
+  * Check if query starts with # before stripping for hashtag query.
+
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Sun, 22 Oct 2017 01:10:32 +0100
+
 cutenews-twitter (0.0.1) unstable; urgency=low
 
   * Initial Release.
