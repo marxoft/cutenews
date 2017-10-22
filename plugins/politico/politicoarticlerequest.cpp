@@ -203,24 +203,6 @@ QString PoliticoArticleRequest::getRedirect(const QNetworkReply *reply) {
     return redirect;
 }
 
-void PoliticoArticleRequest::remove(QString &in, const QString &s) {
-    const int index = in.indexOf(s);
-    const int size = s.size();
-
-    if ((index >= 0) && (size > 0)) {
-        in.remove(index, size);
-    }
-}
-
-void PoliticoArticleRequest::replace(QString &in, const QString &s, const QString &r) {
-    const int index = in.indexOf(s);
-    const int size = s.size();
-
-    if ((index >= 0) && (size > 0)) {
-        in.replace(index, size, r);
-    }
-}
-
 void PoliticoArticleRequest::writeArticleAuthor(const QHtmlElement &element) {
     QHtmlElement author = element.firstElementByTagName("div", QHtmlAttributeMatch("itemprop", "author"));
 

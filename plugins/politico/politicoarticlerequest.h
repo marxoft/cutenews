@@ -56,9 +56,6 @@ private:
     static void fixRelativeUrls(QString &page, const QString &baseUrl);
 
     static QString getRedirect(const QNetworkReply *reply);
-    
-    static void remove(QString &in, const QString &s);
-    static void replace(QString &in, const QString &s, const QString &r);
 
     void writeArticleAuthor(const QHtmlElement &element);
     void writeArticleBody(const QHtmlElement &element);
