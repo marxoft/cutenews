@@ -245,24 +245,14 @@ void IndependentFeedRequest::checkArticle(ArticleRequest *request) {
         qDebug() << "IndependentFeedRequest::checkArticle(). Error:" << request->errorString();
     }
 #endif
-    if (m_results < m_settings.value("maxResults", 20).toInt()) {
-        if (!m_parser.readNextArticle()) {
-            writeEndFeed();
-            setErrorString(m_parser.errorString());
-            setStatus(Error);
-            emit finished(this);
-            return;
-        }
-
-        if (m_parser.date() > m_settings.value("lastUpdated").toDateTime()) {
-            getArticle(m_parser.url());
-            return;
-        }
-#ifdef INDEPENDENT_DEBUG
-        qDebug() << "IndependentFeedRequest::checkArticle(). No more new articles";
-#endif
+    if ((m_results < m_settings.value("maxResults", 20).toInt()) && (m_parser.readNextArticle())
+            && (m_parser.date() > m_settings.value("lastUpdated").toDateTime())) {
+        getArticle(m_parser.url());
+        return;
     }
-
+#ifdef INDEPENDENT_DEBUG
+    qDebug() << "IndependentFeedRequest::checkArticle(). No more new articles";
+#endif
     writeEndFeed();
     setStatus(Ready);
     emit finished(this);

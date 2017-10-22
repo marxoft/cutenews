@@ -328,10 +328,9 @@ bool FeedParser::readNextArticle() {
     
     if ((m_reader.hasError()) && (!m_reader.atEnd())) {
         setErrorString(QString("Error parsing tag %1").arg(m_reader.qualifiedName().toString()));
-        return false;
     }
     
-    return true;
+    return false;
 }
 
 void FeedParser::readAuthor() {
