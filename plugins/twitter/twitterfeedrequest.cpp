@@ -96,8 +96,11 @@ bool TwitterFeedRequest::getFeed(const QVariantMap &settings) {
     if (query.startsWith("@")) {
         getPage(USER_URL + query.mid(1));
     }
-    else {
+    else if (query.startsWith("#")) {
         getPage(HASHTAG_URL + query.mid(1));
+    }
+    else {
+        getPage(HASHTAG_URL + query);
     }
 
     return true;
