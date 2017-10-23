@@ -3,7 +3,7 @@
     "version": 1,
     "name": "Twitter",
     "supportsArticles": true,
-    "articleRegExp": "http(s|)://(mobile\\.|www\\.|)twitter\\.com/[\\w-_]+/status/\\d+",
+    "articleRegExp": "http(s|)://((mobile\\.|www\\.|)twitter\\.com/[\\w-_]+/status/\\d+|pic\\.twitter\\.com/[\\w-_]+)",
     "articleSettings": [
         {
             "type": "boolean",

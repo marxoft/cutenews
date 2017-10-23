@@ -252,7 +252,8 @@ QString TwitterFeedRequest::getItemAuthor(const QHtmlElement &element) {
 
 QString TwitterFeedRequest::getItemBody(const QHtmlElement &element, bool includeImages) {
     QString body;
-    const QHtmlElement retweet = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "js-retweet-text"));
+    const QHtmlElement retweet =
+        element.firstElementByTagName("span", QHtmlAttributeMatch("class", "js-retweet-text"));
 
     if (!retweet.isNull()) {
         body.append(QString("<p>%1</p>").arg(retweet.toString()));

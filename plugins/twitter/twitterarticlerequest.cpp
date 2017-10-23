@@ -82,8 +82,8 @@ bool TwitterArticleRequest::getArticle(const QString &url, const QVariantMap &se
     setResult(ArticleResult());
     m_settings = settings;
     m_redirects = 0;
-    QUrl u(url);
-    u.setHost("mobile.twitter.com");
+    QString u = url;
+    u.replace("mobile.twitter.com", "twtter.com");
 #ifdef TWITTER_DEBUG
     qDebug() << "TwitterArticleRequest::getArticle(). URL:" << u;
 #endif
@@ -204,131 +204,92 @@ QString TwitterArticleRequest::getRedirect(const QNetworkReply *reply) {
 }
 
 void TwitterArticleRequest::writeArticleAuthor(const QHtmlElement &element) {
-    const QHtmlElement tweet = element.firstElementByTagName("table", QHtmlAttributeMatch("class", "main-tweet"));
+    const QHtmlElement tweet = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "original-tweet",
+                QHtmlParser::MatchContains));
 
     if (!tweet.isNull()) {
-        QString author;
-        const QHtmlElement fullname = tweet.firstElementByTagName("div", QHtmlAttributeMatch("class", "fullname"));
-
-        if (!fullname.isNull()) {
-            author = fullname.firstElementByTagName("strong").text();
-        }
-
-        const QHtmlElement username = tweet.firstElementByTagName("span", QHtmlAttributeMatch("class", "username"));
-
-        if (!username.isNull()) {
-            if (author.isEmpty()) {
-                author = username.text(true).trimmed().remove("\n");
-            }
-            else {
-                author.append(QString(" (%1)").arg(username.text(true).trimmed().remove("\n") ));
-            }
-        }
-
-        m_result.author = author;
+        m_result.author = QString("%1 (@%2)").arg(tweet.attribute("data-name"))
+            .arg(tweet.attribute("data-screen-name"));
     }
 }
 
 void TwitterArticleRequest::writeArticleBody(const QHtmlElement &element, bool includeImages, bool includeReplies) {
-    const QHtmlElement tweet = element.firstElementByTagName("table", QHtmlAttributeMatch("class", "main-tweet"));
+    const QHtmlElement tweet = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "original-tweet",
+                QHtmlParser::MatchContains));
     
     if (!tweet.isNull()) {
         writeTweetToArticleBody(tweet, includeImages);
 
         if (includeReplies) {
-            const QHtmlElementList replies =
-                element.firstElementByTagName("div", QHtmlAttributeMatch("class", "timeline replies"))
-                        .elementsByTagName("table", QHtmlAttributeMatch("class", "tweet"));
+            const QHtmlElementList replies = element.elementsByTagName("div",
+                    QHtmlAttributeMatch("class", "descendant-tweet", QHtmlParser::MatchContains));
 
             foreach (const QHtmlElement &reply, replies) {
-                writeTweetToArticleBody(reply, includeImages);
+                if (!reply.attribute("class").contains("promoted")) {
+                    writeTweetToArticleBody(reply, includeImages);
+                }
             }
         }
     }
 }
 
 void TwitterArticleRequest::writeTweetToArticleBody(const QHtmlElement &tweet, bool includeImages) {
-    QString user;
-    QString media;
-    QString text = QString("<p style=\"clear: both\">%1</p>")
-        .arg(tweet.firstElementByTagName("div", QHtmlAttributeMatch("class", "tweet-text")).toString());
-    const QHtmlElement info = tweet.firstElementByTagName("td", QHtmlAttributeMatch("class", "user-info"));
-
-    if (!info.isNull()) {
-        const QHtmlElement fullname = info.firstElementByTagName("strong");
-
-        if (!fullname.isNull()) {
-            user.append(fullname.text());
-        }
-
-        QHtmlElement username = info.firstElementByTagName("span", QHtmlAttributeMatch("class", "username"));
-
-        if (!username.isNull()) {
-            if (!user.isEmpty()) {
-                user.append("<br>");
-            }
-
-            user.append(username.text(true).trimmed().remove("\n"));
-        }
-        else {
-            username = info.firstElementByTagName("div", QHtmlAttributeMatch("class", "username"));
-
-            if (!username.isNull()) {
-                if (!user.isEmpty()) {
-                    user.append("<br>");
-                }
-
-                user.append(username.text(true).trimmed().remove("\n"));
-            }
-        }
-    }
+    QString body;
+    const QString user = QString("%1<br>@%2").arg(tweet.attribute("data-name"))
+        .arg(tweet.attribute("data-screen-name"));
+    const QString text = tweet.firstElementByTagName("p", QHtmlAttributeMatch("class", "js-tweet-text",
+                QHtmlParser::MatchContains)).toString();
 
     if (includeImages) {
-        const QHtmlElement avatarEl = tweet.firstElementByTagName("td", QHtmlAttributeMatch("class", "avatar"))
-            .firstElementByTagName("img");
+        const QHtmlElement avatar = tweet.firstElementByTagName("img", QHtmlAttributeMatch("class", "avatar",
+                    QHtmlParser::MatchStartsWith));
 
-        if (!avatarEl.isNull()) {
-            user = QString("<div><img align=\"left\" src=\"%1\"><div style=\"margin-left: 56px\">%2</div></div>")
-                    .arg(avatarEl.attribute("src")).arg(user);
+        if (!avatar.isNull()) {
+            body.append(QString("<div><img align=\"left\" src=\"%1\"><div style=\"margin-left: 81px\">%2</div></div>")
+                    .arg(avatar.attribute("src")).arg(user));
+            body.append(QString("<div style=\"clear: both; margin-top: 8px;\">%1</div>").arg(text));
+        }
+        else {
+            body.append(user);
+            body.append(text);
         }
 
-        const QHtmlElement mediaEl = tweet.firstElementByTagName("div", QHtmlAttributeMatch("class", "media"));
+        const QHtmlElement media = tweet.firstElementByTagName("div", QHtmlAttributeMatch("class",
+                    "AdaptiveMediaOuterContainer"));
 
-        if (!mediaEl.isNull()) {
-            foreach (const QHtmlElement &image, mediaEl.elementsByTagName("img")) {
-                media.append(QString("<div style=\"clear: both\"><img style=\"margin-top: 8px\" src=\"%1\"></div>")
+        if (!media.isNull()) {
+            foreach (const QHtmlElement &image, media.elementsByTagName("img")) {
+                body.append(QString("<div style=\"clear: both\"><img style=\"margin-top: 8px\" src=\"%1\"></div>")
                         .arg(image.attribute("src")));
             }
         }
     }
+    else {
+        body.append(user);
+        body.append(text);
+    }
 
-    fixRelativeUrls(text, BASE_URL);
-    m_result.body.append(QString("<div style=\"clear: both; margin-top: 16px;\">%1%2%3</div>")
-            .arg(user).arg(text).arg(media));
+    fixRelativeUrls(body, BASE_URL);
+    m_result.body.append(QString("<div style=\"clear: both; margin-top: 16px;\">%1</div>").arg(body));
 }
 
 void TwitterArticleRequest::writeArticleDate(const QHtmlElement &element) {
-    const QHtmlElement tweet = element.firstElementByTagName("table", QHtmlAttributeMatch("class", "main-tweet"));
+    const QHtmlElement tweet = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "original-tweet",
+                QHtmlParser::MatchContains));
 
     if (!tweet.isNull()) {
-        const QHtmlElement metadata = tweet.firstElementByTagName("div", QHtmlAttributeMatch("class", "metadata"));
+        const QHtmlElement date = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "timestamp",
+                    QHtmlParser::MatchContains));
 
-        if (!metadata.isNull()) {
-            m_result.date = QDateTime::fromString(metadata.firstElementByTagName("a").text(), "h:mm ap - dd MMM yyyy");
+        if (!date.isNull()) {
+            m_result.date = QDateTime::fromTime_t(date.attribute("data-time").toUInt());
         }
     }
 }
 
 void TwitterArticleRequest::writeArticleTitle(const QHtmlElement &element) {
-    const QHtmlElement tweet = element.firstElementByTagName("table", QHtmlAttributeMatch("class", "main-tweet"));
-
-    if (!tweet.isNull()) {
-        const QHtmlElement username = tweet.firstElementByTagName("span", QHtmlAttributeMatch("class", "username"));
-
-        if (!username.isNull()) {
-            m_result.title = tr("Tweet by %1").arg(username.text(true).trimmed().remove("\n"));
-        }
-    }
+    m_result.title = element.firstElementByTagName("meta", QHtmlAttributeMatch("property", "og:title"))
+        .attribute("content");
 }
 
 void TwitterArticleRequest::writeArticleUrl(const QString &url) {
