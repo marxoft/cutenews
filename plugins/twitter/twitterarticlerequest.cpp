@@ -288,7 +288,7 @@ void TwitterArticleRequest::writeTweetToArticleBody(const QHtmlElement &tweet, b
             .firstElementByTagName("img");
 
         if (!avatarEl.isNull()) {
-            user = QString("<div><img align=\"left\" src=\"%1\"><div>%2</div></div>")
+            user = QString("<div><img align=\"left\" src=\"%1\"><div style=\"margin-left: 56px\">%2</div></div>")
                     .arg(avatarEl.attribute("src")).arg(user);
         }
 
