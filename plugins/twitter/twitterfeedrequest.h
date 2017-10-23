@@ -18,30 +18,16 @@
 #define TWITTERFEEDREQUEST_H
 
 #include "feedrequest.h"
+#include "tweet.h"
 #include <qhtmlparser/qhtmlparser.h>
 #include <QBuffer>
-#include <QDateTime>
 #include <QVariantMap>
 #include <QXmlStreamWriter>
 
 class QNetworkAccessManager;
 class QNetworkReply;
 
-struct Tweet {
-    QString author;
-    QString body;
-    QDateTime date;
-    QString title;
-    QString url;
 
-    bool operator<(const Tweet &other) const {
-        return date > other.date;
-    }
-
-    bool operator>(const Tweet &other) const {
-        return date < other.date;
-    }
-};
 
 class TwitterFeedRequest : public FeedRequest
 {

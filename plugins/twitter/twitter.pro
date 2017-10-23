@@ -5,6 +5,7 @@ TARGET = cutenews-twitter
 TEMPLATE = lib
 
 HEADERS += \
+    tweet.h \
     twitterarticlerequest.h \
     twitterfeedplugin.h \
     twitterfeedrequest.h

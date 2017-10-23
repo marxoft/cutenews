@@ -15,6 +15,7 @@
  */
 
 #include "twitterarticlerequest.h"
+#include "tweet.h"
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QRegExp>
@@ -218,6 +219,8 @@ void TwitterArticleRequest::writeArticleBody(const QHtmlElement &element, bool i
                 QHtmlParser::MatchContains));
     
     if (!tweet.isNull()) {
+        m_result.body.append(QString("<style>%1</style>")
+                .arg(includeImages ? TWEET_STYLESHEET_INCLUDE_IMAGES : TWEET_STYLESHEET));
         writeTweetToArticleBody(tweet, includeImages);
 
         if (includeReplies) {
@@ -237,40 +240,44 @@ void TwitterArticleRequest::writeTweetToArticleBody(const QHtmlElement &tweet, b
     QString body;
     const QString user = QString("%1<br>@%2").arg(tweet.attribute("data-name"))
         .arg(tweet.attribute("data-screen-name"));
-    const QString text = tweet.firstElementByTagName("p", QHtmlAttributeMatch("class", "js-tweet-text",
+    QString text = tweet.firstElementByTagName("p", QHtmlAttributeMatch("class", "js-tweet-text",
                 QHtmlParser::MatchContains)).toString();
+    QString date;
+    const QHtmlElement dateEl = tweet.firstElementByTagName("span", QHtmlAttributeMatch("class", "timestamp",
+                QHtmlParser::MatchContains));
+
+    if (!dateEl.isNull()) {
+        date = QDateTime::fromTime_t(dateEl.attribute("data-time").toUInt()).toString("dd MMM yyyy @ HH:mm");
+    }
 
     if (includeImages) {
-        const QHtmlElement avatar = tweet.firstElementByTagName("img", QHtmlAttributeMatch("class", "avatar",
+        QString avatar;
+        const QHtmlElement avatarEl = tweet.firstElementByTagName("img", QHtmlAttributeMatch("class", "avatar",
                     QHtmlParser::MatchStartsWith));
 
-        if (!avatar.isNull()) {
-            body.append(QString("<div><img align=\"left\" src=\"%1\"><div style=\"margin-left: 81px\">%2</div></div>")
-                    .arg(avatar.attribute("src")).arg(user));
-            body.append(QString("<div style=\"clear: both; margin-top: 8px;\">%1</div>").arg(text));
-        }
-        else {
-            body.append(user);
-            body.append(text);
+        if (!avatarEl.isNull()) {
+            avatar = avatarEl.attribute("src");
         }
 
-        const QHtmlElement media = tweet.firstElementByTagName("div", QHtmlAttributeMatch("class",
+        QString media;
+        const QHtmlElement mediaEl = tweet.firstElementByTagName("div", QHtmlAttributeMatch("class",
                     "AdaptiveMediaOuterContainer"));
 
-        if (!media.isNull()) {
-            foreach (const QHtmlElement &image, media.elementsByTagName("img")) {
-                body.append(QString("<div style=\"clear: both\"><img style=\"margin-top: 8px\" src=\"%1\"></div>")
-                        .arg(image.attribute("src")));
+        if (!mediaEl.isNull()) {
+            foreach (const QHtmlElement &image, mediaEl.elementsByTagName("img")) {
+                media.append(QString("<img class='cutenews-tweet-media' src='%1'>").arg(image.attribute("src")));
             }
         }
+
+        body = TWEET_HTML_INCLUDE_IMAGES.arg(avatar).arg(user).arg(text).arg(media).arg(tr("Posted on %1").arg(date));
     }
     else {
-        body.append(user);
-        body.append(text);
+        text.remove(QRegExp("<img[^>]+>"));
+        body = TWEET_HTML.arg(user).arg(text).arg(tr("Posted on %1").arg(date));
     }
 
     fixRelativeUrls(body, BASE_URL);
-    m_result.body.append(QString("<div style=\"clear: both; margin-top: 16px;\">%1</div>").arg(body));
+    m_result.body.append(body);
 }
 
 void TwitterArticleRequest::writeArticleDate(const QHtmlElement &element) {

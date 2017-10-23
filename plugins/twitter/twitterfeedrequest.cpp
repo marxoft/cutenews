@@ -252,44 +252,48 @@ QString TwitterFeedRequest::getItemAuthor(const QHtmlElement &element) {
 
 QString TwitterFeedRequest::getItemBody(const QHtmlElement &element, bool includeImages) {
     QString body;
-    const QHtmlElement retweet =
-        element.firstElementByTagName("span", QHtmlAttributeMatch("class", "js-retweet-text"));
-
-    if (!retweet.isNull()) {
-        body.append(QString("<p>%1</p>").arg(retweet.toString()));
-    }
-
-    const QString tweet = element.firstElementByTagName("p", QHtmlAttributeMatch("class", "js-tweet-text",
+    const QString user = QString("%1<br>@%2").arg(element.attribute("data-name"))
+        .arg(element.attribute("data-screen-name"));
+    QString text = element.firstElementByTagName("p", QHtmlAttributeMatch("class", "js-tweet-text",
                 QHtmlParser::MatchContains)).toString();
+    QString date;
+    const QHtmlElement dateEl = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "timestamp",
+                QHtmlParser::MatchContains));
+
+    if (!dateEl.isNull()) {
+        date = QDateTime::fromTime_t(dateEl.attribute("data-time").toUInt()).toString("dd MMM yyyy @ HH:mm");
+    }
 
     if (includeImages) {
-        const QHtmlElement avatar = element.firstElementByTagName("img", QHtmlAttributeMatch("class", "avatar",
+        QString avatar;
+        const QHtmlElement avatarEl = element.firstElementByTagName("img", QHtmlAttributeMatch("class", "avatar",
                     QHtmlParser::MatchStartsWith));
 
-        if (!avatar.isNull()) {
-            body.append(QString("<div><img align=\"left\" src=\"%1\"><div style=\"margin-left: 81px\">%2</div></div>")
-                    .arg(avatar.attribute("src")).arg(tweet));
-        }
-        else {
-            body.append(tweet);
+        if (!avatarEl.isNull()) {
+            avatar = avatarEl.attribute("src");
         }
 
-        const QHtmlElement media = element.firstElementByTagName("div", QHtmlAttributeMatch("class",
+        QString media;
+        const QHtmlElement mediaEl = element.firstElementByTagName("div", QHtmlAttributeMatch("class",
                     "AdaptiveMediaOuterContainer"));
 
-        if (!media.isNull()) {
-            foreach (const QHtmlElement &image, media.elementsByTagName("img")) {
-                body.append(QString("<div style=\"clear: both\"><img style=\"margin-top: 8px\" src=\"%1\"></div>")
-                        .arg(image.attribute("src")));
+        if (!mediaEl.isNull()) {
+            foreach (const QHtmlElement &image, mediaEl.elementsByTagName("img")) {
+                media.append(QString("<img class='cutenews-tweet-media' src='%1'>").arg(image.attribute("src")));
             }
         }
+
+        body = TWEET_HTML_INCLUDE_IMAGES.arg(avatar).arg(user).arg(text).arg(media).arg(tr("Posted on %1").arg(date));
     }
     else {
-        body.append(tweet);
+        text.remove(QRegExp("<img[^>]+>"));
+        body = TWEET_HTML.arg(user).arg(text).arg(tr("Posted on %1").arg(date));
     }
 
     fixRelativeUrls(body, BASE_URL);
-    return body;
+
+    return QString("<style>%1</style>%2").arg(includeImages ? TWEET_STYLESHEET_INCLUDE_IMAGES : TWEET_STYLESHEET)
+        .arg(body);
 }
 
 QDateTime TwitterFeedRequest::getItemDate(const QHtmlElement &element) {
