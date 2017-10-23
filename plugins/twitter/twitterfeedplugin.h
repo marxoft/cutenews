@@ -18,6 +18,7 @@
 #define TWITTERFEEDPLUGIN_H
 
 #include "feedplugin.h"
+#include "twitterarticlerequest.h"
 #include "twitterfeedrequest.h"
 #if QT_VERSION < 0x050000
 #include <QtPlugin>
@@ -32,6 +33,7 @@ class TwitterFeedPlugin : public QObject, public FeedPlugin
 #endif
 
 public:
+    virtual ArticleRequest* articleRequest(QObject *parent = 0) { return new TwitterArticleRequest(parent); }
     virtual FeedRequest* feedRequest(QObject *parent = 0) { return new TwitterFeedRequest(parent); }
 };
 

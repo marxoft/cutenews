@@ -5,10 +5,12 @@ TARGET = cutenews-twitter
 TEMPLATE = lib
 
 HEADERS += \
+    twitterarticlerequest.h \
     twitterfeedplugin.h \
     twitterfeedrequest.h
 
 SOURCES += \
+    twitterarticlerequest.cpp \
     twitterfeedrequest.cpp
 
 maemo5 {
@@ -17,6 +19,7 @@ maemo5 {
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
+        /usr/include/cutenews/articlerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h
     
@@ -35,6 +38,7 @@ maemo5 {
     PKGCONFIG += libqhtmlparser
     INCLUDEPATH += /usr/include/cutenews
     HEADERS += \
+        /usr/include/cutenews/articlerequest.h \
         /usr/include/cutenews/feedplugin.h \
         /usr/include/cutenews/feedrequest.h
     

@@ -2,7 +2,23 @@
     "type": "qt",
     "version": 1,
     "name": "Twitter",
-    "supportsArticles": false,
+    "supportsArticles": true,
+    "articleRegExp": "http(s|)://(mobile\\.|www\\.|)twitter\\.com/[\\w-_]+/status/\\d+",
+    "articleSettings": [
+        {
+            "type": "boolean",
+            "label": "Include images",
+            "key": "includeImages",
+            "value": true
+        },
+
+        {
+            "type": "boolean",
+            "label": "Include replies",
+            "key": "includeReplies",
+            "value": true
+        }
+    ],
     "supportsEnclosures": false,
     "supportsFeeds": true,
     "feedSettings": [
