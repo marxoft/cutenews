@@ -252,10 +252,17 @@ QString TwitterFeedRequest::getItemAuthor(const QHtmlElement &element) {
 
 QString TwitterFeedRequest::getItemBody(const QHtmlElement &element, bool includeImages) {
     QString body;
-    const QString user = QString("%1<br>@%2").arg(element.attribute("data-name"))
-        .arg(element.attribute("data-screen-name"));
-    QString text = element.firstElementByTagName("p", QHtmlAttributeMatch("class", "js-tweet-text",
-                QHtmlParser::MatchContains)).toString();
+    const QString user = QString("<a href='%1/%2'>%3<br>@%2</a>").arg(BASE_URL)
+        .arg(element.attribute("data-screen-name")).arg(element.attribute("data-name"));
+    QString reply = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "ReplyingToContextBelowAuthor"))
+        .toString();
+
+    if (reply.contains("<button")) {
+        reply = reply.left(reply.lastIndexOf("</a>") + 4);
+    }
+
+    QString text = reply + element.firstElementByTagName("p", QHtmlAttributeMatch("class", "js-tweet-text",
+        QHtmlParser::MatchContains)).toString();
     QString date;
     const QHtmlElement dateEl = element.firstElementByTagName("span", QHtmlAttributeMatch("class", "timestamp",
                 QHtmlParser::MatchContains));

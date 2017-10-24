@@ -238,10 +238,17 @@ void TwitterArticleRequest::writeArticleBody(const QHtmlElement &element, bool i
 
 void TwitterArticleRequest::writeTweetToArticleBody(const QHtmlElement &tweet, bool includeImages) {
     QString body;
-    const QString user = QString("%1<br>@%2").arg(tweet.attribute("data-name"))
-        .arg(tweet.attribute("data-screen-name"));
-    QString text = tweet.firstElementByTagName("p", QHtmlAttributeMatch("class", "js-tweet-text",
-                QHtmlParser::MatchContains)).toString();
+    const QString user = QString("<a href='%1/%2'>%3<br>@%2</a>").arg(BASE_URL)
+        .arg(tweet.attribute("data-screen-name")).arg(tweet.attribute("data-name"));
+    QString reply = tweet.firstElementByTagName("div", QHtmlAttributeMatch("class", "ReplyingToContextBelowAuthor"))
+        .toString();
+
+    if (reply.contains("<button")) {
+        reply = reply.left(reply.lastIndexOf("</a>") + 4);
+    }
+
+    QString text = reply + tweet.firstElementByTagName("p", QHtmlAttributeMatch("class", "js-tweet-text",
+        QHtmlParser::MatchContains)).toString();
     QString date;
     const QHtmlElement dateEl = tweet.firstElementByTagName("span", QHtmlAttributeMatch("class", "timestamp",
                 QHtmlParser::MatchContains));

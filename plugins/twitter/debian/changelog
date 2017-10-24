@@ -1,10 +1,11 @@
 cutenews-twitter (0.1.0) unstable; urgency=low
 
   * Add support for article requests.
-  * Sort tweets by date in descending order.
+  * Add reply information to tweets.
+  * Explicitly sort tweets by date in descending order in feeds.
   * Check if query starts with # before stripping for hashtag query.
 
- -- Stuart Howarth <showarth@marxoft.co.uk>  Mon, 22 Oct 2017 02:11:32 +0100
+ -- Stuart Howarth <showarth@marxoft.co.uk>  Tue, 24 Oct 2017 00:53:26 +0100
 
 cutenews-twitter (0.0.1) unstable; urgency=low
 
