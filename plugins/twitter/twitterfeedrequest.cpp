@@ -247,13 +247,15 @@ QHtmlElementList TwitterFeedRequest::getItems(const QHtmlElement &element) {
 }
 
 QString TwitterFeedRequest::getItemAuthor(const QHtmlElement &element) {
-    return QString("%1 (@%2)").arg(element.attribute("data-name")).arg(element.attribute("data-screen-name"));
+    return QString("%1 (@%2)").arg(element.attribute("data-name").remove(QRegExp("[^\\w\\s-_@\\(\\)]")).simplified())
+        .arg(element.attribute("data-screen-name"));
 }
 
 QString TwitterFeedRequest::getItemBody(const QHtmlElement &element, bool includeImages) {
     QString body;
     const QString user = QString("<a href='%1/%2'>%3<br>@%2</a>").arg(BASE_URL)
-        .arg(element.attribute("data-screen-name")).arg(element.attribute("data-name"));
+        .arg(element.attribute("data-screen-name"))
+        .arg(element.attribute("data-name").remove(QRegExp("[^\\w\\s-_@\\(\\)]+")).simplified());
     QString reply = element.firstElementByTagName("div", QHtmlAttributeMatch("class", "ReplyingToContextBelowAuthor"))
         .toString();
 
@@ -310,18 +312,9 @@ QDateTime TwitterFeedRequest::getItemDate(const QHtmlElement &element) {
 }
 
 QString TwitterFeedRequest::getItemTitle(const QHtmlElement &element) {
-    QString author = element.attribute("data-retweeter");
-    QString title;
-
-    if (!author.isEmpty()) {
-        title = tr("Retweet from @%1").arg(author);
-    }
-    else {
-        author = element.attribute("data-screen-name");
-        title = tr("Tweet from @%1").arg(author);
-    }
-
-    return title;
+    return tr("%1 (@%2) on Twitter")
+        .arg(element.attribute("data-name").remove(QRegExp("[^\\w\\s-_@\\(\\)]+")).simplified())
+        .arg(element.attribute("data-screen-name"));
 }
 
 QString TwitterFeedRequest::getItemUrl(const QHtmlElement &element) {
@@ -339,7 +332,8 @@ void TwitterFeedRequest::writeStartFeed(const QHtmlElement &element) {
     m_writer.writeStartElement("channel");
     m_writer.writeTextElement("link", element.firstElementByTagName("link", QHtmlAttributeMatch("rel", "canonical"))
             .attribute("href"));
-    m_writer.writeTextElement("title", element.firstElementByTagName("title").text());
+    m_writer.writeTextElement("title", element.firstElementByTagName("title").text()
+            .remove(QRegExp("[^\\w\\s-_@\\(\\)]+")).simplified());
     m_writer.writeStartElement("description");
     m_writer.writeCDATA(element.firstElementByTagName("meta", QHtmlAttributeMatch("name", "description"))
                 .attribute("content"));

@@ -209,7 +209,8 @@ void TwitterArticleRequest::writeArticleAuthor(const QHtmlElement &element) {
                 QHtmlParser::MatchContains));
 
     if (!tweet.isNull()) {
-        m_result.author = QString("%1 (@%2)").arg(tweet.attribute("data-name"))
+        m_result.author = QString("%1 (@%2)")
+            .arg(tweet.attribute("data-name").remove(QRegExp("[^\\w\\s-_@\\(\\)]+")).simplified())
             .arg(tweet.attribute("data-screen-name"));
     }
 }
@@ -239,7 +240,8 @@ void TwitterArticleRequest::writeArticleBody(const QHtmlElement &element, bool i
 void TwitterArticleRequest::writeTweetToArticleBody(const QHtmlElement &tweet, bool includeImages) {
     QString body;
     const QString user = QString("<a href='%1/%2'>%3<br>@%2</a>").arg(BASE_URL)
-        .arg(tweet.attribute("data-screen-name")).arg(tweet.attribute("data-name"));
+        .arg(tweet.attribute("data-screen-name"))
+        .arg(tweet.attribute("data-name").remove(QRegExp("[^\\w\\s-_@\\(\\)]+")).simplified());
     QString reply = tweet.firstElementByTagName("div", QHtmlAttributeMatch("class", "ReplyingToContextBelowAuthor"))
         .toString();
 
@@ -303,7 +305,7 @@ void TwitterArticleRequest::writeArticleDate(const QHtmlElement &element) {
 
 void TwitterArticleRequest::writeArticleTitle(const QHtmlElement &element) {
     m_result.title = element.firstElementByTagName("meta", QHtmlAttributeMatch("property", "og:title"))
-        .attribute("content");
+        .attribute("content").remove(QRegExp("[^\\w\\s-_@\\(\\)]")).simplified();
 }
 
 void TwitterArticleRequest::writeArticleUrl(const QString &url) {
