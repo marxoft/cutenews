@@ -58,7 +58,7 @@ private:
     static QString getRedirect(const QNetworkReply *reply);
 
     void writeArticleAuthor(const QHtmlElement &element);
-    void writeArticleBody(const QHtmlElement &element);
+    void writeArticleBody(const QHtmlElement &element, bool includeImages);
     void writeArticleCategories(const QHtmlElement &element);
     void writeArticleDate(const QHtmlElement &element);
     void writeArticleEnclosures(const QHtmlElement &element);

@@ -137,8 +137,9 @@ void PoliticoArticleRequest::checkArticle() {
     fixRelativeUrls(page, baseUrl);
     const QHtmlDocument document(page);
     const QHtmlElement html = document.htmlElement();
+    const bool includeImages = m_settings.value("includeImages", false).toBool();
     writeArticleAuthor(html);
-    writeArticleBody(html);
+    writeArticleBody(html, includeImages);
     writeArticleCategories(html);
     writeArticleDate(html);
     writeArticleEnclosures(html);
@@ -219,7 +220,7 @@ void PoliticoArticleRequest::writeArticleAuthor(const QHtmlElement &element) {
     }
 }
 
-void PoliticoArticleRequest::writeArticleBody(const QHtmlElement &element) {
+void PoliticoArticleRequest::writeArticleBody(const QHtmlElement &element, bool includeImages) {
     const QHtmlElement article = element.firstElementByTagName("div",
             QHtmlAttributeMatch("class", "story-text", QHtmlParser::MatchStartsWith));
 
@@ -227,6 +228,10 @@ void PoliticoArticleRequest::writeArticleBody(const QHtmlElement &element) {
         if ((child.tagName() == "p") && (child.attribute("class").isEmpty())) {
             m_result.body.append(child.toString());
         }
+    }
+
+    if (!includeImages) {
+        m_result.body.remove(QRegExp("<img[^>]+>"));
     }
 }
 

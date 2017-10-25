@@ -4,6 +4,14 @@
     "name": "Politico",
     "supportsArticles": true,
     "articleRegExp": "http(s|)://(www\\.|)politico\\.(eu|com)/[\\w-]+",
+    "articleSettings": [
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images",
+            "value": false
+        }
+    ],
     "supportsFeeds": true,
     "feedSettings": [
         {
@@ -284,6 +292,13 @@
             "key": "fetchFullArticle",
             "label": "Fetch full article",
             "value": true
+        },
+
+        {
+            "type": "boolean",
+            "key": "includeImages",
+            "label": "Include images in full article",
+            "value": false
         },
 
         {
