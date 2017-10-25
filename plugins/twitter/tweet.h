@@ -18,6 +18,7 @@
 #define TWEET_H
 
 #include <QDateTime>
+#include <QRegExp>
 #include <QString>
 
 static const QString TWEET_STYLESHEET(".cutenews-tweet { clear: both; padding-bottom: 16px; } .cutenews-tweet-text { clear: both; margin-top: 8px; }");
@@ -27,6 +28,10 @@ static const QString TWEET_STYLESHEET_INCLUDE_IMAGES(".cutenews-tweet { clear: b
 static const QString TWEET_HTML("<div class='cutenews-tweet'><div class='cutenews-tweet-username'>%1</div><div class='cutenews-tweet-text'>%2</div><div class='cutenews-tweet-text'>%3</div></div>");
 
 static const QString TWEET_HTML_INCLUDE_IMAGES("<div class='cutenews-tweet'><img class='cutenews-tweet-avatar' src='%1'><div class='cutenews-tweet-username'>%2</div><div class='cutenews-tweet-text'>%3</div>%4<div class='cutenews-tweet-text'>%5</div></div>");
+
+static inline QString sanitizeUsername(QString str) {
+    return str.remove(QRegExp("[^a-zA-Z0-9#@\\s\\(\\)]+")).simplified();
+}
 
 struct Tweet {
     QString author;
