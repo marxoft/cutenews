@@ -241,6 +241,7 @@ void TwitterArticleRequest::writeTweetToArticleBody(const QHtmlElement &tweet, b
     const QString user = QString("<a href='%1/%2'>%3<br>@%2</a>").arg(BASE_URL)
         .arg(tweet.attribute("data-screen-name"))
         .arg(sanitizeUsername(tweet.attribute("data-name")));
+    const QString url = tweet.attribute("data-permalink-path");
     QString reply = tweet.firstElementByTagName("div", QHtmlAttributeMatch("class", "ReplyingToContextBelowAuthor"))
         .toString();
 
@@ -277,11 +278,12 @@ void TwitterArticleRequest::writeTweetToArticleBody(const QHtmlElement &tweet, b
             }
         }
 
-        body = TWEET_HTML_INCLUDE_IMAGES.arg(avatar).arg(user).arg(text).arg(media).arg(tr("Posted on %1").arg(date));
+        body = TWEET_HTML_INCLUDE_IMAGES.arg(avatar).arg(user).arg(text).arg(media)
+            .arg(QString("<a href='%1'>%2</a>").arg(url).arg(date));
     }
     else {
         text.remove(QRegExp("<img[^>]+>"));
-        body = TWEET_HTML.arg(user).arg(text).arg(tr("Posted on %1").arg(date));
+        body = TWEET_HTML.arg(user).arg(text).arg(QString("<a href='%1'>%2</a>").arg(url).arg(date));
     }
 
     fixRelativeUrls(body, BASE_URL);
