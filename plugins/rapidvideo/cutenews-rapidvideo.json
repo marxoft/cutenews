@@ -1,0 +1,37 @@
+{
+    "type": "js",
+    "version": 1,
+    "name": "Rapidvideo",
+    "supportsEnclosures": true,
+    "enclosureRegExp": "http(s|)://(www\\.|)rapidvideo\\.com/(\\?v=|v/|e/)[A-Z0-9]+",
+    "enclosureSettings": [
+        {
+            "type": "list",
+            "label": "Video format",
+            "key": "format",
+            "value": "1080",
+            "options": [
+                {
+                    "label": "1080P",
+                    "value": "1080"
+                },
+
+                {
+                    "label": "720P",
+                    "value": "720"
+                },
+
+                {
+                    "label": "480P",
+                    "value": "480"
+                },
+
+                {
+                    "label": "360P",
+                    "value": "360"
+                }
+            ]
+        }
+    ]
+}
+
