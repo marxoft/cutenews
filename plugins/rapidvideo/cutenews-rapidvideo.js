@@ -46,8 +46,37 @@ function getEnclosure(url, settings) {
                     finished(new EnclosureResult(fileName, new NetworkRequest(sources[0].file)));
                 }
                 catch(e) {
-                    var source = /<source src="([^"]+)/.exec(request.responseText)[1];
-                    finished(new EnclosureResult(fileName, new NetworkRequest(source)));
+                    var sources = response.split("<source ");
+
+                    if (sources.length < 2) {
+                        error(qsTr("No video formats found"));
+                        return;
+                    }
+
+                    var format = settings.format || "1080";
+
+                    for (var i = sources.length - 1; i > 0; i--) {
+                        var source = sources[i];
+                        var res = /data-res="([^"]+)/.exec(source)[1];
+
+                        if (res == format) {
+                            var src = /src="([^"]+)/.exec(source)[1];
+
+                            if (src) {
+                                finished(new EnclosureResult(fileName, new NetworkRequest(src)));
+                                return;
+                            }
+                        }
+                    }
+
+                    var src = /src="([^"]+)/.exec(sources[1])[1];
+
+                    if (src) {
+                        finished(new EnclosureResult(fileName, new NetworkRequest(src)));
+                    }
+                    else {
+                        error(qsTr("No video formats found"));
+                    }
                 }
             }
             catch(e) {
@@ -56,7 +85,7 @@ function getEnclosure(url, settings) {
         }
     }
 
-    request.open("GET", url);
+    request.open("GET", url + "&q=0p");
     request.send();
     return true;
 }
