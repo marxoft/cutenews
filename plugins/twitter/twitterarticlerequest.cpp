@@ -83,7 +83,7 @@ bool TwitterArticleRequest::getArticle(const QString &url, const QVariantMap &se
     m_settings = settings;
     m_redirects = 0;
     QString u = url;
-    u.replace("mobile.twitter.com", "twtter.com");
+    u.replace("mobile.twitter.com", "twitter.com");
 #ifdef TWITTER_DEBUG
     qDebug() << "TwitterArticleRequest::getArticle(). URL:" << u;
 #endif
